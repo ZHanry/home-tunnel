@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  services:
+    name: TypeScript services
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [control-center, traffic-gateway]
+    defaults:
+      run:
+        working-directory: ${{ matrix.service }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.16.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.17.1
+          cache: pnpm
+          cache-dependency-path: ${{ matrix.service }}/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run check
+      - run: pnpm run build
+      - run: pnpm test
+      - if: matrix.service == 'control-center'
+        run: pnpm run test:public
+
+  windows-client:
+    name: Windows client
+    runs-on: windows-latest
+    env:
+      HOME_TUNNEL_SKIP_AGENT_TESTS: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet run --project .\windows-client-tests\HomeTunnel.Client.Tests.csproj -c Release
+
+  repository:
+    name: Repository and Compose checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.23.12
+      - name: Check Go formatting
+        run: test -z "$(gofmt -l windows-agent/main.go)"
+      - name: Prepare non-production Compose inputs
+        run: |
+          cp .env.example .env
+          mkdir -p deploy/secrets
+          for name in postgres_password internal_service_key frps_plugin_key lease_signing_key bootstrap_admin_password; do
+            printf '%064d\n' 0 > "deploy/secrets/$name"
+          done
+      - run: docker compose config --quiet

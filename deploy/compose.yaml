@@ -1,0 +1,209 @@
+name: home-tunnel
+
+services:
+  postgres:
+    image: postgres:17.5-bookworm
+    pull_policy: never
+    container_name: home-tunnel-postgres
+    restart: unless-stopped
+    init: true
+    environment:
+      POSTGRES_DB: home_tunnel
+      POSTGRES_USER: home_tunnel
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      PGDATA: /var/lib/postgresql/data/pgdata
+    secrets:
+      - source: postgres_password_db
+        target: postgres_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid,nodev
+      - /var/run/postgresql:size=16m,nosuid,nodev,uid=999,gid=999,mode=0770
+    networks: [control]
+    read_only: true
+    cap_drop: [ALL]
+    cap_add: [CHOWN, FOWNER, SETUID, SETGID, DAC_OVERRIDE]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U home_tunnel -d home_tunnel"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 15s
+    mem_limit: 768m
+    cpus: "0.70"
+    pids_limit: 256
+    stop_grace_period: 45s
+    logging: &logging
+      driver: json-file
+      options: { max-size: 10m, max-file: "5" }
+
+  control-center:
+    image: home-tunnel/control-center:2.2.4-arm64
+    pull_policy: never
+    container_name: home-tunnel-control-center
+    restart: unless-stopped
+    init: true
+    depends_on:
+      postgres: { condition: service_healthy }
+    environment:
+      NODE_ENV: production
+      PORT: "8080"
+      PUBLIC_BASE_URL: ${HOME_TUNNEL_PUBLIC_BASE_URL:?set HOME_TUNNEL_PUBLIC_BASE_URL}
+      DOWNLOADS_DIRECTORY: /app/downloads
+      TUNNEL_DOMAIN: ${HOME_TUNNEL_TUNNEL_DOMAIN:?set HOME_TUNNEL_TUNNEL_DOMAIN}
+      PUBLIC_FRPS_HOST: ${HOME_TUNNEL_FRPS_PUBLIC_HOST:?set HOME_TUNNEL_FRPS_PUBLIC_HOST}
+      PUBLIC_FRPS_PORT: ${HOME_TUNNEL_FRPS_PORT:-7000}
+      COOKIE_SECURE: "true"
+      PGHOST: home-tunnel-postgres
+      PGPORT: "5432"
+      PGDATABASE: home_tunnel
+      PGUSER: home_tunnel
+      PGPASSWORD_FILE: /run/secrets/postgres_password
+      INTERNAL_SERVICE_KEY_FILE: /run/secrets/internal_service_key
+      FRPS_PLUGIN_KEY_FILE: /run/secrets/frps_plugin_key
+      LEASE_SIGNING_KEY_FILE: /run/secrets/lease_signing_key
+      BOOTSTRAP_ADMIN_PASSWORD_FILE: /run/secrets/bootstrap_admin_password
+      BOOTSTRAP_ADMIN_USERNAME: ${HOME_TUNNEL_BOOTSTRAP_ADMIN_USERNAME:-admin}
+      ACCESS_TOKEN_SECONDS: "900"
+      REFRESH_TOKEN_SECONDS: "2592000"
+      ONLINE_LEASE_SECONDS: "86400"
+      OFFLINE_LEASE_MAX_SECONDS: "86400"
+      POLICY_SNAPSHOT_SECONDS: "86400"
+      GATEWAY_HEALTH_URL: http://home-tunnel-traffic-gateway:8080/healthz
+      FRPS_HOST: home-tunnel-frps
+      FRPS_PORT: "7000"
+      CADDY_HOST: ${HOME_TUNNEL_CADDY_HOST:-caddy}
+      CADDY_PORT: "80"
+      BACKUP_STATUS_FILE: /run/home-tunnel-status/backup.json
+    secrets:
+      - source: postgres_password_control
+        target: postgres_password
+      - source: internal_service_key
+        target: internal_service_key
+      - source: frps_plugin_key_control
+        target: frps_plugin_key
+      - source: lease_signing_key
+        target: lease_signing_key
+      - source: bootstrap_admin_password
+        target: bootstrap_admin_password
+    volumes:
+      - ./status:/run/home-tunnel-status:ro
+      - ./downloads:/app/downloads:ro
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid,nodev,uid=10001,gid=10001,mode=0700
+    networks: [control, edge]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:8080/healthz').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 10s
+      retries: 20
+      start_period: 20s
+    mem_limit: 512m
+    cpus: "0.55"
+    pids_limit: 128
+    stop_grace_period: 20s
+    logging: *logging
+
+  traffic-gateway:
+    image: home-tunnel/traffic-gateway:2.2.4-arm64
+    pull_policy: never
+    container_name: home-tunnel-traffic-gateway
+    restart: unless-stopped
+    init: true
+    depends_on:
+      control-center: { condition: service_healthy }
+      frps: { condition: service_started }
+    environment:
+      PORT: "8080"
+      CONTROL_CENTER_URL: http://home-tunnel-control-center:8080
+      FRPS_VHOST_HOST: home-tunnel-frps
+      FRPS_VHOST_PORT: "8080"
+      INTERNAL_SERVICE_KEY_FILE: /run/secrets/internal_service_key
+      POLICY_POLL_MS: "1000"
+      POLICY_FULL_SYNC_MS: "300000"
+      SAMPLE_BUCKET_SECONDS: "10"
+    secrets:
+      - source: internal_service_key
+        target: internal_service_key
+    tmpfs:
+      - /tmp:size=32m,noexec,nosuid,nodev,uid=10001,gid=10001,mode=0700
+    networks: [control, edge]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:8080/healthz',{headers:{host:'127.0.0.1:8080'}}).then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 10s
+      retries: 20
+      start_period: 20s
+    mem_limit: 384m
+    cpus: "0.45"
+    pids_limit: 128
+    stop_grace_period: 20s
+    logging: *logging
+
+  frps:
+    image: home-tunnel/frps:0.62.1-arm64
+    pull_policy: never
+    container_name: home-tunnel-frps
+    restart: unless-stopped
+    init: true
+    depends_on:
+      control-center: { condition: service_healthy }
+    ports:
+      - "${FRPS_BIND_ADDRESS:-0.0.0.0}:${FRPS_HOST_PORT:-7000}:7000/tcp"
+    secrets:
+      - source: frps_plugin_key_frps
+        target: frps_plugin_key
+    tmpfs:
+      - /run/frp:size=16m,noexec,nosuid,nodev,uid=10001,gid=10001,mode=0700
+      - /tmp:size=16m,noexec,nosuid,nodev
+    networks: [control, edge]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: [CMD-SHELL, "nc -z 127.0.0.1 7000"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    mem_limit: 256m
+    cpus: "0.30"
+    pids_limit: 128
+    stop_grace_period: 20s
+    logging: *logging
+
+volumes:
+  postgres-data:
+    name: home-tunnel-postgres-data
+
+networks:
+  control:
+    name: home-tunnel-control
+    internal: true
+  edge:
+    name: home-tunnel-edge
+    external: true
+
+secrets:
+  postgres_password_db:
+    file: ./secrets/postgres_password_db
+  postgres_password_control:
+    file: ./secrets/postgres_password_control
+  internal_service_key:
+    file: ./secrets/internal_service_key
+  frps_plugin_key_control:
+    file: ./secrets/frps_plugin_key_control
+  frps_plugin_key_frps:
+    file: ./secrets/frps_plugin_key_frps
+  lease_signing_key:
+    file: ./secrets/lease_signing_key
+  bootstrap_admin_password:
+    file: ./secrets/bootstrap_admin_password

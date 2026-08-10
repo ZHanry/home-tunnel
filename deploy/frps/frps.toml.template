@@ -1,0 +1,16 @@
+bindAddr = "0.0.0.0"
+bindPort = 7000
+proxyBindAddr = "0.0.0.0"
+vhostHTTPPort = 8080
+detailedErrorsToClient = false
+
+transport.tls.force = true
+transport.heartbeatTimeout = 90
+transport.maxPoolCount = 10
+transport.tcpKeepalive = 7200
+
+[[httpPlugins]]
+name = "home-tunnel-authorization"
+addr = "home-tunnel-control-center:8080"
+path = "/internal/frps/plugin/__PLUGIN_TOKEN__"
+ops = ["Login", "NewProxy", "CloseProxy"]

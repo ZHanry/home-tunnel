@@ -1,0 +1,57 @@
+# Dependencies and compiled output
+**/node_modules/
+**/dist/
+**/bin/
+**/obj/
+**/__pycache__/
+*.py[cod]
+artifacts/
+outputs/
+.downloads/
+.codex-tools/
+design-system/
+
+# Locally built or vendored executables
+windows-client/assets/HomeTunnel.Agent.exe
+deploy/frps/frps
+*.exe
+*.msi
+*.msix
+*.appx
+*.tar
+*.tar.gz
+
+# Secrets and machine-local configuration
+.env
+.env.*
+!.env.example
+**/secrets/
+*.pfx
+*.p12
+*.key
+*.pem
+*credentials*.txt
+*credential*.txt
+.ssh_known_hosts_home_tunnel
+
+# IDE, operating-system and user files
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.swp
+*.tmp
+Thumbs.db
+.DS_Store
+
+# Logs, coverage and generated QA material
+*.log
+coverage/
+.nyc_output/
+.docx-qa/
+
+# Original deployment verification fixtures contain site-specific topology
+tests/caddy-baseline.Caddyfile
+tests/frpc-http.toml
+tests/frpc-https.toml

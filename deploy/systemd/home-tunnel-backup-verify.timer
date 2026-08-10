@@ -1,0 +1,11 @@
+[Unit]
+Description=Verify a Home Tunnel backup monthly
+
+[Timer]
+OnCalendar=*-*-01 04:30:00 UTC
+RandomizedDelaySec=1h
+Persistent=true
+Unit=home-tunnel-backup-verify.service
+
+[Install]
+WantedBy=timers.target

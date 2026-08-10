@@ -1,0 +1,20 @@
+[Unit]
+Description=Verify the latest Home Tunnel backup by restoring it
+Requires=docker.service
+After=docker.service home-tunnel-backup.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/home-tunnel/scripts/verify-backup.sh
+User=root
+Group=root
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+
+[Install]
+WantedBy=multi-user.target

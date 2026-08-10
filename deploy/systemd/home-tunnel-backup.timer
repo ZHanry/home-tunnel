@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Home Tunnel backup daily
+
+[Timer]
+OnCalendar=*-*-* 03:15:00 UTC
+RandomizedDelaySec=30m
+Persistent=true
+Unit=home-tunnel-backup.service
+
+[Install]
+WantedBy=timers.target

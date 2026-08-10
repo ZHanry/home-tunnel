@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>assets\HomeTunnel.ico</ApplicationIcon>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <AssemblyName>HomeTunnel</AssemblyName>
+    <RootNamespace>HomeTunnel.Client</RootNamespace>
+    <Version>2.2.4</Version>
+    <InformationalVersion>2.2.4</InformationalVersion>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>false</PublishSingleFile>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <AgentBinaryPath Condition="'$(AgentBinaryPath)' == ''">assets\HomeTunnel.Agent.exe</AgentBinaryPath>
+    <AgentExpectedSha256 Condition="'$(AgentExpectedSha256)' == ''">eee75a6ca45dd539d57ff6e2a6790579919de5105264ad3cdd0008fcbce234e5</AgentExpectedSha256>
+    <AgentSignerThumbprint Condition="'$(AgentSignerThumbprint)' == ''"></AgentSignerThumbprint>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(UpdateQa)' == 'true'">
+    <DefineConstants>$(DefineConstants);UPDATE_QA</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <AssemblyMetadata Include="HomeTunnelAgentSha256" Value="$(AgentExpectedSha256)" />
+    <AssemblyMetadata Include="HomeTunnelAgentSignerThumbprint" Value="$(AgentSignerThumbprint)" />
+    <InternalsVisibleTo Include="HomeTunnel.Client.Tests" />
+  </ItemGroup>
+  <ItemGroup Condition="Exists('$(AgentBinaryPath)')">
+    <Content Include="$(AgentBinaryPath)">
+      <Link>HomeTunnel.Agent.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\windows-agent\THIRD-PARTY-NOTICES.txt">
+      <Link>THIRD-PARTY-NOTICES.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="..\windows-agent\FRP-LICENSE.txt">
+      <Link>FRP-LICENSE.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+</Project>

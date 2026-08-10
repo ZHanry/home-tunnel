@@ -1,0 +1,15 @@
+changelog:
+  exclude:
+    labels:
+      - ignore-for-release
+  categories:
+    - title: Security
+      labels: [security]
+    - title: Added
+      labels: [enhancement, feature]
+    - title: Fixed
+      labels: [bug, fix]
+    - title: Documentation and maintenance
+      labels: [documentation, dependencies, maintenance]
+    - title: Other changes
+      labels: ["*"]

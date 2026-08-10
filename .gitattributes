@@ -1,0 +1,35 @@
+* text=auto eol=lf
+
+*.cs text eol=crlf
+*.csproj text eol=crlf
+*.ps1 text eol=crlf
+*.xaml text eol=crlf
+*.sln text eol=crlf
+*.iss text eol=crlf
+*.isl text eol=crlf
+*.rc text eol=crlf
+*.manifest text eol=crlf
+
+*.sh text eol=lf
+*.py text eol=lf
+*.ts text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+*.sql text eol=lf
+*.md text eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.bmp binary
+*.cer binary
+*.docx binary
+*.exe binary
+*.dll binary
+*.tar binary
+*.gz binary

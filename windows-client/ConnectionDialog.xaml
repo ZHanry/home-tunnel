@@ -1,0 +1,119 @@
+<Window x:Class="HomeTunnel.Client.ConnectionDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="连接设置 - Home Tunnel" Width="432" Height="600" MinHeight="520"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize" ShowInTaskbar="False"
+        Background="{StaticResource SurfaceBrush}"
+        Closing="Window_Closing" KeyDown="Window_KeyDown"
+        UseLayoutRounding="True" SnapsToDevicePixels="True">
+  <Grid Background="{StaticResource SurfaceBrush}">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="72" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <Border Grid.Row="0" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1"
+            Padding="20,0">
+      <Grid>
+        <StackPanel VerticalAlignment="Center">
+          <TextBlock x:Name="DialogTitleText" Text="新建连接"
+                     Foreground="{StaticResource InkBrush}" FontSize="19" FontWeight="SemiBold" />
+          <TextBlock Text="设置公网入口与本地目标" Style="{StaticResource CaptionTextStyle}" Margin="0,3,0,0" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled">
+      <StackPanel x:Name="FormPanel" Margin="20,10,20,22">
+        <Label Content="连接名称" Target="{Binding ElementName=ConnectionNameBox}" />
+        <TextBox x:Name="ConnectionNameBox" MaxLength="128"
+                 AutomationProperties.Name="连接名称"
+                 AutomationProperties.HelpText="用于在客户端中识别这条连接" />
+
+        <Label Content="公网子域" Target="{Binding ElementName=SubdomainBox}" Margin="0,4,0,0" />
+        <TextBox x:Name="SubdomainBox" MaxLength="63"
+                 AutomationProperties.Name="公网子域"
+                 AutomationProperties.HelpText="只能包含小写字母、数字和连字符" />
+        <TextBlock x:Name="PublicAddressHint" Text="发布地址：https://&lt;子域&gt;.tunnel.example.com"
+                   Style="{StaticResource CaptionTextStyle}" Margin="1,5,0,0" />
+
+        <Grid Margin="0,4,0,0">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <StackPanel Grid.Column="0">
+            <Label Content="本地协议" Target="{Binding ElementName=SchemeBox}" />
+            <ComboBox x:Name="SchemeBox" SelectedIndex="0" AutomationProperties.Name="本地协议">
+              <ComboBoxItem Content="http" />
+              <ComboBoxItem Content="https" />
+            </ComboBox>
+          </StackPanel>
+          <StackPanel Grid.Column="2">
+            <Label Content="连接状态" Target="{Binding ElementName=EnabledBox}" />
+            <Border MinHeight="44" Background="{StaticResource SurfaceMutedBrush}"
+                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                    CornerRadius="8" Padding="10,5">
+              <CheckBox x:Name="EnabledBox" Content="启用公网访问" IsChecked="True" />
+            </Border>
+          </StackPanel>
+        </Grid>
+
+        <Grid Margin="0,4,0,0">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1.45*" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <StackPanel Grid.Column="0">
+            <Label Content="本地主机" Target="{Binding ElementName=LocalHostBox}" />
+            <TextBox x:Name="LocalHostBox" Text="127.0.0.1" MaxLength="255"
+                     AutomationProperties.Name="本地主机" />
+          </StackPanel>
+          <StackPanel Grid.Column="2">
+            <Label Content="本地端口" Target="{Binding ElementName=LocalPortBox}" />
+            <TextBox x:Name="LocalPortBox" MaxLength="5"
+                     AutomationProperties.Name="本地端口" />
+          </StackPanel>
+        </Grid>
+
+        <TextBlock x:Name="DialogError" Text="" Style="{StaticResource ErrorTextStyle}"
+                   AutomationProperties.LiveSetting="Assertive" />
+      </StackPanel>
+    </ScrollViewer>
+
+    <Border Grid.Row="2" Background="{StaticResource SurfaceMutedBrush}"
+            BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0"
+            Padding="16,12">
+      <Grid>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0">
+          <Button x:Name="DeleteButton" Content="删除连接"
+                  Style="{StaticResource DangerButtonStyle}" HorizontalAlignment="Left"
+                  MinWidth="104" Click="DeleteButton_Click" />
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button x:Name="CancelButton" Content="取消"
+                    Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"
+                    Click="CancelButton_Click" />
+            <Button x:Name="SaveButton" Content="保存连接" MinWidth="112"
+                    IsDefault="True" Click="SaveButton_Click" />
+          </StackPanel>
+        </Grid>
+        <StackPanel Grid.Row="1" x:Name="BusyPanel" Visibility="Collapsed" Margin="0,10,0,0">
+          <ProgressBar Height="3" IsIndeterminate="True"
+                       Foreground="{StaticResource PrimaryBrush}"
+                       Background="{StaticResource PrimaryBorderBrush}" />
+          <TextBlock x:Name="BusyText" Text="正在保存…" Style="{StaticResource CaptionTextStyle}"
+                     HorizontalAlignment="Right" Margin="0,5,0,0"
+                     AutomationProperties.LiveSetting="Polite" />
+        </StackPanel>
+      </Grid>
+    </Border>
+  </Grid>
+</Window>

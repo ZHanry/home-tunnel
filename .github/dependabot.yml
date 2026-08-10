@@ -1,0 +1,36 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /control-center
+    schedule:
+      interval: weekly
+    groups:
+      control-center-dependencies:
+        patterns: ["*"]
+  - package-ecosystem: npm
+    directory: /traffic-gateway
+    schedule:
+      interval: weekly
+    groups:
+      gateway-dependencies:
+        patterns: ["*"]
+  - package-ecosystem: nuget
+    directory: /windows-client
+    schedule:
+      interval: weekly
+  - package-ecosystem: docker
+    directory: /control-center
+    schedule:
+      interval: weekly
+  - package-ecosystem: docker
+    directory: /traffic-gateway
+    schedule:
+      interval: weekly
+  - package-ecosystem: docker
+    directory: /deploy/frps
+    schedule:
+      interval: weekly
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

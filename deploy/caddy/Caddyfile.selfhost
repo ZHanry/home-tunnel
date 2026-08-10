@@ -1,0 +1,21 @@
+{
+    email {$HOME_TUNNEL_ACME_EMAIL}
+    on_demand_tls {
+        ask http://control-center:8080/internal/tls/allow
+    }
+}
+
+{$HOME_TUNNEL_CONSOLE_HOST} {
+    tls {
+        on_demand
+    }
+    encode zstd gzip
+    reverse_proxy control-center:8080
+}
+
+*.{$HOME_TUNNEL_TUNNEL_DOMAIN} {
+    tls {
+        on_demand
+    }
+    reverse_proxy traffic-gateway:8080
+}

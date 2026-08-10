@@ -1,0 +1,5 @@
+    # BEGIN HOME TUNNEL ON-DEMAND TLS v1.2
+    on_demand_tls {
+        ask http://home-tunnel-control-center:8080/internal/tls/allow
+    }
+    # END HOME TUNNEL ON-DEMAND TLS v1.2

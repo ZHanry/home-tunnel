@@ -1,0 +1,16 @@
+# BEGIN HOME TUNNEL v1.2
+console.tunnel.example.com {
+    tls {
+        on_demand
+    }
+    encode zstd gzip
+    reverse_proxy home-tunnel-control-center:8080
+}
+
+*.tunnel.example.com {
+    tls {
+        on_demand
+    }
+    reverse_proxy home-tunnel-traffic-gateway:8080
+}
+# END HOME TUNNEL v1.2

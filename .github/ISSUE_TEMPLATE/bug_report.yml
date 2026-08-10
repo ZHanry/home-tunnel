@@ -1,0 +1,63 @@
+name: Bug report
+description: Report a reproducible Home Tunnel problem without including secrets.
+title: "[Bug]: "
+labels: [bug, triage]
+body:
+  - type: markdown
+    attributes:
+      value: Do not include passwords, tokens, private keys, full diagnostic archives or unredacted public infrastructure details.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      placeholder: 2.2.4
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Windows client / Agent
+        - Control center
+        - Traffic gateway
+        - FRPS / Caddy
+        - Docker Compose / deployment
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, architecture, Docker/.NET versions and relevant network topology. Redact public addresses if unnecessary.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior and redacted logs
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues.
+          required: true
+        - label: I removed credentials and personal data.
+          required: true
+        - label: This is not a security vulnerability.
+          required: true
