@@ -11,6 +11,6 @@ transport.tcpKeepalive = 7200
 
 [[httpPlugins]]
 name = "home-tunnel-authorization"
-addr = "home-tunnel-control-center:8080"
+addr = "control-center:8080"
 path = "/internal/frps/plugin/__PLUGIN_TOKEN__"
 ops = ["Login", "NewProxy", "CloseProxy"]

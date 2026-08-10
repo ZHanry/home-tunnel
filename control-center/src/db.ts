@@ -87,7 +87,7 @@ function intervalSeconds(amount: string, unit: string): number {
   return value * 24 * 60 * 60;
 }
 
-function normalizeSql(text: string): string {
+function normalizeSql(text: string): { sql: string; bindingIndexes: number[] } {
   let sql = text;
   sql = sql.replace(/\$(\d+)::(?:uuid|text|jsonb|timestamptz|int|integer|bigint|inet)(?:\[\])?/gi, "?$1");
   sql = sql.replace(/\$(\d+)/g, "?$1");
@@ -113,7 +113,12 @@ function normalizeSql(text: string): string {
   sql = sql.replace(/\bto_timestamp\s*\(/gi, "home_tunnel_from_unix(");
   sql = sql.replace(/\bdate_trunc\s*\(\s*'hour'\s*,/gi, "home_tunnel_hour(");
   sql = sql.replace(/\bnow\(\)/gi, "home_tunnel_now()");
-  return sql.trim();
+  const bindingIndexes: number[] = [];
+  sql = sql.replace(/\?(\d+)/g, (_match, index: string) => {
+    bindingIndexes.push(Number(index) - 1);
+    return "?";
+  });
+  return { sql: sql.trim(), bindingIndexes };
 }
 
 function databaseError(error: unknown): never {
@@ -163,10 +168,18 @@ class SqliteClient implements DatabaseClient {
   outboxChanged = false;
 
   async query<T extends DatabaseRow = DatabaseRow>(text: string, values: unknown[] = []): Promise<QueryResult<T>> {
-    const sql = normalizeSql(text);
+    const { sql, bindingIndexes } = normalizeSql(text);
     try {
       const statement = database.prepare(sql);
-      const bindings = values.map(bindValue);
+      const orderedValues = bindingIndexes.length
+        ? bindingIndexes.map((index) => {
+            if (index < 0 || index >= values.length) {
+              throw new Error(`Missing SQLite binding for parameter $${index + 1}`);
+            }
+            return values[index];
+          })
+        : values;
+      const bindings = orderedValues.map(bindValue);
       const hasRows = statement.columns().length > 0;
       if (hasRows) {
         const rows = statement.all(...bindings).map((row) => decodeRow<T>(row));

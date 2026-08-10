@@ -1,7 +1,11 @@
 FROM golang:1.23.12-bookworm AS build
 ARG FRP_VERSION=v0.62.1
+ARG FRP_COMMIT=b41d8f8e4074c4f633fb67d7d31b97db59472674
 ENV CGO_ENABLED=0
-RUN go install -trimpath -ldflags="-s -w -buildid=" github.com/fatedier/frp/cmd/frps@${FRP_VERSION}
+RUN git clone --depth 1 --branch "${FRP_VERSION}" https://github.com/fatedier/frp.git /src/frp \
+    && test "$(git -C /src/frp rev-parse HEAD)" = "${FRP_COMMIT}" \
+    && cd /src/frp \
+    && go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /go/bin/frps ./cmd/frps
 
 FROM alpine:3.22
 ARG FRP_VERSION=v0.62.1
