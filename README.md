@@ -5,16 +5,16 @@
   <p><a href="https://github.com/ZHanry/home-tunnel/actions/workflows/ci.yml"><img src="https://github.com/ZHanry/home-tunnel/actions/workflows/ci.yml/badge.svg" alt="CI"></a></p>
 </div>
 
-Home Tunnel 把 FRP、自动 HTTPS、访问策略、管理后台和 Windows 图形客户端组合成一套完整工具。它适合安全发布 NAS、Home Assistant、开发预览等私网 HTTP/HTTPS 服务，同时保留可审计、可限速、可撤销的集中控制。
+Home Tunnel 把 FRP、自动 HTTPS、访问策略、管理后台和 Windows 图形客户端组合成一套完整工具。它适合安全发布 NAS、Home Assistant、开发预览等私网 HTTP/HTTPS 服务，同时保留可审计、可限速、可立即停止的集中控制。
 
-> 当前版本为 `2.2.4`。服务端支持从源码构建的 `amd64`/`arm64` 容器；桌面客户端目前仅支持 Windows 10/11 x64。客户端不内置任何运营者域名或 IP，首次登录时由用户填写自己的控制中心 HTTPS 地址。
+> 当前版本为 `2.2.5`。服务端支持从源码构建的 `amd64`/`arm64` 容器；桌面客户端目前仅支持 Windows 10/11 x64。客户端不内置任何运营者域名或 IP，首次登录时由用户填写自己的控制中心 HTTPS 地址。
 
 ## 为什么使用 Home Tunnel
 
 - **Windows 友好**：图形化登录、连接管理、系统托盘、自动启动、诊断导出和安全更新。
 - **自动 HTTPS**：Caddy 作为唯一公网 Web 入口，按已分配域名签发证书。
 - **能力受限的 Agent**：基于固定 FRP 0.62.1 源码构建，只接受与用户所选服务器一致的 Home Tunnel HTTP 隧道配置。
-- **集中策略**：用户、设备、连接、带宽、租约和撤销状态统一管理。
+- **集中策略**：用户、设备、连接、带宽和租约状态统一管理。
 - **默认隔离**：数据库、控制中心和网关不直接发布主机端口；容器采用只读文件系统和最小能力集。
 - **可运维**：健康检查、审计事件、流量聚合、备份与回滚工具，以及版本化发布元数据。
 

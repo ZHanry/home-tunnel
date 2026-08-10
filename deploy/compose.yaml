@@ -40,7 +40,7 @@ services:
       options: { max-size: 10m, max-file: "5" }
 
   control-center:
-    image: home-tunnel/control-center:2.2.4-arm64
+    image: home-tunnel/control-center:2.2.5-arm64
     pull_policy: never
     container_name: home-tunnel-control-center
     restart: unless-stopped
@@ -110,7 +110,7 @@ services:
     logging: *logging
 
   traffic-gateway:
-    image: home-tunnel/traffic-gateway:2.2.4-arm64
+    image: home-tunnel/traffic-gateway:2.2.5-arm64
     pull_policy: never
     container_name: home-tunnel-traffic-gateway
     restart: unless-stopped

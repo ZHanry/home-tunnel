@@ -21,10 +21,10 @@ internal sealed record AgentTrustProfile(string Server, int Port, string Domain)
 
 public sealed class FrpcSupervisor : IDisposable
 {
-    public const string Version = "2.2.4";
+    public const string Version = "2.2.5";
     public const string FrpVersion = "0.62.1";
     public const string BinaryFileName = "HomeTunnel.Agent.exe";
-    private const string DevelopmentSha256 = "eee75a6ca45dd539d57ff6e2a6790579919de5105264ad3cdd0008fcbce234e5";
+    private const string DevelopmentSha256 = "79fe1aca57639e3592a16135695d4ba1b5c0a77872104f4c6f4e609188555024";
     public static string ExpectedSha256 { get; } = ReadAssemblyMetadata("HomeTunnelAgentSha256") ?? DevelopmentSha256;
     public static string? ExpectedSignerThumbprint { get; } = NormalizeOptional(ReadAssemblyMetadata("HomeTunnelAgentSignerThumbprint"));
 

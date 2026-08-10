@@ -4,6 +4,12 @@ All notable changes to Home Tunnel are documented in this file. The project foll
 
 ## [Unreleased]
 
+## [2.2.5] - 2026-08-10
+
+- Increased the Windows login window height and removed the visible login-page scrollbar.
+- Replaced device revocation in the administration UI with permanent device deletion, including associated sessions, connections, runtime state and traffic detail.
+- Rejected missing or documentation-only public FRPS endpoints in production so new clients cannot receive an unusable placeholder address.
+
 ## [2.2.4] - 2026-08-10
 
 - Prepared the source tree for public GitHub development.

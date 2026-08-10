@@ -198,7 +198,7 @@ Trust: Internal self-signed certificate; a publicly trusted code-signing certifi
 Agent SHA-256: $signedAgentHash
 Agent: Purpose-built Home Tunnel Agent $Version based on pinned FRP 0.62.1 source.
 "@, [Text.UTF8Encoding]::new($false))
-    [IO.File]::WriteAllText((Join-Path $OutputDirectory "README-EXE安装.txt"), @"
+    [IO.File]::WriteAllText((Join-Path $OutputDirectory "README-EXE.txt"), @"
 Home Tunnel $Version Windows x64 安装包
 
 1. 双击 HomeTunnel-Setup-$Version-x64.exe，按向导完成安装。
@@ -213,7 +213,7 @@ SHA-256: $installerHash
         $installerInfo.Name,
         "HomeTunnel-Internal-Code-Signing.cer",
         "latest.json",
-        "README-EXE安装.txt",
+        "README-EXE.txt",
         "SIGNATURE.txt"
     )
     $hashLines = $releaseArtifactNames |

@@ -323,7 +323,7 @@ async function renderDevices(renderId = state.renderId) {
   if (renderId !== state.renderId) return;
   state.devices = data.items;
   viewContent.innerHTML = `
-    <section class="panel table-panel">${state.devices.length ? `<table class="data-table"><thead><tr><th>设备</th><th>用户</th><th>状态</th><th>配置版本</th><th class="hide-tablet">最后在线</th><th class="hide-tablet">租约到期</th><th><span class="visually-hidden">操作</span></th></tr></thead><tbody>${state.devices.map((device) => `<tr><td data-label="设备"><span class="cell-primary">${escapeHtml(device.name)}</span><span class="cell-secondary mono">${escapeHtml(device.id.slice(0, 8))} · ${escapeHtml(device.client_version ?? "未知版本")}</span></td><td data-label="用户">${escapeHtml(device.username)}</td><td data-label="状态">${statusBadge(device.status === "active" && device.online ? "active" : device.status === "active" ? "Offline" : device.status)}</td><td data-label="配置版本" class="mono">${device.applied_config_version} / ${device.config_version}</td><td data-label="最后在线" class="hide-tablet">${formatDate(device.last_seen_at)}</td><td data-label="租约到期" class="hide-tablet">${formatDate(device.lease_expires_at)}</td><td class="actions-cell"><div class="actions">${device.status === "active" ? `<button class="button button-danger button-small" data-action="revoke-device" data-id="${device.id}" data-name="${escapeHtml(device.name)}">撤销</button>` : ""}</div></td></tr>`).join("")}</tbody></table>` : emptyState("还没有注册设备", "用户在 Windows 客户端完成首次改密后可注册设备。")}</section>`;
+    <section class="panel table-panel">${state.devices.length ? `<table class="data-table"><thead><tr><th>设备</th><th>用户</th><th>状态</th><th>配置版本</th><th class="hide-tablet">最后在线</th><th class="hide-tablet">租约到期</th><th><span class="visually-hidden">操作</span></th></tr></thead><tbody>${state.devices.map((device) => `<tr><td data-label="设备"><span class="cell-primary">${escapeHtml(device.name)}</span><span class="cell-secondary mono">${escapeHtml(device.id.slice(0, 8))} · ${escapeHtml(device.client_version ?? "未知版本")}</span></td><td data-label="用户">${escapeHtml(device.username)}</td><td data-label="状态">${statusBadge(device.status === "active" && device.online ? "active" : device.status === "active" ? "Offline" : device.status)}</td><td data-label="配置版本" class="mono">${device.applied_config_version} / ${device.config_version}</td><td data-label="最后在线" class="hide-tablet">${formatDate(device.last_seen_at)}</td><td data-label="租约到期" class="hide-tablet">${formatDate(device.lease_expires_at)}</td><td class="actions-cell"><div class="actions"><button class="button button-danger button-small" data-action="delete-device" data-id="${device.id}" data-name="${escapeHtml(device.name)}" aria-label="删除设备 ${escapeHtml(device.name)}">删除</button></div></td></tr>`).join("")}</tbody></table>` : emptyState("还没有注册设备", "用户在 Windows 客户端完成首次改密后可注册设备。")}</section>`;
 }
 
 async function renderConnections(renderId = state.renderId) {
@@ -547,9 +547,9 @@ appShell.addEventListener("click", async (event) => {
       modal.close("done"); toast(disabling ? "账号禁用正在收敛" : "账号已恢复"); await renderUsers();
     });
   }
-  if (action === "revoke-device") {
-    confirmAction("撤销设备", `设备“${button.dataset.name}”的旧凭据、会话和租约将立即失效。`, "确认撤销", async () => {
-      await api(`/api/v1/admin/devices/${button.dataset.id}/revoke`, { method: "POST", body: "{}" }); modal.close("done"); toast("设备撤销正在收敛"); await renderDevices();
+  if (action === "delete-device") {
+    confirmAction("删除设备", `设备“${button.dataset.name}”的凭据、会话、租约、连接和流量明细将被删除，且无法恢复。`, "确认删除", async () => {
+      await api(`/api/v1/admin/devices/${button.dataset.id}`, { method: "DELETE", body: "{}" }); modal.close("done"); toast("设备已删除"); await renderDevices();
     });
   }
   if (action === "create-connection") await openCreateConnection();

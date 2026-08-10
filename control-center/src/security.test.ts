@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
 import test from "node:test";
 
+process.env.NODE_ENV = "test";
 process.env.PGPASSWORD = "test-postgres-password";
 process.env.INTERNAL_SERVICE_KEY = "11".repeat(32);
 process.env.FRPS_PLUGIN_KEY = "22".repeat(32);

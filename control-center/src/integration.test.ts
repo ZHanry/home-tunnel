@@ -8,6 +8,7 @@ const enabled = process.env.RUN_INTEGRATION === "1";
 export async function runIntegrationSuite(): Promise<void> {
   assert.ok(process.env.PGPASSWORD, "PGPASSWORD is required for integration tests");
   assert.ok(process.env.BOOTSTRAP_ADMIN_PASSWORD, "BOOTSTRAP_ADMIN_PASSWORD is required for integration tests");
+  process.env.NODE_ENV = "test";
   process.env.INTERNAL_SERVICE_KEY ??= "11".repeat(32);
   process.env.FRPS_PLUGIN_KEY ??= "22".repeat(32);
   process.env.LEASE_SIGNING_KEY ??= "33".repeat(32);
@@ -306,10 +307,38 @@ export async function runIntegrationSuite(): Promise<void> {
     assert.equal(stalePing.payload.reject, true);
     assert.equal(stalePing.payload.reject_reason, "LEASE_EXPIRED");
 
+    const deletedDevice = await call("DELETE", `/api/v1/admin/devices/${deviceId}`, {}, adminToken);
+    assert.equal(deletedDevice.status, 204);
+    const devicesAfterDelete = await call("GET", "/api/v1/admin/devices", undefined, adminToken);
+    assert.equal(devicesAfterDelete.status, 200);
+    assert.equal(devicesAfterDelete.payload.items.some((item: any) => item.id === deviceId), false);
+    const storedDevice = await database.query<{ count: string }>(
+      "SELECT count(*)::text AS count FROM devices WHERE id=$1",
+      [deviceId],
+    );
+    const storedConnections = await database.query<{ count: string }>(
+      "SELECT count(*)::text AS count FROM connections WHERE device_id=$1",
+      [deviceId],
+    );
+    const storedTraffic = await database.query<{ count: string }>(
+      `SELECT (SELECT count(*) FROM traffic_samples WHERE device_id=$1) +
+              (SELECT count(*) FROM traffic_hourly WHERE device_id=$1) AS count`,
+      [deviceId],
+    );
+    assert.equal(Number(storedDevice[0]?.count), 0);
+    assert.equal(Number(storedConnections[0]?.count), 0);
+    assert.equal(Number(storedTraffic[0]?.count), 0);
+    const policiesAfterDelete = await call("GET", "/internal/policies/sync", undefined, undefined, {
+      "x-home-tunnel-key": process.env.INTERNAL_SERVICE_KEY!,
+    });
+    assert.equal(policiesAfterDelete.status, 200);
+    assert.equal(policiesAfterDelete.payload.connections.some((item: any) => item.connection_id === connectionId), false);
+
     const auditEvents = await call("GET", "/api/v1/admin/audit-events?limit=200", undefined, adminToken);
     assert.equal(auditEvents.status, 200);
     assert.ok(auditEvents.payload.items.some((item: any) => item.action === "DeviceSessionRevoked"));
     assert.ok(auditEvents.payload.items.some((item: any) => item.action === "ConnectionUpdated"));
+    assert.ok(auditEvents.payload.items.some((item: any) => item.action === "DeviceDeleted"));
 
     const filteredAudit = await call(
       "GET",

@@ -38,7 +38,7 @@ printf 'Ht-%s-A7!\n' "$(openssl rand -hex 18)" > "$secret_root/bootstrap_admin_p
 chmod 0600 "$secret_root"/*
 
 cat > "$environment_path" <<EOF
-HOME_TUNNEL_VERSION=2.2.4
+HOME_TUNNEL_VERSION=2.2.5
 HOME_TUNNEL_CONSOLE_HOST=$console_host
 HOME_TUNNEL_TUNNEL_DOMAIN=$tunnel_domain
 HOME_TUNNEL_PUBLIC_BASE_URL=https://$console_host

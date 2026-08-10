@@ -102,14 +102,14 @@ public partial class MainWindow : Window
             Dispatcher.BeginInvoke(() =>
             {
                 var release = new ReleaseMetadata(
-                    "2.2.4",
+                    "2.2.6",
                     "windows",
                     "x64",
-                    "HomeTunnel-Setup-2.2.4-x64.exe",
+                    "HomeTunnel-Setup-2.2.6-x64.exe",
                     58_900_000,
                     new string('a', 64),
                     DateTimeOffset.Now.AddDays(-1),
-                    "https://github.com/ZHanry/home-tunnel/releases/download/v2.2.4/HomeTunnel-Setup-2.2.4-x64.exe",
+                    "https://github.com/ZHanry/home-tunnel/releases/download/v2.2.6/HomeTunnel-Setup-2.2.6-x64.exe",
                     "https://github.com/ZHanry/home-tunnel/releases/latest");
                 UpdateDialog.Available(
                     this,
@@ -1305,7 +1305,7 @@ public partial class MainWindow : Window
     private void ApplyWorkAreaBounds()
     {
         var workArea = SystemParameters.WorkArea;
-        Height = Math.Max(520, Math.Min(680, workArea.Height - 16));
+        Height = Math.Max(520, Math.Min(720, workArea.Height - 16));
         Width = 460;
     }
 

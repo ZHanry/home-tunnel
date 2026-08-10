@@ -1,5 +1,7 @@
 import { readFileSync } from "node:fs";
 
+const nodeEnvironment = process.env.NODE_ENV ?? "production";
+
 function integer(name: string, fallback: number): number {
   const raw = process.env[name];
   if (!raw) return fallback;
@@ -28,13 +30,29 @@ function secret(name: string, fileName: string, required = true): string {
   return "";
 }
 
+function publicFrpsHost(): string {
+  const value = process.env.PUBLIC_FRPS_HOST?.trim();
+  if (!value) {
+    if (nodeEnvironment === "production") throw new Error("PUBLIC_FRPS_HOST is required in production");
+    return "203.0.113.10";
+  }
+  if (value.length > 253 || /[\s/\\]/.test(value)) throw new Error("PUBLIC_FRPS_HOST is invalid");
+  if (
+    nodeEnvironment === "production" &&
+    (/^(?:192\.0\.2|198\.51\.100|203\.0\.113)\.\d{1,3}$/.test(value) || /(?:^|\.)example(?:\.(?:com|net|org))?$/i.test(value))
+  ) {
+    throw new Error("PUBLIC_FRPS_HOST must not use a documentation placeholder in production");
+  }
+  return value;
+}
+
 export const config = {
-  nodeEnv: process.env.NODE_ENV ?? "production",
+  nodeEnv: nodeEnvironment,
   port: integer("PORT", 8080),
   publicBaseUrl: process.env.PUBLIC_BASE_URL ?? "https://console.tunnel.example.com",
   downloadsDirectory: process.env.DOWNLOADS_DIRECTORY ?? "/app/downloads",
   tunnelDomain: (process.env.TUNNEL_DOMAIN ?? "tunnel.example.com").toLowerCase(),
-  publicFrpsHost: process.env.PUBLIC_FRPS_HOST ?? "203.0.113.10",
+  publicFrpsHost: publicFrpsHost(),
   publicFrpsPort: integer("PUBLIC_FRPS_PORT", 7000),
   cookieSecure: boolean("COOKIE_SECURE", true),
   database: {

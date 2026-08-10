@@ -45,7 +45,7 @@ internal static class Program
 
     private static void TestSemanticVersions()
     {
-        Assert(AppVersion.Current == "2.2.4", "client version must be 2.2.4");
+        Assert(AppVersion.Current == "2.2.5", "client version must be 2.2.5");
         Assert(
             typeof(AppVersion).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion == AppVersion.Current,
             "public client version metadata does not expose a local source revision");
@@ -149,21 +149,21 @@ internal static class Program
 
     private static void TestTrustedDownloadUrls()
     {
-        var trustedInstaller = GitHubDownloadUri("2.2.4");
+        var trustedInstaller = GitHubDownloadUri("2.2.5");
         var absolute = UpdateService.ResolveTrustedDownloadUri(trustedInstaller.AbsoluteUri);
         Assert(absolute == trustedInstaller, "versioned GitHub release URL accepted");
 
         var malicious = new[]
         {
-            "http://github.com/ZHanry/home-tunnel/releases/download/v2.2.4/HomeTunnel-Setup-2.2.4-x64.exe",
-            "https://evil.example/ZHanry/home-tunnel/releases/download/v2.2.4/HomeTunnel-Setup-2.2.4-x64.exe",
-            "https://github.com@evil.example/ZHanry/home-tunnel/releases/download/v2.2.4/HomeTunnel-Setup-2.2.4-x64.exe",
-            "https://github.com/ZHanry/home-tunnel/releases/download/v2.2.4/HomeTunnel-Setup-2.2.4-x64.exe?redirect=evil",
-            "https://github.com/another/repository/releases/download/v2.2.4/HomeTunnel-Setup-2.2.4-x64.exe",
-            "https://github.com/ZHanry/home-tunnel/releases/latest/download/HomeTunnel-Setup-2.2.4-x64.exe",
-            "https://github.com/ZHanry/home-tunnel/releases/download/v2.2.5/HomeTunnel-Setup-2.2.4-x64.exe",
-            "https://github.com/ZHanry/home-tunnel/releases/download/v2.2.4/sub/HomeTunnel-Setup-2.2.4-x64.exe",
-            "/downloads/HomeTunnel-Setup-2.2.4-x64.exe",
+            "http://github.com/ZHanry/home-tunnel/releases/download/v2.2.5/HomeTunnel-Setup-2.2.5-x64.exe",
+            "https://evil.example/ZHanry/home-tunnel/releases/download/v2.2.5/HomeTunnel-Setup-2.2.5-x64.exe",
+            "https://github.com@evil.example/ZHanry/home-tunnel/releases/download/v2.2.5/HomeTunnel-Setup-2.2.5-x64.exe",
+            "https://github.com/ZHanry/home-tunnel/releases/download/v2.2.5/HomeTunnel-Setup-2.2.5-x64.exe?redirect=evil",
+            "https://github.com/another/repository/releases/download/v2.2.5/HomeTunnel-Setup-2.2.5-x64.exe",
+            "https://github.com/ZHanry/home-tunnel/releases/latest/download/HomeTunnel-Setup-2.2.5-x64.exe",
+            "https://github.com/ZHanry/home-tunnel/releases/download/v2.2.6/HomeTunnel-Setup-2.2.5-x64.exe",
+            "https://github.com/ZHanry/home-tunnel/releases/download/v2.2.5/sub/HomeTunnel-Setup-2.2.5-x64.exe",
+            "/downloads/HomeTunnel-Setup-2.2.5-x64.exe",
         };
         foreach (var value in malicious)
         {
@@ -173,15 +173,15 @@ internal static class Program
 
     private static async Task TestReleaseValidationAsync()
     {
-        var validPayload = ReleasePayload("2.2.5", GitHubDownloadUri("2.2.5").AbsoluteUri);
+        var validPayload = ReleasePayload("2.2.6", GitHubDownloadUri("2.2.6").AbsoluteUri);
         using (var service = new UpdateService(new StaticJsonHandler(validPayload)))
         {
             var result = await service.CheckAsync(CancellationToken.None);
             Assert(result.IsUpdateAvailable, "newer release detected");
-            Assert(result.Release.Version == "2.2.5", "release metadata parsed");
+            Assert(result.Release.Version == "2.2.6", "release metadata parsed");
         }
 
-        var maliciousPayload = ReleasePayload("2.2.5", "https://evil.example/downloads/HomeTunnel-Setup-2.2.5-x64.exe");
+        var maliciousPayload = ReleasePayload("2.2.6", "https://evil.example/downloads/HomeTunnel-Setup-2.2.6-x64.exe");
         using var maliciousService = new UpdateService(new StaticJsonHandler(maliciousPayload));
         await AssertThrowsAsync<InvalidDataException>(
             () => maliciousService.CheckAsync(CancellationToken.None),
@@ -193,16 +193,16 @@ internal static class Program
         var bytes = Enumerable.Range(0, 260_123).Select(index => (byte)(index * 31 % 251)).ToArray();
         var hash = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
         var payload = ReleasePayload(
-            "2.2.5",
-            GitHubDownloadUri("2.2.5").AbsoluteUri,
+            "2.2.6",
+            GitHubDownloadUri("2.2.6").AbsoluteUri,
             bytes.Length,
             hash);
         var root = Path.Combine(Path.GetTempPath(), $"HomeTunnel-UpdateService-Test-{Guid.NewGuid():N}");
         try
         {
-            var versionDirectory = Path.Combine(root, "2.2.5");
+            var versionDirectory = Path.Combine(root, "2.2.6");
             Directory.CreateDirectory(versionDirectory);
-            var partial = Path.Combine(versionDirectory, "HomeTunnel-Setup-2.2.5-x64.exe.part");
+            var partial = Path.Combine(versionDirectory, "HomeTunnel-Setup-2.2.6-x64.exe.part");
             await File.WriteAllBytesAsync(partial, bytes[..8192]);
 
             var handler = new UpdateHandler(payload, bytes);
@@ -232,8 +232,8 @@ internal static class Program
             Assert(!File.Exists(installer), "tampered cached installer removed");
 
             var badPayload = ReleasePayload(
-                "2.2.5",
-                GitHubDownloadUri("2.2.5").AbsoluteUri,
+                "2.2.6",
+                GitHubDownloadUri("2.2.6").AbsoluteUri,
                 bytes.Length,
                 new string('0', 64));
             using var badService = new UpdateService(
@@ -258,7 +258,7 @@ internal static class Program
     {
         var bytes = Enumerable.Range(0, 32_777).Select(index => (byte)(index * 17 % 251)).ToArray();
         var hash = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
-        var payload = ReleasePayload("2.2.5", GitHubDownloadUri("2.2.5").AbsoluteUri, bytes.Length, hash);
+        var payload = ReleasePayload("2.2.6", GitHubDownloadUri("2.2.6").AbsoluteUri, bytes.Length, hash);
         var root = Path.Combine(Path.GetTempPath(), $"HomeTunnel-GitHub-Redirect-Test-{Guid.NewGuid():N}");
         try
         {
@@ -448,7 +448,7 @@ internal static class Program
                 MetadataRedirects++;
                 return Task.FromResult(Redirect(
                     request,
-                    "https://github.com/ZHanry/home-tunnel/releases/download/v2.2.5/latest.json"));
+                    "https://github.com/ZHanry/home-tunnel/releases/download/v2.2.6/latest.json"));
             }
             if (uri.Host == "github.com" && uri.AbsolutePath.EndsWith("/latest.json", StringComparison.Ordinal))
             {
@@ -459,7 +459,7 @@ internal static class Program
             }
             if (uri.Host == "release-assets.githubusercontent.com" && uri.AbsolutePath == "/github-metadata/latest.json")
                 return Task.FromResult(Ok(request, new StringContent(metadata, Encoding.UTF8, "application/json")));
-            if (uri.Host == "github.com" && uri.AbsolutePath.EndsWith("HomeTunnel-Setup-2.2.5-x64.exe", StringComparison.Ordinal))
+            if (uri.Host == "github.com" && uri.AbsolutePath.EndsWith("HomeTunnel-Setup-2.2.6-x64.exe", StringComparison.Ordinal))
             {
                 InstallerRedirects++;
                 return Task.FromResult(Redirect(

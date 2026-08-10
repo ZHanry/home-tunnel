@@ -28,8 +28,6 @@ import {
   generateTemporaryPassword,
   hashPassword,
   normalizeUsername,
-  opaqueToken,
-  tokenHash,
 } from "../security.js";
 import { nullableBandwidth, parseBody } from "../validation.js";
 import { config } from "../config.js";
@@ -430,42 +428,65 @@ router.get(
   }),
 );
 
-router.post(
-  "/devices/:deviceId/revoke",
-  asyncHandler(async (request, response) => {
-    adminGuard(request);
-    const deviceId = pathParam(request, "deviceId");
-    const revokedCredentialHash = tokenHash(opaqueToken(48));
-    await transaction(async (client) => {
-      const current = await client.query<{ id: string; user_id: string; status: string; config_version: string }>(
-        "SELECT id::text,user_id::text,status,config_version::text FROM devices WHERE id=$1 FOR UPDATE",
-        [deviceId],
-      );
-      const device = current.rows[0];
-      if (!device) throw new HttpError(404, "NOT_FOUND", "设备不存在");
-      await client.query(
-        `UPDATE devices SET status='revoked',credential_hash=$2,
-           revoked_at=now(),lease_expires_at=now(),config_version=config_version+1,updated_at=now() WHERE id=$1`,
-        [deviceId, revokedCredentialHash],
-      );
-      await client.query("UPDATE sessions SET revoked_at=COALESCE(revoked_at,now()),updated_at=now() WHERE device_id=$1", [
+const deleteDeviceHandler = asyncHandler(async (request, response) => {
+  adminGuard(request);
+  const deviceId = pathParam(request, "deviceId");
+  await transaction(async (client) => {
+    const current = await client.query<{ id: string; user_id: string; status: string; config_version: string }>(
+      "SELECT id::text,user_id::text,status,config_version::text FROM devices WHERE id=$1 FOR UPDATE",
+      [deviceId],
+    );
+    const device = current.rows[0];
+    if (!device) throw new HttpError(404, "NOT_FOUND", "设备不存在");
+
+    const connections = await client.query<{ id: string }>(
+      "SELECT id::text FROM connections WHERE device_id=$1 FOR UPDATE",
+      [deviceId],
+    );
+    const connectionIds = connections.rows.map((connection) => connection.id);
+
+    // Keep the revocation event name for older clients while making deletion the
+    // management and storage semantic. The event also advances gateway policy revision.
+    await client.query(
+      `INSERT INTO outbox_events(event_type,resource_type,resource_id,resource_version,recipient_user_id,recipient_device_id,payload)
+       VALUES('subject.revoked','Device',$1::text,$2,$3,$1::uuid,$4)`,
+      [
         deviceId,
-      ]);
+        Number(device.config_version) + 1,
+        device.user_id,
+        JSON.stringify({ subject_type: "device", subject_id: deviceId, action: "delete", deleted: true }),
+      ],
+    );
+
+    await client.query("DELETE FROM sessions WHERE device_id=$1", [deviceId]);
+    await client.query("DELETE FROM traffic_hourly WHERE device_id=$1", [deviceId]);
+    await client.query("DELETE FROM traffic_samples WHERE device_id=$1", [deviceId]);
+    if (connectionIds.length) {
+      await client.query("DELETE FROM runtime_states WHERE connection_id=ANY($1::uuid[])", [connectionIds]);
       await client.query(
-        `INSERT INTO outbox_events(event_type,resource_type,resource_id,resource_version,recipient_user_id,recipient_device_id,payload)
-         VALUES('subject.revoked','Device',$1::text,$2,$3,$1::uuid,$4)`,
-        [
-          deviceId,
-          Number(device.config_version) + 1,
-          device.user_id,
-          JSON.stringify({ subject_type: "device", subject_id: deviceId }),
-        ],
+        "DELETE FROM traffic_policies WHERE scope_type='connection' AND scope_id=ANY($1::uuid[])",
+        [connectionIds],
       );
-      await audit(client, request, "DeviceRevoked", "Device", deviceId, { status: device.status }, { status: "revoked" });
-    });
-    response.status(202).json({ status: "revoked" });
-  }),
-);
+    }
+    await client.query("DELETE FROM connections WHERE device_id=$1", [deviceId]);
+    await client.query("DELETE FROM devices WHERE id=$1", [deviceId]);
+    await audit(
+      client,
+      request,
+      "DeviceDeleted",
+      "Device",
+      deviceId,
+      { status: device.status, connection_count: connectionIds.length },
+      { deleted: true },
+    );
+  });
+  response.status(204).end();
+});
+
+router.delete("/devices/:deviceId", deleteDeviceHandler);
+
+// Compatibility for an administrator page that was already open before v2.2.5.
+router.post("/devices/:deviceId/revoke", deleteDeviceHandler);
 
 const connectionSelect = `
   SELECT c.*,u.username,d.name AS device_name,rs.state,rs.applied_version::text,rs.last_error_code,
