@@ -48,7 +48,7 @@ jobs:
       HOME_TUNNEL_SKIP_AGENT_TESTS: "1"
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 8.0.x
       - run: dotnet run --project .\windows-client-tests\HomeTunnel.Client.Tests.csproj -c Release
