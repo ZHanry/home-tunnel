@@ -24,6 +24,7 @@ if ($Version -notmatch '^\d+\.\d+\.\d+$') { throw "Version must use MAJOR.MINOR.
 if ($controlPackage.version -ne $Version) { throw "Control-center package version does not match $Version" }
 $version = $Version
 $gatewayVersion = [string]$gatewayPackage.version
+if ($gatewayVersion -ne $version) { throw "Traffic-gateway package version does not match $version" }
 $stamp = (Get-Date).ToUniversalTime().ToString("yyyyMMddTHHmmssZ")
 $releaseName = "home-tunnel-release-$version-arm64-$stamp"
 $releaseDirectory = Join-Path $OutputRoot $releaseName
@@ -32,32 +33,19 @@ $archiveChecksumPath = $archivePath + ".sha256"
 $frpcSource = Join-Path $workspaceRoot ".downloads\frp-linux-arm64\frp_0.62.1_linux_arm64\frpc"
 $expectedFrpcHash = "3f900ac9b035aac50b117ce5f7c450ca073d3e453448783979e978dc57bc39a9"
 $sbomSource = Join-Path $allowedOutputRoot "sbom"
-$windowsOutput = Join-Path $workspaceRoot "outputs\windows"
-$releaseMetadata = Join-Path $windowsOutput "latest.json"
 $sbomNames = @(
     "control-center.spdx.json",
     "traffic-gateway.spdx.json",
-    "frps.spdx.json",
-    "postgres.spdx.json"
+    "frps.spdx.json"
 )
 $images = @(
     "home-tunnel/control-center:$version-arm64",
     "home-tunnel/traffic-gateway:$gatewayVersion-arm64",
-    "home-tunnel/frps:0.62.1-arm64",
-    "postgres:17.5-bookworm"
+    "home-tunnel/frps:0.62.1-arm64"
 )
 
-foreach ($required in @($frpcSource, (Join-Path $deployRoot "compose.yaml"), $releaseMetadata)) {
+foreach ($required in @($frpcSource, (Join-Path $deployRoot "compose.yaml"))) {
     if (-not (Test-Path -LiteralPath $required -PathType Leaf)) { throw "Required release input is missing: $required" }
-}
-$latestWindowsRelease = Get-Content -Raw -LiteralPath $releaseMetadata | ConvertFrom-Json
-if ($latestWindowsRelease.file_name -notmatch '^HomeTunnel-Setup-\d+\.\d+\.\d+-x64\.exe$') { throw "Malformed Windows release metadata" }
-$expectedInstallerName = "HomeTunnel-Setup-$version-x64.exe"
-$expectedDownloadUrl = "https://github.com/ZHanry/home-tunnel/releases/download/v$version/$expectedInstallerName"
-if ($latestWindowsRelease.version -ne $version -or $latestWindowsRelease.file_name -ne $expectedInstallerName -or
-    $latestWindowsRelease.download_url -ne $expectedDownloadUrl -or
-    $latestWindowsRelease.stable_download_url -ne "https://github.com/ZHanry/home-tunnel/releases/latest") {
-    throw "Windows release metadata does not match server release version $version"
 }
 $composeSource = Get-Content -Raw -LiteralPath (Join-Path $deployRoot "compose.yaml")
 foreach ($expectedImage in @("home-tunnel/control-center:$version-arm64", "home-tunnel/traffic-gateway:$gatewayVersion-arm64")) {
@@ -65,13 +53,8 @@ foreach ($expectedImage in @("home-tunnel/control-center:$version-arm64", "home-
         throw "Compose does not reference $expectedImage"
     }
 }
-$windowsInstaller = Join-Path $windowsOutput $latestWindowsRelease.file_name
-if (-not (Test-Path -LiteralPath $windowsInstaller -PathType Leaf)) { throw "Windows installer is missing: $windowsInstaller" }
-if ((Get-FileHash -LiteralPath $windowsInstaller -Algorithm SHA256).Hash.ToLowerInvariant() -ne $latestWindowsRelease.sha256) {
-    throw "Windows installer hash does not match latest.json"
-}
-if ((Get-Item -LiteralPath $windowsInstaller).Length -ne $latestWindowsRelease.size_bytes) {
-    throw "Windows installer size does not match latest.json"
+if ($composeSource -match '(?im)^\s*postgres:|home-tunnel-postgres|PGHOST|PGPASSWORD') {
+    throw "Server Compose still contains PostgreSQL configuration"
 }
 if ((Get-FileHash -LiteralPath $frpcSource -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expectedFrpcHash) {
     throw "Pinned ARM64 FRPC hash mismatch"
@@ -98,13 +81,11 @@ if ((Test-Path -LiteralPath $releaseDirectory) -or (Test-Path -LiteralPath $arch
 }
 
 try {
-    foreach ($directory in @("caddy", "scripts", "systemd", "images", "sbom", "downloads")) {
+    foreach ($directory in @("caddy", "scripts", "systemd", "images", "sbom")) {
         New-Item -ItemType Directory -Force (Join-Path $releaseDirectory $directory) | Out-Null
     }
     Copy-Item -LiteralPath (Join-Path $deployRoot "compose.yaml") -Destination (Join-Path $releaseDirectory "compose.yaml")
     Copy-Item -LiteralPath $frpcSource -Destination (Join-Path $releaseDirectory "frpc")
-    Copy-Item -LiteralPath $releaseMetadata -Destination (Join-Path $releaseDirectory "downloads\latest.json")
-    Copy-Item -LiteralPath $windowsInstaller -Destination (Join-Path $releaseDirectory ("downloads\" + $latestWindowsRelease.file_name))
     foreach ($directory in @("caddy", "scripts", "systemd")) {
         Get-ChildItem -LiteralPath (Join-Path $deployRoot $directory) -File | ForEach-Object {
             Copy-Item -LiteralPath $_.FullName -Destination (Join-Path (Join-Path $releaseDirectory $directory) $_.Name)
@@ -118,6 +99,18 @@ try {
     [IO.File]::WriteAllText(
         (Join-Path $releaseDirectory "release-info.txt"),
         ($releaseInfoLines -join "`n") + "`n",
+        [Text.UTF8Encoding]::new($false)
+    )
+    $releaseJson = [ordered]@{
+        version = $version
+        created_at = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+        target = "linux/arm64"
+        database = "sqlite"
+        images = $images
+    }
+    [IO.File]::WriteAllText(
+        (Join-Path $releaseDirectory "release.json"),
+        ($releaseJson | ConvertTo-Json -Depth 4) + "`n",
         [Text.UTF8Encoding]::new($false)
     )
 

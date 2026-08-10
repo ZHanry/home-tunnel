@@ -6,7 +6,7 @@ import { once } from "node:events";
 const enabled = process.env.RUN_INTEGRATION === "1";
 
 export async function runIntegrationSuite(): Promise<void> {
-  assert.ok(process.env.PGPASSWORD, "PGPASSWORD is required for integration tests");
+  assert.ok(process.env.SQLITE_PATH, "SQLITE_PATH is required for integration tests");
   assert.ok(process.env.BOOTSTRAP_ADMIN_PASSWORD, "BOOTSTRAP_ADMIN_PASSWORD is required for integration tests");
   process.env.NODE_ENV = "test";
   process.env.INTERNAL_SERVICE_KEY ??= "11".repeat(32);
@@ -143,11 +143,28 @@ export async function runIntegrationSuite(): Promise<void> {
     assert.equal(createdConnection.status, 201);
     const connectionId = createdConnection.payload.id as string;
 
+    const policyEvents = await fetch(origin + "/internal/policies/events", {
+      headers: { "x-home-tunnel-key": process.env.INTERNAL_SERVICE_KEY!, accept: "text/event-stream" },
+    });
+    assert.equal(policyEvents.status, 200);
+    assert.ok(policyEvents.body);
+    const policyReader = policyEvents.body.getReader();
+    const decoder = new TextDecoder();
+    const readyEvent = await policyReader.read();
+    assert.match(decoder.decode(readyEvent.value), /event: ready/);
+    const pushedPolicyEvent = policyReader.read();
+
     const firstUpdate = await call("PATCH", `/api/v1/client/connections/${connectionId}`, {
       name: "Integration Tunnel Updated",
     }, userToken, { "if-match": '"1"' });
     assert.equal(firstUpdate.status, 200);
     assert.equal(firstUpdate.payload.version, 2);
+    const pushed = await Promise.race([
+      pushedPolicyEvent,
+      new Promise<never>((_resolve, reject) => setTimeout(() => reject(new Error("policy push timed out")), 2_000)),
+    ]);
+    assert.match(decoder.decode(pushed.value), /event: policy/);
+    await policyReader.cancel();
     const staleUpdate = await call("PATCH", `/api/v1/client/connections/${connectionId}`, {
       name: "Stale Update Must Not Win",
     }, userToken, { "if-match": '"1"' });
@@ -378,7 +395,7 @@ export async function runIntegrationSuite(): Promise<void> {
 
 if (process.env.RUN_INTEGRATION_DIRECT !== "1") {
   test(
-    "PostgreSQL API, lease, FRPS plugin, optimistic lock, and revocation closure",
+    "SQLite API, lease, FRPS plugin, optimistic lock, and revocation closure",
     { skip: !enabled, timeout: 120_000 },
     runIntegrationSuite,
   );

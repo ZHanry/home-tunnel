@@ -4,6 +4,12 @@ All notable changes to Home Tunnel are documented in this file. The project foll
 
 ## [Unreleased]
 
+- Replaced the server-side PostgreSQL container with a WAL-backed SQLite database and online encrypted SQLite backups.
+- Added authenticated push notifications for gateway policy changes, with a five-minute recovery sync instead of one-second polling.
+- Serialized Argon2 password work with a bounded queue to prevent low-memory hosts from running concurrent 64 MiB hashes.
+- Made prebuilt `amd64`/`arm64` images the default deployment path and moved runtime images to Alpine.
+- Combined shared Node image layers into one offline archive and removed Windows installers from all server release packages.
+
 ## [2.2.5] - 2026-08-10
 
 - Increased the Windows login window height and removed the visible login-page scrollbar.

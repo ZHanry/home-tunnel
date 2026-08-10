@@ -11,6 +11,50 @@ const ARGON_MEMORY_KIB = 65_536;
 const ARGON_ITERATIONS = 3;
 const ARGON_PARALLELISM = 1;
 
+export class PasswordWorkQueueFullError extends Error {
+  constructor() {
+    super("Password hashing queue is full");
+    this.name = "PasswordWorkQueueFullError";
+  }
+}
+
+class PasswordWorkLimiter {
+  private active = 0;
+  private readonly queued: Array<{
+    operation: () => Promise<unknown>;
+    resolve: (value: unknown) => void;
+    reject: (error: unknown) => void;
+  }> = [];
+
+  async run<T>(operation: () => Promise<T>): Promise<T> {
+    if (this.queued.length >= config.passwordHashQueueMax) throw new PasswordWorkQueueFullError();
+    return new Promise<T>((resolve, reject) => {
+      this.queued.push({
+        operation,
+        resolve: (value) => resolve(value as T),
+        reject,
+      });
+      this.drain();
+    });
+  }
+
+  private drain(): void {
+    while (this.active < config.passwordHashConcurrency) {
+      const job = this.queued.shift();
+      if (!job) return;
+      this.active += 1;
+      void job.operation()
+        .then(job.resolve, job.reject)
+        .finally(() => {
+          this.active -= 1;
+          this.drain();
+        });
+    }
+  }
+}
+
+const passwordWork = new PasswordWorkLimiter();
+
 export const reservedSubdomains = new Set([
   "console",
   "admin",
@@ -63,7 +107,7 @@ export function validatePassword(password: string, username: string): string | n
 
 export async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16);
-  const hash = await argon2id({
+  const hash = await passwordWork.run(() => argon2id({
     password,
     salt,
     parallelism: ARGON_PARALLELISM,
@@ -71,7 +115,7 @@ export async function hashPassword(password: string): Promise<string> {
     memorySize: ARGON_MEMORY_KIB,
     hashLength: 32,
     outputType: "hex",
-  });
+  }));
   return `$argon2id$v=19$m=${ARGON_MEMORY_KIB},t=${ARGON_ITERATIONS},p=${ARGON_PARALLELISM}$${salt.toString("base64url")}$${hash}`;
 }
 
@@ -93,7 +137,7 @@ export async function verifyPassword(encoded: string, password: string): Promise
     ) return false;
     const salt = Buffer.from(parts[4] ?? "", "base64url");
     const expected = Buffer.from(parts[5] ?? "", "hex");
-    const actualHex = await argon2id({
+    const actualHex = await passwordWork.run(() => argon2id({
       password,
       salt,
       parallelism,
@@ -101,10 +145,11 @@ export async function verifyPassword(encoded: string, password: string): Promise
       memorySize,
       hashLength: expected.length,
       outputType: "hex",
-    });
+    }));
     const actual = Buffer.from(actualHex, "hex");
     return actual.length === expected.length && timingSafeEqual(actual, expected);
-  } catch {
+  } catch (error) {
+    if (error instanceof PasswordWorkQueueFullError) throw error;
     return false;
   }
 }

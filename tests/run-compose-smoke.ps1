@@ -17,8 +17,6 @@ try {
     Copy-Item -LiteralPath (Join-Path $workspace "deploy\compose.yaml") -Destination (Join-Path $testRoot "compose.yaml")
     $composePrepared = $true
     $secrets = @{
-        postgres_password_db = "Local-Compose-Only-Db-9-safe"
-        postgres_password_control = "Local-Compose-Only-Db-9-safe"
         internal_service_key = "11" * 32
         frps_plugin_key_control = "22" * 32
         frps_plugin_key_frps = "22" * 32
@@ -49,7 +47,7 @@ try {
     & docker compose -f (Join-Path $testRoot "compose.yaml") up -d
     if ($LASTEXITCODE -ne 0) { throw "Compose smoke start failed" }
 
-    foreach ($name in @("home-tunnel-postgres", "home-tunnel-control-center", "home-tunnel-frps", "home-tunnel-traffic-gateway")) {
+    foreach ($name in @("home-tunnel-control-center", "home-tunnel-frps", "home-tunnel-traffic-gateway")) {
         $healthy = $false
         for ($index = 0; $index -lt 120; $index++) {
             $state = (& docker inspect -f "{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}" $name 2>$null).Trim()
@@ -76,7 +74,7 @@ try {
         if ($uid -ne "10001") { throw "$name runs as uid $uid" }
         Write-Output "$name uid=$uid"
     }
-    & docker exec home-tunnel-postgres psql -U home_tunnel -d home_tunnel -Atqc "SELECT max(version) FROM schema_migrations"
+    & docker exec home-tunnel-control-center node --input-type=module -e "import { DatabaseSync } from 'node:sqlite'; const db=new DatabaseSync(process.env.SQLITE_PATH,{readOnly:true}); console.log(db.prepare('SELECT max(version) AS version FROM schema_migrations').get().version); db.close()"
     if ($LASTEXITCODE -ne 0) { throw "Migration query failed" }
     & docker compose -f (Join-Path $testRoot "compose.yaml") ps
 }

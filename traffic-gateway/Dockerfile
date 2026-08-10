@@ -1,4 +1,4 @@
-ARG NODE_IMAGE=node:22.17.1-bookworm-slim
+ARG NODE_IMAGE=node:22.17.1-alpine
 FROM ${NODE_IMAGE} AS build
 WORKDIR /app
 ARG NPM_REGISTRY=https://registry.npmjs.org
@@ -12,7 +12,8 @@ RUN pnpm build && pnpm prune --prod
 FROM ${NODE_IMAGE} AS runtime
 ENV NODE_ENV=production
 WORKDIR /app
-RUN groupadd --gid 10001 home-tunnel && useradd --uid 10001 --gid 10001 --no-create-home --shell /usr/sbin/nologin home-tunnel
+RUN addgroup -g 10001 -S home-tunnel \
+    && adduser -u 10001 -S -D -H -G home-tunnel home-tunnel
 COPY --from=build --chown=10001:10001 /app/package.json ./package.json
 COPY --from=build --chown=10001:10001 /app/node_modules ./node_modules
 COPY --from=build --chown=10001:10001 /app/dist ./dist

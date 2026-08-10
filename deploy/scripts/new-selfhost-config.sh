@@ -30,7 +30,6 @@ fi
 command -v openssl >/dev/null 2>&1 || { echo "openssl is required" >&2; exit 69; }
 
 install -d -m 0700 "$secret_root"
-openssl rand -hex 32 > "$secret_root/postgres_password"
 openssl rand -hex 32 > "$secret_root/internal_service_key"
 openssl rand -hex 32 > "$secret_root/frps_plugin_key"
 openssl rand -hex 32 > "$secret_root/lease_signing_key"
@@ -50,5 +49,5 @@ HOME_TUNNEL_BOOTSTRAP_ADMIN_USERNAME=admin
 EOF
 chmod 0600 "$environment_path"
 
-echo "Created $environment_path and five secret files below $secret_root"
+echo "Created $environment_path and four secret files below $secret_root"
 echo "Read deploy/secrets/bootstrap_admin_password locally for the one-time password."

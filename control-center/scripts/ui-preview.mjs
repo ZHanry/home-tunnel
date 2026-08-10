@@ -64,7 +64,7 @@ app.get("/api/v1/admin/system/health", (_request, response) => response.json({
   status: "healthy",
   components: [
     { component: "control-center", status: "healthy", latency_ms: 3 },
-    { component: "postgres", status: "healthy", latency_ms: 4 },
+    { component: "sqlite", status: "healthy", latency_ms: 1 },
     { component: "traffic-gateway", status: "healthy", latency_ms: 8 },
     { component: "frps", status: "healthy", latency_ms: 6 },
   ],

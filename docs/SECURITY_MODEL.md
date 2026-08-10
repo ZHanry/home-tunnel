@@ -8,7 +8,7 @@ Home Tunnel is intended for personal and small trusted-user deployments. It redu
 - **Caddy → gateway/control center:** clear HTTP is carried on isolated Docker networks on the same host.
 - **Windows Agent → FRPS:** FRP TLS is required. The user selects a control-center HTTPS origin; the client discovers its public FRPS address and tunnel suffix, and the Agent requires the generated configuration to match that profile.
 - **FRPS/gateway → control center:** service calls use generated high-entropy keys and are not published as host ports.
-- **Control center → PostgreSQL:** database credentials are mounted as Docker secrets in the reference deployment.
+- **Control center → SQLite:** the single database file is stored in a private Docker volume with mode `0600`; WAL and foreign-key checks are enabled, and no database network listener exists.
 - **Client local state:** device credentials use Windows Credential Manager; non-secret state and redacted logs are stored under the user's local application data directory.
 
 ## Agent restrictions

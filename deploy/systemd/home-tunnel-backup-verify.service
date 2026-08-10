@@ -1,5 +1,5 @@
 [Unit]
-Description=Verify the latest Home Tunnel backup by restoring it
+Description=Verify the latest Home Tunnel SQLite backup
 Requires=docker.service
 After=docker.service home-tunnel-backup.service
 

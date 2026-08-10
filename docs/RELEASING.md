@@ -24,6 +24,7 @@ pnpm run check
 pnpm run build
 pnpm test
 pnpm run test:public
+pnpm run test:integration
 
 Set-Location ..\traffic-gateway
 pnpm install --frozen-lockfile
@@ -47,3 +48,5 @@ Build the Windows installer with the intended deployment profile, a stable App I
 4. Never upload `.env`, secret files, administrator handoff files, private certificates or deployment audit material containing infrastructure details.
 5. Mark pre-release builds clearly and do not point stable update metadata at them.
 6. Scan source history and unpacked artifacts for personal email addresses, real deployment domains/IPs, absolute user paths and credentials. The generic client must prompt for a server address rather than embedding an operator endpoint.
+
+Server/offline deployment archives contain only the Linux images, deployment scripts, SBOMs and optional release metadata. Do not copy the Windows installer into a server archive or server download directory; public clients download it from GitHub Releases.

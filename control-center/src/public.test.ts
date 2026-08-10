@@ -26,7 +26,7 @@ function request(url: string, headers: Record<string, string> = {}): Promise<{
   });
 }
 
-test("public landing page and versioned EXE download stay available without a session", async () => {
+test("public landing page and GitHub-hosted EXE redirects stay available without a session", async () => {
   const downloads = await mkdtemp(join(tmpdir(), "home-tunnel-public-test-"));
   const fileName = "HomeTunnel-Setup-2.2.5-x64.exe";
   const executableHeader = Buffer.from("MZ", "ascii");
@@ -45,7 +45,7 @@ test("public landing page and versioned EXE download stay available without a se
 
   process.env.NODE_ENV = "test";
   process.env.DOWNLOADS_DIRECTORY = downloads;
-  process.env.PGPASSWORD ??= "public-test-only";
+  process.env.SQLITE_PATH = ":memory:";
   process.env.INTERNAL_SERVICE_KEY ??= "11".repeat(32);
   process.env.FRPS_PLUGIN_KEY ??= "22".repeat(32);
   process.env.LEASE_SIGNING_KEY ??= "33".repeat(32);
@@ -107,12 +107,11 @@ test("public landing page and versioned EXE download stay available without a se
     const unchangedLatest = await request(origin + "/api/v1/public/releases/latest", { "if-none-match": latest.headers.etag! });
     assert.equal(unchangedLatest.status, 304);
 
-    await writeFile(join(downloads, fileName), executableHeader);
     for (const path of [`/downloads/${fileName}`, "/downloads/HomeTunnel-Setup-x64.exe"]) {
       const download = await request(origin + path);
-      assert.equal(download.status, 200);
-      assert.match(download.headers["content-disposition"] ?? "", new RegExp(fileName.replaceAll(".", "\\.")));
-      assert.deepEqual(download.body, executableHeader);
+      assert.equal(download.status, 302);
+      assert.equal(download.headers.location, `https://github.com/ZHanry/home-tunnel/releases/download/v2.2.5/${fileName}`);
+      assert.equal(download.body.includes(executableHeader), false);
     }
 
     const missing = await request(origin + "/downloads/HomeTunnel-Setup-9.9.9-x64.exe");

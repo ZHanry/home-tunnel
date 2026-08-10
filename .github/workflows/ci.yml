@@ -40,6 +40,8 @@ jobs:
       - run: pnpm test
       - if: matrix.service == 'control-center'
         run: pnpm run test:public
+      - if: matrix.service == 'control-center'
+        run: pnpm run test:integration
 
   windows-client:
     name: Windows client
@@ -67,7 +69,8 @@ jobs:
         run: |
           cp .env.example .env
           mkdir -p deploy/secrets
-          for name in postgres_password internal_service_key frps_plugin_key lease_signing_key bootstrap_admin_password; do
+          for name in internal_service_key frps_plugin_key lease_signing_key bootstrap_admin_password; do
             printf '%064d\n' 0 > "deploy/secrets/$name"
           done
       - run: docker compose config --quiet
+      - run: docker compose -f compose.yaml -f compose.build.yaml config --quiet

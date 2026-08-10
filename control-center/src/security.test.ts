@@ -3,12 +3,14 @@ import { createHmac } from "node:crypto";
 import test from "node:test";
 
 process.env.NODE_ENV = "test";
-process.env.PGPASSWORD = "test-postgres-password";
+process.env.SQLITE_PATH = ":memory:";
 process.env.INTERNAL_SERVICE_KEY = "11".repeat(32);
 process.env.FRPS_PLUGIN_KEY = "22".repeat(32);
 process.env.LEASE_SIGNING_KEY = "33".repeat(32);
 process.env.COOKIE_SECURE = "false";
 process.env.OFFLINE_LEASE_MAX_SECONDS = "86400";
+process.env.PASSWORD_HASH_CONCURRENCY = "1";
+process.env.PASSWORD_HASH_QUEUE_MAX = "1";
 
 const security = await import("./security.js");
 
@@ -21,6 +23,17 @@ test("Argon2id password hashes are salted and verifiable", async () => {
   assert.equal(await security.verifyPassword(first, password), true);
   assert.equal(await security.verifyPassword(first, "incorrect password"), false);
   assert.equal(await security.verifyPassword(first.replace("m=65536", "m=999999999"), password), false);
+});
+
+test("Argon2 work is serialized and rejects queue overflow", async () => {
+  const first = security.hashPassword("Queue test password one M7!");
+  const second = security.hashPassword("Queue test password two Q9!");
+  await assert.rejects(
+    security.hashPassword("Queue test password three R4!"),
+    security.PasswordWorkQueueFullError,
+  );
+  const completed = await Promise.all([first, second]);
+  assert.equal(completed.length, 2);
 });
 
 test("password and subdomain policies reject unsafe values", () => {

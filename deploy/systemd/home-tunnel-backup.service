@@ -1,5 +1,5 @@
 [Unit]
-Description=Home Tunnel encrypted PostgreSQL backup
+Description=Home Tunnel encrypted SQLite backup
 Requires=docker.service
 After=docker.service
 

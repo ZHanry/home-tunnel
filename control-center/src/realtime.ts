@@ -1,7 +1,6 @@
 import type { IncomingMessage, Server } from "node:http";
-import type { PoolClient } from "pg";
 import { WebSocket, WebSocketServer } from "ws";
-import { one, pool, transaction } from "./db.js";
+import { databaseEvents, one, transaction } from "./db.js";
 import { parseCookieHeader } from "./http.js";
 import { tokenHash } from "./security.js";
 
@@ -118,7 +117,8 @@ export function attachRealtime(server: Server): { close: () => Promise<void> } {
         delivered.push(event.id);
       }
       if (delivered.length) {
-        await client.query("UPDATE outbox_events SET delivered_at=now() WHERE id=ANY($1::bigint[])", [delivered]);
+        const parameters = delivered.map((_id, index) => `$${index + 1}`).join(",");
+        await client.query(`UPDATE outbox_events SET delivered_at=now() WHERE id IN (${parameters})`, delivered);
       }
       return events.rowCount ?? events.rows.length;
         });
@@ -140,51 +140,9 @@ export function attachRealtime(server: Server): { close: () => Promise<void> } {
       );
   };
 
-  let listener: PoolClient | null = null;
-  let reconnectTimer: NodeJS.Timeout | null = null;
-  const releaseListener = (client: PoolClient, destroy = false) => {
-    try {
-      client.release(destroy);
-    } catch {
-      // The pool can release a failed client before its error callback runs.
-    }
-  };
-  const scheduleListener = () => {
-    if (closing || reconnectTimer) return;
-    reconnectTimer = setTimeout(() => {
-      reconnectTimer = null;
-      void connectListener();
-    }, 5_000);
-    reconnectTimer.unref();
-  };
-  const connectListener = async () => {
-    if (closing || listener) return;
-    let candidate: PoolClient | null = null;
-    try {
-      candidate = await pool.connect();
-      if (closing) {
-        releaseListener(candidate);
-        return;
-      }
-      listener = candidate;
-      candidate.on("notification", () => void drainOutbox().catch(reportOutboxError));
-      candidate.on("error", (error) => {
-        if (listener !== candidate) return;
-        listener = null;
-        reportOutboxError(error);
-        if (candidate) releaseListener(candidate, true);
-        scheduleListener();
-      });
-      await candidate.query("LISTEN home_tunnel_outbox");
-      await drainOutbox();
-    } catch (error) {
-      if (listener === candidate) listener = null;
-      if (candidate) releaseListener(candidate, true);
-      reportOutboxError(error);
-      scheduleListener();
-    }
-  };
-  void connectListener();
+  const onOutbox = () => void drainOutbox().catch(reportOutboxError);
+  databaseEvents.on("outbox", onOutbox);
+  void drainOutbox().catch(reportOutboxError);
 
   const fallbackTimer = setInterval(() => {
     void drainOutbox().catch(reportOutboxError);
@@ -208,13 +166,7 @@ export function attachRealtime(server: Server): { close: () => Promise<void> } {
       closing = true;
       clearInterval(fallbackTimer);
       clearInterval(pingTimer);
-      if (reconnectTimer) clearTimeout(reconnectTimer);
-      const activeListener = listener;
-      listener = null;
-      if (activeListener) {
-        await activeListener.query("UNLISTEN home_tunnel_outbox").catch(() => undefined);
-        releaseListener(activeListener);
-      }
+      databaseEvents.off("outbox", onOutbox);
       for (const socket of websocketServer.clients) socket.close(1001, "server shutdown");
       await new Promise<void>((resolve) => websocketServer.close(() => resolve()));
     },

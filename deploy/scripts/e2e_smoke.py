@@ -21,7 +21,6 @@ from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 
 
@@ -189,46 +188,83 @@ def main() -> None:
     connection_ids: list[str] = []
     original_admin_hash: str | None = None
 
-    def postgres(command: str, capture: bool = False) -> str:
+    def sqlite(statements: list[dict[str, object]]) -> list[object]:
+        bridge = r"""
+import fs from "node:fs";
+import { DatabaseSync } from "node:sqlite";
+const request = JSON.parse(fs.readFileSync(0, "utf8"));
+const database = new DatabaseSync(process.env.SQLITE_PATH || "/data/home-tunnel.db");
+database.exec("PRAGMA foreign_keys=ON; BEGIN IMMEDIATE");
+try {
+  const results = request.statements.map((command) => {
+    const statement = database.prepare(command.sql);
+    if (command.mode === "get") {
+      const row = statement.get(...(command.parameters || []));
+      return row ? Object.values(row)[0] : null;
+    }
+    const result = statement.run(...(command.parameters || []));
+    return Number(result.changes);
+  });
+  database.exec("COMMIT");
+  process.stdout.write(JSON.stringify(results));
+} catch (error) {
+  database.exec("ROLLBACK");
+  throw error;
+} finally {
+  database.close();
+}
+"""
         completed = subprocess.run(
-            ["docker", "exec", "home-tunnel-postgres", "psql", "-v", "ON_ERROR_STOP=1", "-U", "home_tunnel", "-d", "home_tunnel", "-Atc" if capture else "-c", command],
+            ["docker", "exec", "-i", "home-tunnel-control-center", "node", "--input-type=module", "-e", bridge],
             check=True,
-            stdout=subprocess.PIPE if capture else subprocess.DEVNULL,
+            input=json.dumps({"statements": statements}, separators=(",", ":")),
+            stdout=subprocess.PIPE,
             text=True,
         )
-        return completed.stdout.strip() if capture else ""
+        return json.loads(completed.stdout)
+
+    def sqlite_value(statement: str, parameters: list[object] | None = None) -> object:
+        return sqlite([{"sql": statement, "parameters": parameters or [], "mode": "get"}])[0]
 
     def restore_default_administrator() -> None:
         if not original_admin_hash or not original_admin_hash.startswith("$argon2id$") or "'" in original_admin_hash:
             return
-        postgres(f"""
-BEGIN;
-UPDATE users SET password_hash='{original_admin_hash}',password_state='must_change',temporary_password_expires_at=NULL,
-  token_version=token_version+1,version=version+1,updated_at=now() WHERE lower(username)='admin' AND role='admin';
-UPDATE sessions SET revoked_at=COALESCE(revoked_at,now()),updated_at=now()
-  WHERE user_id IN (SELECT id FROM users WHERE lower(username)='admin' AND role='admin');
-INSERT INTO audit_events(actor_type,action,target_type,target_id,after_value,request_id)
-  SELECT 'system','BootstrapAdminRestored','User',id,jsonb_build_object('password_state','must_change'),gen_random_uuid()
-  FROM users WHERE lower(username)='admin' AND role='admin';
-COMMIT;
-""")
+        sqlite([
+            {
+                "sql": """UPDATE users SET password_hash=?,password_state='must_change',temporary_password_expires_at=NULL,
+                  token_version=token_version+1,version=version+1,updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now')
+                  WHERE lower(username)='admin' AND role='admin'""",
+                "parameters": [original_admin_hash],
+            },
+            {
+                "sql": """UPDATE sessions SET revoked_at=COALESCE(revoked_at,strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+                  updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now')
+                  WHERE user_id IN (SELECT id FROM users WHERE lower(username)='admin' AND role='admin')""",
+            },
+            {
+                "sql": """INSERT INTO audit_events(actor_type,action,target_type,target_id,after_value,request_id)
+                  SELECT 'system','BootstrapAdminRestored','User',id,?,?
+                  FROM users WHERE lower(username)='admin' AND role='admin'""",
+                "parameters": [json.dumps({"password_state": "must_change"}, separators=(",", ":")), str(uuid.uuid4())],
+            },
+        ])
 
     def cleanup_database() -> None:
         if not user_id or not uuid.UUID(user_id):
             return
-        sql = f"""
-BEGIN;
-DELETE FROM traffic_samples WHERE user_id='{user_id}'::uuid;
-DELETE FROM runtime_states WHERE connection_id IN (SELECT id FROM connections WHERE user_id='{user_id}'::uuid);
-DELETE FROM traffic_policies WHERE (scope_type='connection' AND scope_id IN (SELECT id FROM connections WHERE user_id='{user_id}'::uuid)) OR (scope_type='user' AND scope_id='{user_id}'::uuid);
-DELETE FROM connections WHERE user_id='{user_id}'::uuid;
-DELETE FROM sessions WHERE user_id='{user_id}'::uuid;
-DELETE FROM outbox_events WHERE recipient_user_id='{user_id}'::uuid OR resource_id='{user_id}';
-DELETE FROM devices WHERE user_id='{user_id}'::uuid;
-DELETE FROM users WHERE id='{user_id}'::uuid;
-COMMIT;
-"""
-        postgres(sql)
+        sqlite([
+            {"sql": "DELETE FROM traffic_samples WHERE user_id=?", "parameters": [user_id]},
+            {"sql": "DELETE FROM traffic_hourly WHERE user_id=?", "parameters": [user_id]},
+            {"sql": "DELETE FROM runtime_states WHERE connection_id IN (SELECT id FROM connections WHERE user_id=?)", "parameters": [user_id]},
+            {"sql": """DELETE FROM traffic_policies WHERE
+              (scope_type='connection' AND scope_id IN (SELECT id FROM connections WHERE user_id=?))
+              OR (scope_type='user' AND scope_id=?)""", "parameters": [user_id, user_id]},
+            {"sql": "DELETE FROM connections WHERE user_id=?", "parameters": [user_id]},
+            {"sql": "DELETE FROM sessions WHERE user_id=?", "parameters": [user_id]},
+            {"sql": "DELETE FROM outbox_events WHERE recipient_user_id=? OR resource_id=?", "parameters": [user_id, user_id]},
+            {"sql": "DELETE FROM devices WHERE user_id=?", "parameters": [user_id]},
+            {"sql": "DELETE FROM users WHERE id=?", "parameters": [user_id]},
+        ])
 
     with tempfile.TemporaryDirectory(prefix="home-tunnel-smoke-") as temporary:
         temporary_path = Path(temporary)
@@ -256,18 +292,13 @@ COMMIT;
             else:
                 raise RuntimeError("Console endpoint did not become ready")
 
-            public_get(arguments.origin + "/", "下载 Windows 安装包")
-            release = api("GET", "/api/v1/public/releases/latest")
-            if not release.get("file_name", "").endswith(".exe") or len(release.get("sha256", "")) != 64:
-                raise RuntimeError("Public Windows release metadata is invalid")
-            expected_download = f"https://github.com/ZHanry/home-tunnel/releases/download/v{release['version']}/{release['file_name']}"
-            if release.get("download_url") != expected_download or urlsplit(expected_download).hostname != "github.com":
-                raise RuntimeError("Public Windows release does not point to the official GitHub repository")
-            with urlopen(expected_download, timeout=30) as response:
-                if response.status != 200 or response.read(2) != b"MZ":
-                    raise RuntimeError("Public Windows installer is not an EXE")
+            public_get(arguments.origin + "/", "下载 Windows 客户端")
+            with urlopen(arguments.origin + "/", timeout=20) as response:
+                landing_page = response.read().decode()
+            if 'href="https://github.com/ZHanry/home-tunnel/releases/latest"' not in landing_page:
+                raise RuntimeError("Landing page does not point to GitHub Releases")
 
-            original_admin_hash = postgres("SELECT password_hash FROM users WHERE lower(username)='admin' AND role='admin' LIMIT 1", True)
+            original_admin_hash = str(sqlite_value("SELECT password_hash FROM users WHERE lower(username)='admin' AND role='admin' LIMIT 1") or "")
             bootstrap_login = api("POST", "/api/v1/auth/login", {"username": "admin", "password": bootstrap_password, "client_type": "windows"})
             if not bootstrap_login.get("password_change_required"):
                 raise RuntimeError("Bootstrap administrator did not require a password change")
@@ -376,7 +407,7 @@ COMMIT;
             Path(arguments.evidence_file).write_text(json.dumps({
                 "status": "passed",
                 "completed_at": datetime.now(timezone.utc).isoformat(),
-                "tests": ["landing_page", "exe_download", "api", "http_local", "https_local", "sse", "websocket", "unassigned_host_denied", "component_health"],
+                "tests": ["landing_page", "github_release_link", "api", "http_local", "https_local", "sse", "websocket", "unassigned_host_denied", "component_health"],
                 "http_domain": http_domain,
                 "https_domain": https_domain,
             }, indent=2) + "\n", encoding="utf-8")
@@ -401,7 +432,7 @@ COMMIT;
                         pass
                 restore_default_administrator()
 
-    print("Production smoke passed: landing page, EXE download, API, HTTP, HTTPS-local, SSE, WebSocket, host denial, health")
+    print("Production smoke passed: landing page, GitHub release link, API, HTTP, HTTPS-local, SSE, WebSocket, host denial, health")
 
 
 if __name__ == "__main__":

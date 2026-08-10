@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { PoolClient } from "pg";
+import type { DatabaseClient } from "./db.js";
 import { z } from "zod";
 import { config } from "./config.js";
 import { HttpError } from "./http.js";
@@ -72,7 +72,7 @@ export function publicConnection(row: ConnectionRow) {
 }
 
 export async function bumpDeviceConfig(
-  client: PoolClient,
+  client: DatabaseClient,
   deviceId: string,
   eventType: string,
   resourceType: string,
@@ -106,7 +106,7 @@ export async function bumpDeviceConfig(
 }
 
 export async function createConnection(
-  client: PoolClient,
+  client: DatabaseClient,
   userId: string,
   deviceId: string,
   input: ConnectionInput,
@@ -167,7 +167,7 @@ export async function createConnection(
 }
 
 export async function updateConnection(
-  client: PoolClient,
+  client: DatabaseClient,
   connectionId: string,
   expectedVersion: number,
   patch: ConnectionPatch,
@@ -252,7 +252,7 @@ export async function updateConnection(
 }
 
 export async function deleteConnection(
-  client: PoolClient,
+  client: DatabaseClient,
   connectionId: string,
   expectedVersion: number,
   ownerUserId?: string,

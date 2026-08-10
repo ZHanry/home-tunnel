@@ -5,7 +5,7 @@ This guide describes the portable root-level `compose.yaml`. The scripts under `
 ## Requirements
 
 - A Linux server with Docker Engine and Docker Compose v2
-- An `amd64` or `arm64` CPU, at least 2 GiB RAM and 5 GiB free disk space
+- An `amd64` or `arm64` CPU, at least 1 GiB RAM (with swap on small hosts) and 2 GiB free disk space
 - A public IPv4 or IPv6 address reachable on TCP 80, 443 and 7000; UDP 443 is optional for HTTP/3
 - A domain you control
 - A Windows 10/11 x64 machine to run the current desktop client
@@ -41,17 +41,24 @@ On Windows PowerShell:
   -AcmeEmail admin@example.com
 ```
 
-The command creates an ignored `.env` file and five ignored secret files under `deploy/secrets/`. It refuses to overwrite existing configuration unless the PowerShell command is explicitly given `-Force`. Do not commit or share these files.
+The command creates an ignored `.env` file and four ignored secret files under `deploy/secrets/`. It refuses to overwrite existing configuration unless the PowerShell command is explicitly given `-Force`. Do not commit or share these files.
 
 ## 2. Validate and start the server
 
 ```sh
 docker compose config --quiet
-docker compose up -d --build
+docker compose pull
+docker compose up -d
 docker compose ps
 ```
 
 Caddy obtains certificates after DNS is active and the hostname is requested. The control center authorizes the console hostname and assigned connection hostnames before issuance.
+
+The default path pulls prebuilt `amd64`/`arm64` images. To build from the checked-out source instead:
+
+```sh
+docker compose -f compose.yaml -f compose.build.yaml up -d --build
+```
 
 Read the one-time administrator password locally:
 
@@ -85,21 +92,25 @@ docker compose ps
 docker compose logs --tail 100 control-center traffic-gateway frps caddy
 ```
 
-Upgrade source images without deleting data:
+The following upgrade command is only for deployments that already use the `sqlite-data` volume. If your current Compose file still contains a PostgreSQL service, stop here: the new profile intentionally does not auto-convert that database.
+
+Upgrade prebuilt images without deleting SQLite data:
 
 ```sh
 git pull --ff-only
-docker compose build --pull
+docker compose pull
 docker compose up -d
 ```
 
-Back up PostgreSQL before upgrades and retain the generated secret files in an encrypted backup. Never use `docker compose down -v` unless you intentionally want to delete the database and Caddy state.
+The database is `/data/home-tunnel.db` in the `sqlite-data` volume and uses WAL mode. The managed production profile includes online encrypted SQLite backup and integrity-verification scripts. Back it up before upgrades and retain the generated secret files in an encrypted backup. Never use `docker compose down -v` unless you intentionally want to delete SQLite and Caddy state.
+
+The managed updater also detects deployments created by older releases with PostgreSQL and exits before changing containers or data. Export or migrate that database before switching profiles.
 
 ## Current scope
 
 - Windows 10/11 x64 client
 - HTTP and HTTPS local targets
 - One public tunnel domain per server deployment
-- Source-built `amd64` and `arm64` server containers
+- Prebuilt and source-buildable `amd64` and `arm64` server containers
 
 Raw TCP/UDP forwarding, macOS/Linux clients and a single-binary server are not part of the current release.

@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { Router } from "express";
 import { z } from "zod";
 import { config } from "../config.js";
-import { one, query } from "../db.js";
+import { databaseEvents, one, query, transaction } from "../db.js";
 import { asyncHandler, HttpError } from "../http.js";
 import { constantTimeStringEqual, verifyLease } from "../security.js";
 import { parseBody } from "../validation.js";
@@ -44,6 +44,32 @@ function requireInternalKey(value: string | undefined): void {
     throw new HttpError(401, "AUTH_INVALID", "内部服务认证失败");
   }
 }
+
+router.get(
+  "/policies/events",
+  asyncHandler(async (request, response) => {
+    requireInternalKey(request.header("x-home-tunnel-key"));
+    response.status(200);
+    response.setHeader("content-type", "text/event-stream; charset=utf-8");
+    response.setHeader("cache-control", "no-store");
+    response.setHeader("connection", "keep-alive");
+    response.flushHeaders();
+    response.write("retry: 3000\nevent: ready\ndata: {}\n\n");
+
+    const notify = () => {
+      if (!response.destroyed) response.write(`event: policy\ndata: {"at":"${new Date().toISOString()}"}\n\n`);
+    };
+    const keepalive = setInterval(() => {
+      if (!response.destroyed) response.write(`: keepalive ${Date.now()}\n\n`);
+    }, 30_000);
+    keepalive.unref();
+    databaseEvents.on("outbox", notify);
+    request.once("close", () => {
+      clearInterval(keepalive);
+      databaseEvents.off("outbox", notify);
+    });
+  }),
+);
 
 router.get(
   "/policies/sync",
@@ -144,46 +170,72 @@ router.post(
       }),
       request.body,
     );
-    const result = await one<{ accepted: number; dropped: number }>(
-      `WITH incoming AS (
-         SELECT * FROM jsonb_to_recordset($2::jsonb) AS sample(
-           bucket_start timestamptz,bucket_seconds integer,user_id uuid,device_id uuid,connection_id uuid,
-           upload_bytes bigint,download_bytes bigint,request_count bigint,error_count bigint)
-       ), valid_inputs AS (
-         SELECT incoming.bucket_start,incoming.bucket_seconds,
-                connection.user_id,connection.device_id,incoming.connection_id,
-                incoming.upload_bytes,incoming.download_bytes,incoming.request_count,incoming.error_count
-           FROM incoming JOIN connections connection ON connection.id=incoming.connection_id
-          WHERE connection.deleted_at IS NULL
-            AND connection.user_id=incoming.user_id AND connection.device_id=incoming.device_id
-            AND incoming.bucket_start >= now()-interval '14 days'
-            AND incoming.bucket_start <= now()+interval '5 minutes'
-       ), deduplicated AS (
-         SELECT bucket_start,bucket_seconds,user_id,device_id,connection_id,
-                max(upload_bytes)::bigint AS upload_bytes,max(download_bytes)::bigint AS download_bytes,
-                max(request_count)::bigint AS request_count,max(error_count)::bigint AS error_count
-           FROM valid_inputs GROUP BY 1,2,3,4,5
-       ), upserted AS (
-         INSERT INTO traffic_samples(
-           batch_id,bucket_start,bucket_seconds,user_id,device_id,connection_id,
-           upload_bytes,download_bytes,request_count,error_count)
-         SELECT $1::uuid,bucket_start,bucket_seconds,user_id,device_id,connection_id,
-                upload_bytes,download_bytes,request_count,error_count
-           FROM deduplicated
-         ON CONFLICT(connection_id,bucket_start,bucket_seconds) DO UPDATE SET
-           upload_bytes=GREATEST(traffic_samples.upload_bytes,EXCLUDED.upload_bytes),
-           download_bytes=GREATEST(traffic_samples.download_bytes,EXCLUDED.download_bytes),
-           request_count=GREATEST(traffic_samples.request_count,EXCLUDED.request_count),
-           error_count=GREATEST(traffic_samples.error_count,EXCLUDED.error_count)
-         RETURNING 1
-       )
-       SELECT (SELECT count(*)::int FROM valid_inputs) AS accepted,
-              $3::int-(SELECT count(*)::int FROM valid_inputs) AS dropped`,
-      [body.batch_id, JSON.stringify(body.samples), body.samples.length],
-    );
+    const accepted = await transaction(async (client) => {
+      const connectionIds = [...new Set(body.samples.map((sample) => sample.connection_id))];
+      const parameters = connectionIds.map((_id, index) => `$${index + 1}`).join(",");
+      const subjects = connectionIds.length
+        ? await client.query<{ id: string; user_id: string; device_id: string }>(
+            `SELECT id,user_id,device_id FROM connections
+              WHERE deleted_at IS NULL AND id IN (${parameters})`,
+            connectionIds,
+          )
+        : { rows: [], rowCount: 0 };
+      const byConnection = new Map(subjects.rows.map((subject) => [subject.id, subject]));
+      const earliest = Date.now() - 14 * 24 * 60 * 60 * 1000;
+      const latest = Date.now() + 5 * 60 * 1000;
+      let acceptedCount = 0;
+      const deduplicated = new Map<string, (typeof body.samples)[number]>();
+      for (const sample of body.samples) {
+        const subject = byConnection.get(sample.connection_id);
+        const timestamp = Date.parse(sample.bucket_start);
+        if (
+          !subject ||
+          subject.user_id !== sample.user_id ||
+          subject.device_id !== sample.device_id ||
+          timestamp < earliest ||
+          timestamp > latest
+        ) continue;
+        acceptedCount += 1;
+        const key = `${sample.connection_id}:${sample.bucket_start}:${sample.bucket_seconds}`;
+        const previous = deduplicated.get(key);
+        deduplicated.set(key, previous ? {
+          ...sample,
+          upload_bytes: Math.max(previous.upload_bytes, sample.upload_bytes),
+          download_bytes: Math.max(previous.download_bytes, sample.download_bytes),
+          request_count: Math.max(previous.request_count, sample.request_count),
+          error_count: Math.max(previous.error_count, sample.error_count),
+        } : sample);
+      }
+      for (const sample of deduplicated.values()) {
+        await client.query(
+          `INSERT INTO traffic_samples(
+             batch_id,bucket_start,bucket_seconds,user_id,device_id,connection_id,
+             upload_bytes,download_bytes,request_count,error_count)
+           VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+           ON CONFLICT(connection_id,bucket_start,bucket_seconds) DO UPDATE SET
+             upload_bytes=max(traffic_samples.upload_bytes,excluded.upload_bytes),
+             download_bytes=max(traffic_samples.download_bytes,excluded.download_bytes),
+             request_count=max(traffic_samples.request_count,excluded.request_count),
+             error_count=max(traffic_samples.error_count,excluded.error_count)`,
+          [
+            body.batch_id,
+            sample.bucket_start,
+            sample.bucket_seconds,
+            sample.user_id,
+            sample.device_id,
+            sample.connection_id,
+            sample.upload_bytes,
+            sample.download_bytes,
+            sample.request_count,
+            sample.error_count,
+          ],
+        );
+      }
+      return acceptedCount;
+    });
     response.status(202).json({
-      accepted: Number(result?.accepted ?? 0),
-      dropped: Number(result?.dropped ?? body.samples.length),
+      accepted,
+      dropped: body.samples.length - accepted,
       batch_id: body.batch_id,
     });
   }),
@@ -393,10 +445,10 @@ router.post(
         return;
       }
       const result = await query<{ connection_id: string }>(
-        `UPDATE runtime_states rs SET state='Offline',observed_at=now(),updated_at=now()
-          FROM connections c WHERE rs.connection_id=c.id AND replace(c.id::text,'-','')=$1
-            AND rs.desired_version=$2 AND c.device_id=$3
-          RETURNING rs.connection_id::text`,
+        `UPDATE runtime_states SET state='Offline',observed_at=now(),updated_at=now()
+          WHERE desired_version=$2 AND connection_id IN (
+            SELECT id FROM connections WHERE replace(id,'-','')=$1 AND device_id=$3
+          ) RETURNING connection_id`,
         [parsed.connectionIdCompact, parsed.version, user.deviceId],
       );
       if (!result[0]) {
@@ -418,7 +470,7 @@ router.get(
     const database = await one<{ ok: number }>("SELECT 1 AS ok");
     response.json({
       status: database?.ok === 1 ? "healthy" : "unhealthy",
-      components: [{ component: "postgresql", status: database?.ok === 1 ? "healthy" : "unhealthy" }],
+      components: [{ component: "sqlite", status: database?.ok === 1 ? "healthy" : "unhealthy" }],
       at: new Date().toISOString(),
     });
   }),

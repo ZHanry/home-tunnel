@@ -348,12 +348,12 @@ router.post(
       if (!updated.rows[0]) throw new HttpError(423, "DEVICE_REVOKED", "设备已撤销");
       for (const state of body.connections) {
         await client.query(
-          `UPDATE runtime_states rs SET
-             applied_version=GREATEST(rs.applied_version,$3),state=$4,last_error_code=$5,last_error_summary=$6,
+          `UPDATE runtime_states SET
+             applied_version=GREATEST(applied_version,$3),state=$4,last_error_code=$5,last_error_summary=$6,
              observed_at=now(),updated_at=now()
-           FROM connections c
-          WHERE rs.connection_id=c.id AND c.id=$1 AND c.device_id=$2 AND c.user_id=$7
-            AND $3 <= rs.desired_version`,
+           WHERE connection_id=$1 AND $3 <= desired_version
+             AND EXISTS(SELECT 1 FROM connections c
+               WHERE c.id=runtime_states.connection_id AND c.device_id=$2 AND c.user_id=$7)`,
           [
             state.connection_id,
             body.device_id,
@@ -399,10 +399,11 @@ router.post(
     await transaction(async (client) => {
       for (const report of body.reports) {
         await client.query(
-          `UPDATE runtime_states rs SET applied_version=GREATEST(rs.applied_version,$3),state=$4,
+          `UPDATE runtime_states SET applied_version=GREATEST(applied_version,$3),state=$4,
              last_error_code=$5,last_error_summary=$6,observed_at=$7,updated_at=now()
-           FROM connections c WHERE rs.connection_id=c.id AND c.id=$1 AND c.device_id=$2 AND c.user_id=$8
-             AND $3 <= rs.desired_version AND $7 >= rs.observed_at`,
+           WHERE connection_id=$1 AND $3 <= desired_version AND $7 >= observed_at
+             AND EXISTS(SELECT 1 FROM connections c
+               WHERE c.id=runtime_states.connection_id AND c.device_id=$2 AND c.user_id=$8)`,
           [
             report.connection_id,
             body.device_id,

@@ -15,8 +15,7 @@ preloaded_images="${HOME_TUNNEL_PRELOADED_IMAGES:-0}"
 case "$preloaded_images" in 0|1) ;; *) echo "HOME_TUNNEL_PRELOADED_IMAGES must be 0 or 1" >&2; exit 1 ;; esac
 
 for required in \
-  compose.yaml manifest.sha256 frpc \
-  downloads/latest.json \
+  compose.yaml manifest.sha256 release.json frpc \
   caddy/home-tunnel.caddy caddy/on-demand-global.caddy \
   scripts/backup.sh scripts/caddy-apply.sh scripts/e2e_smoke.py scripts/probe-existing.sh \
   scripts/render_caddy.py scripts/rollback.sh scripts/verify-backup.sh \
@@ -24,23 +23,17 @@ for required in \
   systemd/home-tunnel-backup-verify.service systemd/home-tunnel-backup-verify.timer; do
   [ -f "$release/$required" ] || { echo "Release is missing $required" >&2; exit 1; }
 done
-download_file="$(python3 - "$release/downloads/latest.json" <<'PY'
+release_version="$(python3 - "$release/release.json" <<'PY'
 import json, re, sys
-value = json.load(open(sys.argv[1], encoding="utf-8")).get("file_name", "")
-if not re.fullmatch(r"HomeTunnel-Setup-\d+\.\d+\.\d+-x64\.exe", value):
-    raise SystemExit("Invalid Windows installer metadata")
-print(value)
-PY
-)"
-release_version="$(python3 - "$release/downloads/latest.json" <<'PY'
-import json, re, sys
-value = json.load(open(sys.argv[1], encoding="utf-8")).get("version", "")
+release = json.load(open(sys.argv[1], encoding="utf-8"))
+value = release.get("version", "")
 if not re.fullmatch(r"\d+\.\d+\.\d+", value):
     raise SystemExit("Invalid release version")
+if release.get("target") != "linux/arm64" or release.get("database") != "sqlite":
+    raise SystemExit("Invalid server release target")
 print(value)
 PY
 )"
-[ -f "$release/downloads/$download_file" ] || { echo "Release is missing downloads/$download_file" >&2; exit 1; }
 [ "$preloaded_images" -eq 1 ] || [ -f "$release/images/home-tunnel-images.tar" ] || { echo "Release is missing images/home-tunnel-images.tar" >&2; exit 1; }
 (cd "$release" && sha256sum -c manifest.sha256 >/dev/null)
 chmod 0750 "$release/frpc"
@@ -52,7 +45,7 @@ expected_caddy_sha="${EXPECTED_CADDY_SHA256:-}"
 [ -n "$expected_caddy_sha" ] || { echo "EXPECTED_CADDY_SHA256 is required" >&2; exit 1; }
 [ "$(sha256sum "$caddyfile" | awk '{print $1}')" = "$expected_caddy_sha" ] || { echo "Caddyfile changed after baseline freeze" >&2; exit 1; }
 [ "$(uname -m)" = "aarch64" ] || { echo "This release requires an ARM64 server" >&2; exit 1; }
-[ "$(df -Pk / | awk 'NR==2{print $4}')" -gt 5242880 ] || { echo "Less than 5 GiB free disk space" >&2; exit 1; }
+[ "$(df -Pk / | awk 'NR==2{print $4}')" -gt 2097152 ] || { echo "Less than 2 GiB free disk space" >&2; exit 1; }
 docker info >/dev/null
 docker inspect "$caddy_container" >/dev/null
 if [ -e "$root/compose.yaml" ] || docker ps -a --format '{{.Names}}' | grep -q '^home-tunnel-'; then
@@ -73,8 +66,6 @@ for file in "$release"/scripts/*; do install -m 0750 "$file" "$root/scripts/$(ba
 for file in "$release"/caddy/*; do install -m 0640 "$file" "$root/caddy/$(basename "$file")"; done
 for file in "$release"/systemd/*; do install -m 0644 "$file" "$root/systemd/$(basename "$file")"; done
 install -m 0640 "$release/manifest.sha256" "$root/release-manifest.sha256"
-install -m 0644 "$release/downloads/latest.json" "$root/downloads/latest.json"
-install -m 0644 "$release/downloads/$download_file" "$root/downloads/$download_file"
 
 "$root/scripts/probe-existing.sh" "$root/evidence/existing-domains.pre.tsv"
 {
@@ -95,12 +86,9 @@ write_secret() {
   chown 10001:10001 "$root/secrets/$1"
   chmod 0400 "$root/secrets/$1"
 }
-postgres_password="$(openssl rand -hex 32)"
 frps_plugin_key="$(openssl rand -hex 32)"
 bootstrap_password="Ht-$(openssl rand -hex 24)-B7!"
 admin_password="Ht-$(openssl rand -hex 24)-M7!"
-write_secret postgres_password_db "$postgres_password"
-write_secret postgres_password_control "$postgres_password"
 write_secret internal_service_key "$(openssl rand -hex 32)"
 write_secret frps_plugin_key_control "$frps_plugin_key"
 write_secret frps_plugin_key_frps "$frps_plugin_key"
@@ -108,7 +96,7 @@ write_secret lease_signing_key "$(openssl rand -hex 32)"
 write_secret bootstrap_admin_password "$bootstrap_password"
 write_secret admin_final_password "$admin_password"
 write_secret backup_passphrase "$(openssl rand -hex 48)"
-unset postgres_password frps_plugin_key bootstrap_password admin_password
+unset frps_plugin_key bootstrap_password admin_password
 
 if [ "$preloaded_images" -eq 0 ]; then
   docker load -i "$release/images/home-tunnel-images.tar" >/dev/null
@@ -146,8 +134,6 @@ wait_healthy() {
   return 1
 }
 
-docker compose -f "$root/compose.yaml" up -d postgres
-wait_healthy home-tunnel-postgres 90
 docker compose -f "$root/compose.yaml" up -d control-center
 wait_healthy home-tunnel-control-center 90
 docker compose -f "$root/compose.yaml" up -d frps traffic-gateway
@@ -174,7 +160,7 @@ chmod 0600 "$root/handoff/Home_Tunnel_admin_credentials.txt"
 "$root/scripts/probe-existing.sh" "$root/evidence/existing-domains.post.tsv"
 cmp "$root/evidence/existing-domains.pre.tsv" "$root/evidence/existing-domains.post.tsv" >/dev/null || { echo "Existing domain regression changed status or certificate" >&2; exit 1; }
 
-for service in postgres control-center traffic-gateway; do
+for service in control-center traffic-gateway; do
   [ "$(docker inspect -f '{{json .HostConfig.PortBindings}}' "home-tunnel-$service")" = "{}" ] || { echo "$service unexpectedly publishes a host port" >&2; exit 1; }
 done
 frps_ports="$(docker inspect -f '{{json .HostConfig.PortBindings}}' home-tunnel-frps)"
@@ -184,7 +170,7 @@ for unit in "$root"/systemd/*; do install -m 0644 "$unit" "/etc/systemd/system/$
 systemctl daemon-reload
 systemctl enable --now home-tunnel-backup.timer home-tunnel-backup-verify.timer >/dev/null
 docker compose -f "$root/compose.yaml" ps > "$root/evidence/compose-final.txt"
-docker stats --no-stream --format '{{.Name}} {{.CPUPerc}} {{.MemUsage}}' home-tunnel-postgres home-tunnel-control-center home-tunnel-frps home-tunnel-traffic-gateway > "$root/evidence/resources-final.txt"
+docker stats --no-stream --format '{{.Name}} {{.CPUPerc}} {{.MemUsage}}' home-tunnel-control-center home-tunnel-frps home-tunnel-traffic-gateway > "$root/evidence/resources-final.txt"
 printf '{"status":"deployed","version":"%s","completed_at":"%s"}\n' "$release_version" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$root/status/deployment.json"
 chmod 0444 "$root/status/deployment.json"
 rm -f "$root/Caddyfile.candidate"

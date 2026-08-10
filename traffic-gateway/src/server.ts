@@ -24,9 +24,9 @@ const config = {
   upstreamHost: process.env.FRPS_VHOST_HOST ?? "frps",
   upstreamPort: integer("FRPS_VHOST_PORT", 8080),
   internalKey: secret("INTERNAL_SERVICE_KEY", "INTERNAL_SERVICE_KEY_FILE"),
-  policyPollMs: integer("POLICY_POLL_MS", 1000),
   policyFullSyncMs: integer("POLICY_FULL_SYNC_MS", 5 * 60 * 1000),
-  sampleBucketSeconds: integer("SAMPLE_BUCKET_SECONDS", 10),
+  policyReconnectMs: integer("POLICY_RECONNECT_MS", 3000),
+  sampleBucketSeconds: integer("SAMPLE_BUCKET_SECONDS", 60),
   maxBodyChunkBytes: integer("MAX_BODY_CHUNK_BYTES", 64 * 1024),
 };
 
@@ -259,8 +259,12 @@ export class HierarchicalLimiter {
   }
 }
 
-function abortableDelay(milliseconds: number, signal: AbortSignal): Promise<void> {
-  return new Promise((resolve, reject) => {
+function waitForReconnect(milliseconds: number, signal: AbortSignal): Promise<void> {
+  return new Promise((resolve) => {
+    if (signal.aborted) {
+      resolve();
+      return;
+    }
     const timer = setTimeout(done, milliseconds);
     function done() {
       signal.removeEventListener("abort", aborted);
@@ -268,7 +272,7 @@ function abortableDelay(milliseconds: number, signal: AbortSignal): Promise<void
     }
     function aborted() {
       clearTimeout(timer);
-      reject(new Error("TRANSFER_ABORTED"));
+      done();
     }
     signal.addEventListener("abort", aborted, { once: true });
   });
@@ -620,16 +624,99 @@ async function syncPolicies(): Promise<void> {
   policies.apply(snapshot);
 }
 
+function abortableDelay(milliseconds: number, signal: AbortSignal): Promise<void> {
+  return new Promise((resolve) => {
+    if (signal.aborted) {
+      resolve();
+      return;
+    }
+    const finish = () => {
+      signal.removeEventListener("abort", stop);
+      resolve();
+    };
+    const timer = setTimeout(finish, milliseconds);
+    const stop = () => {
+      clearTimeout(timer);
+      finish();
+    };
+    signal.addEventListener("abort", stop, { once: true });
+  });
+}
+
+async function consumePolicyEvents(response: Response, signal: AbortSignal, onEvent: () => void): Promise<void> {
+  if (!response.body) throw new Error("policy event stream has no body");
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  try {
+    while (!signal.aborted) {
+      const chunk = await reader.read();
+      if (chunk.done) throw new Error("policy event stream closed");
+      buffer += decoder.decode(chunk.value, { stream: true }).replaceAll("\r\n", "\n");
+      let boundary = buffer.indexOf("\n\n");
+      while (boundary >= 0) {
+        const message = buffer.slice(0, boundary);
+        buffer = buffer.slice(boundary + 2);
+        const event = message.split("\n").find((line) => line.startsWith("event:"))?.slice(6).trim();
+        if (event === "policy" || event === "ready") onEvent();
+        boundary = buffer.indexOf("\n\n");
+      }
+    }
+  } finally {
+    await reader.cancel().catch(() => undefined);
+  }
+}
+
+async function watchPolicyEvents(signal: AbortSignal, onEvent: () => void): Promise<void> {
+  while (!signal.aborted) {
+    const connection = new AbortController();
+    const forwardAbort = () => connection.abort(signal.reason);
+    signal.addEventListener("abort", forwardAbort, { once: true });
+    const connectTimeout = setTimeout(() => connection.abort(new Error("policy event connection timeout")), 10_000);
+    try {
+      const response = await fetch(`${config.controlCenterUrl}/internal/policies/events`, {
+        headers: { "x-home-tunnel-key": config.internalKey, accept: "text/event-stream" },
+        signal: connection.signal,
+      });
+      clearTimeout(connectTimeout);
+      if (!response.ok) throw new Error(`policy event stream returned ${response.status}`);
+      log("info", "POLICY_EVENTS_CONNECTED", "Policy push channel connected");
+      await consumePolicyEvents(response, signal, onEvent);
+    } catch (error) {
+      clearTimeout(connectTimeout);
+      if (!signal.aborted) {
+        log("warn", "POLICY_EVENTS_DISCONNECTED", error instanceof Error ? error.message : "Policy push channel disconnected");
+      }
+    } finally {
+      signal.removeEventListener("abort", forwardAbort);
+    }
+    if (!signal.aborted) await waitForReconnect(config.policyReconnectMs, signal);
+  }
+}
+
 async function main(): Promise<void> {
   await syncPolicies();
   let syncing = false;
-  const policyTimer = setInterval(() => {
-    if (syncing) return;
+  let syncAgain = false;
+  const requestSync = () => {
+    if (syncing) {
+      syncAgain = true;
+      return;
+    }
     syncing = true;
-    void syncPolicies().catch((error) => log("warn", "POLICY_SYNC_FAILED", error instanceof Error ? error.message : "Unknown policy error")).finally(() => {
+    void (async () => {
+      do {
+        syncAgain = false;
+        await syncPolicies();
+      } while (syncAgain);
+    })().catch((error) => log("warn", "POLICY_SYNC_FAILED", error instanceof Error ? error.message : "Unknown policy error")).finally(() => {
       syncing = false;
+      if (syncAgain) requestSync();
     });
-  }, config.policyPollMs);
+  };
+  const policyEvents = new AbortController();
+  void watchPolicyEvents(policyEvents.signal, requestSync);
+  const policyTimer = setInterval(requestSync, config.policyFullSyncMs);
   const sampleTimer = setInterval(() => void samples.flush(), config.sampleBucketSeconds * 1000);
   const expiryTimer = setInterval(() => {
     if (policies.enforceExpiry()) log("warn", "POLICY_AUTHORIZATION_EXPIRED", "Expired policy authorization closed active streams");
@@ -646,6 +733,7 @@ async function main(): Promise<void> {
   const stop = async (signal: string) => {
     if (stopping) return;
     stopping = true;
+    policyEvents.abort();
     clearInterval(policyTimer);
     clearInterval(sampleTimer);
     clearInterval(expiryTimer);

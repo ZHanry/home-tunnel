@@ -12,8 +12,8 @@ flowchart LR
     Caddy -->|"Assigned tunnel host"| Gateway["Traffic gateway"]
     Gateway -->|"Authorized vhost request"| FRPS
     FRPS -->|"Managed tunnel"| Local["Private HTTP/HTTPS service"]
-    Control --> PostgreSQL[("PostgreSQL")]
-    Gateway <-->|"Policy snapshots and traffic samples"| Control
+    Control --> SQLite[("SQLite / WAL")]
+    Gateway <-->|"Policy push, snapshots and traffic samples"| Control
     FRPS <-->|"Login and proxy authorization plugin"| Control
 ```
 
@@ -24,7 +24,7 @@ flowchart LR
 - `windows-client/`: WPF client for server selection, account login, device state, connection configuration, GitHub-hosted updates and diagnostics.
 - `windows-agent/`: capability-restricted FRP client. It requires the generated configuration to match the server profile explicitly selected in the Windows client.
 - `deploy/frps/`: FRPS image and authorization-plugin configuration.
-- `compose.yaml`: portable source-build deployment including PostgreSQL and Caddy.
+- `compose.yaml`: portable deployment using prebuilt multi-architecture images, SQLite and Caddy; `compose.build.yaml` opts into local source builds.
 - `deploy/`: production-oriented ARM64 release, backup, smoke-test and rollback tooling retained for the original deployment profile.
 
 ## Control flow
@@ -34,6 +34,7 @@ flowchart LR
 3. The managed Agent validates the generated FRP configuration against the HTTPS server profile selected by the user before starting.
 4. FRPS asks the control center to authorize Agent login and proxy creation.
 5. Caddy asks the control center before obtaining an on-demand certificate for a hostname.
-6. The traffic gateway resolves the hostname to an active policy before forwarding the request to FRPS.
+6. Policy changes notify the traffic gateway over an authenticated server-sent-event stream; a five-minute full sync remains as recovery.
+7. The traffic gateway resolves the hostname to an active policy before forwarding the request to FRPS.
 
-The design intentionally does not expose PostgreSQL, the control-center container or the traffic-gateway container directly on host ports.
+The design intentionally does not expose the SQLite volume, control-center container or traffic-gateway container directly on host ports.

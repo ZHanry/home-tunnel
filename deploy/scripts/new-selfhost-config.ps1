@@ -31,7 +31,6 @@ if ($FrpsPublicHost -notmatch '^[A-Za-z0-9.-]{1,253}$') { throw "FrpsPublicHost 
 if ($AcmeEmail -notmatch '^[^\s@]+@[^\s@]+$') { throw "AcmeEmail is not valid" }
 
 $secretNames = @(
-    "postgres_password",
     "internal_service_key",
     "frps_plugin_key",
     "lease_signing_key",
@@ -50,7 +49,6 @@ function New-HexSecret([int]$Bytes) {
 if ($PSCmdlet.ShouldProcess($workspaceRoot, "create local self-host configuration and secrets")) {
     New-Item -ItemType Directory -Force -Path $secretRoot | Out-Null
     $values = @{
-        postgres_password = New-HexSecret 32
         internal_service_key = New-HexSecret 32
         frps_plugin_key = New-HexSecret 32
         lease_signing_key = New-HexSecret 32
@@ -75,7 +73,7 @@ HOME_TUNNEL_BOOTSTRAP_ADMIN_USERNAME=admin
     $values.Clear()
 
     Write-Output "Created $environmentPath"
-    Write-Output "Created five untracked secret files below $secretRoot"
+    Write-Output "Created four untracked secret files below $secretRoot"
     Write-Output "Bootstrap username: admin"
     Write-Output "Read deploy/secrets/bootstrap_admin_password locally for the one-time password."
 }

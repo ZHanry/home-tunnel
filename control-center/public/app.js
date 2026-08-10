@@ -93,7 +93,7 @@ async function loadLatestRelease() {
     shaNode.title = release.sha256;
     releaseNote.textContent = `v${release.version} · ${release.architecture} · ${formatBytes(release.size_bytes)}`;
   } catch {
-    releaseNote.textContent = "安装包暂不可用，请稍后刷新页面重试。";
+    releaseNote.textContent = "前往 GitHub Releases 获取最新版本";
   }
 }
 

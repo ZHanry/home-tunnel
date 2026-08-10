@@ -1,7 +1,6 @@
-import type { PoolClient } from "pg";
-import { pool } from "./db.js";
+import type { DatabaseClient } from "./db.js";
+import { transaction } from "./db.js";
 
-const maintenanceLock = 1_212_384_743;
 const batchSize = 5_000;
 const maximumBatchesPerRun = 20;
 
@@ -13,128 +12,166 @@ type MaintenanceStats = {
   outbox_events_deleted: number;
 };
 
-async function runBatches(
-  client: PoolClient,
-  text: string,
+function placeholders(count: number, offset = 0): string {
+  return Array.from({ length: count }, (_value, index) => `$${offset + index + 1}`).join(",");
+}
+
+async function deleteByIds(
+  client: DatabaseClient,
+  table: string,
+  where: string,
   values: unknown[],
 ): Promise<number> {
   let total = 0;
   for (let batch = 0; batch < maximumBatchesPerRun; batch += 1) {
-    const result = await client.query<{ processed: number }>(text, [...values, batchSize]);
-    const processed = Number(result.rows[0]?.processed ?? 0);
-    total += processed;
-    if (processed < batchSize) break;
+    const rows = await client.query<{ id: number }>(
+      `SELECT id FROM ${table} WHERE ${where} ORDER BY id LIMIT ${batchSize}`,
+      values,
+    );
+    const ids = rows.rows.map((row) => row.id);
+    if (!ids.length) break;
+    const result = await client.query(
+      `DELETE FROM ${table} WHERE id IN (${placeholders(ids.length)})`,
+      ids,
+    );
+    total += result.rowCount;
+    if (ids.length < batchSize) break;
   }
   return total;
 }
 
-export async function runDataMaintenance(now = new Date()): Promise<MaintenanceStats | null> {
-  const client = await pool.connect();
-  let locked = false;
-  try {
-    const lock = await client.query<{ locked: boolean }>("SELECT pg_try_advisory_lock($1) AS locked", [maintenanceLock]);
-    locked = lock.rows[0]?.locked === true;
-    if (!locked) return null;
-
-    const trafficCutoff = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
-    const hourlyCutoff = new Date(now);
-    hourlyCutoff.setUTCMonth(hourlyCutoff.getUTCMonth() - 18);
-    const auditCutoff = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-    const sessionCutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    const outboxCutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-
-    const trafficSamplesArchived = await runBatches(
-      client,
-      `WITH candidates AS MATERIALIZED (
-         SELECT id,bucket_start,user_id,device_id,connection_id,upload_bytes,download_bytes,request_count,error_count
-           FROM traffic_samples
-          WHERE bucket_start < $1
-          ORDER BY bucket_start,id
-          LIMIT $2
-          FOR UPDATE SKIP LOCKED
-       ), aggregated AS (
-         SELECT date_trunc('hour',bucket_start) AS bucket_start,user_id,device_id,connection_id,
-                sum(upload_bytes)::bigint AS upload_bytes,sum(download_bytes)::bigint AS download_bytes,
-                sum(request_count)::bigint AS request_count,sum(error_count)::bigint AS error_count
-           FROM candidates GROUP BY 1,2,3,4
-       ), archived AS (
-         INSERT INTO traffic_hourly(
+async function archiveTrafficSamples(client: DatabaseClient, cutoff: Date): Promise<number> {
+  let total = 0;
+  for (let batch = 0; batch < maximumBatchesPerRun; batch += 1) {
+    const selected = await client.query<{
+      id: number;
+      bucket_start: Date;
+      user_id: string;
+      device_id: string;
+      connection_id: string;
+      upload_bytes: number;
+      download_bytes: number;
+      request_count: number;
+      error_count: number;
+    }>(
+      `SELECT id,bucket_start,user_id,device_id,connection_id,
+              upload_bytes,download_bytes,request_count,error_count
+         FROM traffic_samples WHERE bucket_start < $1 ORDER BY bucket_start,id LIMIT ${batchSize}`,
+      [cutoff],
+    );
+    if (!selected.rows.length) break;
+    const aggregates = new Map<string, {
+      bucketStart: string;
+      userId: string;
+      deviceId: string;
+      connectionId: string;
+      uploadBytes: number;
+      downloadBytes: number;
+      requestCount: number;
+      errorCount: number;
+    }>();
+    for (const sample of selected.rows) {
+      const hour = new Date(sample.bucket_start);
+      hour.setUTCMinutes(0, 0, 0);
+      const bucketStart = hour.toISOString();
+      const key = `${sample.connection_id}:${bucketStart}`;
+      const aggregate = aggregates.get(key) ?? {
+        bucketStart,
+        userId: sample.user_id,
+        deviceId: sample.device_id,
+        connectionId: sample.connection_id,
+        uploadBytes: 0,
+        downloadBytes: 0,
+        requestCount: 0,
+        errorCount: 0,
+      };
+      aggregate.uploadBytes += Number(sample.upload_bytes);
+      aggregate.downloadBytes += Number(sample.download_bytes);
+      aggregate.requestCount += Number(sample.request_count);
+      aggregate.errorCount += Number(sample.error_count);
+      aggregates.set(key, aggregate);
+    }
+    for (const aggregate of aggregates.values()) {
+      await client.query(
+        `INSERT INTO traffic_hourly(
            bucket_start,user_id,device_id,connection_id,upload_bytes,download_bytes,request_count,error_count)
-         SELECT bucket_start,user_id,device_id,connection_id,upload_bytes,download_bytes,request_count,error_count
-           FROM aggregated
+         VALUES($1,$2,$3,$4,$5,$6,$7,$8)
          ON CONFLICT(connection_id,bucket_start) DO UPDATE SET
-           upload_bytes=traffic_hourly.upload_bytes+EXCLUDED.upload_bytes,
-           download_bytes=traffic_hourly.download_bytes+EXCLUDED.download_bytes,
-           request_count=traffic_hourly.request_count+EXCLUDED.request_count,
-           error_count=traffic_hourly.error_count+EXCLUDED.error_count,
-           updated_at=now()
-         RETURNING 1
-       ), deleted AS (
-         DELETE FROM traffic_samples sample USING candidates candidate
-          WHERE sample.id=candidate.id RETURNING sample.id
-       )
-       SELECT count(*)::int AS processed FROM deleted`,
-      [trafficCutoff],
+           upload_bytes=traffic_hourly.upload_bytes+excluded.upload_bytes,
+           download_bytes=traffic_hourly.download_bytes+excluded.download_bytes,
+           request_count=traffic_hourly.request_count+excluded.request_count,
+           error_count=traffic_hourly.error_count+excluded.error_count,
+           updated_at=now()`,
+        [
+          aggregate.bucketStart,
+          aggregate.userId,
+          aggregate.deviceId,
+          aggregate.connectionId,
+          aggregate.uploadBytes,
+          aggregate.downloadBytes,
+          aggregate.requestCount,
+          aggregate.errorCount,
+        ],
+      );
+    }
+    const ids = selected.rows.map((row) => row.id);
+    const deleted = await client.query(
+      `DELETE FROM traffic_samples WHERE id IN (${placeholders(ids.length)})`,
+      ids,
     );
-
-    const trafficHourlyDeleted = await runBatches(
-      client,
-      `WITH candidates AS (
-         SELECT connection_id,bucket_start FROM traffic_hourly
-          WHERE bucket_start < $1 ORDER BY bucket_start LIMIT $2
-       ), deleted AS (
-         DELETE FROM traffic_hourly hourly USING candidates candidate
-          WHERE hourly.connection_id=candidate.connection_id AND hourly.bucket_start=candidate.bucket_start
-          RETURNING 1
-       ) SELECT count(*)::int AS processed FROM deleted`,
-      [hourlyCutoff],
-    );
-
-    const auditEventsDeleted = await runBatches(
-      client,
-      `WITH candidates AS (
-         SELECT id FROM audit_events WHERE created_at < $1 ORDER BY id LIMIT $2
-       ), deleted AS (
-         DELETE FROM audit_events event USING candidates candidate WHERE event.id=candidate.id RETURNING 1
-       ) SELECT count(*)::int AS processed FROM deleted`,
-      [auditCutoff],
-    );
-
-    const sessionsDeleted = await runBatches(
-      client,
-      `WITH candidates AS (
-         SELECT id FROM sessions
-          WHERE (revoked_at IS NOT NULL AND revoked_at < $1) OR refresh_expires_at < $1
-          ORDER BY created_at LIMIT $2
-       ), deleted AS (
-         DELETE FROM sessions session USING candidates candidate WHERE session.id=candidate.id RETURNING 1
-       ) SELECT count(*)::int AS processed FROM deleted`,
-      [sessionCutoff],
-    );
-
-    const outboxEventsDeleted = await runBatches(
-      client,
-      `WITH latest AS (SELECT max(id) AS id FROM outbox_events), candidates AS (
-         SELECT event.id FROM outbox_events event,latest
-          WHERE event.delivered_at IS NOT NULL AND event.delivered_at < $1 AND event.id < latest.id
-          ORDER BY event.id LIMIT $2
-       ), deleted AS (
-         DELETE FROM outbox_events event USING candidates candidate WHERE event.id=candidate.id RETURNING 1
-       ) SELECT count(*)::int AS processed FROM deleted`,
-      [outboxCutoff],
-    );
-
-    return {
-      traffic_samples_archived: trafficSamplesArchived,
-      traffic_hourly_deleted: trafficHourlyDeleted,
-      audit_events_deleted: auditEventsDeleted,
-      sessions_deleted: sessionsDeleted,
-      outbox_events_deleted: outboxEventsDeleted,
-    };
-  } finally {
-    if (locked) await client.query("SELECT pg_advisory_unlock($1)", [maintenanceLock]).catch(() => undefined);
-    client.release();
+    total += deleted.rowCount;
+    if (selected.rows.length < batchSize) break;
   }
+  return total;
+}
+
+async function deleteTrafficHourly(client: DatabaseClient, cutoff: Date): Promise<number> {
+  let total = 0;
+  for (let batch = 0; batch < maximumBatchesPerRun; batch += 1) {
+    const selected = await client.query<{ connection_id: string; bucket_start: Date }>(
+      `SELECT connection_id,bucket_start FROM traffic_hourly
+        WHERE bucket_start < $1 ORDER BY bucket_start LIMIT ${batchSize}`,
+      [cutoff],
+    );
+    if (!selected.rows.length) break;
+    let parameter = 1;
+    const tuples = selected.rows.map(() => `($${parameter++},$${parameter++})`).join(",");
+    const values = selected.rows.flatMap((row) => [row.connection_id, row.bucket_start]);
+    const deleted = await client.query(
+      `DELETE FROM traffic_hourly WHERE (connection_id,bucket_start) IN (${tuples})`,
+      values,
+    );
+    total += deleted.rowCount;
+    if (selected.rows.length < batchSize) break;
+  }
+  return total;
+}
+
+export async function runDataMaintenance(now = new Date()): Promise<MaintenanceStats> {
+  const trafficCutoff = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+  const hourlyCutoff = new Date(now);
+  hourlyCutoff.setUTCMonth(hourlyCutoff.getUTCMonth() - 18);
+  const auditCutoff = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+  const sessionCutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const outboxCutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+  return transaction(async (client) => ({
+    traffic_samples_archived: await archiveTrafficSamples(client, trafficCutoff),
+    traffic_hourly_deleted: await deleteTrafficHourly(client, hourlyCutoff),
+    audit_events_deleted: await deleteByIds(client, "audit_events", "created_at < $1", [auditCutoff]),
+    sessions_deleted: await deleteByIds(
+      client,
+      "sessions",
+      "(revoked_at IS NOT NULL AND revoked_at < $1) OR refresh_expires_at < $1",
+      [sessionCutoff],
+    ),
+    outbox_events_deleted: await deleteByIds(
+      client,
+      "outbox_events",
+      "delivered_at IS NOT NULL AND delivered_at < $1 AND id < (SELECT max(id) FROM outbox_events)",
+      [outboxCutoff],
+    ),
+  }));
 }
 
 export function startDataMaintenance(): { close: () => void } {
@@ -143,7 +180,7 @@ export function startDataMaintenance(): { close: () => void } {
     if (closed) return;
     void runDataMaintenance()
       .then((stats) => {
-        if (!stats || !Object.values(stats).some((value) => value > 0)) return;
+        if (!Object.values(stats).some((value) => value > 0)) return;
         console.log(JSON.stringify({
           timestamp: new Date().toISOString(),
           level: "info",

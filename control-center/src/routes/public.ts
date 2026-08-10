@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { readFile, stat } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { config } from "../config.js";
 import { asyncHandler, HttpError } from "../http.js";
 
@@ -107,20 +107,11 @@ async function sendRelease(
   release: ReleaseMetadata,
   stable: boolean,
 ): Promise<void> {
-  const root = resolve(config.downloadsDirectory);
-  const filePath = resolve(root, release.file_name);
-  if (dirname(filePath) !== root) throw unavailable();
-  const file = await stat(filePath);
-  if (!file.isFile() || file.size !== release.size_bytes) throw unavailable();
   response.setHeader("cache-control", stable ? "no-store" : "public, max-age=31536000, immutable");
-  response.setHeader("content-type", "application/vnd.microsoft.portable-executable");
-  response.setHeader("digest", `sha-256=${Buffer.from(release.sha256, "hex").toString("base64")}`);
-  await new Promise<void>((resolvePromise, rejectPromise) => {
-    response.download(filePath, release.file_name, (error) => {
-      if (error && !response.headersSent) rejectPromise(error);
-      else resolvePromise();
-    });
-  });
+  response.redirect(
+    302,
+    `${githubRepositoryUrl}/releases/download/v${encodeURIComponent(release.version)}/${encodeURIComponent(release.file_name)}`,
+  );
 }
 
 downloadRouter.get(

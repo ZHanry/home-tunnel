@@ -1,0 +1,17 @@
+services:
+  control-center:
+    image: home-tunnel/control-center:dev
+    build:
+      context: ./control-center
+
+  traffic-gateway:
+    image: home-tunnel/traffic-gateway:dev
+    build:
+      context: ./traffic-gateway
+
+  frps:
+    image: home-tunnel/frps:0.62.1-dev
+    build:
+      context: ./deploy/frps
+      args:
+        FRP_VERSION: v0.62.1

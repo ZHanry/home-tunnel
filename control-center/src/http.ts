@@ -1,9 +1,9 @@
 import { randomUUID } from "node:crypto";
 import type { NextFunction, Request, RequestHandler, Response } from "express";
-import type { PoolClient } from "pg";
+import type { DatabaseClient } from "./db.js";
 import { config } from "./config.js";
 import { one, query } from "./db.js";
-import { constantTimeStringEqual, opaqueToken, tokenHash } from "./security.js";
+import { constantTimeStringEqual, opaqueToken, PasswordWorkQueueFullError, tokenHash } from "./security.js";
 import type { AuthenticatedActor, AuthenticatedRequest } from "./types.js";
 
 export class HttpError extends Error {
@@ -191,7 +191,7 @@ export type IssuedSession = {
 };
 
 export async function issueSession(
-  client: PoolClient,
+  client: DatabaseClient,
   user: { id: string; token_version: string | number },
   deviceId: string | null,
 ): Promise<IssuedSession> {
@@ -248,7 +248,7 @@ export function sourceIp(request: Request): string | null {
 }
 
 export async function audit(
-  client: PoolClient,
+  client: DatabaseClient,
   request: AuthenticatedRequest,
   action: string,
   targetType: string,
@@ -296,6 +296,15 @@ export function errorMiddleware(
       message: error.message,
       request_id: requestId,
       ...error.details,
+    });
+    return;
+  }
+  if (error instanceof PasswordWorkQueueFullError) {
+    response.setHeader("retry-after", "1");
+    response.status(429).json({
+      error_code: "RATE_LIMITED",
+      message: "密码校验请求过多，请稍后重试",
+      request_id: requestId,
     });
     return;
   }

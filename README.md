@@ -7,7 +7,7 @@
 
 Home Tunnel 把 FRP、自动 HTTPS、访问策略、管理后台和 Windows 图形客户端组合成一套完整工具。它适合安全发布 NAS、Home Assistant、开发预览等私网 HTTP/HTTPS 服务，同时保留可审计、可限速、可立即停止的集中控制。
 
-> 当前版本为 `2.2.5`。服务端支持从源码构建的 `amd64`/`arm64` 容器；桌面客户端目前仅支持 Windows 10/11 x64。客户端不内置任何运营者域名或 IP，首次登录时由用户填写自己的控制中心 HTTPS 地址。
+> 当前版本为 `2.2.5`。服务端默认提供 `amd64`/`arm64` 预构建镜像，也保留源码构建方式；桌面客户端目前仅支持 Windows 10/11 x64。客户端不内置任何运营者域名或 IP，首次登录时由用户填写自己的控制中心 HTTPS 地址。
 
 ## 为什么使用 Home Tunnel
 
@@ -15,16 +15,16 @@ Home Tunnel 把 FRP、自动 HTTPS、访问策略、管理后台和 Windows 图�
 - **自动 HTTPS**：Caddy 作为唯一公网 Web 入口，按已分配域名签发证书。
 - **能力受限的 Agent**：基于固定 FRP 0.62.1 源码构建，只接受与用户所选服务器一致的 Home Tunnel HTTP 隧道配置。
 - **集中策略**：用户、设备、连接、带宽和租约状态统一管理。
-- **默认隔离**：数据库、控制中心和网关不直接发布主机端口；容器采用只读文件系统和最小能力集。
+- **默认隔离**：SQLite、控制中心和网关不直接发布主机端口；容器采用只读文件系统和最小能力集。
 - **可运维**：健康检查、审计事件、流量聚合、备份与回滚工具，以及版本化发布元数据。
 
-“轻量”主要指个人用户的使用和管理体验，而不是单文件服务端。参考部署包含 Caddy、控制中心、流量网关、PostgreSQL 和 FRPS 五个容器，建议至少准备 2 GiB 内存与 5 GiB 可用磁盘。
+参考部署现在只有 Caddy、控制中心、流量网关和 FRPS 四个容器，控制数据保存在单个 SQLite 文件中。空闲状态不再每秒轮询策略；变更通过推送触发同步。建议准备 1 GiB 内存（低配机同时启用 swap）与 2 GiB 可用磁盘。
 
 ## 工作方式
 
 ```text
 远程浏览器 ─HTTPS→ Caddy ─→ 流量网关 ─→ FRPS ═受管隧道═→ 家中 Windows 主机
-管理员     ─HTTPS→ Caddy ─→ 控制中心 ─→ PostgreSQL
+管理员     ─HTTPS→ Caddy ─→ 控制中心 ─→ SQLite
 Windows 客户端 ─REST/WebSocket→ 控制中心
 ```
 
@@ -50,7 +50,8 @@ Windows 客户端 ─REST/WebSocket→ 控制中心
 
    ```sh
    docker compose config --quiet
-   docker compose up -d --build
+   docker compose pull
+   docker compose up -d
    docker compose ps
    ```
 
@@ -61,6 +62,8 @@ Windows 客户端 ─REST/WebSocket→ 控制中心
    ```
 
 完整的 DNS、防火墙、Windows 客户端构建和升级说明见 [自托管指南](docs/SELF_HOSTING.md)。不要将示例域名、示例 IP 或任何 `CHANGE_ME` 值用于实际公网部署。
+
+若要从当前源码构建镜像，改用 `docker compose -f compose.yaml -f compose.build.yaml up -d --build`。
 
 ## 通用 Windows 客户端
 
@@ -98,6 +101,7 @@ pnpm run check
 pnpm run build
 pnpm test
 pnpm run test:public
+pnpm run test:integration
 
 Set-Location ..\traffic-gateway
 pnpm install --frozen-lockfile
@@ -124,7 +128,7 @@ dotnet run --project .\windows-client-tests\HomeTunnel.Client.Tests.csproj -c Re
 
 - 简化跨平台客户端构建与签名流程
 - 增加自动化数据库备份和恢复演练文档
-- 完善 GitHub Release 多架构镜像发布
+- 继续降低空闲内存、镜像体积和低配机器启动峰值
 - 评估 Linux/macOS 客户端支持
 
 ## 许可证

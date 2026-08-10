@@ -461,11 +461,11 @@ const deleteDeviceHandler = asyncHandler(async (request, response) => {
     await client.query("DELETE FROM sessions WHERE device_id=$1", [deviceId]);
     await client.query("DELETE FROM traffic_hourly WHERE device_id=$1", [deviceId]);
     await client.query("DELETE FROM traffic_samples WHERE device_id=$1", [deviceId]);
-    if (connectionIds.length) {
-      await client.query("DELETE FROM runtime_states WHERE connection_id=ANY($1::uuid[])", [connectionIds]);
+    for (const connectionId of connectionIds) {
+      await client.query("DELETE FROM runtime_states WHERE connection_id=$1", [connectionId]);
       await client.query(
-        "DELETE FROM traffic_policies WHERE scope_type='connection' AND scope_id=ANY($1::uuid[])",
-        [connectionIds],
+        "DELETE FROM traffic_policies WHERE scope_type='connection' AND scope_id=$1",
+        [connectionId],
       );
     }
     await client.query("DELETE FROM connections WHERE device_id=$1", [deviceId]);
@@ -761,13 +761,15 @@ router.get(
     requireAdmin(request);
     requirePasswordNormal(request);
     const started = performance.now();
-    const dbResult = await pool.query<{ now: Date }>("SELECT now()");
+    const dbResult = await pool.query<{ now: Date }>("SELECT now() AS now");
     const dbLatencyMs = Math.round((performance.now() - started) * 10) / 10;
-    const outbox = await one<{ pending: number; oldest_age_seconds: string | null }>(
-      `SELECT count(*)::int AS pending,
-              extract(epoch FROM (now()-min(created_at)))::text AS oldest_age_seconds
+    const outbox = await one<{ pending: number; oldest_at: Date | null }>(
+      `SELECT count(*) AS pending,min(created_at) AS oldest_at
          FROM outbox_events WHERE delivered_at IS NULL`,
     );
+    const oldestAgeSeconds = outbox?.oldest_at
+      ? Math.max(0, Math.round((Date.now() - outbox.oldest_at.getTime()) / 1000))
+      : 0;
     const [gateway, frpsProbe, caddyProbe, backup] = await Promise.all([
       gatewayHealth(),
       tcpHealth(config.frpsHost, config.frpsPort),
@@ -776,12 +778,12 @@ router.get(
     ]);
     const components: Array<Record<string, unknown> & { status: string }> = [
       { component: "control-center", status: "healthy", version: APP_VERSION },
-      { component: "postgresql", status: dbResult.rows[0] ? "healthy" : "unhealthy", latency_ms: dbLatencyMs },
+      { component: "sqlite", status: dbResult.rows[0] ? "healthy" : "unhealthy", latency_ms: dbLatencyMs },
       {
         component: "outbox",
-        status: Number(outbox?.oldest_age_seconds ?? 0) <= 5 ? "healthy" : "degraded",
+        status: oldestAgeSeconds <= 5 ? "healthy" : "degraded",
         pending: outbox?.pending ?? 0,
-        oldest_age_seconds: Number(outbox?.oldest_age_seconds ?? 0),
+        oldest_age_seconds: oldestAgeSeconds,
       },
       gateway as Record<string, unknown> & { status: string },
       { component: "frps", ...frpsProbe },

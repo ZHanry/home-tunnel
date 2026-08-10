@@ -48,8 +48,7 @@ if ($release.target -ne "linux/arm64" -or $release.image_tag -ne $expectedImageT
     throw "Release target metadata is invalid"
 }
 
-$installerName = "HomeTunnel-Setup-$version-x64.exe"
-$fileNames = @("control-center-image.tar", "traffic-gateway-image.tar", $installerName, "latest.json", "update-ui.sh")
+$fileNames = @("home-tunnel-ui-images.tar", "update-ui.sh")
 $localFiles = @{}
 foreach ($name in $fileNames) {
     $path = Join-Path $ReleaseDirectory $name
@@ -62,15 +61,6 @@ foreach ($name in $fileNames) {
         throw "Release file does not match release.json: $name"
     }
     $localFiles[$name] = [pscustomobject]@{ Path = $path; Hash = $actualHash; Size = $actualSize }
-}
-
-$latest = Get-Content -Raw -LiteralPath $localFiles["latest.json"].Path | ConvertFrom-Json
-$expectedDownloadUrl = "https://github.com/ZHanry/home-tunnel/releases/download/v$version/$installerName"
-if ($latest.version -ne $version -or $latest.file_name -ne $installerName -or
-    $latest.sha256 -ne $localFiles[$installerName].Hash -or $latest.size_bytes -ne $localFiles[$installerName].Size -or
-    $latest.download_url -ne $expectedDownloadUrl -or
-    $latest.stable_download_url -ne "https://github.com/ZHanry/home-tunnel/releases/latest") {
-    throw "Installer and latest.json do not match"
 }
 
 $ssh = Get-Command ssh -ErrorAction Stop | Select-Object -ExpandProperty Source -First 1
@@ -116,14 +106,17 @@ printf "CADDY_PATH=%s\n" "$caddyfile"
 printf "CADDY_SHA="; sha256sum "$caddyfile" | cut -d" " -f1
 printf "CADDY_INODE="; stat -c "%i" "$caddyfile"
 printf "ROOT_FREE_KB="; df -Pk / | awk "NR==2 {print \$4}"
-for name in home-tunnel-postgres home-tunnel-control-center home-tunnel-frps home-tunnel-traffic-gateway; do
+if docker ps -a --format "{{.Names}}" | grep -qx home-tunnel-postgres || grep -Eq "^  postgres:" /opt/home-tunnel/compose.yaml; then
+  printf "LEGACY_POSTGRES=1\n"
+else
+  printf "LEGACY_POSTGRES=0\n"
+  grep -q "SQLITE_PATH: /data/home-tunnel.db" /opt/home-tunnel/compose.yaml
+  grep -q "sqlite-data:/data" /opt/home-tunnel/compose.yaml
+fi
+for name in home-tunnel-control-center home-tunnel-frps home-tunnel-traffic-gateway; do
   printf "%s=" "$name"
   docker inspect -f "{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}|{{.Image}}|{{.State.StartedAt}}" "$name"
 done
-printf "CONTROL_COMPOSE_IMAGE="
-awk "/^  control-center:/{inside=1;next} inside && /^  [A-Za-z0-9_-]+:/{exit} inside && /^    image:/{print \$2;exit}" /opt/home-tunnel/compose.yaml
-printf "GATEWAY_COMPOSE_IMAGE="
-awk "/^  traffic-gateway:/{inside=1;next} inside && /^  [A-Za-z0-9_-]+:/{exit} inside && /^    image:/{print \$2;exit}" /opt/home-tunnel/compose.yaml
 '
 '@
 $preflightCommand = $preflightCommand.Replace("__CADDY_SELECTOR__", $caddySelector)
@@ -133,8 +126,13 @@ $caddyHash = [regex]::Match($preflight, '(?m)^CADDY_SHA=([0-9a-f]{64})$').Groups
 $caddyInode = [regex]::Match($preflight, '(?m)^CADDY_INODE=([0-9]+)$').Groups[1].Value
 $freeKb = [regex]::Match($preflight, '(?m)^ROOT_FREE_KB=([0-9]+)$').Groups[1].Value
 if (-not $caddyPath -or -not $caddyHash -or -not $caddyInode -or -not $freeKb) { throw "Could not freeze the production baseline" }
-if ([long]$freeKb -lt 4194304) { throw "Server has less than 4 GiB free disk space" }
-foreach ($name in @("home-tunnel-postgres", "home-tunnel-control-center", "home-tunnel-frps", "home-tunnel-traffic-gateway")) {
+if ($preflight -match '(?m)^LEGACY_POSTGRES=1$') {
+    throw "Legacy PostgreSQL deployment detected. This SQLite update intentionally stops before changing data; export or migrate the old database first."
+}
+$archiveKb = [Math]::Ceiling([double]$localFiles["home-tunnel-ui-images.tar"].Size / 1KB)
+$requiredFreeKb = [Math]::Max(1048576, [long]($archiveKb * 3 + 262144))
+if ([long]$freeKb -lt $requiredFreeKb) { throw "Server does not have enough free disk space for a rollback-safe update" }
+foreach ($name in @("home-tunnel-control-center", "home-tunnel-frps", "home-tunnel-traffic-gateway")) {
     if ($preflight -notmatch "(?m)^$([regex]::Escape($name))=healthy\|") {
         throw "$name is not healthy before deployment"
     }
@@ -157,24 +155,20 @@ $deploymentSucceeded = $false
 try {
     Invoke-Remote "umask 077; install -d -m 0700 '$stage'" | Out-Null
     $stageCreated = $true
-
     foreach ($name in $fileNames) {
         $destination = "${SshUser}@${ServerAddress}:$stage/$name"
         $uploadOutput = & $scp @commonArgs -- $localFiles[$name].Path $destination 2>&1
-        if ($LASTEXITCODE -ne 0) {
-            throw "Upload failed for ${name}: $(($uploadOutput | Out-String).Trim())"
-        }
+        if ($LASTEXITCODE -ne 0) { throw "Upload failed for ${name}: $(($uploadOutput | Out-String).Trim())" }
     }
 
-    $remoteHashCommand = "cd '$stage'; sha256sum control-center-image.tar traffic-gateway-image.tar '$installerName' latest.json update-ui.sh"
-    $remoteHashes = (Invoke-Remote $remoteHashCommand) -join "`n"
+    $remoteHashes = (Invoke-Remote "cd '$stage'; sha256sum home-tunnel-ui-images.tar update-ui.sh") -join "`n"
     foreach ($name in $fileNames) {
         if ($remoteHashes -notmatch "(?m)^$($localFiles[$name].Hash)  $([regex]::Escape($name))$") {
             throw "Remote SHA-256 verification failed for $name"
         }
     }
 
-    $deployCommand = "sudo -n env CADDYFILE_PATH='$caddyPath' sh '$stage/update-ui.sh' '$stage' '$version' '$($localFiles['control-center-image.tar'].Hash)' '$($localFiles['traffic-gateway-image.tar'].Hash)' '$($localFiles[$installerName].Hash)' '$($localFiles['latest.json'].Hash)' '$caddyHash' '$caddyInode'"
+    $deployCommand = "sudo -n env CADDYFILE_PATH='$caddyPath' sh '$stage/update-ui.sh' '$stage' '$version' '$($localFiles['home-tunnel-ui-images.tar'].Hash)' '$caddyHash' '$caddyInode'"
     $deploymentOutput = Invoke-Remote $deployCommand
     $deploymentSucceeded = $true
 
@@ -189,19 +183,14 @@ new_gateway_id="$(docker image inspect -f "{{.Id}}" "__GATEWAY_IMAGE_TAG__")"
 [ "$(docker inspect -f "{{.Image}}" home-tunnel-traffic-gateway)" = "$new_gateway_id" ]
 [ "$(docker inspect -f "{{.State.Health.Status}}" home-tunnel-control-center)" = "healthy" ]
 [ "$(docker inspect -f "{{.State.Health.Status}}" home-tunnel-traffic-gateway)" = "healthy" ]
+[ "$(docker inspect -f "{{.State.Health.Status}}" home-tunnel-frps)" = "healthy" ]
 [ "$(docker image inspect -f "{{index .Config.Labels \"org.opencontainers.image.version\"}}" "__IMAGE_TAG__")" = "__VERSION__" ]
 [ "$(docker image inspect -f "{{index .Config.Labels \"org.opencontainers.image.version\"}}" "__GATEWAY_IMAGE_TAG__")" = "__VERSION__" ]
-[ -f "/opt/home-tunnel/downloads/__INSTALLER__" ]
-[ "$(sha256sum "/opt/home-tunnel/downloads/__INSTALLER__" | awk "{print \$1}")" = "__INSTALLER_SHA__" ]
+! docker ps -a --format "{{.Names}}" | grep -qx home-tunnel-postgres
+! find /opt/home-tunnel/downloads -maxdepth 1 -type f -name "HomeTunnel-Setup-*-x64.exe" | grep -q .
 [ ! -e /opt/home-tunnel/compose.yaml.new ]
-[ ! -e "/opt/home-tunnel/downloads/__INSTALLER__.new" ]
-[ ! -e "/opt/home-tunnel/downloads/__INSTALLER__.rollback" ]
-[ ! -e /opt/home-tunnel/downloads/latest.json.new ]
-[ ! -e /opt/home-tunnel/downloads/latest.json.rollback ]
 ! docker image ls --format "{{.Repository}}:{{.Tag}}" | grep -q "^home-tunnel/control-center:rollback-ui-"
 ! docker image ls --format "{{.Repository}}:{{.Tag}}" | grep -q "^home-tunnel/traffic-gateway:rollback-ui-"
-docker image ls --format "{{.Repository}}:{{.Tag}}" | grep "^home-tunnel/control-center:"
-docker image ls --format "{{.Repository}}:{{.Tag}}" | grep "^home-tunnel/traffic-gateway:"
 '
 '@
     $postflightCommand = $postflightCommand.Replace("__STAGE__", $stage).
@@ -210,9 +199,7 @@ docker image ls --format "{{.Repository}}:{{.Tag}}" | grep "^home-tunnel/traffic
         Replace("__CADDY_INODE__", $caddyInode).
         Replace("__IMAGE_TAG__", $expectedImageTag).
         Replace("__GATEWAY_IMAGE_TAG__", $expectedGatewayImageTag).
-        Replace("__VERSION__", $version).
-        Replace("__INSTALLER__", $installerName).
-        Replace("__INSTALLER_SHA__", $localFiles[$installerName].Hash)
+        Replace("__VERSION__", $version)
     $postflight = Invoke-Remote $postflightCommand
 
     $audit = [ordered]@{
@@ -221,14 +208,11 @@ docker image ls --format "{{.Repository}}:{{.Tag}}" | grep "^home-tunnel/traffic
         version = $version
         image_tag = $expectedImageTag
         gateway_image_tag = $expectedGatewayImageTag
-        installer_sha256 = $localFiles[$installerName].Hash
-        image_archive_sha256 = $localFiles["control-center-image.tar"].Hash
-        gateway_image_archive_sha256 = $localFiles["traffic-gateway-image.tar"].Hash
-        metadata_sha256 = $localFiles["latest.json"].Hash
+        combined_image_archive_sha256 = $localFiles["home-tunnel-ui-images.tar"].Hash
         caddy_sha256 = $caddyHash
         caddy_inode = $caddyInode
         remote_result = ($deploymentOutput -join "`n").Trim()
-        remaining_control_center_tags = @($postflight)
+        postflight = @($postflight)
         temporary_stage_removed = $true
     }
     $auditPath = Join-Path $ReleaseDirectory "deployment-audit.json"
