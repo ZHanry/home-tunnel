@@ -1,4 +1,4 @@
-FROM golang:1.23.12-bookworm AS build
+FROM golang:1.26.5-bookworm AS build
 ARG FRP_VERSION=v0.62.1
 ENV CGO_ENABLED=0
 RUN go install -trimpath -ldflags="-s -w -buildid=" github.com/fatedier/frp/cmd/frps@${FRP_VERSION}
