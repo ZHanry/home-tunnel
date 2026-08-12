@@ -463,12 +463,23 @@ async function renderDevices(renderId = state.renderId) {
     <section class="panel table-panel">${state.devices.length ? `<table class="data-table"><thead><tr><th>设备</th><th>用户</th><th>状态</th><th>配置</th><th class="hide-tablet">最后在线</th><th class="hide-tablet">租约到期</th><th><span class="visually-hidden">操作</span></th></tr></thead><tbody>${state.devices.map((device) => `<tr><td data-label="设备"><span class="cell-primary">${escapeHtml(device.name)}</span><span class="cell-secondary mono">${escapeHtml(device.id.slice(0, 8))} · 客户端 ${escapeHtml(device.client_version ?? "未知")} · Agent ${escapeHtml(device.agent_version ?? "未知")}</span></td><td data-label="用户">${escapeHtml(device.username)}</td><td data-label="状态">${statusBadge(device.status === "active" && device.online ? "active" : device.status === "active" ? "Offline" : device.status)}</td><td data-label="配置">${configState(device)}</td><td data-label="最后在线" class="hide-tablet">${formatDate(device.last_seen_at)}</td><td data-label="租约到期" class="hide-tablet">${formatDate(device.lease_expires_at)}</td><td class="actions-cell" data-label="操作"><div class="actions"><button class="button button-danger button-small" data-action="delete-device" data-id="${device.id}" data-name="${escapeHtml(device.name)}" aria-label="删除设备 ${escapeHtml(device.name)}">删除</button></div></td></tr>`).join("")}</tbody></table>` : emptyState("还没有注册设备", "用户可通过 Windows 图形客户端或 Linux 无界面服务完成设备注册。")}</section>`;
 }
 
+// 访问控制徽章：只依据 access_basic_auth_enabled / access_ip_allowlist 展示
+// 状态摘要，绝不涉及口令或哈希。
+function accessBadges(connection) {
+  const badges = [];
+  if (connection.access_ip_allowlist?.length) {
+    badges.push(`<span class="status-badge ok" title="${escapeHtml(connection.access_ip_allowlist.join(", "))}">IP 白名单 ×${connection.access_ip_allowlist.length}</span>`);
+  }
+  if (connection.access_basic_auth_enabled) badges.push('<span class="status-badge ok">Basic Auth</span>');
+  return badges.length ? badges.join(" ") : '<span class="cell-secondary">开放</span>';
+}
+
 async function renderConnections(renderId = state.renderId) {
   const data = await api("/api/v1/admin/connections");
   if (renderId !== state.renderId) return;
   state.connections = data.items;
   viewContent.innerHTML = `
-    <section class="panel table-panel">${state.connections.length ? `<table class="data-table"><thead><tr><th>连接</th><th>归属</th><th>状态</th><th>本地目标</th><th>连接上限</th><th>版本</th><th><span class="visually-hidden">操作</span></th></tr></thead><tbody>${state.connections.map((connection) => `<tr><td data-label="连接"><span class="cell-primary">${escapeHtml(connection.name)}</span><a class="cell-secondary mono" href="${escapeHtml(connection.public_url)}" target="_blank" rel="noopener">${escapeHtml(connection.public_url)}</a></td><td data-label="归属"><span class="cell-primary">${escapeHtml(connection.username)}</span><span class="cell-secondary">${escapeHtml(connection.device_name)}</span></td><td data-label="状态">${statusBadge(connection.enabled ? connection.state : "disabled")}</td><td data-label="本地目标" class="mono">${escapeHtml(connection.local_scheme)}://${escapeHtml(connection.local_host)}:${connection.local_port}</td><td data-label="连接上限" class="mono">${formatBps(connection.bandwidth_limit_bps)}</td><td data-label="版本" class="mono">v${connection.version} / a${connection.applied_version}</td><td class="actions-cell"><div class="actions"><button class="button button-quiet button-small" data-action="edit-connection" data-id="${connection.id}">编辑</button><button class="button button-danger button-small" data-action="delete-connection" data-id="${connection.id}">删除</button></div></td></tr>`).join("")}</tbody></table>` : emptyState("还没有连接", "为已注册设备创建 HTTP/HTTPS 连接，设备离线时会保持 Pending。")}</section>`;
+    <section class="panel table-panel">${state.connections.length ? `<table class="data-table"><thead><tr><th>连接</th><th>归属</th><th>状态</th><th>访问控制</th><th>本地目标</th><th>连接上限</th><th>版本</th><th><span class="visually-hidden">操作</span></th></tr></thead><tbody>${state.connections.map((connection) => `<tr><td data-label="连接"><span class="cell-primary">${escapeHtml(connection.name)}</span><a class="cell-secondary mono" href="${escapeHtml(connection.public_url)}" target="_blank" rel="noopener">${escapeHtml(connection.public_url)}</a></td><td data-label="归属"><span class="cell-primary">${escapeHtml(connection.username)}</span><span class="cell-secondary">${escapeHtml(connection.device_name)}</span></td><td data-label="状态">${statusBadge(connection.enabled ? connection.state : "disabled")}</td><td data-label="访问控制">${accessBadges(connection)}</td><td data-label="本地目标" class="mono">${escapeHtml(connection.local_scheme)}://${escapeHtml(connection.local_host)}:${connection.local_port}</td><td data-label="连接上限" class="mono">${formatBps(connection.bandwidth_limit_bps)}</td><td data-label="版本" class="mono">v${connection.version} / a${connection.applied_version}</td><td class="actions-cell"><div class="actions"><button class="button button-quiet button-small" data-action="edit-connection" data-id="${connection.id}">编辑</button><button class="button button-danger button-small" data-action="delete-connection" data-id="${connection.id}">删除</button></div></td></tr>`).join("")}</tbody></table>` : emptyState("还没有连接", "为已注册设备创建 HTTP/HTTPS 连接，设备离线时会保持 Pending。")}</section>`;
 }
 
 async function renderAudit(renderId = state.renderId) {
@@ -596,6 +607,54 @@ async function openUserPolicy(userId) {
   });
 }
 
+// ---- 连接访问控制（IP 白名单 + Basic Auth）表单区块 ----
+// patch 语义：白名单文本与原值一致则不发送；Basic Auth 通过 keep/set/off 三态
+// 决定是否重设或关闭。口令仅在"设置/重设"时提交，界面绝不回显既有口令。
+function accessFormFields(connection = null) {
+  const allowlistText = (connection?.access_ip_allowlist ?? []).join("\n");
+  const basicEnabled = Boolean(connection?.access_basic_auth_enabled);
+  const keepOption = connection ? `<option value="keep">保持不变（当前：${basicEnabled ? "已启用" : "未启用"}）</option>` : "";
+  return `<div class="field full"><label for="modal-access_allowlist">IP 白名单（每行一个 IP 或 CIDR）</label><textarea id="modal-access_allowlist" name="access_allowlist" rows="3" placeholder="203.0.113.0/24&#10;2001:db8::/64">${escapeHtml(allowlistText)}</textarea><p class="helper">留空表示不限制来源。门禁在网关侧执行，保存后立即生效且不会重启隧道。</p></div>
+    <div class="field"><label for="modal-access_basic_mode">Basic Auth 门禁</label><select id="modal-access_basic_mode" name="access_basic_mode">${keepOption}<option value="off">${connection ? "关闭" : "不启用"}</option><option value="set">${connection ? "设置 / 重设凭据" : "启用"}</option></select></div>
+    ${field("access_basic_user", "Basic 用户名", "", { required: false, helper: "1-64 字符，不能包含冒号" })}
+    ${field("access_basic_password", "Basic 口令", "", { type: "password", required: false, minlength: 8, helper: "8-128 字符；口令不会在界面回显" })}`;
+}
+
+function bindAccessModeToggle() {
+  const mode = modalBody.querySelector("#modal-access_basic_mode");
+  const user = modalBody.querySelector("#modal-access_basic_user");
+  const password = modalBody.querySelector("#modal-access_basic_password");
+  const apply = () => {
+    const active = mode.value === "set";
+    for (const input of [user, password]) {
+      input.disabled = !active;
+      input.required = active;
+    }
+  };
+  mode.addEventListener("change", apply);
+  apply();
+}
+
+function collectAccessPatch(form, connection = null) {
+  const lines = String(form.get("access_allowlist") ?? "")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const access = {};
+  const originalLines = connection?.access_ip_allowlist ?? [];
+  if (lines.join("\n") !== originalLines.join("\n")) access.ip_allowlist = lines.length ? lines : null;
+  const mode = String(form.get("access_basic_mode") ?? "keep");
+  if (mode === "set") {
+    access.basic_auth = {
+      username: String(form.get("access_basic_user") ?? "").trim(),
+      password: String(form.get("access_basic_password") ?? ""),
+    };
+  } else if (mode === "off" && connection?.access_basic_auth_enabled) {
+    access.basic_auth = null;
+  }
+  return Object.keys(access).length ? access : undefined;
+}
+
 async function openCreateConnection() {
   if (!state.users.length) state.users = (await api("/api/v1/admin/users")).items;
   state.devices = (await api("/api/v1/admin/devices")).items.filter((item) => item.status === "active");
@@ -608,16 +667,18 @@ async function openCreateConnection() {
   openModal({
     title: "创建受管连接",
     eyebrow: "受管连接",
-    body: `<div class="form-grid"><div class="field"><label for="modal-user_id">用户</label><select id="modal-user_id" name="user_id">${userOptions}</select></div><div class="field"><label for="modal-device_id">设备</label><select id="modal-device_id" name="device_id">${deviceOptions}</select></div>${field("name", "连接名称")}${field("subdomain", "业务子域", "", { helper: `.${state.tunnelDomain}` })}<div class="field"><label for="modal-local_scheme">本地协议</label><select id="modal-local_scheme" name="local_scheme"><option value="http">http</option><option value="https">https</option></select></div>${field("local_host", "本地地址", "127.0.0.1")}${field("local_port", "本地端口", "8080", { type: "number", min: 1, max: 65535 })}${field("bandwidth_mbps", "连接上限 (Mbps)", "", { type: "number", required: false, min: 0.1 })}<div class="field full"><label><input name="enabled" type="checkbox" checked> 创建后立即启用</label></div></div>`,
+    body: `<div class="form-grid"><div class="field"><label for="modal-user_id">用户</label><select id="modal-user_id" name="user_id">${userOptions}</select></div><div class="field"><label for="modal-device_id">设备</label><select id="modal-device_id" name="device_id">${deviceOptions}</select></div>${field("name", "连接名称")}${field("subdomain", "业务子域", "", { helper: `.${state.tunnelDomain}` })}<div class="field"><label for="modal-local_scheme">本地协议</label><select id="modal-local_scheme" name="local_scheme"><option value="http">http</option><option value="https">https</option></select></div>${field("local_host", "本地地址", "127.0.0.1")}${field("local_port", "本地端口", "8080", { type: "number", min: 1, max: 65535 })}${field("bandwidth_mbps", "连接上限 (Mbps)", "", { type: "number", required: false, min: 0.1 })}${accessFormFields()}<div class="field full"><label><input name="enabled" type="checkbox" checked> 创建后立即启用</label></div></div>`,
     submitLabel: "创建连接",
     onSubmit: async (form) => {
       const mbps = String(form.get("bandwidth_mbps") ?? "").trim();
-      await api("/api/v1/admin/connections", { method: "POST", body: JSON.stringify({ user_id: form.get("user_id"), device_id: form.get("device_id"), name: form.get("name"), subdomain: form.get("subdomain"), local_scheme: form.get("local_scheme"), local_host: form.get("local_host"), local_port: Number(form.get("local_port")), enabled: form.get("enabled") === "on", bandwidth_limit_bps: mbps ? Math.round(Number(mbps) * 1_000_000) : null }) });
+      const access = collectAccessPatch(form);
+      await api("/api/v1/admin/connections", { method: "POST", body: JSON.stringify({ user_id: form.get("user_id"), device_id: form.get("device_id"), name: form.get("name"), subdomain: form.get("subdomain"), local_scheme: form.get("local_scheme"), local_host: form.get("local_host"), local_port: Number(form.get("local_port")), enabled: form.get("enabled") === "on", bandwidth_limit_bps: mbps ? Math.round(Number(mbps) * 1_000_000) : null, ...(access ? { access } : {}) }) });
       modal.close("saved");
       toast("连接已创建；设备离线时保持 Pending");
       await renderConnections();
     },
   });
+  bindAccessModeToggle();
   const userSelect = modalBody.querySelector("#modal-user_id");
   const deviceSelect = modalBody.querySelector("#modal-device_id");
   const filterDevices = () => {
@@ -638,15 +699,17 @@ function openEditConnection(connectionId) {
   openModal({
     title: `编辑连接 · ${connection.name}`,
     eyebrow: "版本化更新",
-    body: `<div class="form-grid">${field("name", "连接名称", connection.name)}${field("subdomain", "业务子域", connection.subdomain)}<div class="field"><label for="modal-local_scheme">本地协议</label><select id="modal-local_scheme" name="local_scheme"><option value="http" ${connection.local_scheme === "http" ? "selected" : ""}>http</option><option value="https" ${connection.local_scheme === "https" ? "selected" : ""}>https</option></select></div>${field("local_host", "本地地址", connection.local_host)}${field("local_port", "本地端口", connection.local_port, { type: "number", min: 1, max: 65535 })}${field("bandwidth_mbps", "连接上限 (Mbps)", connection.bandwidth_limit_bps == null ? "" : connection.bandwidth_limit_bps / 1_000_000, { type: "number", required: false, min: 0.1 })}<div class="field full"><label><input name="enabled" type="checkbox" ${connection.enabled ? "checked" : ""}> 启用连接</label><p class="helper">当前版本 v${connection.version}；冲突时不会覆盖服务器新值。</p></div></div>`,
+    body: `<div class="form-grid">${field("name", "连接名称", connection.name)}${field("subdomain", "业务子域", connection.subdomain)}<div class="field"><label for="modal-local_scheme">本地协议</label><select id="modal-local_scheme" name="local_scheme"><option value="http" ${connection.local_scheme === "http" ? "selected" : ""}>http</option><option value="https" ${connection.local_scheme === "https" ? "selected" : ""}>https</option></select></div>${field("local_host", "本地地址", connection.local_host)}${field("local_port", "本地端口", connection.local_port, { type: "number", min: 1, max: 65535 })}${field("bandwidth_mbps", "连接上限 (Mbps)", connection.bandwidth_limit_bps == null ? "" : connection.bandwidth_limit_bps / 1_000_000, { type: "number", required: false, min: 0.1 })}${accessFormFields(connection)}<div class="field full"><label><input name="enabled" type="checkbox" ${connection.enabled ? "checked" : ""}> 启用连接</label><p class="helper">当前版本 v${connection.version}；冲突时不会覆盖服务器新值。</p></div></div>`,
     onSubmit: async (form) => {
       const mbps = String(form.get("bandwidth_mbps") ?? "").trim();
-      await api(`/api/v1/admin/connections/${connection.id}`, { method: "PATCH", headers: { "if-match": `"${connection.version}"` }, body: JSON.stringify({ name: form.get("name"), subdomain: form.get("subdomain"), local_scheme: form.get("local_scheme"), local_host: form.get("local_host"), local_port: Number(form.get("local_port")), enabled: form.get("enabled") === "on", bandwidth_limit_bps: mbps ? Math.round(Number(mbps) * 1_000_000) : null }) });
+      const access = collectAccessPatch(form, connection);
+      await api(`/api/v1/admin/connections/${connection.id}`, { method: "PATCH", headers: { "if-match": `"${connection.version}"` }, body: JSON.stringify({ name: form.get("name"), subdomain: form.get("subdomain"), local_scheme: form.get("local_scheme"), local_host: form.get("local_host"), local_port: Number(form.get("local_port")), enabled: form.get("enabled") === "on", bandwidth_limit_bps: mbps ? Math.round(Number(mbps) * 1_000_000) : null, ...(access ? { access } : {}) }) });
       modal.close("saved");
       toast("连接配置已更新");
       await renderConnections();
     },
   });
+  bindAccessModeToggle();
 }
 
 function confirmAction(title, detail, submitLabel, onSubmit) {

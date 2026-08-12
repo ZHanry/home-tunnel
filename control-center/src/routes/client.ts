@@ -154,7 +154,11 @@ router.post(
     const body = parseBody(connectionInputSchema.extend({ device_id: z.string().uuid() }), request.body);
     const created = await transaction(async (client) => {
       const connection = await createConnection(client, actor.userId, body.device_id, body);
-      await audit(client, request, "ConnectionCreated", "Connection", connection.id, null, publicConnection(connection));
+      // 审计补充 Basic 用户名（口令与哈希绝不入审计）。
+      await audit(client, request, "ConnectionCreated", "Connection", connection.id, null, {
+        ...publicConnection(connection),
+        access_basic_user: connection.access_basic_user ?? null,
+      });
       return connection;
     });
     response.status(201).json(publicConnection(created));
@@ -183,7 +187,10 @@ router.patch(
     const expected = parseExpectedVersion(request, patch.expected_version);
     const updated = await transaction(async (client) => {
       const changed = await updateConnection(client, connectionId, expected, patch, actor.userId);
-      await audit(client, request, "ConnectionUpdated", "Connection", connectionId, publicConnection(changed.before), publicConnection(changed.after));
+      await audit(client, request, "ConnectionUpdated", "Connection", connectionId, publicConnection(changed.before), {
+        ...publicConnection(changed.after),
+        access_basic_user: changed.after.access_basic_user ?? null,
+      });
       return changed.after;
     });
     response.json(publicConnection(updated));

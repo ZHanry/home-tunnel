@@ -193,6 +193,109 @@ export async function runIntegrationSuite(): Promise<void> {
     assert.equal(staleUpdate.status, 409);
     assert.equal(staleUpdate.payload.error_code, "VERSION_CONFLICT");
 
+    // ---- 网关访问控制（功能 1）：schema 校验、ACL-only 编辑、快照契约 ----
+    const invalidCidr = await call("PATCH", `/api/v1/client/connections/${connectionId}`, {
+      access: { ip_allowlist: ["not-a-cidr"] },
+    }, userToken, { "if-match": '"2"' });
+    assert.equal(invalidCidr.status, 400);
+    assert.equal(invalidCidr.payload.error_code, "VALIDATION_ERROR");
+    const shortGatePassword = await call("PATCH", `/api/v1/client/connections/${connectionId}`, {
+      access: { basic_auth: { username: "svc", password: "short" } },
+    }, userToken, { "if-match": '"2"' });
+    assert.equal(shortGatePassword.status, 400);
+    const colonGateUser = await call("PATCH", `/api/v1/client/connections/${connectionId}`, {
+      access: { basic_auth: { username: "svc:bad", password: "long enough pass" } },
+    }, userToken, { "if-match": '"2"' });
+    assert.equal(colonGateUser.status, 400);
+
+    const configVersionBeforeAcl = Number((await database.query<{ config_version: string }>(
+      "SELECT config_version FROM devices WHERE id=?",
+      [deviceId],
+    ))[0]?.config_version);
+    const policiesBeforeAcl = await call("GET", "/internal/policies/sync", undefined, undefined, {
+      "x-home-tunnel-key": process.env.INTERNAL_SERVICE_KEY!,
+    });
+    assert.equal(policiesBeforeAcl.status, 200);
+
+    const aclUpdate = await call("PATCH", `/api/v1/client/connections/${connectionId}`, {
+      access: {
+        ip_allowlist: ["203.0.113.0/24", "2001:db8::/64"],
+        basic_auth: { username: "svc", password: "gate pass 42!" },
+      },
+    }, userToken, { "if-match": '"2"' });
+    assert.equal(aclUpdate.status, 200);
+    // ACL-only 编辑：连接 version 不变（Agent 无需重配），只有门禁版本递增
+    assert.equal(aclUpdate.payload.version, 2);
+    assert.equal(aclUpdate.payload.access_policy_version, 2);
+    assert.deepEqual(aclUpdate.payload.access_ip_allowlist, ["203.0.113.0/24", "2001:db8::/64"]);
+    assert.equal(aclUpdate.payload.access_basic_auth_enabled, true);
+    const aclUpdateSerialized = JSON.stringify(aclUpdate.payload);
+    assert.ok(!aclUpdateSerialized.includes("access_basic_hash"), "public payload must not expose the hash column");
+    assert.ok(!aclUpdateSerialized.includes("scrypt$"), "public payload must not leak hash material");
+    assert.ok(!aclUpdateSerialized.includes("gate pass 42!"), "public payload must not leak the plaintext password");
+
+    const configVersionAfterAcl = Number((await database.query<{ config_version: string }>(
+      "SELECT config_version FROM devices WHERE id=?",
+      [deviceId],
+    ))[0]?.config_version);
+    assert.equal(configVersionAfterAcl, configVersionBeforeAcl, "ACL-only edits must not bump device config_version");
+    const aclOutbox = await database.query<{ count: string }>(
+      "SELECT count(*) AS count FROM outbox_events WHERE event_type='access.policy.changed' AND resource_id=?",
+      [connectionId],
+    );
+    assert.equal(Number(aclOutbox[0]?.count), 1, "ACL edits must enqueue an access.policy.changed outbox event");
+
+    // outbox 前进使快照 revision 变化：携带旧 ETag 必须拿到 200 新快照而非 304
+    const policiesAfterAcl = await call("GET", "/internal/policies/sync", undefined, undefined, {
+      "x-home-tunnel-key": process.env.INTERNAL_SERVICE_KEY!,
+      "if-none-match": policiesBeforeAcl.headers.get("etag") ?? "",
+    });
+    assert.equal(policiesAfterAcl.status, 200);
+    const aclSnapshotEntry = policiesAfterAcl.payload.connections.find(
+      (item: any) => item.connection_id === connectionId,
+    );
+    assert.deepEqual(aclSnapshotEntry.access_ip_allowlist, ["203.0.113.0/24", "2001:db8::/64"]);
+    assert.equal(aclSnapshotEntry.access_basic_user, "svc");
+    assert.match(aclSnapshotEntry.access_basic_hash, /^scrypt\$16384\$8\$1\$/);
+    assert.ok(!aclSnapshotEntry.access_basic_hash.includes("gate pass 42!"), "snapshot must never contain plaintext");
+    assert.equal(aclSnapshotEntry.access_policy_version, 2);
+    const protectedMetrics = await call("GET", "/internal/metrics", undefined, undefined, {
+      "x-home-tunnel-key": process.env.INTERNAL_SERVICE_KEY!,
+    });
+    assert.match(protectedMetrics.payload as string, /^home_tunnel_connections_access_protected_total 1$/m);
+
+    // 关闭 Basic Auth（basic_auth: null）：白名单保留，门禁版本再次递增
+    const aclClearBasic = await call("PATCH", `/api/v1/client/connections/${connectionId}`, {
+      access: { basic_auth: null },
+    }, userToken, { "if-match": '"2"' });
+    assert.equal(aclClearBasic.status, 200);
+    assert.equal(aclClearBasic.payload.version, 2);
+    assert.equal(aclClearBasic.payload.access_policy_version, 3);
+    assert.equal(aclClearBasic.payload.access_basic_auth_enabled, false);
+    assert.deepEqual(aclClearBasic.payload.access_ip_allowlist, ["203.0.113.0/24", "2001:db8::/64"]);
+
+    // 清除白名单（ip_allowlist: null）：连接回到完全开放
+    const aclClearAllowlist = await call("PATCH", `/api/v1/client/connections/${connectionId}`, {
+      access: { ip_allowlist: null },
+    }, userToken, { "if-match": '"2"' });
+    assert.equal(aclClearAllowlist.status, 200);
+    assert.equal(aclClearAllowlist.payload.access_ip_allowlist, null);
+    assert.equal(aclClearAllowlist.payload.access_policy_version, 4);
+    const clearedSnapshot = await call("GET", "/internal/policies/sync", undefined, undefined, {
+      "x-home-tunnel-key": process.env.INTERNAL_SERVICE_KEY!,
+    });
+    const clearedEntry = clearedSnapshot.payload.connections.find(
+      (item: any) => item.connection_id === connectionId,
+    );
+    assert.equal(clearedEntry.access_ip_allowlist, null);
+    assert.equal(clearedEntry.access_basic_user, null);
+    assert.equal(clearedEntry.access_basic_hash, null);
+    const configVersionAfterClear = Number((await database.query<{ config_version: string }>(
+      "SELECT config_version FROM devices WHERE id=?",
+      [deviceId],
+    ))[0]?.config_version);
+    assert.equal(configVersionAfterClear, configVersionBeforeAcl, "clearing ACLs must not bump device config_version either");
+
     const sync = await call("POST", "/api/v1/client/sync", {
       device_id: deviceId,
       last_config_version: 0,
@@ -306,6 +409,7 @@ export async function runIntegrationSuite(): Promise<void> {
     assert.match(metricsText, /^home_tunnel_devices_total 1$/m);
     assert.match(metricsText, /^home_tunnel_connections_total\{enabled="true"\} 1$/m);
     assert.match(metricsText, /^home_tunnel_connections_total\{enabled="false"\} 0$/m);
+    assert.match(metricsText, /^home_tunnel_connections_access_protected_total 0$/m);
     assert.match(metricsText, /^home_tunnel_active_sessions_total \d+$/m);
     assert.match(metricsText, /^home_tunnel_websocket_clients 0$/m);
     assert.match(metricsText, /^home_tunnel_http_requests_total\{class="2xx"\} [1-9]\d*$/m);

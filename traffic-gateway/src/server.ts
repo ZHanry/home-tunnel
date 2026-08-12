@@ -1,9 +1,10 @@
 import { readFileSync } from "node:fs";
 import http, { type IncomingHttpHeaders, type IncomingMessage, type ServerResponse } from "node:http";
 import net, { type Socket } from "node:net";
-import { randomUUID, timingSafeEqual } from "node:crypto";
+import { randomUUID, scrypt, timingSafeEqual } from "node:crypto";
 import { Transform, type TransformCallback } from "node:stream";
 import { pathToFileURL } from "node:url";
+import { promisify } from "node:util";
 
 function integer(name: string, fallback: number): number {
   const value = Number.parseInt(process.env[name] ?? "", 10);
@@ -48,6 +49,7 @@ const metrics = {
   upstreamErrorsTotal: 0,
   bytesTotal: { upload: 0, download: 0 },
   throttleWaitSecondsTotal: 0,
+  accessDeniedTotal: { ip: 0, basic: 0 },
 };
 
 type Policy = {
@@ -58,6 +60,10 @@ type Policy = {
   enabled: boolean;
   device_lease_expires_at: string | null;
   connection_version: number;
+  access_ip_allowlist: string[] | null;
+  access_basic_user: string | null;
+  access_basic_hash: string | null;
+  access_policy_version: number;
   connection_limit_bps: number | null;
   connection_burst_bytes: number | null;
   connection_policy_version: number;
@@ -74,12 +80,121 @@ type PolicySnapshot = {
   connections: Policy[];
 };
 
+// ---------- 零依赖 IPv4/IPv6 CIDR 匹配（与控制中心 security.ts 同一实现） ----------
+
+function parseIpv4Bytes(text: string): number[] | null {
+  const parts = text.split(".");
+  if (parts.length !== 4) return null;
+  const bytes: number[] = [];
+  for (const part of parts) {
+    // 拒绝空段、非数字与前导零（避免八进制歧义解释）
+    if (!/^\d{1,3}$/.test(part) || (part.length > 1 && part.startsWith("0"))) return null;
+    const value = Number(part);
+    if (value > 255) return null;
+    bytes.push(value);
+  }
+  return bytes;
+}
+
+// 统一解析为 16 字节：IPv4 与 IPv4-mapped IPv6 都归一到 ::ffff:a.b.c.d 的
+// 字节形式，使 IPv4/IPv6 白名单条目可在同一字节域内按前缀比较。
+export function parseIpBytes(text: string): Uint8Array | null {
+  const value = text.trim();
+  if (!value) return null;
+  if (!value.includes(":")) {
+    const ipv4 = parseIpv4Bytes(value);
+    if (!ipv4) return null;
+    const bytes = new Uint8Array(16);
+    bytes[10] = 0xff;
+    bytes[11] = 0xff;
+    bytes.set(ipv4, 12);
+    return bytes;
+  }
+  let head = value;
+  let tail: string | null = null;
+  const marker = value.indexOf("::");
+  if (marker >= 0) {
+    if (value.indexOf("::", marker + 1) >= 0) return null;
+    head = value.slice(0, marker);
+    tail = value.slice(marker + 2);
+  }
+  const parseGroups = (part: string): number[] | null => {
+    if (!part) return [];
+    const groups = part.split(":");
+    const words: number[] = [];
+    for (let index = 0; index < groups.length; index += 1) {
+      const group = groups[index] ?? "";
+      if (group.includes(".")) {
+        // 内嵌 IPv4 只允许出现在最后一组
+        if (index !== groups.length - 1) return null;
+        const ipv4 = parseIpv4Bytes(group);
+        if (!ipv4) return null;
+        words.push(((ipv4[0] ?? 0) << 8) | (ipv4[1] ?? 0), ((ipv4[2] ?? 0) << 8) | (ipv4[3] ?? 0));
+      } else {
+        if (!/^[0-9a-f]{1,4}$/i.test(group)) return null;
+        words.push(Number.parseInt(group, 16));
+      }
+    }
+    return words;
+  };
+  const headWords = parseGroups(head);
+  const tailWords = tail === null ? [] : parseGroups(tail);
+  if (!headWords || !tailWords) return null;
+  const total = headWords.length + tailWords.length;
+  if (tail === null ? total !== 8 : total > 7) return null;
+  const words = [...headWords, ...Array.from({ length: 8 - total }, () => 0), ...tailWords];
+  const bytes = new Uint8Array(16);
+  words.forEach((word, index) => {
+    bytes[index * 2] = word >> 8;
+    bytes[index * 2 + 1] = word & 0xff;
+  });
+  return bytes;
+}
+
+export type CidrRule = { bytes: Uint8Array; prefixBits: number };
+
+// 接受单 IP（等价 /32、/128）或 CIDR。IPv4 前缀映射到 IPv4-mapped 空间
+// （prefix + 96），与 parseIpBytes 的 16 字节归一保持一致。
+export function parseCidr(text: string): CidrRule | null {
+  const value = text.trim();
+  if (!value) return null;
+  const slash = value.indexOf("/");
+  const ipText = slash >= 0 ? value.slice(0, slash) : value;
+  const isIpv4 = !ipText.includes(":");
+  const bytes = parseIpBytes(ipText);
+  if (!bytes) return null;
+  let prefixBits = 128;
+  if (slash >= 0) {
+    const prefixText = value.slice(slash + 1);
+    if (!/^\d{1,3}$/.test(prefixText)) return null;
+    const prefix = Number(prefixText);
+    if (prefix > (isIpv4 ? 32 : 128)) return null;
+    prefixBits = isIpv4 ? prefix + 96 : prefix;
+  }
+  return { bytes, prefixBits };
+}
+
+export function cidrContains(rule: CidrRule, ip: Uint8Array): boolean {
+  if (rule.bytes.length !== ip.length) return false;
+  const fullBytes = rule.prefixBits >> 3;
+  for (let index = 0; index < fullBytes; index += 1) {
+    if (rule.bytes[index] !== ip[index]) return false;
+  }
+  const remainder = rule.prefixBits & 7;
+  if (!remainder) return true;
+  const mask = (0xff << (8 - remainder)) & 0xff;
+  return (((rule.bytes[fullBytes] ?? 0) ^ (ip[fullBytes] ?? 0)) & mask) === 0;
+}
+
 type ActiveClose = () => void;
 
 export class PolicyStore {
   private bySubdomain = new Map<string, Policy>();
   private byConnection = new Map<string, Policy>();
   private active = new Map<string, Set<ActiveClose>>();
+  // 按 connection_id 预编译的白名单规则；无效条目在 apply 时剔除并告警，
+  // 剔除后仍保持 fail-closed（条目越少可放行的来源越少）。
+  private allowRules = new Map<string, CidrRule[]>();
   revision = 0;
   domain = "tunnel.example.com";
   expiresAt = 0;
@@ -103,6 +218,7 @@ export class PolicyStore {
     }
     const nextBySubdomain = new Map<string, Policy>();
     const nextByConnection = new Map<string, Policy>();
+    const nextAllowRules = new Map<string, CidrRule[]>();
     for (const policy of snapshot.connections) {
       const subdomain = policy.subdomain.toLowerCase();
       if (nextBySubdomain.has(subdomain) || nextByConnection.has(policy.connection_id)) {
@@ -111,12 +227,36 @@ export class PolicyStore {
       if (policy.device_lease_expires_at !== null && !Number.isFinite(Date.parse(policy.device_lease_expires_at))) {
         throw new Error("invalid device lease expiry in policy snapshot");
       }
+      // 归一化门禁字段：兼容尚未升级的控制中心（字段缺失视为未启用）。
+      policy.access_ip_allowlist = Array.isArray(policy.access_ip_allowlist)
+        ? policy.access_ip_allowlist.filter((entry): entry is string => typeof entry === "string")
+        : null;
+      policy.access_basic_user =
+        typeof policy.access_basic_user === "string" && policy.access_basic_user ? policy.access_basic_user : null;
+      policy.access_basic_hash =
+        typeof policy.access_basic_hash === "string" && policy.access_basic_hash ? policy.access_basic_hash : null;
+      policy.access_policy_version = Number.isFinite(policy.access_policy_version)
+        ? Number(policy.access_policy_version)
+        : 1;
+      if (policy.access_ip_allowlist) {
+        const rules: CidrRule[] = [];
+        for (const entry of policy.access_ip_allowlist) {
+          const rule = parseCidr(entry);
+          if (rule) rules.push(rule);
+          else log("warn", "ACCESS_ALLOWLIST_ENTRY_INVALID", "Ignoring unparsable allowlist entry", { connection_id: policy.connection_id, entry });
+        }
+        nextAllowRules.set(policy.connection_id, rules);
+      }
       nextBySubdomain.set(subdomain, policy);
       nextByConnection.set(policy.connection_id, policy);
     }
     for (const [connectionId, closers] of this.active) {
       const before = this.byConnection.get(connectionId);
       const after = nextByConnection.get(connectionId);
+      // 取舍：access_policy_version 变化不参与此判定——ACL 变更只需对后续请求
+      // 生效（新快照立即用于门禁，记忆缓存键含该版本号所以也随之失效），无需
+      // 像 connection_version 那样切断进行中的流；已建立的长连接在门禁收紧后
+      // 继续存活，属可接受的语义（与 Basic Auth 会话性质一致）。
       const authorizationChanged =
         this.authorized(before) &&
         (!this.authorized(after) ||
@@ -131,11 +271,22 @@ export class PolicyStore {
     }
     this.bySubdomain = nextBySubdomain;
     this.byConnection = nextByConnection;
+    this.allowRules = nextAllowRules;
     this.revision = snapshot.revision;
     this.domain = domain;
     this.expiresAt = expiresAt;
     this.lastSuccessAt = Date.now();
     this.lastFullSuccessAt = this.lastSuccessAt;
+  }
+
+  // IP 白名单判定：未配置（null）时不限制；配置后客户端 IP 必须命中至少一条
+  // 规则，IP 无法解析或规则为空时拒绝（fail-closed）。
+  ipAllowed(policy: Policy, clientIpText: string): boolean {
+    if (policy.access_ip_allowlist == null) return true;
+    const ip = parseIpBytes(clientIpText);
+    if (!ip) return false;
+    const rules = this.allowRules.get(policy.connection_id) ?? [];
+    return rules.some((rule) => cidrContains(rule, ip));
   }
 
   touch(snapshotExpiresAt: string): void {
@@ -491,7 +642,16 @@ function log(level: string, eventCode: string, message: string, fields: Record<s
   console.log(JSON.stringify({ timestamp: new Date().toISOString(), level, component: "traffic-gateway", event_code: eventCode, message, ...fields }));
 }
 
-function sanitizedHeaders(request: IncomingMessage, forUpgrade = false): IncomingHttpHeaders {
+// 可信客户端 IP：取最右 XFF 元素（由唯一可信的直连代理 Caddy 追加，最左元素
+// 可被客户端伪造），非法时退回 socket 对端地址。IP 白名单门禁与转发头共用。
+function clientIp(request: IncomingMessage): string {
+  const forwarded = String(request.headers["x-forwarded-for"] ?? "").split(",").at(-1)?.trim();
+  return forwarded && /^[0-9a-f:.]+$/i.test(forwarded)
+    ? forwarded
+    : (request.socket.remoteAddress ?? "").replace(/^::ffff:/, "");
+}
+
+function sanitizedHeaders(request: IncomingMessage, forUpgrade = false, stripAuthorization = false): IncomingHttpHeaders {
   const headers = { ...request.headers };
   for (const name of [
     "proxy-authorization",
@@ -504,16 +664,15 @@ function sanitizedHeaders(request: IncomingMessage, forUpgrade = false): Incomin
     "x-forwarded-proto",
     "x-real-ip",
   ]) delete headers[name];
+  // 仅在该连接启用了 Basic Auth 门禁时删除 authorization：它是门禁凭据，不应
+  // 泄漏给后端；未启用门禁时保持透传，以免破坏后端自身的鉴权。
+  if (stripAuthorization) delete headers.authorization;
   if (!forUpgrade) {
     for (const name of ["connection", "keep-alive", "te", "trailer", "transfer-encoding", "upgrade"]) {
       delete headers[name];
     }
   }
-  // 取最右元素：由唯一可信的直连代理（Caddy）追加，最左元素可被客户端伪造
-  const forwarded = String(request.headers["x-forwarded-for"] ?? "").split(",").at(-1)?.trim();
-  const source = forwarded && /^[0-9a-f:.]+$/i.test(forwarded)
-    ? forwarded
-    : (request.socket.remoteAddress ?? "").replace(/^::ffff:/, "");
+  const source = clientIp(request);
   headers["x-forwarded-for"] = source;
   headers["x-real-ip"] = source;
   headers["x-forwarded-host"] = request.headers.host ?? "";
@@ -545,6 +704,107 @@ function constantTimeStringEqual(left: string, right: string): boolean {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
+// ---------- Basic Auth 门禁：scrypt 验证 + 按连接的记忆缓存 ----------
+
+const scryptAsync = promisify(scrypt) as (password: string, salt: Buffer, keylen: number, options: {
+  N: number;
+  r: number;
+  p: number;
+  maxmem: number;
+}) => Promise<Buffer>;
+
+// 观测与测试钩子：scrypt 实际执行次数与缓存命中次数。
+export const accessStats = { scryptVerifications: 0, basicCacheHits: 0 };
+
+// 验证控制中心生成的 scrypt$N$r$p$saltB64$hashB64 哈希串。异步 scrypt 跑在
+// libuv 线程池里，不阻塞代理事件循环。参数带防御上限，避免异常快照造成
+// 内存/CPU 放大。
+async function verifyScryptHash(password: string, stored: string): Promise<boolean> {
+  try {
+    const parts = stored.split("$");
+    if (parts.length !== 6 || parts[0] !== "scrypt") return false;
+    const cost = Number(parts[1]);
+    const blockSize = Number(parts[2]);
+    const parallelism = Number(parts[3]);
+    if (!Number.isInteger(cost) || cost < 1024 || cost > 65_536 || (cost & (cost - 1)) !== 0) return false;
+    if (!Number.isInteger(blockSize) || blockSize < 1 || blockSize > 16) return false;
+    if (!Number.isInteger(parallelism) || parallelism < 1 || parallelism > 4) return false;
+    const salt = Buffer.from(parts[4] ?? "", "base64");
+    const expected = Buffer.from(parts[5] ?? "", "base64");
+    if (salt.length < 8 || expected.length < 16 || expected.length > 64) return false;
+    const actual = await scryptAsync(password, salt, expected.length, {
+      N: cost,
+      r: blockSize,
+      p: parallelism,
+      maxmem: 256 * 1024 * 1024,
+    });
+    return actual.length === expected.length && timingSafeEqual(actual, expected);
+  } catch {
+    return false;
+  }
+}
+
+function parseBasicAuthorization(header: string): { username: string; password: string } | null {
+  const match = /^basic\s+([a-z0-9+/=_-]+)$/i.exec(header.trim());
+  if (!match?.[1]) return null;
+  let decoded: string;
+  try {
+    decoded = Buffer.from(match[1], "base64").toString("utf8");
+  } catch {
+    return null;
+  }
+  const colon = decoded.indexOf(":");
+  if (colon < 0) return null;
+  return { username: decoded.slice(0, colon), password: decoded.slice(colon + 1) };
+}
+
+// 记忆缓存：键 = connection_id + access_policy_version + Authorization 原文。
+// 命中即放行，避免每个请求都跑一次 scrypt；access_policy_version 变化（改口令
+// /关闭门禁）后旧键自然失效。只缓存验证成功的凭据，失败尝试永远走全量
+// scrypt（这也天然限制了在线爆破速率）。
+const basicAuthCacheTtlMs = 5 * 60 * 1000;
+const basicAuthCacheMaxEntries = 1000;
+const basicAuthCache = new Map<string, number>();
+
+function basicAuthCacheGet(key: string): boolean {
+  const expiresAt = basicAuthCache.get(key);
+  if (expiresAt === undefined) return false;
+  if (expiresAt <= Date.now()) {
+    basicAuthCache.delete(key);
+    return false;
+  }
+  // Map 迭代序即插入序：删除后重插，使迭代首位始终是最久未使用的键（LRU）
+  basicAuthCache.delete(key);
+  basicAuthCache.set(key, expiresAt);
+  return true;
+}
+
+function basicAuthCachePut(key: string): void {
+  if (basicAuthCache.size >= basicAuthCacheMaxEntries) {
+    const oldest = basicAuthCache.keys().next().value;
+    if (oldest !== undefined) basicAuthCache.delete(oldest);
+  }
+  basicAuthCache.set(key, Date.now() + basicAuthCacheTtlMs);
+}
+
+async function verifyBasicAuthorization(policy: Policy, header: string): Promise<boolean> {
+  if (!policy.access_basic_user || !policy.access_basic_hash) return false;
+  const cacheKey = `${policy.connection_id}:${policy.access_policy_version}:${header}`;
+  if (basicAuthCacheGet(cacheKey)) {
+    accessStats.basicCacheHits += 1;
+    return true;
+  }
+  const credentials = parseBasicAuthorization(header);
+  if (!credentials) return false;
+  accessStats.scryptVerifications += 1;
+  // 用户名不匹配时也照常跑 scrypt，避免通过响应时间枚举用户名
+  const usernameMatches = constantTimeStringEqual(credentials.username, policy.access_basic_user);
+  const passwordMatches = await verifyScryptHash(credentials.password, policy.access_basic_hash);
+  if (!usernameMatches || !passwordMatches) return false;
+  basicAuthCachePut(cacheKey);
+  return true;
+}
+
 function renderMetrics(): string {
   const policyAgeSeconds = policies.lastSuccessAt ? (Date.now() - policies.lastSuccessAt) / 1000 : -1;
   const lines = [
@@ -570,6 +830,10 @@ function renderMetrics(): string {
     "# HELP home_tunnel_gateway_upstream_errors_total Upstream connection failures.",
     "# TYPE home_tunnel_gateway_upstream_errors_total counter",
     `home_tunnel_gateway_upstream_errors_total ${metrics.upstreamErrorsTotal}`,
+    "# HELP home_tunnel_gateway_access_denied_total Requests rejected by per-connection access control gates.",
+    "# TYPE home_tunnel_gateway_access_denied_total counter",
+    `home_tunnel_gateway_access_denied_total{reason="ip"} ${metrics.accessDeniedTotal.ip}`,
+    `home_tunnel_gateway_access_denied_total{reason="basic"} ${metrics.accessDeniedTotal.basic}`,
     "# HELP home_tunnel_gateway_sample_buffer_size Traffic samples buffered for upload to the control center.",
     "# TYPE home_tunnel_gateway_sample_buffer_size gauge",
     `home_tunnel_gateway_sample_buffer_size ${samples.bufferedSampleCount}`,
@@ -587,6 +851,21 @@ function controlledError(response: ServerResponse, status: number, errorCode: st
   }
   response.writeHead(status, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" });
   response.end(JSON.stringify({ error_code: errorCode, message }));
+}
+
+function basicAuthChallenge(response: ServerResponse): void {
+  metrics.accessDeniedTotal.basic += 1;
+  if (response.destroyed) return;
+  if (response.headersSent) {
+    response.destroy();
+    return;
+  }
+  response.writeHead(401, {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-store",
+    "www-authenticate": 'Basic realm="Home Tunnel"',
+  });
+  response.end(JSON.stringify({ error_code: "ACCESS_BASIC_UNAUTHORIZED", message: "该连接要求 Basic Auth 凭据" }));
 }
 
 function handleRequest(request: IncomingMessage, response: ServerResponse): void {
@@ -631,9 +910,45 @@ function handleRequest(request: IncomingMessage, response: ServerResponse): void
     return;
   }
   const policy = authorized.policy;
+  // ---- 访问控制门禁：解析出 policy 之后、代理之前强制执行 ----
+  if (!policies.ipAllowed(policy, clientIp(request))) {
+    metrics.accessDeniedTotal.ip += 1;
+    controlledError(response, 403, "ACCESS_IP_FORBIDDEN", "来源 IP 不在该连接的白名单内");
+    return;
+  }
+  if (policy.access_basic_user != null) {
+    const authorizationHeader = request.headers.authorization;
+    if (typeof authorizationHeader !== "string" || !authorizationHeader) {
+      basicAuthChallenge(response);
+      return;
+    }
+    // 异步 scrypt 验证期间 request 尚未被 pipe（保持 paused、靠背压缓冲）；
+    // 挂 no-op error 监听，防止验证窗口内客户端 RST 触发未处理异常。
+    request.on("error", () => {});
+    void verifyBasicAuthorization(policy, authorizationHeader)
+      .then((allowed) => {
+        if (request.destroyed || response.destroyed) return;
+        if (!allowed) {
+          basicAuthChallenge(response);
+          return;
+        }
+        proxyRequest(request, response, policy, true);
+      })
+      .catch(() => basicAuthChallenge(response));
+    return;
+  }
+  proxyRequest(request, response, policy, false);
+}
+
+function proxyRequest(
+  request: IncomingMessage,
+  response: ServerResponse,
+  policy: Policy,
+  stripAuthorization: boolean,
+): void {
   samples.request(policy);
   const controller = new AbortController();
-  const headers = sanitizedHeaders(request);
+  const headers = sanitizedHeaders(request, false, stripAuthorization);
   const upstream = http.request({
     host: config.upstreamHost,
     port: config.upstreamPort,
@@ -684,8 +999,8 @@ function handleRequest(request: IncomingMessage, response: ServerResponse): void
   request.pipe(upload).pipe(upstream);
 }
 
-function writeUpgradeRequest(request: IncomingMessage, upstream: Socket): void {
-  const headers = sanitizedHeaders(request, true);
+function writeUpgradeRequest(request: IncomingMessage, upstream: Socket, stripAuthorization: boolean): void {
+  const headers = sanitizedHeaders(request, true, stripAuthorization);
   let data = `${request.method ?? "GET"} ${request.url ?? "/"} HTTP/${request.httpVersion}\r\n`;
   for (const [key, value] of Object.entries(headers)) {
     if (value == null) continue;
@@ -695,6 +1010,14 @@ function writeUpgradeRequest(request: IncomingMessage, upstream: Socket): void {
   upstream.write(`${data}\r\n`);
 }
 
+// 升级路径的门禁拒绝：写出最小响应后确定性拆除 socket（flush 后 destroy），
+// 不给半开连接留存活窗口。
+function rejectUpgrade(client: Socket, statusLine: string, extraHeaderLines = ""): void {
+  if (client.destroyed) return;
+  client.write(`HTTP/1.1 ${statusLine}\r\nConnection: close\r\n${extraHeaderLines}Content-Length: 0\r\n\r\n`);
+  client.destroySoon();
+}
+
 function handleUpgrade(request: IncomingMessage, client: Socket, head: Buffer): void {
   const authorized = policies.host(request.headers.host);
   if (!authorized.policy) {
@@ -702,6 +1025,43 @@ function handleUpgrade(request: IncomingMessage, client: Socket, head: Buffer): 
     return;
   }
   const policy = authorized.policy;
+  // ---- 访问控制门禁（与 handleRequest 同规则）----
+  client.on("error", () => {});
+  if (!policies.ipAllowed(policy, clientIp(request))) {
+    metrics.accessDeniedTotal.ip += 1;
+    rejectUpgrade(client, "403 Forbidden");
+    return;
+  }
+  if (policy.access_basic_user != null) {
+    const authorizationHeader = request.headers.authorization;
+    if (typeof authorizationHeader !== "string" || !authorizationHeader) {
+      metrics.accessDeniedTotal.basic += 1;
+      rejectUpgrade(client, "401 Unauthorized", 'WWW-Authenticate: Basic realm="Home Tunnel"\r\n');
+      return;
+    }
+    void verifyBasicAuthorization(policy, authorizationHeader)
+      .then((allowed) => {
+        if (client.destroyed) return;
+        if (!allowed) {
+          metrics.accessDeniedTotal.basic += 1;
+          rejectUpgrade(client, "401 Unauthorized", 'WWW-Authenticate: Basic realm="Home Tunnel"\r\n');
+          return;
+        }
+        proxyUpgrade(request, client, head, policy, true);
+      })
+      .catch(() => rejectUpgrade(client, "401 Unauthorized", 'WWW-Authenticate: Basic realm="Home Tunnel"\r\n'));
+    return;
+  }
+  proxyUpgrade(request, client, head, policy, false);
+}
+
+function proxyUpgrade(
+  request: IncomingMessage,
+  client: Socket,
+  head: Buffer,
+  policy: Policy,
+  stripAuthorization: boolean,
+): void {
   samples.request(policy);
   const controller = new AbortController();
   const upstream = net.connect(config.upstreamPort, config.upstreamHost);
@@ -720,7 +1080,7 @@ function handleUpgrade(request: IncomingMessage, client: Socket, head: Buffer): 
   unregister = policies.register(policy.connection_id, close);
   upstream.once("connect", () => {
     upstream.setTimeout(0);
-    writeUpgradeRequest(request, upstream);
+    writeUpgradeRequest(request, upstream, stripAuthorization);
     if (head.length) {
       void limiter.acquire(policy.connection_id, head.length, controller.signal).then(() => {
         samples.record(policy, "upload", head.length);

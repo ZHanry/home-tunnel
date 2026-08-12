@@ -575,7 +575,11 @@ router.post(
     );
     const connection = await transaction(async (client) => {
       const created = await createConnection(client, body.user_id, body.device_id, body);
-      await audit(client, request, "ConnectionCreated", "Connection", created.id, null, publicConnection(created));
+      // 审计补充 Basic 用户名（口令与哈希绝不入审计）。
+      await audit(client, request, "ConnectionCreated", "Connection", created.id, null, {
+        ...publicConnection(created),
+        access_basic_user: created.access_basic_user ?? null,
+      });
       return created;
     });
     response.status(201).json(publicConnection(connection));
@@ -604,7 +608,10 @@ router.patch(
     const expected = parseExpectedVersion(request, patch.expected_version);
     const result = await transaction(async (client) => {
       const changed = await updateConnection(client, connectionId, expected, patch);
-      await audit(client, request, "ConnectionUpdated", "Connection", connectionId, publicConnection(changed.before), publicConnection(changed.after));
+      await audit(client, request, "ConnectionUpdated", "Connection", connectionId, publicConnection(changed.before), {
+        ...publicConnection(changed.after),
+        access_basic_user: changed.after.access_basic_user ?? null,
+      });
       return changed.after;
     });
     response.json(publicConnection(result));

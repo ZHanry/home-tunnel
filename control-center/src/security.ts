@@ -3,6 +3,7 @@ import {
   createHmac,
   randomBytes,
   randomInt,
+  scryptSync,
   timingSafeEqual,
 } from "node:crypto";
 import { argon2id } from "hash-wasm";
@@ -153,6 +154,155 @@ export async function verifyPassword(encoded: string, password: string): Promise
     if (error instanceof PasswordWorkQueueFullError) throw error;
     return false;
   }
+}
+
+// 隧道 Basic Auth 门禁口令使用 scrypt（node:crypto 内置，零新依赖）：
+// 网关侧可以低成本地按需验证，与 hash-wasm Argon2（账号登录密码）互不混用。
+// 输出格式 scrypt$N$r$p$saltB64$hashB64，网关按同一格式独立实现验证。
+const BASIC_SCRYPT_COST = 16_384;
+const BASIC_SCRYPT_BLOCK_SIZE = 8;
+const BASIC_SCRYPT_PARALLELISM = 1;
+const BASIC_SCRYPT_KEY_LENGTH = 32;
+const BASIC_SCRYPT_MAXMEM = 256 * 1024 * 1024;
+
+export function hashBasicPassword(password: string): string {
+  const salt = randomBytes(16);
+  const hash = scryptSync(password, salt, BASIC_SCRYPT_KEY_LENGTH, {
+    N: BASIC_SCRYPT_COST,
+    r: BASIC_SCRYPT_BLOCK_SIZE,
+    p: BASIC_SCRYPT_PARALLELISM,
+    maxmem: BASIC_SCRYPT_MAXMEM,
+  });
+  return `scrypt$${BASIC_SCRYPT_COST}$${BASIC_SCRYPT_BLOCK_SIZE}$${BASIC_SCRYPT_PARALLELISM}$${salt.toString("base64")}$${hash.toString("base64")}`;
+}
+
+export function verifyBasicPassword(password: string, stored: string): boolean {
+  try {
+    const parts = stored.split("$");
+    if (parts.length !== 6 || parts[0] !== "scrypt") return false;
+    const cost = Number(parts[1]);
+    const blockSize = Number(parts[2]);
+    const parallelism = Number(parts[3]);
+    if (!Number.isInteger(cost) || cost < 1024 || cost > 65_536 || (cost & (cost - 1)) !== 0) return false;
+    if (!Number.isInteger(blockSize) || blockSize < 1 || blockSize > 16) return false;
+    if (!Number.isInteger(parallelism) || parallelism < 1 || parallelism > 4) return false;
+    const salt = Buffer.from(parts[4] ?? "", "base64");
+    const expected = Buffer.from(parts[5] ?? "", "base64");
+    if (salt.length < 8 || expected.length < 16 || expected.length > 64) return false;
+    const actual = scryptSync(password, salt, expected.length, {
+      N: cost,
+      r: blockSize,
+      p: parallelism,
+      maxmem: BASIC_SCRYPT_MAXMEM,
+    });
+    return actual.length === expected.length && timingSafeEqual(actual, expected);
+  } catch {
+    return false;
+  }
+}
+
+function parseIpv4Bytes(text: string): number[] | null {
+  const parts = text.split(".");
+  if (parts.length !== 4) return null;
+  const bytes: number[] = [];
+  for (const part of parts) {
+    // 拒绝空段、非数字与前导零（避免八进制歧义解释）
+    if (!/^\d{1,3}$/.test(part) || (part.length > 1 && part.startsWith("0"))) return null;
+    const value = Number(part);
+    if (value > 255) return null;
+    bytes.push(value);
+  }
+  return bytes;
+}
+
+// 统一解析为 16 字节：IPv4 与 IPv4-mapped IPv6 都归一到 ::ffff:a.b.c.d 的
+// 字节形式，使 IPv4/IPv6 白名单条目可在同一字节域内按前缀比较。
+export function parseIpBytes(text: string): Uint8Array | null {
+  const value = text.trim();
+  if (!value) return null;
+  if (!value.includes(":")) {
+    const ipv4 = parseIpv4Bytes(value);
+    if (!ipv4) return null;
+    const bytes = new Uint8Array(16);
+    bytes[10] = 0xff;
+    bytes[11] = 0xff;
+    bytes.set(ipv4, 12);
+    return bytes;
+  }
+  let head = value;
+  let tail: string | null = null;
+  const marker = value.indexOf("::");
+  if (marker >= 0) {
+    if (value.indexOf("::", marker + 1) >= 0) return null;
+    head = value.slice(0, marker);
+    tail = value.slice(marker + 2);
+  }
+  const parseGroups = (part: string): number[] | null => {
+    if (!part) return [];
+    const groups = part.split(":");
+    const words: number[] = [];
+    for (let index = 0; index < groups.length; index += 1) {
+      const group = groups[index] ?? "";
+      if (group.includes(".")) {
+        // 内嵌 IPv4 只允许出现在最后一组
+        if (index !== groups.length - 1) return null;
+        const ipv4 = parseIpv4Bytes(group);
+        if (!ipv4) return null;
+        words.push(((ipv4[0] ?? 0) << 8) | (ipv4[1] ?? 0), ((ipv4[2] ?? 0) << 8) | (ipv4[3] ?? 0));
+      } else {
+        if (!/^[0-9a-f]{1,4}$/i.test(group)) return null;
+        words.push(Number.parseInt(group, 16));
+      }
+    }
+    return words;
+  };
+  const headWords = parseGroups(head);
+  const tailWords = tail === null ? [] : parseGroups(tail);
+  if (!headWords || !tailWords) return null;
+  const total = headWords.length + tailWords.length;
+  if (tail === null ? total !== 8 : total > 7) return null;
+  const words = [...headWords, ...Array.from({ length: 8 - total }, () => 0), ...tailWords];
+  const bytes = new Uint8Array(16);
+  words.forEach((word, index) => {
+    bytes[index * 2] = word >> 8;
+    bytes[index * 2 + 1] = word & 0xff;
+  });
+  return bytes;
+}
+
+export type CidrRule = { bytes: Uint8Array; prefixBits: number };
+
+// 接受单 IP（等价 /32、/128）或 CIDR。IPv4 前缀映射到 IPv4-mapped 空间
+// （prefix + 96），与 parseIpBytes 的 16 字节归一保持一致。
+export function parseCidr(text: string): CidrRule | null {
+  const value = text.trim();
+  if (!value) return null;
+  const slash = value.indexOf("/");
+  const ipText = slash >= 0 ? value.slice(0, slash) : value;
+  const isIpv4 = !ipText.includes(":");
+  const bytes = parseIpBytes(ipText);
+  if (!bytes) return null;
+  let prefixBits = 128;
+  if (slash >= 0) {
+    const prefixText = value.slice(slash + 1);
+    if (!/^\d{1,3}$/.test(prefixText)) return null;
+    const prefix = Number(prefixText);
+    if (prefix > (isIpv4 ? 32 : 128)) return null;
+    prefixBits = isIpv4 ? prefix + 96 : prefix;
+  }
+  return { bytes, prefixBits };
+}
+
+export function cidrContains(rule: CidrRule, ip: Uint8Array): boolean {
+  if (rule.bytes.length !== ip.length) return false;
+  const fullBytes = rule.prefixBits >> 3;
+  for (let index = 0; index < fullBytes; index += 1) {
+    if (rule.bytes[index] !== ip[index]) return false;
+  }
+  const remainder = rule.prefixBits & 7;
+  if (!remainder) return true;
+  const mask = (0xff << (8 - remainder)) & 0xff;
+  return (((rule.bytes[fullBytes] ?? 0) ^ (ip[fullBytes] ?? 0)) & mask) === 0;
 }
 
 export function opaqueToken(bytes = 32): string {

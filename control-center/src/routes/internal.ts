@@ -3,6 +3,7 @@ import { z } from "zod";
 import { backupLastSuccessAt } from "../backup.js";
 import { config } from "../config.js";
 import { databaseEvents, one, query, transaction } from "../db.js";
+import { parseStoredAllowlist } from "../domain.js";
 import { asyncHandler, HttpError, httpRequestCounts } from "../http.js";
 import { getWebsocketClientCount } from "../realtime.js";
 import { constantTimeStringEqual, verifyLease } from "../security.js";
@@ -99,6 +100,10 @@ router.get(
       device_status: string;
       device_lease_valid: boolean;
       device_lease_expires_at: Date | null;
+      access_ip_allowlist: string | null;
+      access_basic_user: string | null;
+      access_basic_hash: string | null;
+      access_policy_version: string;
       connection_limit_bps: string | null;
       connection_burst_bytes: string | null;
       connection_policy_version: string;
@@ -110,6 +115,7 @@ router.get(
               c.version AS connection_version,u.status AS user_status,d.status AS device_status,
               (d.lease_expires_at IS NOT NULL AND d.lease_expires_at > home_tunnel_now()) AS device_lease_valid,
               d.lease_expires_at AS device_lease_expires_at,
+              c.access_ip_allowlist,c.access_basic_user,c.access_basic_hash,c.access_policy_version,
               cp.bandwidth_limit_bps AS connection_limit_bps,cp.burst_bytes AS connection_burst_bytes,
               cp.version AS connection_policy_version,
               up.bandwidth_limit_bps AS user_limit_bps,up.burst_bytes AS user_burst_bytes,
@@ -133,6 +139,10 @@ router.get(
           row.enabled && row.user_status === "active" && row.device_status === "active" && row.device_lease_valid,
         device_lease_expires_at: row.device_lease_expires_at?.toISOString() ?? null,
         connection_version: Number(row.connection_version),
+        access_ip_allowlist: parseStoredAllowlist(row.access_ip_allowlist),
+        access_basic_user: row.access_basic_user ?? null,
+        access_basic_hash: row.access_basic_hash ?? null,
+        access_policy_version: Number(row.access_policy_version ?? 1),
         connection_limit_bps:
           row.connection_limit_bps == null ? null : Number(row.connection_limit_bps),
         connection_burst_bytes:
@@ -494,6 +504,7 @@ router.get(
       devices_total: number;
       connections_enabled: number;
       connections_disabled: number;
+      connections_access_protected: number;
       active_sessions: number;
     }>(
       `SELECT
@@ -501,6 +512,8 @@ router.get(
         (SELECT count(*) FROM devices) AS devices_total,
         (SELECT count(*) FROM connections WHERE deleted_at IS NULL AND enabled=true) AS connections_enabled,
         (SELECT count(*) FROM connections WHERE deleted_at IS NULL AND enabled=false) AS connections_disabled,
+        (SELECT count(*) FROM connections WHERE deleted_at IS NULL
+           AND (access_ip_allowlist IS NOT NULL OR access_basic_user IS NOT NULL)) AS connections_access_protected,
         (SELECT count(*) FROM sessions WHERE revoked_at IS NULL AND access_expires_at > home_tunnel_now()) AS active_sessions`,
     );
     const requests = httpRequestCounts();
@@ -522,6 +535,9 @@ router.get(
       "# TYPE home_tunnel_connections_total gauge",
       `home_tunnel_connections_total{enabled="true"} ${Number(totals?.connections_enabled ?? 0)}`,
       `home_tunnel_connections_total{enabled="false"} ${Number(totals?.connections_disabled ?? 0)}`,
+      "# HELP home_tunnel_connections_access_protected_total Non-deleted connections with an IP allowlist or Basic Auth gate.",
+      "# TYPE home_tunnel_connections_access_protected_total gauge",
+      `home_tunnel_connections_access_protected_total ${Number(totals?.connections_access_protected ?? 0)}`,
       "# HELP home_tunnel_active_sessions_total Number of sessions that are neither revoked nor expired.",
       "# TYPE home_tunnel_active_sessions_total gauge",
       `home_tunnel_active_sessions_total ${Number(totals?.active_sessions ?? 0)}`,

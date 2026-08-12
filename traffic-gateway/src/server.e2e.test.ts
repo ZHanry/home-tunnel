@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { randomBytes, scryptSync } from "node:crypto";
 import { once } from "node:events";
 import http, { type IncomingHttpHeaders, type IncomingMessage, type OutgoingHttpHeaders, type ServerResponse } from "node:http";
 import net, { type AddressInfo } from "node:net";
@@ -9,6 +10,23 @@ const internalKey = "11".repeat(32);
 const tunnelDomain = "tunnel.example.com";
 const managedHost = `service.${tunnelDomain}`;
 const limitedHost = `limited.${tunnelDomain}`;
+const ipGatedHost = `ipgate.${tunnelDomain}`;
+const basicGatedHost = `basicgate.${tunnelDomain}`;
+const dualGatedHost = `dualgate.${tunnelDomain}`;
+
+// 与控制中心 hashBasicPassword 相同的 scrypt$N$r$p$saltB64$hashB64 格式
+function scryptBasicHash(password: string): string {
+  const salt = randomBytes(16);
+  const hash = scryptSync(password, salt, 32, { N: 16_384, r: 8, p: 1 });
+  return `scrypt$16384$8$1$${salt.toString("base64")}$${hash.toString("base64")}`;
+}
+
+const basicGatePassword = "open sesame 42!";
+const basicGateHash = scryptBasicHash(basicGatePassword);
+
+function basicHeader(username: string, password: string): string {
+  return `Basic ${Buffer.from(`${username}:${password}`, "utf8").toString("base64")}`;
+}
 
 type TestPolicy = {
   connection_id: string;
@@ -18,6 +36,10 @@ type TestPolicy = {
   enabled: boolean;
   device_lease_expires_at: string | null;
   connection_version: number;
+  access_ip_allowlist: string[] | null;
+  access_basic_user: string | null;
+  access_basic_hash: string | null;
+  access_policy_version: number;
   connection_limit_bps: number | null;
   connection_burst_bytes: number | null;
   connection_policy_version: number;
@@ -35,6 +57,10 @@ function gatewayPolicy(id: string, subdomain: string, overrides: Partial<TestPol
     enabled: true,
     device_lease_expires_at: new Date(Date.now() + 3_600_000).toISOString(),
     connection_version: 1,
+    access_ip_allowlist: null,
+    access_basic_user: null,
+    access_basic_hash: null,
+    access_policy_version: 1,
     connection_limit_bps: null,
     connection_burst_bytes: null,
     connection_policy_version: 1,
@@ -53,6 +79,21 @@ function defaultConnections(): TestPolicy[] {
       user_id: "user-limited",
       user_limit_bps: 8 * 1024 * 1024,
       user_burst_bytes: 64 * 1024,
+    }),
+    gatewayPolicy("connection-ipgate", "ipgate", {
+      user_id: "user-ipgate",
+      access_ip_allowlist: ["198.51.100.0/24", "2001:db8::/64"],
+    }),
+    gatewayPolicy("connection-basicgate", "basicgate", {
+      user_id: "user-basicgate",
+      access_basic_user: "svc",
+      access_basic_hash: basicGateHash,
+    }),
+    gatewayPolicy("connection-dualgate", "dualgate", {
+      user_id: "user-dualgate",
+      access_ip_allowlist: ["198.51.100.0/24"],
+      access_basic_user: "svc",
+      access_basic_hash: basicGateHash,
     }),
   ];
 }
@@ -169,7 +210,7 @@ process.env.FRPS_VHOST_HOST = "127.0.0.1";
 process.env.FRPS_VHOST_PORT = String(upstreamPort);
 process.env.CONTROL_CENTER_URL = `http://127.0.0.1:${controlCenterPort}`;
 
-const { createGatewayServer, policies, samples, syncPolicies } = await import("./server.js");
+const { accessStats, createGatewayServer, policies, samples, syncPolicies } = await import("./server.js");
 
 const gateway = createGatewayServer();
 const gatewayPort = await listen(gateway);
@@ -551,4 +592,170 @@ test("metrics counters advance with proxied traffic and limiter waits", async ()
       metricValue(before, "home_tunnel_gateway_throttle_wait_seconds_total"),
     "throttled upload must accumulate limiter wait time",
   );
+});
+
+// ---------- 访问控制门禁（功能 1）----------
+
+test("IP allowlist admits matching clients and rejects others with 403", async () => {
+  applyDefaultPolicies();
+  const deniedBefore = metricValue(await scrapeMetrics(), 'home_tunnel_gateway_access_denied_total{reason="ip"}');
+
+  // 生产部署中最右 XFF 由可信 Caddy 追加，即门禁使用的可信客户端 IP
+  const allowedIpv4 = await gatewayRequest({ path: "/echo", headers: { host: ipGatedHost, "x-forwarded-for": "198.51.100.7" } });
+  assert.equal(allowedIpv4.status, 200);
+  assert.equal(parseEcho(allowedIpv4).headers["x-forwarded-for"], "198.51.100.7");
+
+  const allowedIpv6 = await gatewayRequest({ path: "/echo", headers: { host: ipGatedHost, "x-forwarded-for": "2001:db8::42" } });
+  assert.equal(allowedIpv6.status, 200);
+
+  const deniedForeign = await gatewayRequest({ path: "/echo", headers: { host: ipGatedHost, "x-forwarded-for": "203.0.113.9" } });
+  assert.equal(deniedForeign.status, 403);
+  assert.equal(errorCode(deniedForeign), "ACCESS_IP_FORBIDDEN");
+
+  // 无 XFF 时取 socket 对端地址（127.0.0.1），不在白名单内：fail-closed
+  const deniedLoopback = await gatewayRequest({ path: "/echo", headers: { host: ipGatedHost } });
+  assert.equal(deniedLoopback.status, 403);
+  assert.equal(errorCode(deniedLoopback), "ACCESS_IP_FORBIDDEN");
+
+  const deniedAfter = metricValue(await scrapeMetrics(), 'home_tunnel_gateway_access_denied_total{reason="ip"}');
+  assert.ok(deniedAfter >= deniedBefore + 2, "denied requests must advance the ip counter");
+});
+
+test("Basic Auth gate challenges, rejects bad credentials, and hides the header from upstream", async () => {
+  applyDefaultPolicies();
+  const deniedBefore = metricValue(await scrapeMetrics(), 'home_tunnel_gateway_access_denied_total{reason="basic"}');
+
+  const missing = await gatewayRequest({ path: "/echo", headers: { host: basicGatedHost } });
+  assert.equal(missing.status, 401);
+  assert.equal(missing.headers["www-authenticate"], 'Basic realm="Home Tunnel"');
+  assert.equal(errorCode(missing), "ACCESS_BASIC_UNAUTHORIZED");
+
+  const malformed = await gatewayRequest({ path: "/echo", headers: { host: basicGatedHost, authorization: "Bearer not-basic" } });
+  assert.equal(malformed.status, 401);
+  assert.equal(malformed.headers["www-authenticate"], 'Basic realm="Home Tunnel"');
+
+  const wrongPassword = await gatewayRequest({
+    path: "/echo",
+    headers: { host: basicGatedHost, authorization: basicHeader("svc", "wrong password") },
+  });
+  assert.equal(wrongPassword.status, 401);
+
+  const wrongUser = await gatewayRequest({
+    path: "/echo",
+    headers: { host: basicGatedHost, authorization: basicHeader("intruder", basicGatePassword) },
+  });
+  assert.equal(wrongUser.status, 401);
+
+  const accepted = await gatewayRequest({
+    path: "/echo",
+    headers: { host: basicGatedHost, authorization: basicHeader("svc", basicGatePassword) },
+  });
+  assert.equal(accepted.status, 200);
+  // 门禁凭据不得泄漏给后端
+  assert.equal(parseEcho(accepted).headers.authorization, undefined);
+
+  const deniedAfter = metricValue(await scrapeMetrics(), 'home_tunnel_gateway_access_denied_total{reason="basic"}');
+  assert.ok(deniedAfter >= deniedBefore + 4, "denied requests must advance the basic counter");
+});
+
+test("authorization passes through untouched when no Basic gate is configured", async () => {
+  applyDefaultPolicies();
+  const forwarded = await gatewayRequest({
+    path: "/echo",
+    headers: { host: managedHost, authorization: "Bearer upstream-app-token" },
+  });
+  assert.equal(forwarded.status, 200);
+  assert.equal(parseEcho(forwarded).headers.authorization, "Bearer upstream-app-token");
+});
+
+test("Basic Auth verification is memoized until the access policy version changes", async () => {
+  applyDefaultPolicies();
+  const header = basicHeader("svc", basicGatePassword);
+  const first = await gatewayRequest({ path: "/echo", headers: { host: basicGatedHost, authorization: header } });
+  assert.equal(first.status, 200);
+  const verificationsAfterFirst = accessStats.scryptVerifications;
+  const hitsAfterFirst = accessStats.basicCacheHits;
+
+  const second = await gatewayRequest({ path: "/echo", headers: { host: basicGatedHost, authorization: header } });
+  assert.equal(second.status, 200);
+  assert.equal(accessStats.scryptVerifications, verificationsAfterFirst, "repeat credentials must not re-run scrypt");
+  assert.ok(accessStats.basicCacheHits > hitsAfterFirst, "repeat credentials must hit the memo cache");
+
+  // access_policy_version 变化（如改口令/重设门禁）后旧缓存键失效，需重新验证
+  const rotated = defaultConnections().map((connection) =>
+    connection.connection_id === "connection-basicgate" ? { ...connection, access_policy_version: 2 } : connection,
+  );
+  policies.apply(makeSnapshot(rotated, 11));
+  const third = await gatewayRequest({ path: "/echo", headers: { host: basicGatedHost, authorization: header } });
+  assert.equal(third.status, 200);
+  assert.equal(accessStats.scryptVerifications, verificationsAfterFirst + 1, "policy version change must invalidate the cache");
+  applyDefaultPolicies();
+});
+
+test("upgrade path enforces IP and Basic gates before proxying", async () => {
+  applyDefaultPolicies();
+
+  async function upgradeAttempt(host: string, extraHeaders: string): Promise<Buffer> {
+    const socket = net.connect(gatewayPort, "127.0.0.1");
+    socket.on("error", () => {});
+    await withTimeout(once(socket, "connect"), 5000, "upgrade gate client connect");
+    const reader = new SocketReader(socket);
+    socket.write(
+      `GET /ws HTTP/1.1\r\n` +
+        `host: ${host}\r\n` +
+        `connection: Upgrade\r\n` +
+        `upgrade: websocket\r\n` +
+        `sec-websocket-version: 13\r\n` +
+        `sec-websocket-key: ZTJlLXRlc3Qta2V5LTEyMw==\r\n` +
+        extraHeaders +
+        `\r\n`,
+    );
+    const data = await reader.waitFor((buffer) => buffer.includes(Buffer.from("\r\n\r\n")));
+    socket.destroy();
+    return data;
+  }
+
+  const ipDenied = await upgradeAttempt(ipGatedHost, "");
+  assert.match(ipDenied.toString("latin1"), /^HTTP\/1\.1 403 /);
+
+  const ipAllowed = await upgradeAttempt(ipGatedHost, `x-forwarded-for: 198.51.100.7\r\n`);
+  assert.match(ipAllowed.toString("latin1"), /^HTTP\/1\.1 101 /);
+
+  const basicMissing = await upgradeAttempt(basicGatedHost, "");
+  assert.match(basicMissing.toString("latin1"), /^HTTP\/1\.1 401 /);
+  assert.match(basicMissing.toString("latin1"), /www-authenticate: Basic realm="Home Tunnel"/i);
+
+  const basicWrong = await upgradeAttempt(basicGatedHost, `authorization: ${basicHeader("svc", "bad password")}\r\n`);
+  assert.match(basicWrong.toString("latin1"), /^HTTP\/1\.1 401 /);
+
+  const basicAccepted = await upgradeAttempt(basicGatedHost, `authorization: ${basicHeader("svc", basicGatePassword)}\r\n`);
+  assert.match(basicAccepted.toString("latin1"), /^HTTP\/1\.1 101 /);
+  const upgradeHeaders = upgradeCaptures.at(-1);
+  assert.ok(upgradeHeaders, "fake upstream should observe the authorized upgrade");
+  assert.equal(upgradeHeaders.authorization, undefined, "gate credentials must not leak upstream");
+});
+
+test("stacked gates check the IP allowlist before Basic Auth", async () => {
+  applyDefaultPolicies();
+  const header = basicHeader("svc", basicGatePassword);
+
+  const ipRejected = await gatewayRequest({
+    path: "/echo",
+    headers: { host: dualGatedHost, "x-forwarded-for": "203.0.113.9", authorization: header },
+  });
+  assert.equal(ipRejected.status, 403);
+  assert.equal(errorCode(ipRejected), "ACCESS_IP_FORBIDDEN");
+
+  const basicChallenged = await gatewayRequest({
+    path: "/echo",
+    headers: { host: dualGatedHost, "x-forwarded-for": "198.51.100.7" },
+  });
+  assert.equal(basicChallenged.status, 401);
+
+  const admitted = await gatewayRequest({
+    path: "/echo",
+    headers: { host: dualGatedHost, "x-forwarded-for": "198.51.100.7", authorization: header },
+  });
+  assert.equal(admitted.status, 200);
+  assert.equal(parseEcho(admitted).headers.authorization, undefined);
 });

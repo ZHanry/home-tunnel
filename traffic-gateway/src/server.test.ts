@@ -5,7 +5,8 @@ process.env.INTERNAL_SERVICE_KEY = "11".repeat(32);
 process.env.SAMPLE_BUCKET_SECONDS = "10";
 process.env.MAX_BODY_CHUNK_BYTES = String(64 * 1024);
 
-const { HierarchicalLimiter, PolicyStore, SampleCollector, ThrottleTransform } = await import("./server.js");
+const { HierarchicalLimiter, PolicyStore, SampleCollector, ThrottleTransform, cidrContains, parseCidr, parseIpBytes } =
+  await import("./server.js");
 
 function policy(id: string, subdomain: string, enabled = true) {
   return {
@@ -16,6 +17,10 @@ function policy(id: string, subdomain: string, enabled = true) {
     enabled,
     device_lease_expires_at: new Date(Date.now() + 60_000).toISOString(),
     connection_version: 1,
+    access_ip_allowlist: null as string[] | null,
+    access_basic_user: null as string | null,
+    access_basic_hash: null as string | null,
+    access_policy_version: 1,
     connection_limit_bps: null,
     connection_burst_bytes: null,
     connection_policy_version: 1,
@@ -222,6 +227,83 @@ test("the fast path still enforces policy revocation", async () => {
   const failure = new Promise<Error>((resolve) => transform.once("error", resolve));
   transform.write(Buffer.from("blocked"));
   assert.equal((await failure).message, "POLICY_REVOKED");
+});
+
+test("CIDR parser rejects malformed IPs, prefixes, and octal-ambiguous octets", () => {
+  for (const invalid of [
+    "",
+    "abc",
+    "1.2.3",
+    "1.2.3.4.5",
+    "1.2.3.256",
+    "01.2.3.4",
+    "1.2.3.4/33",
+    "1.2.3.4/x",
+    "1.2.3.4/",
+    "2001:db8::/129",
+    "1:2:3:4:5:6:7:8:9",
+    "1::2::3",
+    "2001:db8::zz",
+    "::ffff:1.2.3.4.5",
+    "1.2.3.4:80",
+  ]) {
+    assert.equal(parseCidr(invalid), null, `expected ${JSON.stringify(invalid)} to be rejected`);
+  }
+  assert.ok(parseCidr("0.0.0.0/0"));
+  assert.ok(parseCidr("255.255.255.255"));
+  assert.ok(parseCidr("::"));
+  assert.ok(parseCidr("::/0"));
+  assert.ok(parseCidr("2001:db8::1/128"));
+});
+
+function matches(rule: string, ip: string): boolean {
+  const parsedRule = parseCidr(rule);
+  const parsedIp = parseIpBytes(ip);
+  assert.ok(parsedRule, `rule ${rule} must parse`);
+  assert.ok(parsedIp, `ip ${ip} must parse`);
+  return cidrContains(parsedRule, parsedIp);
+}
+
+test("CIDR matching covers IPv4, IPv6, mapped normalization, and prefix boundaries", () => {
+  assert.equal(matches("192.168.1.0/24", "192.168.1.1"), true);
+  assert.equal(matches("192.168.1.0/24", "192.168.1.255"), true);
+  assert.equal(matches("192.168.1.0/24", "192.168.2.1"), false);
+  assert.equal(matches("10.0.0.5", "10.0.0.5"), true);
+  assert.equal(matches("10.0.0.5", "10.0.0.6"), false);
+  // 非字节对齐前缀：/12 的掩码只覆盖第二字节的高 4 位
+  assert.equal(matches("10.16.0.0/12", "10.31.255.255"), true);
+  assert.equal(matches("10.16.0.0/12", "10.32.0.0"), false);
+  assert.equal(matches("0.0.0.0/0", "203.0.113.9"), true);
+  // IPv4 全零前缀映射到 mapped 空间，不会吞掉真 IPv6 地址
+  assert.equal(matches("0.0.0.0/0", "2001:db8::1"), false);
+  assert.equal(matches("2001:db8::/32", "2001:db8::1"), true);
+  assert.equal(matches("2001:db8::/32", "2001:db8:ffff::1"), true);
+  assert.equal(matches("2001:db8::/32", "2001:db9::1"), false);
+  assert.equal(matches("::1", "::1"), true);
+  assert.equal(matches("::1", "::2"), false);
+  // IPv4-mapped IPv6 与点分 IPv4 双向归一
+  assert.equal(matches("192.168.1.0/24", "::ffff:192.168.1.7"), true);
+  assert.equal(matches("::ffff:192.168.1.0/120", "192.168.1.7"), true);
+  assert.equal(matches("::/0", "203.0.113.9"), true);
+  assert.equal(matches("::/0", "2001:db8::1"), true);
+  // 大小写与内嵌 IPv4 写法
+  assert.equal(matches("2001:DB8::/32", "2001:db8::99"), true);
+  assert.equal(matches("64:ff9b::0.0.0.0/96", "64:ff9b::203.0.113.9"), true);
+});
+
+test("ipAllowed is fail-closed for unparsable client IPs and empty rule sets", () => {
+  const store = new PolicyStore();
+  const open = policy("connection-open", "open");
+  const gated = { ...policy("connection-gated", "gated"), access_ip_allowlist: ["203.0.113.0/24"] };
+  // 无效条目在 apply 时被剔除：该连接启用了白名单但没有可放行的规则
+  const broken = { ...policy("connection-broken", "broken"), access_ip_allowlist: ["999.999.1.1"] };
+  store.apply(snapshot([open, gated, broken]));
+  assert.equal(store.ipAllowed(open, "198.51.100.1"), true, "no allowlist means unrestricted");
+  assert.equal(store.ipAllowed(gated, "203.0.113.77"), true);
+  assert.equal(store.ipAllowed(gated, "198.51.100.1"), false);
+  assert.equal(store.ipAllowed(gated, "not-an-ip"), false, "unparsable client IP must be rejected");
+  assert.equal(store.ipAllowed(gated, ""), false);
+  assert.equal(store.ipAllowed(broken, "203.0.113.77"), false, "invalid entries never admit traffic");
 });
 
 test("sample identity changes replace a stale bucket instead of poisoning its batch", async () => {

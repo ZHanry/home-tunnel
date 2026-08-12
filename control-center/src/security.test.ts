@@ -84,3 +84,53 @@ test("fixed-window limiter returns a bounded retry delay", () => {
   assert.equal(denied.allowed, false);
   assert.ok(denied.retryAfterSeconds >= 1);
 });
+
+test("Basic Auth scrypt hashes are salted, verifiable, and tamper-resistant", () => {
+  const password = "gate password 42!";
+  const first = security.hashBasicPassword(password);
+  const second = security.hashBasicPassword(password);
+  assert.match(first, /^scrypt\$16384\$8\$1\$[A-Za-z0-9+/=]+\$[A-Za-z0-9+/=]+$/);
+  assert.notEqual(first, second, "random salts must yield distinct hashes");
+  assert.equal(security.verifyBasicPassword(password, first), true);
+  assert.equal(security.verifyBasicPassword(password, second), true);
+  assert.equal(security.verifyBasicPassword("wrong password", first), false);
+  assert.equal(security.verifyBasicPassword("", first), false);
+});
+
+test("verifyBasicPassword rejects malformed or hostile stored hashes", () => {
+  const valid = security.hashBasicPassword("another gate pass 7");
+  const [, , , , saltB64, hashB64] = valid.split("$");
+  assert.equal(security.verifyBasicPassword("x", ""), false);
+  assert.equal(security.verifyBasicPassword("x", "plaintext"), false);
+  assert.equal(security.verifyBasicPassword("x", "argon2$16384$8$1$a$b"), false);
+  // 篡改后的哈希体
+  assert.equal(security.verifyBasicPassword("another gate pass 7", `${valid.slice(0, -2)}xx`), false);
+  // 非 2 的幂 / 超界的成本参数（防 CPU/内存放大）
+  assert.equal(security.verifyBasicPassword("x", `scrypt$12345$8$1$${saltB64}$${hashB64}`), false);
+  assert.equal(security.verifyBasicPassword("x", `scrypt$131072$8$1$${saltB64}$${hashB64}`), false);
+  assert.equal(security.verifyBasicPassword("x", `scrypt$16384$99$1$${saltB64}$${hashB64}`), false);
+  assert.equal(security.verifyBasicPassword("x", `scrypt$16384$8$9$${saltB64}$${hashB64}`), false);
+  // 盐/哈希长度不足
+  assert.equal(security.verifyBasicPassword("x", "scrypt$16384$8$1$c2FsdA==$c2hvcnQ="), false);
+});
+
+test("CIDR parsing and containment cover IPv4, IPv6, and mapped normalization", () => {
+  assert.equal(security.parseCidr("not an ip"), null);
+  assert.equal(security.parseCidr("192.168.1.0/33"), null);
+  assert.equal(security.parseCidr("2001:db8::/129"), null);
+  assert.equal(security.parseCidr("01.2.3.4"), null);
+
+  const ipv4Rule = security.parseCidr("192.168.1.0/24");
+  const ipv6Rule = security.parseCidr("2001:db8::/32");
+  assert.ok(ipv4Rule && ipv6Rule);
+  const contains = (rule: NonNullable<ReturnType<typeof security.parseCidr>>, ip: string) => {
+    const bytes = security.parseIpBytes(ip);
+    assert.ok(bytes, `ip ${ip} must parse`);
+    return security.cidrContains(rule, bytes);
+  };
+  assert.equal(contains(ipv4Rule, "192.168.1.9"), true);
+  assert.equal(contains(ipv4Rule, "192.168.2.9"), false);
+  assert.equal(contains(ipv4Rule, "::ffff:192.168.1.9"), true, "IPv4-mapped must normalize");
+  assert.equal(contains(ipv6Rule, "2001:db8:1::1"), true);
+  assert.equal(contains(ipv6Rule, "2001:db9::1"), false);
+});
