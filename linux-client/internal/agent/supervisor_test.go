@@ -25,7 +25,7 @@ func TestRenderConfigMatchesManagedSurface(t *testing.T) {
 			{ID: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", Subdomain: "secure-app", LocalScheme: "https", LocalHost: "nas.lan", LocalPort: 8443, Enabled: true, Version: 3},
 			{ID: "disabled", Subdomain: "disabled", LocalScheme: "http", LocalHost: "127.0.0.1", LocalPort: 9, Enabled: false},
 		},
-	})
+	}, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -44,11 +44,95 @@ func TestRenderConfigMatchesManagedSurface(t *testing.T) {
 	if strings.Contains(configuration, "disabled.tunnel.example.com") {
 		t.Fatalf("disabled connection was rendered:\n%s", configuration)
 	}
+	if strings.Contains(configuration, "trustedCaFile") || strings.Contains(configuration, "serverName") {
+		t.Fatalf("configuration without a CA must not pin TLS files:\n%s", configuration)
+	}
+}
+
+func TestRenderConfigPinsTrustedCa(t *testing.T) {
+	expires := time.Now().Add(time.Hour)
+	configuration, err := RenderConfig(model.Profile{
+		FRPSHost: "frps.example.com", FRPSPort: 7000, TunnelDomain: "tunnel.example.com",
+		FRPSTLSCertificatePEM: "-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----\n",
+	}, model.SyncResponse{
+		DeviceID: "device-id", Lease: &model.Lease{Value: "signed-lease", ExpiresAt: expires},
+	}, "/var/lib/home-tunnel/runtime/frps-ca.pem")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, expected := range []string{
+		`transport.tls.trustedCaFile = "/var/lib/home-tunnel/runtime/frps-ca.pem"`,
+		`transport.tls.serverName = "frps.example.com"`,
+	} {
+		if !strings.Contains(configuration, expected) {
+			t.Fatalf("configuration missing %q:\n%s", expected, configuration)
+		}
+	}
 }
 
 func TestRenderConfigRequiresLease(t *testing.T) {
-	if _, err := RenderConfig(model.Profile{}, model.SyncResponse{}); err == nil {
+	if _, err := RenderConfig(model.Profile{}, model.SyncResponse{}, ""); err == nil {
 		t.Fatal("RenderConfig unexpectedly accepted a missing lease")
+	}
+}
+
+func TestSupervisorWritesTrustedCaAndArguments(t *testing.T) {
+	pem := "-----BEGIN CERTIFICATE-----\ntest-only-frps-ca\n-----END CERTIFICATE-----\n"
+	runtimeDir := filepath.Join(t.TempDir(), "runtime")
+	supervisor, err := New(
+		filepath.Join(t.TempDir(), "missing-agent"),
+		runtimeDir,
+		"development",
+		model.Profile{FRPSHost: "frps.example.com", FRPSPort: 7000, TunnelDomain: "tunnel.example.com", FRPSTLSCertificatePEM: pem},
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	caPath := filepath.Join(runtimeDir, "frps-ca.pem")
+	content, err := os.ReadFile(caPath)
+	if err != nil {
+		t.Fatalf("managed CA file missing: %v", err)
+	}
+	if string(content) != pem {
+		t.Fatalf("managed CA file content mismatch:\n%s", content)
+	}
+	if runtime.GOOS == "linux" {
+		info, err := os.Stat(caPath)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if info.Mode().Perm() != 0o600 {
+			t.Fatalf("managed CA file mode = %v, want 0600", info.Mode().Perm())
+		}
+	}
+	digest := sha256.Sum256([]byte(pem))
+	expectedArgument := hex.EncodeToString(digest[:])
+	arguments := supervisor.arguments("verify", "config.toml")
+	found := false
+	for index, argument := range arguments {
+		if argument == "--tls-ca-sha256" && index+1 < len(arguments) && arguments[index+1] == expectedArgument {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("arguments missing --tls-ca-sha256 %s: %v", expectedArgument, arguments)
+	}
+
+	plain, err := New(
+		filepath.Join(t.TempDir(), "missing-agent"),
+		filepath.Join(t.TempDir(), "runtime"),
+		"development",
+		model.Profile{FRPSHost: "frps.example.com", FRPSPort: 7000, TunnelDomain: "tunnel.example.com"},
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, argument := range plain.arguments("verify", "config.toml") {
+		if argument == "--tls-ca-sha256" {
+			t.Fatal("profile without a certificate must not pass --tls-ca-sha256")
+		}
 	}
 }
 

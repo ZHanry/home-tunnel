@@ -41,7 +41,7 @@ On Windows PowerShell:
   -AcmeEmail admin@example.com
 ```
 
-The command creates an ignored `.env` file and four ignored secret files under `deploy/secrets/`. It refuses to overwrite existing configuration unless the PowerShell command is explicitly given `-Force`. Do not commit or share these files.
+The command creates an ignored `.env` file and the ignored secret files under `deploy/secrets/`: four generated keys plus a ten-year self-signed FRPS TLS certificate (`frps_tls_cert.pem`/`frps_tls_key.pem`, EC P-256, CN and SAN covering the FRPS host). FRPS serves this certificate on TCP 7000, the control center publishes the public part through `/api/v1/public/config`, and managed clients pin it so the Agent only completes the FRP TLS handshake with your real FRPS. If the certificate files already exist they are kept as-is. It refuses to overwrite existing configuration unless the PowerShell command is explicitly given `-Force`. Do not commit or share these files.
 
 ## 2. Validate and start the server
 
@@ -122,6 +122,8 @@ docker compose up -d
 ```
 
 The database is `/data/home-tunnel.db` in the `sqlite-data` volume and uses WAL mode. The managed production profile includes online encrypted SQLite backup and integrity-verification scripts. Back it up before upgrades and retain the generated secret files in an encrypted backup. Never use `docker compose down -v` unless you intentionally want to delete SQLite and Caddy state.
+
+The control center also snapshots its own database. Shortly after startup and then every 24 hours it runs SQLite `VACUUM INTO` and writes `control-center-<UTC timestamp>.sqlite3` into `/data/backups/` inside the same `sqlite-data` volume, keeping the newest seven snapshots. Adjust this with the `BACKUP_INTERVAL_HOURS` (set `0` to disable), `BACKUP_RETENTION_COUNT` and `BACKUP_DIRECTORY` environment variables on the `control-center` service. To restore a snapshot, stop the stack, replace `/data/home-tunnel.db` with the chosen backup file (and delete any leftover `home-tunnel.db-wal` and `home-tunnel.db-shm` files), then start the stack again.
 
 The managed updater also detects deployments created by older releases with PostgreSQL and exits before changing containers or data. Export or migrate that database before switching profiles.
 

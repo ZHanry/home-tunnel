@@ -6,6 +6,8 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"flag"
 	"fmt"
@@ -14,6 +16,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"strings"
 	"syscall"
@@ -31,17 +34,24 @@ var (
 	frpCommit    = "unknown"
 )
 
-const maxConfigBytes = 1024 * 1024
+const (
+	maxConfigBytes = 1024 * 1024
+	maxCaFileBytes = 64 * 1024
+)
 
 var (
 	subdomainPattern = regexp.MustCompile(`^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$`)
 	domainPattern    = regexp.MustCompile(`^[a-z0-9](?:[a-z0-9.-]{0,251}[a-z0-9])?$`)
+	sha256HexPattern = regexp.MustCompile(`^[0-9a-f]{64}$`)
 )
 
 type trustProfile struct {
 	server string
 	port   int
 	domain string
+	// tlsCaSha256 是客户端写入 frps-ca.pem 后计算的文件字节 SHA-256（小写
+	// 十六进制）。为空表示服务端未下发 FRPS 证书，保持历史行为。
+	tlsCaSha256 string
 }
 
 func main() {
@@ -62,19 +72,25 @@ func execute(args []string) error {
 	command := args[0]
 	flags := flag.NewFlagSet(command, flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
-	var configPath, server, domain string
+	var configPath, server, domain, tlsCaSha256 string
 	var port int
 	flags.StringVar(&configPath, "config", "", "managed configuration path")
 	flags.StringVar(&server, "server", "", "user-selected FRPS host")
 	flags.IntVar(&port, "port", 0, "user-selected FRPS port")
 	flags.StringVar(&domain, "domain", "", "user-selected tunnel domain")
+	flags.StringVar(&tlsCaSha256, "tls-ca-sha256", "", "expected SHA-256 of the managed FRPS CA file")
 	if err := flags.Parse(args[1:]); err != nil || flags.NArg() != 0 {
 		return errors.New("受管启动参数无效")
 	}
+	tlsCaSha256 = strings.ToLower(strings.TrimSpace(tlsCaSha256))
+	if tlsCaSha256 != "" && !sha256HexPattern.MatchString(tlsCaSha256) {
+		return errors.New("受管 CA 哈希参数无效")
+	}
 	trust := trustProfile{
-		server: strings.TrimSpace(server),
-		port:   port,
-		domain: strings.ToLower(strings.Trim(strings.TrimSpace(domain), ".")),
+		server:      strings.TrimSpace(server),
+		port:        port,
+		domain:      strings.ToLower(strings.Trim(strings.TrimSpace(domain), ".")),
+		tlsCaSha256: tlsCaSha256,
 	}
 	if err := validateTrustProfile(trust); err != nil {
 		return err
@@ -180,7 +196,16 @@ func validTunnelDomain(value string) bool {
 	return true
 }
 
+// validateManagedSurface 以白名单方式校验受管配置：先对少数合法可变字段做格式
+// 校验并拷贝进按受管模板构造的期望配置，其余字段全部交给 FRP 的 Complete()
+// 填充默认值，最后整体 DeepEqual。任何模板未声明的字段（包括 FRP 升级引入的
+// 新字段）只要显式偏离默认值即被拒绝，默认拒绝而非黑名单枚举。
 func validateManagedSurface(common *v1.ClientCommonConfig, all v1.ClientConfig, proxies []v1.ProxyConfigurer, trust trustProfile) error {
+	// Visitors 不属于 ClientCommonConfig，DeepEqual 覆盖不到，单独禁止。
+	if len(all.Visitors) != 0 {
+		return errors.New("不允许访客配置")
+	}
+	// 前置校验保留语义化错误：服务器一致性、设备标识与租约元数据格式。
 	if !strings.EqualFold(common.ServerAddr, trust.server) || common.ServerPort != trust.port {
 		return errors.New("配置与用户选择的服务器不一致")
 	}
@@ -190,48 +215,149 @@ func validateManagedSurface(common *v1.ClientCommonConfig, all v1.ClientConfig, 
 	if common.Metadatas["home_tunnel_lease"] == "" || len(common.Metadatas) != 1 {
 		return errors.New("安全租约元数据无效")
 	}
-	if len(all.Visitors) != 0 || len(common.IncludeConfigFiles) != 0 || len(common.Start) != 0 {
-		return errors.New("不允许访客、外部配置或启动筛选")
+
+	// 受管模板固定字段：与两个客户端 RenderConfig 输出一一对应，
+	// ServerAddr/ServerPort 直接取用户选择的 trust profile。
+	expected := v1.ClientCommonConfig{
+		ServerAddr:    trust.server,
+		ServerPort:    trust.port,
+		LoginFailExit: ptrTo(true),
+		Auth:          v1.AuthClientConfig{Method: v1.AuthMethodToken},
+		Transport: v1.ClientTransportConfig{
+			Protocol:          "tcp",
+			HeartbeatInterval: 30,
+			HeartbeatTimeout:  90,
+			TLS: v1.TLSClientConfig{
+				Enable:                    ptrTo(true),
+				DisableCustomTLSFirstByte: ptrTo(true),
+			},
+		},
+		Log: v1.LogConfig{To: "console", Level: "info"},
 	}
-	if len(common.FeatureGates) != 0 || common.VirtualNet.Address != "" {
-		return errors.New("不允许实验能力或虚拟网络")
+	// 合法可变字段：校验通过后拷贝进期望配置。
+	expected.User = common.User
+	expected.Metadatas = map[string]string{"home_tunnel_lease": common.Metadatas["home_tunnel_lease"]}
+	if trust.tlsCaSha256 == "" {
+		// 服务端未下发 FRPS 证书：保持历史行为，禁止一切自定义 TLS 文件。
+		if common.Transport.TLS.TrustedCaFile != "" || common.Transport.TLS.ServerName != "" {
+			return errors.New("不允许自定义 TLS 文件")
+		}
+	} else {
+		// 客户端声明了受管 CA：配置必须固定到该 CA 文件与用户选择的服务器名，
+		// 由 FRP 用它验证 FRPS 证书，防止租约令牌被中间人窃取。
+		if common.Transport.TLS.TrustedCaFile == "" {
+			return errors.New("缺少受管 FRPS CA 配置")
+		}
+		if err := validateTrustedCaFile(common.Transport.TLS.TrustedCaFile, trust.tlsCaSha256); err != nil {
+			return err
+		}
+		if !strings.EqualFold(common.Transport.TLS.ServerName, trust.server) {
+			return errors.New("TLS 服务器名称与用户选择的服务器不一致")
+		}
+		expected.Transport.TLS.TrustedCaFile = common.Transport.TLS.TrustedCaFile
+		expected.Transport.TLS.ServerName = common.Transport.TLS.ServerName
 	}
-	if common.WebServer.Port != 0 || common.WebServer.User != "" || common.WebServer.Password != "" ||
-		common.WebServer.AssetsDir != "" || common.WebServer.PprofEnable || common.WebServer.TLS != nil {
-		return errors.New("不允许本地管理服务器")
+	// 由 FRP 填充全部默认值：未来新增字段若带非零默认值，两侧一致仍放行；
+	// 配置显式写入任何偏离默认的值都会在 DeepEqual 处被拒。
+	expected.Complete()
+	// Complete 会把 http_proxy 环境变量写进 ProxyURL；受管模板固定直连，
+	// 即使环境变量清理失败也绝不放行环境代理。
+	expected.Transport.ProxyURL = ""
+	if !reflect.DeepEqual(*common, expected) {
+		return templateMismatchError("配置", *common, expected)
 	}
-	if common.Auth.Method != v1.AuthMethodToken || common.Auth.Token != "" || len(common.Auth.AdditionalScopes) != 0 {
-		return errors.New("认证配置无效")
-	}
-	if common.Transport.Protocol != "tcp" || common.Transport.ProxyURL != "" || common.Transport.ConnectServerLocalIP != "" {
-		return errors.New("只允许直连 TCP 传输")
-	}
-	if common.Transport.HeartbeatInterval != 30 || common.Transport.HeartbeatTimeout != 90 {
-		return errors.New("受管心跳配置无效")
-	}
-	if common.Transport.TLS.Enable == nil || !*common.Transport.TLS.Enable ||
-		common.Transport.TLS.DisableCustomTLSFirstByte == nil || !*common.Transport.TLS.DisableCustomTLSFirstByte {
-		return errors.New("必须启用受管 TLS")
-	}
-	if common.Transport.TLS.CertFile != "" || common.Transport.TLS.KeyFile != "" ||
-		common.Transport.TLS.TrustedCaFile != "" || common.Transport.TLS.ServerName != "" {
-		return errors.New("不允许自定义 TLS 文件")
-	}
-	if common.Log.To != "console" || common.Log.Level != "info" {
-		return errors.New("日志配置无效")
-	}
+
 	if len(proxies) > 100 {
 		return errors.New("连接数量超过上限")
 	}
 	for _, proxy := range proxies {
-		if err := validateManagedProxy(proxy, trust.domain); err != nil {
+		if err := validateManagedProxy(proxy, common.User, trust.domain); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func validateManagedProxy(proxy v1.ProxyConfigurer, tunnelDomain string) error {
+// ptrTo 返回值的指针，用于构造模板中的 *bool 固定值。
+func ptrTo[T any](value T) *T { return &value }
+
+// templateMismatchError 生成默认拒绝错误，并尽力附上第一个偏离受管模板的
+// 字段路径，方便定位手工构造配置里的问题字段。
+func templateMismatchError(scope string, actual, expected any) error {
+	if path := firstDiffPath("", reflect.ValueOf(actual), reflect.ValueOf(expected)); path != "" {
+		return fmt.Errorf("%s超出受管模板：字段 %s 与模板不一致", scope, path)
+	}
+	return fmt.Errorf("%s超出受管模板", scope)
+}
+
+// firstDiffPath 深度优先遍历导出字段，返回实际值与期望值之间第一个不一致的
+// 字段路径，找不到具体路径时返回空串。含未导出字段的类型（如带宽配额）不再
+// 深入，在当前路径整体比较。仅用于生成诊断信息，判定始终以 DeepEqual 为准。
+func firstDiffPath(path string, actual, expected reflect.Value) string {
+	if actual.Type() != expected.Type() {
+		return path
+	}
+	switch actual.Kind() {
+	case reflect.Pointer, reflect.Interface:
+		if actual.IsNil() != expected.IsNil() {
+			return path
+		}
+		if actual.IsNil() {
+			return ""
+		}
+		return firstDiffPath(path, actual.Elem(), expected.Elem())
+	case reflect.Struct:
+		for index := 0; index < actual.NumField(); index++ {
+			field := actual.Type().Field(index)
+			if !field.IsExported() {
+				continue
+			}
+			childPath := field.Name
+			if path != "" {
+				childPath = path + "." + field.Name
+			}
+			if diff := firstDiffPath(childPath, actual.Field(index), expected.Field(index)); diff != "" {
+				return diff
+			}
+		}
+		if !reflect.DeepEqual(actual.Interface(), expected.Interface()) {
+			return path
+		}
+		return ""
+	default:
+		if !reflect.DeepEqual(actual.Interface(), expected.Interface()) {
+			return path
+		}
+		return ""
+	}
+}
+
+// validateTrustedCaFile 确认配置引用的受管 CA 文件与客户端刚写入的内容完全一致，
+// 防止手工构造的配置把信任锚替换成攻击者的证书。
+func validateTrustedCaFile(path, expectedSha256 string) error {
+	info, err := os.Stat(path)
+	if err != nil {
+		return fmt.Errorf("无法读取受管 CA 文件: %w", err)
+	}
+	if !info.Mode().IsRegular() || info.Size() <= 0 || info.Size() > maxCaFileBytes {
+		return errors.New("受管 CA 文件大小或类型无效")
+	}
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("无法读取受管 CA 文件: %w", err)
+	}
+	digest := sha256.Sum256(content)
+	if hex.EncodeToString(digest[:]) != expectedSha256 {
+		return errors.New("受管 CA 文件哈希不一致")
+	}
+	return nil
+}
+
+// validateManagedProxy 对每条连接按白名单模板比对。可变输入只有 name、
+// customDomains 里唯一的受管域名，以及本地后端：localIP+localPort（HTTP 直连）
+// 或 http2https 插件的 localAddr+hostHeaderRewrite（HTTPS 后端）。校验可变项
+// 格式后拷贝进期望配置，Complete 填充默认值，其余字段偏离模板即拒绝。
+func validateManagedProxy(proxy v1.ProxyConfigurer, user, tunnelDomain string) error {
 	httpProxy, ok := proxy.(*v1.HTTPProxyConfig)
 	if !ok {
 		return errors.New("只允许 HTTP 类型连接")
@@ -240,39 +366,55 @@ func validateManagedProxy(proxy v1.ProxyConfigurer, tunnelDomain string) error {
 	if len(httpProxy.CustomDomains) != 1 || !isManagedDomain(httpProxy.CustomDomains[0], tunnelDomain) {
 		return errors.New("公网域名不属于 Home Tunnel")
 	}
-	if len(httpProxy.Locations) != 0 || httpProxy.HTTPUser != "" || httpProxy.HTTPPassword != "" ||
-		httpProxy.HostHeaderRewrite != "" || httpProxy.RouteByHTTPUser != "" ||
-		len(httpProxy.RequestHeaders.Set) != 0 || len(httpProxy.ResponseHeaders.Set) != 0 {
-		return errors.New("HTTP 高级选项不受支持")
+	// subdomain 与 customDomains 并存时可绕过受管域名约束，保留明确错误。
+	if httpProxy.SubDomain != "" {
+		return errors.New("不允许 subdomain 配置")
 	}
-	if len(base.Annotations) != 0 || len(base.Metadatas) != 0 || base.LoadBalancer.Group != "" || base.LoadBalancer.GroupKey != "" {
-		return errors.New("代理扩展选项不受支持")
+	expected := v1.HTTPProxyConfig{
+		ProxyBaseConfig: v1.ProxyBaseConfig{
+			Type:      "http",
+			Transport: v1.ProxyTransport{UseEncryption: true, UseCompression: true},
+			HealthCheck: v1.HealthCheckConfig{
+				Type:            "tcp",
+				TimeoutSeconds:  3,
+				IntervalSeconds: 10,
+			},
+		},
+		DomainConfig: v1.DomainConfig{CustomDomains: []string{httpProxy.CustomDomains[0]}},
 	}
-	if !base.Transport.UseEncryption || !base.Transport.UseCompression ||
-		base.Transport.BandwidthLimit.String() != "0B" && base.Transport.BandwidthLimit.String() != "" ||
-		base.Transport.ProxyProtocolVersion != "" {
-		return errors.New("代理传输选项无效")
-	}
-	if base.HealthCheck.Type != "tcp" || base.HealthCheck.TimeoutSeconds != 3 || base.HealthCheck.IntervalSeconds != 10 {
-		return errors.New("健康检查配置无效")
-	}
-
 	if base.Plugin.ClientPluginOptions == nil {
 		if base.LocalPort < 1 || base.LocalPort > 65535 || !validLocalHost(base.LocalIP) {
 			return errors.New("本地 HTTP 目标无效")
 		}
-		return nil
+		expected.LocalIP = base.LocalIP
+		expected.LocalPort = base.LocalPort
+	} else {
+		plugin, ok := base.Plugin.ClientPluginOptions.(*v1.HTTP2HTTPSPluginOptions)
+		if !ok || base.Plugin.Type != v1.PluginHTTP2HTTPS {
+			return errors.New("只允许受管 HTTPS 转换插件")
+		}
+		host, port, err := net.SplitHostPort(plugin.LocalAddr)
+		if err != nil || !validLocalHost(host) || port == "0" {
+			return errors.New("本地 HTTPS 目标无效")
+		}
+		if plugin.HostHeaderRewrite != host || len(plugin.RequestHeaders.Set) != 0 {
+			return errors.New("HTTPS 主机设置无效")
+		}
+		expected.Plugin = v1.TypedClientPluginOptions{
+			Type: v1.PluginHTTP2HTTPS,
+			ClientPluginOptions: &v1.HTTP2HTTPSPluginOptions{
+				Type:              v1.PluginHTTP2HTTPS,
+				LocalAddr:         plugin.LocalAddr,
+				HostHeaderRewrite: plugin.HostHeaderRewrite,
+			},
+		}
 	}
-	plugin, ok := base.Plugin.ClientPluginOptions.(*v1.HTTP2HTTPSPluginOptions)
-	if !ok || base.Plugin.Type != v1.PluginHTTP2HTTPS || base.LocalPort != 0 {
-		return errors.New("只允许受管 HTTPS 转换插件")
-	}
-	host, port, err := net.SplitHostPort(plugin.LocalAddr)
-	if err != nil || !validLocalHost(host) || port == "0" {
-		return errors.New("本地 HTTPS 目标无效")
-	}
-	if plugin.HostHeaderRewrite != host || len(plugin.RequestHeaders.Set) != 0 {
-		return errors.New("HTTPS 主机设置无效")
+	// Complete 填充默认值（含插件场景下 LocalIP 的 127.0.0.1 回填）并拼接
+	// user 前缀；name 是客户端生成的可变项，实际值已含前缀，直接采用。
+	expected.Complete(user)
+	expected.Name = base.Name
+	if !reflect.DeepEqual(httpProxy, &expected) {
+		return templateMismatchError(fmt.Sprintf("连接 %q ", base.Name), *httpProxy, expected)
 	}
 	return nil
 }

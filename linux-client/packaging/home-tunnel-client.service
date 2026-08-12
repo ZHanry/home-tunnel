@@ -13,7 +13,13 @@ StateDirectory=home-tunnel
 StateDirectoryMode=0700
 ExecStart=/usr/local/bin/home-tunnel-client run
 Restart=on-failure
+# The client already retries transient startup failures in-process with
+# exponential backoff; RestartSteps/RestartMaxDelaySec (systemd >= 254, ignored
+# by older versions) additionally spread out unit-level restarts so a fleet
+# does not replay authentication every 5 seconds while the server is down.
 RestartSec=5s
+RestartSteps=8
+RestartMaxDelaySec=300
 TimeoutStopSec=15s
 NoNewPrivileges=true
 PrivateTmp=true
@@ -34,6 +40,10 @@ MemoryDenyWriteExecute=true
 CapabilityBoundingSet=
 AmbientCapabilities=
 RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+SystemCallFilter=@system-service
+SystemCallArchitectures=native
+ProtectProc=invisible
+ProcSubset=pid
 
 [Install]
 WantedBy=multi-user.target

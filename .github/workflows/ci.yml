@@ -55,6 +55,83 @@ jobs:
           dotnet-version: 8.0.x
       - run: dotnet run --project .\windows-client-tests\HomeTunnel.Client.Tests.csproj -c Release
 
+  windows-agent:
+    name: Windows agent official baseline
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      # windows runner 镜像不保证自带 mingw/windres，统一通过 choco 安装
+      # （mingw 包含 binutils 的 windres）。机器 PATH 的变更对本步骤进程
+      # 不可见，所以在同一步骤内定位 windres.exe 并显式传给构建脚本。
+      - name: Install windres (mingw binutils)
+        shell: pwsh
+        run: |
+          choco install mingw -y --no-progress
+          $windres = (Get-Command windres -ErrorAction SilentlyContinue).Source
+          if (-not $windres) {
+            $windres = Get-ChildItem C:\ProgramData\chocolatey, C:\ProgramData\mingw64 -Recurse `
+              -Filter windres.exe -File -ErrorAction SilentlyContinue |
+              Select-Object -First 1 -ExpandProperty FullName
+          }
+          if (-not $windres) { throw 'windres.exe not found after mingw install' }
+          "HOME_TUNNEL_WINDRES=$windres" >> $env:GITHUB_ENV
+      # build-agent.ps1 自行下载 pinned Go 工具链与 FRP 源码、校验哈希、
+      # 构建并自检版本；stdout 的 AGENT_SHA256= 行即发布基线哈希。
+      - name: Build official agent baseline
+        shell: pwsh
+        run: |
+          $lines = & .\windows-client\build-agent.ps1 -WindRes $env:HOME_TUNNEL_WINDRES
+          $lines | Write-Output
+          $sha = ($lines | Where-Object { $_ -like 'AGENT_SHA256=*' } | Select-Object -First 1) -replace '^AGENT_SHA256=', ''
+          if ($sha -notmatch '^[0-9a-f]{64}$') { throw 'AGENT_SHA256 line missing from build-agent.ps1 output' }
+          $lines | Where-Object { $_ -match '^(AGENT_VERSION|FRP_VERSION|FRP_COMMIT|AGENT_SHA256)=' } |
+            Set-Content -LiteralPath agent-baseline.txt
+          '## Home Tunnel Agent official baseline' >> $env:GITHUB_STEP_SUMMARY
+          '' >> $env:GITHUB_STEP_SUMMARY
+          "``AGENT_SHA256=$sha``" >> $env:GITHUB_STEP_SUMMARY
+          '' >> $env:GITHUB_STEP_SUMMARY
+          '发布时用该哈希更新 windows-client/HomeTunnel.Client.csproj 的 AgentExpectedSha256。' >> $env:GITHUB_STEP_SUMMARY
+      # 复用脚本刚下载的同一工具链与 FRP 树，按受管布局跑 Agent 校验逻辑
+      # 的 gofmt/vet/test，保证 CI 每次验证白名单校验逻辑本身。
+      - name: Run agent Go checks inside the pinned FRP tree
+        shell: pwsh
+        run: |
+          $env:GOFLAGS = '-buildvcs=false'
+          $goBin = Join-Path (Get-Location) '.downloads\go-toolchain\go\bin'
+          $frpRoot = Get-ChildItem (Join-Path '.downloads' 'frp-api-*') -Directory |
+            ForEach-Object { Get-ChildItem $_.FullName -Directory } |
+            Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'go.mod') } |
+            Select-Object -First 1
+          if (-not $frpRoot) { throw 'pinned FRP source tree not found under .downloads' }
+          $agentCmd = Join-Path $frpRoot.FullName 'cmd\home-tunnel-agent'
+          New-Item -ItemType Directory -Force $agentCmd | Out-Null
+          Copy-Item windows-agent\main.go, windows-agent\main_test.go $agentCmd
+          try {
+            $unformatted = & (Join-Path $goBin 'gofmt.exe') -l (Join-Path $agentCmd 'main.go') (Join-Path $agentCmd 'main_test.go')
+            if ($unformatted) { throw "gofmt found unformatted agent files: $unformatted" }
+            Push-Location $frpRoot.FullName
+            try {
+              & (Join-Path $goBin 'go.exe') vet ./cmd/home-tunnel-agent/
+              if ($LASTEXITCODE -ne 0) { throw 'agent go vet failed' }
+              & (Join-Path $goBin 'go.exe') test -count=1 ./cmd/home-tunnel-agent/
+              if ($LASTEXITCODE -ne 0) { throw 'agent go test failed' }
+            }
+            finally {
+              Pop-Location
+            }
+          }
+          finally {
+            Remove-Item -LiteralPath $agentCmd -Recurse -Force
+          }
+      - name: Upload agent baseline artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: home-tunnel-agent-baseline
+          path: |
+            windows-client/assets/HomeTunnel.Agent.exe
+            agent-baseline.txt
+          if-no-files-found: error
+
   repository:
     name: Repository and Compose checks
     runs-on: ubuntu-latest
@@ -68,11 +145,38 @@ jobs:
       - name: Test Linux client
         working-directory: linux-client
         run: go test -race ./...
+      - name: Vet Linux client
+        working-directory: linux-client
+        run: go vet ./...
       - name: Build Linux client controller
         working-directory: linux-client
         run: CGO_ENABLED=0 go build ./cmd/home-tunnel-client
       - name: Check Linux packaging scripts
         run: bash -n linux-client/packaging/build-release.sh linux-client/packaging/install.sh linux-client/packaging/home-tunnel-enroll
+      - name: Shellcheck shell scripts
+        run: |
+          shellcheck --severity=warning \
+            linux-client/packaging/*.sh \
+            linux-client/packaging/home-tunnel-enroll \
+            deploy/scripts/*.sh \
+            deploy/frps/entrypoint.sh
+      - name: Check version consistency
+        run: |
+          set -euo pipefail
+          model_version=$(sed -n 's/^const Version = "\([^"]*\)"$/\1/p' linux-client/internal/model/model.go)
+          env_version=$(sed -n 's/^HOME_TUNNEL_VERSION=//p' .env.example)
+          release_version=$(sed -n 's/^version=\${VERSION:-\([^}]*\)}$/\1/p' linux-client/packaging/build-release.sh)
+          root_compose_versions=$(sed -n 's/.*{HOME_TUNNEL_VERSION:-\([^}]*\)}.*/\1/p' compose.yaml | sort -u)
+          deploy_compose_versions=$(grep -oE 'home-tunnel/(control-center|traffic-gateway):[0-9][0-9.]*' deploy/compose.yaml | sed 's/.*://' | sort -u)
+          echo "model=$model_version env=$env_version release=$release_version root_compose=$root_compose_versions deploy_compose=$deploy_compose_versions"
+          test -n "$model_version" && test -n "$env_version" && test -n "$release_version"
+          test -n "$root_compose_versions" && test -n "$deploy_compose_versions"
+          for candidate in "$env_version" "$release_version" $root_compose_versions $deploy_compose_versions; do
+            if [ "$candidate" != "$model_version" ]; then
+              echo "version mismatch: expected $model_version, found $candidate" >&2
+              exit 1
+            fi
+          done
       - name: Prepare non-production Compose inputs
         run: |
           cp .env.example .env
@@ -80,5 +184,12 @@ jobs:
           for name in internal_service_key frps_plugin_key lease_signing_key bootstrap_admin_password; do
             printf '%064d\n' 0 > "deploy/secrets/$name"
           done
+          # compose config only checks that secret files exist; stub PEM content is enough.
+          printf -- '-----BEGIN CERTIFICATE-----\nstub\n-----END CERTIFICATE-----\n' > deploy/secrets/frps_tls_cert.pem
+          printf -- '-----BEGIN PRIVATE KEY-----\nstub\n-----END PRIVATE KEY-----\n' > deploy/secrets/frps_tls_key.pem
       - run: docker compose config --quiet
       - run: docker compose -f compose.yaml -f compose.build.yaml config --quiet
+      - name: Validate deploy Compose file
+        run: |
+          docker network inspect home-tunnel-edge >/dev/null 2>&1 || docker network create home-tunnel-edge
+          docker compose -f deploy/compose.yaml --env-file .env config --quiet

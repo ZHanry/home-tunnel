@@ -76,7 +76,7 @@ router.post(
       response.setHeader("retry-after", String(limit.retryAfterSeconds));
       throw new HttpError(429, "RATE_LIMITED", "登录尝试过多，请稍后重试");
     }
-    const user = await one<UserRow>("SELECT * FROM users WHERE lower(username)=lower($1)", [normalized]);
+    const user = await one<UserRow>("SELECT * FROM users WHERE lower(username)=lower(?)", [normalized]);
     const passwordValid = await verifyPassword(user?.password_hash ?? (await dummyHashPromise), body.password);
     if (!user || !passwordValid) {
       await transaction(async (client) => {
@@ -131,8 +131,8 @@ router.post(
     const device = await one<
       UserRow & { device_id: string; device_status: "active" | "revoked"; credential_hash: string }
     >(
-      `SELECT u.*, d.id::text AS device_id, d.status AS device_status, d.credential_hash
-         FROM devices d JOIN users u ON u.id=d.user_id WHERE d.id=$1`,
+      `SELECT u.*, d.id AS device_id, d.status AS device_status, d.credential_hash
+         FROM devices d JOIN users u ON u.id=d.user_id WHERE d.id=?`,
       [body.device_id],
     );
     if (!device || !constantTimeStringEqual(device.credential_hash, tokenHash(body.device_credential))) {
@@ -142,7 +142,10 @@ router.post(
     if (device.device_status !== "active") throw new HttpError(423, "DEVICE_REVOKED", "设备已撤销");
     const session = await transaction(async (client) => {
       const issued = await issueSession(client, device, device.device_id);
-      await client.query("UPDATE devices SET last_seen_at=now(),updated_at=now() WHERE id=$1", [device.device_id]);
+      await client.query(
+        "UPDATE devices SET last_seen_at=home_tunnel_now(),updated_at=home_tunnel_now() WHERE id=?",
+        [device.device_id],
+      );
       await audit(client, request, "DeviceAuthenticated", "Device", device.device_id, null, null, {
         type: "device",
         id: device.device_id,
@@ -186,18 +189,17 @@ router.post(
         revoked_at: Date | null;
         status: "active" | "disabled";
       }>(
-        `SELECT s.id::text,s.user_id::text,s.token_family::text,s.token_version::text,
-                u.token_version::text AS user_token_version,s.refresh_token_hash,
+        `SELECT s.id,s.user_id,s.token_family,s.token_version,
+                u.token_version AS user_token_version,s.refresh_token_hash,
                 s.previous_refresh_token_hash,s.refresh_expires_at,s.revoked_at,u.status
            FROM sessions s JOIN users u ON u.id=s.user_id
-          WHERE s.refresh_token_hash=$1 OR s.previous_refresh_token_hash=$1
-          FOR UPDATE OF s`,
-        [presentedHash],
+          WHERE s.refresh_token_hash=? OR s.previous_refresh_token_hash=?`,
+        [presentedHash, presentedHash],
       );
       const session = selected.rows[0];
       if (!session) throw new HttpError(401, "SESSION_REVOKED", "刷新令牌无效");
       if (session.previous_refresh_token_hash === presentedHash) {
-        await client.query("UPDATE sessions SET revoked_at=COALESCE(revoked_at,now()) WHERE token_family=$1", [
+        await client.query("UPDATE sessions SET revoked_at=COALESCE(revoked_at,home_tunnel_now()) WHERE token_family=?", [
           session.token_family,
         ]);
         await audit(client, request, "RefreshTokenReplayDetected", "Session", session.id, null, null, {
@@ -220,9 +222,9 @@ router.post(
       const accessExpiresAt = new Date(Date.now() + config.accessTokenSeconds * 1000);
       await client.query(
         `UPDATE sessions SET previous_refresh_token_hash=refresh_token_hash,
-             refresh_token_hash=$2, access_token_hash=$3, csrf_token_hash=$4,
-             access_expires_at=$5, updated_at=now() WHERE id=$1`,
-        [session.id, tokenHash(refreshToken), tokenHash(accessToken), tokenHash(csrfToken), accessExpiresAt],
+             refresh_token_hash=?, access_token_hash=?, csrf_token_hash=?,
+             access_expires_at=?, updated_at=home_tunnel_now() WHERE id=?`,
+        [tokenHash(refreshToken), tokenHash(accessToken), tokenHash(csrfToken), accessExpiresAt, session.id],
       );
       await audit(client, request, "SessionRefreshed", "Session", session.id, null, null, {
         type: "user",
@@ -260,21 +262,22 @@ router.post(
     await transaction(async (client) => {
       if (actor.deviceId) {
         const device = await client.query<{ config_version: string }>(
-          `UPDATE devices SET credential_hash=$2,lease_expires_at=now(),config_version=config_version+1,
-             updated_at=now() WHERE id=$1 AND user_id=$3 AND status='active'
-           RETURNING config_version::text`,
-          [actor.deviceId, tokenHash(opaqueToken(48)), actor.userId],
+          `UPDATE devices SET credential_hash=?,lease_expires_at=home_tunnel_now(),config_version=config_version+1,
+             updated_at=home_tunnel_now() WHERE id=? AND user_id=? AND status='active'
+           RETURNING config_version`,
+          [tokenHash(opaqueToken(48)), actor.deviceId, actor.userId],
         );
         const configVersion = Number(device.rows[0]?.config_version ?? 0);
         if (configVersion) {
           await client.query(
             `INSERT INTO outbox_events(
                event_type,resource_type,resource_id,resource_version,recipient_user_id,recipient_device_id,payload)
-             VALUES('subject.revoked','DeviceSession',$1::text,$2,$3,$1::uuid,$4)`,
+             VALUES('subject.revoked','DeviceSession',?,?,?,?,?)`,
             [
               actor.deviceId,
               configVersion,
               actor.userId,
+              actor.deviceId,
               JSON.stringify({ subject_type: "device_session", subject_id: actor.deviceId }),
             ],
           );
@@ -283,11 +286,14 @@ router.post(
           });
         }
         await client.query(
-          "UPDATE sessions SET revoked_at=COALESCE(revoked_at,now()),updated_at=now() WHERE device_id=$1",
+          "UPDATE sessions SET revoked_at=COALESCE(revoked_at,home_tunnel_now()),updated_at=home_tunnel_now() WHERE device_id=?",
           [actor.deviceId],
         );
       } else {
-        await client.query("UPDATE sessions SET revoked_at=now(),updated_at=now() WHERE id=$1", [actor.sessionId]);
+        await client.query(
+          "UPDATE sessions SET revoked_at=home_tunnel_now(),updated_at=home_tunnel_now() WHERE id=?",
+          [actor.sessionId],
+        );
       }
       await audit(client, request, "Logout", "Session", actor.sessionId, null, null);
     });
@@ -310,7 +316,7 @@ router.post(
       z.object({ current_password: z.string().min(1).max(256), new_password: z.string().min(12).max(256) }),
       request.body,
     );
-    const user = await one<UserRow>("SELECT * FROM users WHERE id=$1", [actor.userId]);
+    const user = await one<UserRow>("SELECT * FROM users WHERE id=?", [actor.userId]);
     if (!user || !(await verifyPassword(user.password_hash, body.current_password))) {
       throw new HttpError(401, "AUTH_INVALID", "当前密码错误");
     }
@@ -323,18 +329,19 @@ router.post(
     const newHash = await hashPassword(body.new_password);
     await transaction(async (client) => {
       await client.query(
-        `UPDATE users SET password_hash=$2,password_state='normal',temporary_password_expires_at=NULL,
-             token_version=token_version+1,version=version+1,updated_at=now() WHERE id=$1`,
-        [actor.userId, newHash],
+        `UPDATE users SET password_hash=?,password_state='normal',temporary_password_expires_at=NULL,
+             token_version=token_version+1,version=version+1,updated_at=home_tunnel_now() WHERE id=?`,
+        [newHash, actor.userId],
       );
-      await client.query("UPDATE sessions SET revoked_at=COALESCE(revoked_at,now()),updated_at=now() WHERE user_id=$1", [
-        actor.userId,
-      ]);
+      await client.query(
+        "UPDATE sessions SET revoked_at=COALESCE(revoked_at,home_tunnel_now()),updated_at=home_tunnel_now() WHERE user_id=?",
+        [actor.userId],
+      );
       await audit(client, request, "PasswordChanged", "User", actor.userId, { password_state: user.password_state }, { password_state: "normal" });
       await client.query(
         `INSERT INTO outbox_events(event_type,resource_type,resource_id,resource_version,recipient_user_id,payload)
-         VALUES('subject.revoked','User',$1::text,$2,$1::uuid,$3)`,
-        [actor.userId, Number(user.token_version) + 1, JSON.stringify({ subject_type: "user", subject_id: actor.userId })],
+         VALUES('subject.revoked','User',?,?,?,?)`,
+        [actor.userId, Number(user.token_version) + 1, actor.userId, JSON.stringify({ subject_type: "user", subject_id: actor.userId })],
       );
     });
     clearSessionCookies(response);

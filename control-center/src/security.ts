@@ -2,6 +2,7 @@ import {
   createHash,
   createHmac,
   randomBytes,
+  randomInt,
   timingSafeEqual,
 } from "node:crypto";
 import { argon2id } from "hash-wasm";
@@ -164,8 +165,8 @@ export function tokenHash(token: string): string {
 
 export function generateTemporaryPassword(): string {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
-  const bytes = randomBytes(24);
-  return Array.from(bytes, (byte) => alphabet[byte % alphabet.length]).join("");
+  // randomInt draws uniformly, avoiding the modulo bias of `byte % length`.
+  return Array.from({ length: 24 }, () => alphabet[randomInt(alphabet.length)]).join("");
 }
 
 export function constantTimeStringEqual(left: string, right: string): boolean {
@@ -241,6 +242,10 @@ export function verifyLease(token: string): LeasePayload | null {
 }
 
 export class FixedWindowLimiter {
+  // Keys contain attacker-controlled input (ip:username), so the map is capped:
+  // reaching the cap first sweeps expired windows, then evicts oldest entries.
+  static readonly maxEntries = 10_000;
+
   private readonly buckets = new Map<string, { startedAt: number; count: number }>();
 
   constructor(
@@ -252,6 +257,7 @@ export class FixedWindowLimiter {
     const now = Date.now();
     const current = this.buckets.get(key);
     if (!current || now - current.startedAt >= this.windowMs) {
+      if (!current && this.buckets.size >= FixedWindowLimiter.maxEntries) this.evict(now);
       this.buckets.set(key, { startedAt: now, count: 1 });
       return { allowed: true, retryAfterSeconds: 0 };
     }
@@ -261,5 +267,19 @@ export class FixedWindowLimiter {
       allowed: false,
       retryAfterSeconds: Math.max(1, Math.ceil((this.windowMs - (now - current.startedAt)) / 1000)),
     };
+  }
+
+  private evict(now: number): void {
+    for (const [key, bucket] of this.buckets) {
+      if (now - bucket.startedAt >= this.windowMs) this.buckets.delete(key);
+    }
+    let overflow = this.buckets.size - FixedWindowLimiter.maxEntries + 1;
+    if (overflow <= 0) return;
+    // Map iteration order is insertion order, so this drops the oldest windows.
+    for (const key of this.buckets.keys()) {
+      this.buckets.delete(key);
+      overflow -= 1;
+      if (overflow <= 0) break;
+    }
   }
 }

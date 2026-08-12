@@ -75,7 +75,6 @@ func enroll(arguments []string) error {
 	if err != nil {
 		return fmt.Errorf("read password: %w", err)
 	}
-	defer clearString(&password)
 	var nextPassword string
 	if *newPasswordFile != "" {
 		if *passwordFile == "-" && *newPasswordFile == "-" {
@@ -85,7 +84,6 @@ func enroll(arguments []string) error {
 		if err != nil {
 			return fmt.Errorf("read new password: %w", err)
 		}
-		defer clearString(&nextPassword)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
 	defer cancel()
@@ -208,10 +206,6 @@ func defaultAgentPath() string {
 		return value
 	}
 	return "/usr/local/lib/home-tunnel/home-tunnel-agent"
-}
-
-func clearString(value *string) {
-	*value = ""
 }
 
 func valueOrDash(value string) string {

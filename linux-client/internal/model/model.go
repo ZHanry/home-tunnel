@@ -10,6 +10,9 @@ type Profile struct {
 	FRPSHost      string `json:"frps_host"`
 	FRPSPort      int    `json:"frps_port"`
 	TunnelDomain  string `json:"tunnel_domain"`
+	// FRPSTLSCertificatePEM 是服务端下发的 FRPS 自签证书 PEM；旧 state.json
+	// 没有该字段时为空字符串，客户端保持历史行为（不固定信任锚）。
+	FRPSTLSCertificatePEM string `json:"frps_tls_certificate_pem,omitempty"`
 }
 
 type User struct {

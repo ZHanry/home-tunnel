@@ -12,6 +12,13 @@ type SocketIdentity = {
 
 type LiveSocket = WebSocket & { identity?: SocketIdentity; alive?: boolean };
 
+let websocketClientCount = 0;
+
+// Connected realtime clients across the process, for /internal/metrics.
+export function getWebsocketClientCount(): number {
+  return websocketClientCount;
+}
+
 async function authenticateUpgrade(request: IncomingMessage): Promise<SocketIdentity | null> {
   const authorization = request.headers.authorization;
   const bearer = authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
@@ -19,9 +26,9 @@ async function authenticateUpgrade(request: IncomingMessage): Promise<SocketIden
   const token = bearer ?? cookieToken;
   if (!token) return null;
   return one<SocketIdentity>(
-    `SELECT s.user_id::text AS "userId",s.device_id::text AS "deviceId",u.role
+    `SELECT s.user_id AS "userId",s.device_id AS "deviceId",u.role
        FROM sessions s JOIN users u ON u.id=s.user_id
-      WHERE s.access_token_hash=$1 AND s.revoked_at IS NULL AND s.access_expires_at>now()
+      WHERE s.access_token_hash=? AND s.revoked_at IS NULL AND s.access_expires_at>home_tunnel_now()
         AND s.token_version=u.token_version AND u.status='active'`,
     [tokenHash(token)],
   );
@@ -33,7 +40,11 @@ export function attachRealtime(server: Server): { close: () => Promise<void> } {
 
   server.on("upgrade", (request, socket, head) => {
     const url = new URL(request.url ?? "/", "http://internal");
-    if (url.pathname !== "/api/v1/ws") return;
+    if (url.pathname !== "/api/v1/ws") {
+      socket.write("HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n");
+      socket.destroy();
+      return;
+    }
     void authenticateUpgrade(request)
       .then((identity) => {
         if (!identity) {
@@ -52,6 +63,10 @@ export function attachRealtime(server: Server): { close: () => Promise<void> } {
   });
 
   websocketServer.on("connection", (socket: LiveSocket) => {
+    websocketClientCount += 1;
+    socket.once("close", () => {
+      websocketClientCount -= 1;
+    });
     socket.on("pong", () => {
       socket.alive = true;
     });
@@ -85,9 +100,9 @@ export function attachRealtime(server: Server): { close: () => Promise<void> } {
         payload: Record<string, unknown>;
         created_at: Date;
       }>(
-        `SELECT id::text,event_type,resource_type,resource_id,resource_version::text,
-                recipient_user_id::text,recipient_device_id::text,payload,created_at
-           FROM outbox_events WHERE delivered_at IS NULL ORDER BY id LIMIT 100 FOR UPDATE SKIP LOCKED`,
+        `SELECT id,event_type,resource_type,resource_id,resource_version,
+                recipient_user_id,recipient_device_id,payload,created_at
+           FROM outbox_events WHERE delivered_at IS NULL ORDER BY id LIMIT 100`,
       );
       const delivered: string[] = [];
       for (const event of events.rows) {
@@ -107,6 +122,10 @@ export function attachRealtime(server: Server): { close: () => Promise<void> } {
             (!event.recipient_user_id || event.recipient_user_id === live.identity.userId) &&
             (!event.recipient_device_id || event.recipient_device_id === live.identity.deviceId);
           if (isAdmin || isRecipient) {
+            if (live.bufferedAmount > 1024 * 1024) {
+              live.terminate();
+              continue;
+            }
             try {
               live.send(serialized);
             } catch {
@@ -117,8 +136,11 @@ export function attachRealtime(server: Server): { close: () => Promise<void> } {
         delivered.push(event.id);
       }
       if (delivered.length) {
-        const parameters = delivered.map((_id, index) => `$${index + 1}`).join(",");
-        await client.query(`UPDATE outbox_events SET delivered_at=now() WHERE id IN (${parameters})`, delivered);
+        const parameters = delivered.map(() => "?").join(",");
+        await client.query(
+          `UPDATE outbox_events SET delivered_at=home_tunnel_now() WHERE id IN (${parameters})`,
+          delivered,
+        );
       }
       return events.rowCount ?? events.rows.length;
         });

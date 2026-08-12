@@ -82,8 +82,8 @@ export async function bumpDeviceConfig(
   payload: Record<string, unknown> = {},
 ): Promise<number> {
   const result = await client.query<{ config_version: string }>(
-    `UPDATE devices SET config_version=config_version+1,updated_at=now()
-      WHERE id=$1 RETURNING config_version::text`,
+    `UPDATE devices SET config_version=config_version+1,updated_at=home_tunnel_now()
+      WHERE id=? RETURNING config_version`,
     [deviceId],
   );
   const configVersion = Number(result.rows[0]?.config_version ?? 0);
@@ -91,7 +91,7 @@ export async function bumpDeviceConfig(
   await client.query(
     `INSERT INTO outbox_events(
        event_type,resource_type,resource_id,resource_version,recipient_user_id,recipient_device_id,payload)
-     VALUES($1,$2,$3,$4,$5,$6,$7)`,
+     VALUES(?,?,?,?,?,?,?)`,
     [
       eventType,
       resourceType,
@@ -119,7 +119,7 @@ export async function createConnection(
     });
   }
   const device = await client.query<{ user_id: string; status: string }>(
-    "SELECT user_id::text,status FROM devices WHERE id=$1",
+    "SELECT user_id,status FROM devices WHERE id=?",
     [deviceId],
   );
   if (!device.rows[0] || device.rows[0].user_id !== userId) {
@@ -130,7 +130,7 @@ export async function createConnection(
   const connection = await client.query<ConnectionRow>(
     `INSERT INTO connections(
        id,user_id,device_id,name,subdomain,local_scheme,local_host,local_port,enabled)
-     VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+     VALUES(?,?,?,?,?,?,?,?,?) RETURNING *`,
     [
       connectionId,
       userId,
@@ -145,12 +145,12 @@ export async function createConnection(
   );
   await client.query(
     `INSERT INTO traffic_policies(id,scope_type,scope_id,bandwidth_limit_bps)
-     VALUES($1,'connection',$2,$3)`,
+     VALUES(?,'connection',?,?)`,
     [randomUUID(), connectionId, input.bandwidth_limit_bps ?? null],
   );
   await client.query(
     `INSERT INTO runtime_states(connection_id,desired_version,state)
-     VALUES($1,1,$2)`,
+     VALUES(?,1,?)`,
     [connectionId, input.enabled ? "Pending" : "Disabled"],
   );
   await bumpDeviceConfig(
@@ -174,12 +174,12 @@ export async function updateConnection(
   ownerUserId?: string,
 ): Promise<{ before: ConnectionRow; after: ConnectionRow }> {
   const currentResult = await client.query<ConnectionRow>(
-    `SELECT c.*,tp.bandwidth_limit_bps,tp.version::text AS policy_version,
-            rs.state,rs.applied_version::text,rs.last_error_code
+    `SELECT c.*,tp.bandwidth_limit_bps,tp.version AS policy_version,
+            rs.state,rs.applied_version,rs.last_error_code
        FROM connections c
        LEFT JOIN traffic_policies tp ON tp.scope_type='connection' AND tp.scope_id=c.id
        LEFT JOIN runtime_states rs ON rs.connection_id=c.id
-      WHERE c.id=$1 AND c.deleted_at IS NULL`,
+      WHERE c.id=? AND c.deleted_at IS NULL`,
     [connectionId],
   );
   const current = currentResult.rows[0];
@@ -204,18 +204,18 @@ export async function updateConnection(
   }
   const updated = await client.query<ConnectionRow>(
     `UPDATE connections SET
-       name=$3,subdomain=$4,local_scheme=$5,local_host=$6,local_port=$7,enabled=$8,
-       version=version+1,updated_at=now()
-      WHERE id=$1 AND version=$2 AND deleted_at IS NULL RETURNING *`,
+       name=?,subdomain=?,local_scheme=?,local_host=?,local_port=?,enabled=?,
+       version=version+1,updated_at=home_tunnel_now()
+      WHERE id=? AND version=? AND deleted_at IS NULL RETURNING *`,
     [
-      connectionId,
-      expectedVersion,
       patch.name ?? current.name,
       subdomain,
       patch.local_scheme ?? current.local_scheme,
       patch.local_host ?? current.local_host,
       patch.local_port ?? current.local_port,
       patch.enabled ?? current.enabled,
+      connectionId,
+      expectedVersion,
     ],
   );
   if (!updated.rows[0]) throw new HttpError(409, "VERSION_CONFLICT", "连接已被其他操作修改");
@@ -224,16 +224,16 @@ export async function updateConnection(
   if (Object.hasOwn(patch, "bandwidth_limit_bps")) {
     bandwidth = patch.bandwidth_limit_bps ?? null;
     const policy = await client.query<{ version: string }>(
-      `UPDATE traffic_policies SET bandwidth_limit_bps=$2,version=version+1,updated_at=now()
-        WHERE scope_type='connection' AND scope_id=$1 RETURNING version::text`,
-      [connectionId, bandwidth],
+      `UPDATE traffic_policies SET bandwidth_limit_bps=?,version=version+1,updated_at=home_tunnel_now()
+        WHERE scope_type='connection' AND scope_id=? RETURNING version`,
+      [bandwidth, connectionId],
     );
     policyVersion = Number(policy.rows[0]?.version ?? policyVersion);
   }
   await client.query(
-    `UPDATE runtime_states SET desired_version=$2,state=$3,last_error_code=NULL,updated_at=now()
-      WHERE connection_id=$1`,
-    [connectionId, Number(updated.rows[0].version), (patch.enabled ?? current.enabled) ? "Applying" : "Disabled"],
+    `UPDATE runtime_states SET desired_version=?,state=?,last_error_code=NULL,updated_at=home_tunnel_now()
+      WHERE connection_id=?`,
+    [Number(updated.rows[0].version), (patch.enabled ?? current.enabled) ? "Applying" : "Disabled", connectionId],
   );
   await bumpDeviceConfig(
     client,
@@ -258,9 +258,9 @@ export async function deleteConnection(
   ownerUserId?: string,
 ): Promise<ConnectionRow> {
   const currentResult = await client.query<ConnectionRow>(
-    `SELECT c.*,tp.bandwidth_limit_bps,tp.version::text AS policy_version
+    `SELECT c.*,tp.bandwidth_limit_bps,tp.version AS policy_version
        FROM connections c LEFT JOIN traffic_policies tp ON tp.scope_type='connection' AND tp.scope_id=c.id
-      WHERE c.id=$1 AND c.deleted_at IS NULL`,
+      WHERE c.id=? AND c.deleted_at IS NULL`,
     [connectionId],
   );
   const current = currentResult.rows[0];
@@ -274,14 +274,14 @@ export async function deleteConnection(
     });
   }
   const deleted = await client.query<ConnectionRow>(
-    `UPDATE connections SET enabled=false,deleted_at=now(),version=version+1,updated_at=now()
-      WHERE id=$1 AND version=$2 AND deleted_at IS NULL RETURNING *`,
+    `UPDATE connections SET enabled=false,deleted_at=home_tunnel_now(),version=version+1,updated_at=home_tunnel_now()
+      WHERE id=? AND version=? AND deleted_at IS NULL RETURNING *`,
     [connectionId, expectedVersion],
   );
   if (!deleted.rows[0]) throw new HttpError(409, "VERSION_CONFLICT", "连接已被其他操作修改");
   await client.query(
-    `UPDATE runtime_states SET desired_version=$2,state='Disabled',updated_at=now() WHERE connection_id=$1`,
-    [connectionId, Number(deleted.rows[0].version)],
+    `UPDATE runtime_states SET desired_version=?,state='Disabled',updated_at=home_tunnel_now() WHERE connection_id=?`,
+    [Number(deleted.rows[0].version), connectionId],
   );
   await bumpDeviceConfig(
     client,

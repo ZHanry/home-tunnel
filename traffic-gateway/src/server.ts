@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import http, { type IncomingHttpHeaders, type IncomingMessage, type ServerResponse } from "node:http";
 import net, { type Socket } from "node:net";
-import { randomUUID } from "node:crypto";
+import { randomUUID, timingSafeEqual } from "node:crypto";
 import { Transform, type TransformCallback } from "node:stream";
 import { pathToFileURL } from "node:url";
 
@@ -30,9 +30,25 @@ const config = {
   maxBodyChunkBytes: integer("MAX_BODY_CHUNK_BYTES", 64 * 1024),
 };
 
+const upstreamAgent = new http.Agent({ keepAlive: true, maxSockets: 256 });
+// 等待上游响应头阶段的 socket 空闲超时；响应头到达后清除，避免误杀长轮询/SSE
+const upstreamHeadersTimeoutMs = 30_000;
+// WebSocket 升级路径的超时仅覆盖 TCP 连接建立阶段，建立后清除以保护长连接
+const upstreamConnectTimeoutMs = 30_000;
+// 控制中心每 30 秒发送 SSE keepalive，超过该时长无数据视为推送通道失效
+const policyEventIdleTimeoutMs = 90_000;
+
 const reservedSubdomains = new Set([
   "console", "admin", "api", "auth", "caddy", "frp", "frps", "gateway", "status", "tunnel", "www",
 ]);
+
+// /metrics 暴露的进程级累计计数器：仅进程内存中累加，重启后归零（Prometheus counter 语义）
+const metrics = {
+  requestsTotal: 0,
+  upstreamErrorsTotal: 0,
+  bytesTotal: { upload: 0, download: 0 },
+  throttleWaitSecondsTotal: 0,
+};
 
 type Policy = {
   connection_id: string;
@@ -185,9 +201,15 @@ export class PolicyStore {
       if (!group.size) this.active.delete(connectionId);
     };
   }
+
+  get activeStreamCount(): number {
+    let total = 0;
+    for (const closers of this.active.values()) total += closers.size;
+    return total;
+  }
 }
 
-const policies = new PolicyStore();
+export const policies = new PolicyStore();
 
 type Bucket = { rateBytesPerSecond: number; capacity: number; tokens: number; updatedAt: number; version: number };
 
@@ -254,7 +276,9 @@ export class HierarchicalLimiter {
         remaining -= bytes;
         continue;
       }
+      const waitStartedAt = performance.now();
       await abortableDelay(Math.max(1, Math.ceil(waitSeconds * 1000)), signal);
+      metrics.throttleWaitSecondsTotal += (performance.now() - waitStartedAt) / 1000;
     }
   }
 }
@@ -308,10 +332,12 @@ export class SampleCollector {
   private samples = new Map<string, Sample>();
   private lastUploadFailureAt = Number.NEGATIVE_INFINITY;
   private lastUploadFailure = "";
+  private lastOverflowLogAt = Number.NEGATIVE_INFINITY;
 
   constructor(
     private readonly now: () => number = () => Date.now(),
     private readonly uploader: SampleBatchUploader = uploadSampleBatch,
+    private readonly maxBufferedSamples: number = 5000,
   ) {}
 
   private bucketStart(): string {
@@ -337,21 +363,55 @@ export class SampleCollector {
       error_count: 0,
     };
     this.samples.set(key, sample);
+    this.evictOverflow();
     return sample;
   }
 
+  // 上传长期失败时丢弃最旧 bucket 的样本，避免缓冲无限膨胀
+  private evictOverflow(): void {
+    if (this.samples.size <= this.maxBufferedSamples) return;
+    const currentStart = this.bucketStart();
+    let dropped = 0;
+    while (this.samples.size > this.maxBufferedSamples) {
+      let oldest = "";
+      for (const sample of this.samples.values()) {
+        if (!oldest || sample.bucket_start < oldest) oldest = sample.bucket_start;
+      }
+      if (!oldest || oldest === currentStart) break;
+      for (const [key, sample] of this.samples) {
+        if (sample.bucket_start === oldest) {
+          this.samples.delete(key);
+          dropped += 1;
+        }
+      }
+    }
+    if (!dropped) return;
+    const now = this.now();
+    if (now - this.lastOverflowLogAt >= 60_000) {
+      log("warn", "SAMPLE_BUFFER_OVERFLOW", "Sample buffer exceeded limit, dropped oldest buckets", { dropped_samples: dropped, buffered_samples: this.samples.size });
+      this.lastOverflowLogAt = now;
+    }
+  }
+
   record(policy: Policy, direction: "upload" | "download", bytes: number): void {
+    metrics.bytesTotal[direction] += bytes;
     const sample = this.current(policy);
     if (direction === "upload") sample.upload_bytes += bytes;
     else sample.download_bytes += bytes;
   }
 
   request(policy: Policy): void {
+    metrics.requestsTotal += 1;
     this.current(policy).request_count += 1;
   }
 
   error(policy: Policy): void {
+    metrics.upstreamErrorsTotal += 1;
     this.current(policy).error_count += 1;
+  }
+
+  get bufferedSampleCount(): number {
+    return this.samples.size;
   }
 
   async flush(): Promise<void> {
@@ -386,23 +446,41 @@ export class SampleCollector {
   }
 }
 
-const samples = new SampleCollector();
+export const samples = new SampleCollector();
 
-class ThrottleTransform extends Transform {
+export class ThrottleTransform extends Transform {
   constructor(
     private readonly connectionId: string,
     private readonly direction: "upload" | "download",
     private readonly controller: AbortController,
+    private readonly store: PolicyStore = policies,
+    private readonly limits: HierarchicalLimiter = limiter,
+    private readonly collector: SampleCollector = samples,
   ) {
     super({ highWaterMark: config.maxBodyChunkBytes });
   }
 
   override _transform(chunk: Buffer, _encoding: BufferEncoding, callback: TransformCallback): void {
-    void limiter.acquire(this.connectionId, chunk.length, this.controller.signal)
+    if (this.controller.signal.aborted) {
+      callback(new Error("TRANSFER_ABORTED"));
+      return;
+    }
+    const policy = this.store.connection(this.connectionId);
+    if (!policy) {
+      callback(new Error("POLICY_REVOKED"));
+      return;
+    }
+    // 两级均无限速时走同步快速路径，避免逐块经过 Promise 链
+    if (policy.user_limit_bps == null && policy.connection_limit_bps == null) {
+      this.collector.record(policy, this.direction, chunk.length);
+      callback(null, chunk);
+      return;
+    }
+    void this.limits.acquire(this.connectionId, chunk.length, this.controller.signal)
       .then(() => {
-        const policy = policies.connection(this.connectionId);
-        if (!policy) throw new Error("POLICY_REVOKED");
-        samples.record(policy, this.direction, chunk.length);
+        const current = this.store.connection(this.connectionId);
+        if (!current) throw new Error("POLICY_REVOKED");
+        this.collector.record(current, this.direction, chunk.length);
         callback(null, chunk);
       })
       .catch((error) => callback(error as Error));
@@ -431,7 +509,8 @@ function sanitizedHeaders(request: IncomingMessage, forUpgrade = false): Incomin
       delete headers[name];
     }
   }
-  const forwarded = String(request.headers["x-forwarded-for"] ?? "").split(",")[0]?.trim();
+  // 取最右元素：由唯一可信的直连代理（Caddy）追加，最左元素可被客户端伪造
+  const forwarded = String(request.headers["x-forwarded-for"] ?? "").split(",").at(-1)?.trim();
   const source = forwarded && /^[0-9a-f:.]+$/i.test(forwarded)
     ? forwarded
     : (request.socket.remoteAddress ?? "").replace(/^::ffff:/, "");
@@ -458,6 +537,49 @@ function sanitizedResponseHeaders(headers: IncomingHttpHeaders): IncomingHttpHea
   return output;
 }
 
+// 与 control-center 的 constantTimeStringEqual 同思路：长度不等直接失败（只泄露长度），
+// 等长时用 timingSafeEqual 做恒定时间比较
+function constantTimeStringEqual(left: string, right: string): boolean {
+  const a = Buffer.from(left, "utf8");
+  const b = Buffer.from(right, "utf8");
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+function renderMetrics(): string {
+  const policyAgeSeconds = policies.lastSuccessAt ? (Date.now() - policies.lastSuccessAt) / 1000 : -1;
+  const lines = [
+    "# HELP home_tunnel_gateway_up Traffic gateway process is running.",
+    "# TYPE home_tunnel_gateway_up gauge",
+    "home_tunnel_gateway_up 1",
+    "# HELP home_tunnel_gateway_policy_revision Revision of the applied policy snapshot.",
+    "# TYPE home_tunnel_gateway_policy_revision gauge",
+    `home_tunnel_gateway_policy_revision ${policies.revision}`,
+    "# HELP home_tunnel_gateway_policy_age_seconds Seconds since the last successful policy sync (-1 before the first sync).",
+    "# TYPE home_tunnel_gateway_policy_age_seconds gauge",
+    `home_tunnel_gateway_policy_age_seconds ${policyAgeSeconds}`,
+    "# HELP home_tunnel_gateway_active_streams Proxied streams currently registered for revocation.",
+    "# TYPE home_tunnel_gateway_active_streams gauge",
+    `home_tunnel_gateway_active_streams ${policies.activeStreamCount}`,
+    "# HELP home_tunnel_gateway_bytes_total Proxied payload bytes by direction.",
+    "# TYPE home_tunnel_gateway_bytes_total counter",
+    `home_tunnel_gateway_bytes_total{direction="upload"} ${metrics.bytesTotal.upload}`,
+    `home_tunnel_gateway_bytes_total{direction="download"} ${metrics.bytesTotal.download}`,
+    "# HELP home_tunnel_gateway_requests_total Authorized proxied requests and upgrades.",
+    "# TYPE home_tunnel_gateway_requests_total counter",
+    `home_tunnel_gateway_requests_total ${metrics.requestsTotal}`,
+    "# HELP home_tunnel_gateway_upstream_errors_total Upstream connection failures.",
+    "# TYPE home_tunnel_gateway_upstream_errors_total counter",
+    `home_tunnel_gateway_upstream_errors_total ${metrics.upstreamErrorsTotal}`,
+    "# HELP home_tunnel_gateway_sample_buffer_size Traffic samples buffered for upload to the control center.",
+    "# TYPE home_tunnel_gateway_sample_buffer_size gauge",
+    `home_tunnel_gateway_sample_buffer_size ${samples.bufferedSampleCount}`,
+    "# HELP home_tunnel_gateway_throttle_wait_seconds_total Seconds spent waiting on rate limiter buckets.",
+    "# TYPE home_tunnel_gateway_throttle_wait_seconds_total counter",
+    `home_tunnel_gateway_throttle_wait_seconds_total ${metrics.throttleWaitSecondsTotal}`,
+  ];
+  return `${lines.join("\n")}\n`;
+}
+
 function controlledError(response: ServerResponse, status: number, errorCode: string, message: string): void {
   if (response.headersSent) {
     response.destroy();
@@ -468,6 +590,10 @@ function controlledError(response: ServerResponse, status: number, errorCode: st
 }
 
 function handleRequest(request: IncomingMessage, response: ServerResponse): void {
+  // healthz 仅靠 Host 白名单区分内外（Host 可伪造）：compose 健康检查与
+  // control-center 的 GATEWAY_HEALTH_URL 探活均使用 fetch 且不带
+  // x-home-tunnel-key（且 fetch 禁止覆盖 Host header），改为强制 key 校验会
+  // 破坏现有部署；此端点仅暴露健康状态与策略版本号，泄露风险可接受。
   if (request.url === "/healthz" && [
     "127.0.0.1:8080",
     "localhost:8080",
@@ -477,6 +603,19 @@ function handleRequest(request: IncomingMessage, response: ServerResponse): void
     const status = policies.valid() ? 200 : 503;
     response.writeHead(status, { "content-type": "application/json" });
     response.end(JSON.stringify({ status: policies.valid() ? "healthy" : "stale", revision: policies.revision, policy_age_seconds: policies.lastSuccessAt ? Math.round((Date.now() - policies.lastSuccessAt) / 1000) : null }));
+    return;
+  }
+  // /metrics 仅凭内部密钥鉴权（Host 不参与判定）：密钥缺失或不匹配时返回与
+  // "未分配子域"完全一致的 404 响应，避免向外部探测者暴露端点存在性。
+  // 代价是业务隧道无法透传自身的 /metrics 路径，当前没有该需求。
+  if (request.url === "/metrics") {
+    const providedKey = request.headers["x-home-tunnel-key"];
+    if (typeof providedKey !== "string" || !constantTimeStringEqual(providedKey, config.internalKey)) {
+      controlledError(response, 404, "CONNECTION_NOT_FOUND", "未分配该业务子域");
+      return;
+    }
+    response.writeHead(200, { "content-type": "text/plain; version=0.0.4; charset=utf-8", "cache-control": "no-store" });
+    response.end(renderMetrics());
     return;
   }
   const authorized = policies.host(request.headers.host);
@@ -501,8 +640,10 @@ function handleRequest(request: IncomingMessage, response: ServerResponse): void
     method: request.method,
     path: request.url,
     headers,
-    agent: false,
+    agent: upstreamAgent,
   });
+  // 空闲超时只覆盖等待响应头阶段，响应头到达后清除
+  upstream.setTimeout(upstreamHeadersTimeoutMs, () => upstream.destroy(new Error("UPSTREAM_TIMEOUT")));
   let finished = false;
   let unregister: () => void = () => {};
   const finish = (reason?: Error) => {
@@ -510,12 +651,17 @@ function handleRequest(request: IncomingMessage, response: ServerResponse): void
     finished = true;
     unregister();
     controller.abort();
-    if (!upstream.destroyed) upstream.destroy(reason);
-    if (reason && !response.destroyed) response.destroy();
+    if (reason) {
+      if (!upstream.destroyed) upstream.destroy(reason);
+      if (!response.destroyed) response.destroy();
+    }
   };
   unregister = policies.register(policy.connection_id, () => finish(new Error("POLICY_REVOKED")));
-  response.once("close", () => finish());
+  response.once("close", () => finish(response.writableFinished ? undefined : new Error("CLIENT_CLOSED")));
+  request.once("error", (error) => finish(error));
+  response.once("error", (error) => finish(error));
   upstream.on("response", (upstreamResponse) => {
+    upstream.setTimeout(0);
     const responseHeaders = sanitizedResponseHeaders(upstreamResponse.headers);
     response.writeHead(upstreamResponse.statusCode ?? 502, responseHeaders);
     const throttled = new ThrottleTransform(policy.connection_id, "download", controller);
@@ -530,7 +676,6 @@ function handleRequest(request: IncomingMessage, response: ServerResponse): void
     controlledError(response, error.message === "POLICY_REVOKED" ? 423 : 502, error.message === "POLICY_REVOKED" ? "CONNECTION_DISABLED" : "UPSTREAM_UNAVAILABLE", "隧道上游暂不可用");
     finish(error);
   });
-  request.on("aborted", () => finish(new Error("CLIENT_ABORTED")));
   const upload = new ThrottleTransform(policy.connection_id, "upload", controller);
   upload.once("error", (error) => {
     controlledError(response, error.message === "POLICY_REVOKED" ? 423 : 502, error.message === "POLICY_REVOKED" ? "CONNECTION_DISABLED" : "UPSTREAM_UNAVAILABLE", "隧道上游暂不可用");
@@ -560,6 +705,8 @@ function handleUpgrade(request: IncomingMessage, client: Socket, head: Buffer): 
   samples.request(policy);
   const controller = new AbortController();
   const upstream = net.connect(config.upstreamPort, config.upstreamHost);
+  // 超时仅覆盖连接建立阶段，建立后清除，避免误杀 WebSocket 长连接
+  upstream.setTimeout(upstreamConnectTimeoutMs, () => upstream.destroy(new Error("UPSTREAM_CONNECT_TIMEOUT")));
   let closed = false;
   let unregister: () => void = () => {};
   const close = () => {
@@ -572,6 +719,7 @@ function handleUpgrade(request: IncomingMessage, client: Socket, head: Buffer): 
   };
   unregister = policies.register(policy.connection_id, close);
   upstream.once("connect", () => {
+    upstream.setTimeout(0);
     writeUpgradeRequest(request, upstream);
     if (head.length) {
       void limiter.acquire(policy.connection_id, head.length, controller.signal).then(() => {
@@ -596,7 +744,18 @@ function handleUpgrade(request: IncomingMessage, client: Socket, head: Buffer): 
   upstream.on("close", close);
 }
 
-async function syncPolicies(): Promise<void> {
+// 供 main() 与进程内 e2e 测试复用：仅创建并配置 HTTP 服务器，不启动任何
+// 定时器或策略同步循环，也不监听端口（由调用方决定地址与生命周期）
+export function createGatewayServer(): http.Server {
+  const server = http.createServer(handleRequest);
+  server.on("upgrade", handleUpgrade);
+  server.requestTimeout = 0;
+  server.headersTimeout = 15_000;
+  server.keepAliveTimeout = 65_000;
+  return server;
+}
+
+export async function syncPolicies(): Promise<void> {
   const headers: Record<string, string> = { "x-home-tunnel-key": config.internalKey };
   const fullSnapshotDue = Date.now() - policies.lastFullSuccessAt >= config.policyFullSyncMs;
   if (policies.lastFullSuccessAt && !fullSnapshotDue) headers["if-none-match"] = `"${policies.revision}"`;
@@ -643,14 +802,20 @@ function abortableDelay(milliseconds: number, signal: AbortSignal): Promise<void
   });
 }
 
-async function consumePolicyEvents(response: Response, signal: AbortSignal, onEvent: () => void): Promise<void> {
+async function consumePolicyEvents(response: Response, signal: AbortSignal, onEvent: () => void, connection: AbortController): Promise<void> {
   if (!response.body) throw new Error("policy event stream has no body");
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
   try {
     while (!signal.aborted) {
-      const chunk = await reader.read();
+      const idleTimer = setTimeout(() => connection.abort(new Error("policy event stream idle timeout")), policyEventIdleTimeoutMs);
+      let chunk: Awaited<ReturnType<typeof reader.read>>;
+      try {
+        chunk = await reader.read();
+      } finally {
+        clearTimeout(idleTimer);
+      }
       if (chunk.done) throw new Error("policy event stream closed");
       buffer += decoder.decode(chunk.value, { stream: true }).replaceAll("\r\n", "\n");
       let boundary = buffer.indexOf("\n\n");
@@ -681,7 +846,7 @@ async function watchPolicyEvents(signal: AbortSignal, onEvent: () => void): Prom
       clearTimeout(connectTimeout);
       if (!response.ok) throw new Error(`policy event stream returned ${response.status}`);
       log("info", "POLICY_EVENTS_CONNECTED", "Policy push channel connected");
-      await consumePolicyEvents(response, signal, onEvent);
+      await consumePolicyEvents(response, signal, onEvent, connection);
     } catch (error) {
       clearTimeout(connectTimeout);
       if (!signal.aborted) {
@@ -694,8 +859,23 @@ async function watchPolicyEvents(signal: AbortSignal, onEvent: () => void): Prom
   }
 }
 
+// 启动时退避重试，避免与控制中心形成强启动顺序耦合
+async function initialPolicySync(): Promise<void> {
+  let delayMs = 1000;
+  for (;;) {
+    try {
+      await syncPolicies();
+      return;
+    } catch (error) {
+      log("warn", "POLICY_SYNC_FAILED", error instanceof Error ? error.message : "Unknown policy error", { retry_in_ms: delayMs });
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      delayMs = Math.min(delayMs * 2, 30_000);
+    }
+  }
+}
+
 async function main(): Promise<void> {
-  await syncPolicies();
+  await initialPolicySync();
   let syncing = false;
   let syncAgain = false;
   const requestSync = () => {
@@ -721,11 +901,7 @@ async function main(): Promise<void> {
   const expiryTimer = setInterval(() => {
     if (policies.enforceExpiry()) log("warn", "POLICY_AUTHORIZATION_EXPIRED", "Expired policy authorization closed active streams");
   }, 1000);
-  const server = http.createServer(handleRequest);
-  server.on("upgrade", handleUpgrade);
-  server.requestTimeout = 0;
-  server.headersTimeout = 15_000;
-  server.keepAliveTimeout = 65_000;
+  const server = createGatewayServer();
   await new Promise<void>((resolve) => server.listen(config.port, "0.0.0.0", resolve));
   log("info", "SERVER_STARTED", "Traffic gateway started", { port: config.port, revision: policies.revision });
 

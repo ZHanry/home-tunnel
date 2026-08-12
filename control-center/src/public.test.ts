@@ -43,6 +43,11 @@ test("public landing page and GitHub-hosted EXE redirects stay available without
     }),
   );
 
+  const frpsCertificatePem =
+    "-----BEGIN CERTIFICATE-----\ntest-only-frps-certificate\n-----END CERTIFICATE-----\n";
+  const frpsCertificatePath = join(downloads, "frps_tls_cert.pem");
+  await writeFile(frpsCertificatePath, frpsCertificatePem);
+
   process.env.NODE_ENV = "test";
   process.env.DOWNLOADS_DIRECTORY = downloads;
   process.env.SQLITE_PATH = ":memory:";
@@ -50,6 +55,8 @@ test("public landing page and GitHub-hosted EXE redirects stay available without
   process.env.FRPS_PLUGIN_KEY ??= "22".repeat(32);
   process.env.LEASE_SIGNING_KEY ??= "33".repeat(32);
   process.env.COOKIE_SECURE = "false";
+  // config.ts 在模块加载时求值，必须在 import server.js 之前设置。
+  process.env.FRPS_TLS_CERT_FILE = frpsCertificatePath;
 
   const [{ createApplication }, { closeDatabase }] = await Promise.all([import("./server.js"), import("./db.js")]);
   const app = await createApplication(false);
@@ -82,6 +89,7 @@ test("public landing page and GitHub-hosted EXE redirects stay available without
     assert.equal(publicConfigValue.public_base_url, "https://console.tunnel.example.com");
     assert.equal(publicConfigValue.frps_host, "203.0.113.10");
     assert.equal(publicConfigValue.frps_port, 7000);
+    assert.equal(publicConfigValue.frps_tls_certificate_pem, frpsCertificatePem);
 
     const stylesheet = await request(origin + "/v2.css?v=2.3.0-ui3");
     assert.equal(stylesheet.status, 200);

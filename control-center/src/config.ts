@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 
 const nodeEnvironment = process.env.NODE_ENV ?? "production";
 
@@ -8,6 +9,16 @@ function integer(name: string, fallback: number): number {
   const parsed = Number.parseInt(raw, 10);
   if (!Number.isFinite(parsed) || parsed <= 0) {
     throw new Error(`${name} must be a positive integer`);
+  }
+  return parsed;
+}
+
+function nonNegativeInteger(name: string, fallback: number): number {
+  const raw = process.env[name];
+  if (!raw) return fallback;
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    throw new Error(`${name} must be a non-negative integer`);
   }
   return parsed;
 }
@@ -30,6 +41,13 @@ function secret(name: string, fileName: string, required = true): string {
   return "";
 }
 
+function isDocumentationPlaceholder(host: string): boolean {
+  return (
+    /^(?:192\.0\.2|198\.51\.100|203\.0\.113)\.\d{1,3}$/.test(host) ||
+    /(?:^|\.)example(?:\.(?:com|net|org))?$/i.test(host)
+  );
+}
+
 function publicFrpsHost(): string {
   const value = process.env.PUBLIC_FRPS_HOST?.trim();
   if (!value) {
@@ -37,26 +55,83 @@ function publicFrpsHost(): string {
     return "203.0.113.10";
   }
   if (value.length > 253 || /[\s/\\]/.test(value)) throw new Error("PUBLIC_FRPS_HOST is invalid");
-  if (
-    nodeEnvironment === "production" &&
-    (/^(?:192\.0\.2|198\.51\.100|203\.0\.113)\.\d{1,3}$/.test(value) || /(?:^|\.)example(?:\.(?:com|net|org))?$/i.test(value))
-  ) {
+  if (nodeEnvironment === "production" && isDocumentationPlaceholder(value)) {
     throw new Error("PUBLIC_FRPS_HOST must not use a documentation placeholder in production");
   }
   return value;
 }
 
+function publicBaseUrl(): string {
+  const value = process.env.PUBLIC_BASE_URL?.trim();
+  if (!value) {
+    if (nodeEnvironment === "production") throw new Error("PUBLIC_BASE_URL is required in production");
+    return "https://console.tunnel.example.com";
+  }
+  let hostname: string;
+  try {
+    hostname = new URL(value).hostname;
+  } catch {
+    throw new Error("PUBLIC_BASE_URL is invalid");
+  }
+  if (nodeEnvironment === "production" && isDocumentationPlaceholder(hostname)) {
+    throw new Error("PUBLIC_BASE_URL must not use a documentation placeholder in production");
+  }
+  return value;
+}
+
+// FRPS_TLS_CERT_FILE 指向 FRPS 自签证书的公钥 PEM 文件（不是 secret 内容本身）。
+// 配置后 /api/v1/public/config 会原样下发该 PEM，客户端据此固定 FRPS 的信任锚。
+function frpsTlsCertificatePem(): string | null {
+  const path = process.env.FRPS_TLS_CERT_FILE?.trim();
+  if (!path) return null;
+  const value = readFileSync(path, "utf8");
+  if (
+    !value.includes("-----BEGIN CERTIFICATE-----") ||
+    !value.includes("-----END CERTIFICATE-----") ||
+    value.length > 16 * 1024
+  ) {
+    throw new Error("FRPS_TLS_CERT_FILE must contain a PEM CERTIFICATE block");
+  }
+  return value;
+}
+
+function tunnelDomain(): string {
+  const value = process.env.TUNNEL_DOMAIN?.trim().toLowerCase();
+  if (!value) {
+    if (nodeEnvironment === "production") throw new Error("TUNNEL_DOMAIN is required in production");
+    return "tunnel.example.com";
+  }
+  if (nodeEnvironment === "production" && isDocumentationPlaceholder(value)) {
+    throw new Error("TUNNEL_DOMAIN must not use a documentation placeholder in production");
+  }
+  return value;
+}
+
+const sqlitePath = process.env.SQLITE_PATH?.trim() || "/data/home-tunnel.db";
+
 export const config = {
   nodeEnv: nodeEnvironment,
   port: integer("PORT", 8080),
-  publicBaseUrl: process.env.PUBLIC_BASE_URL ?? "https://console.tunnel.example.com",
+  publicBaseUrl: publicBaseUrl(),
   downloadsDirectory: process.env.DOWNLOADS_DIRECTORY ?? "/app/downloads",
-  tunnelDomain: (process.env.TUNNEL_DOMAIN ?? "tunnel.example.com").toLowerCase(),
+  tunnelDomain: tunnelDomain(),
   publicFrpsHost: publicFrpsHost(),
   publicFrpsPort: integer("PUBLIC_FRPS_PORT", 7000),
+  frpsTlsCertificatePem: frpsTlsCertificatePem(),
   cookieSecure: boolean("COOKIE_SECURE", true),
   database: {
-    path: process.env.SQLITE_PATH?.trim() || "/data/home-tunnel.db",
+    path: sqlitePath,
+  },
+  backup: {
+    // Empty means "no usable target": backups stay disabled for in-memory
+    // databases unless BACKUP_DIRECTORY points somewhere explicitly.
+    directory:
+      process.env.BACKUP_DIRECTORY?.trim() ||
+      (sqlitePath === ":memory:" ? "" : join(dirname(sqlitePath), "backups")),
+    // 0 disables the scheduler; the cap keeps the interval inside the 32-bit
+    // millisecond range accepted by setInterval.
+    intervalHours: Math.min(nonNegativeInteger("BACKUP_INTERVAL_HOURS", 24), 168),
+    retentionCount: integer("BACKUP_RETENTION_COUNT", 7),
   },
   internalServiceKey: secret("INTERNAL_SERVICE_KEY", "INTERNAL_SERVICE_KEY_FILE"),
   frpsPluginKey: secret("FRPS_PLUGIN_KEY", "FRPS_PLUGIN_KEY_FILE"),

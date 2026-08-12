@@ -60,6 +60,11 @@ export async function runIntegrationSuite(): Promise<void> {
   let adminRefresh = "";
 
   try {
+    // 未配置 FRPS_TLS_CERT_FILE 时公开配置不得出现证书字段（向后兼容）。
+    const publicConfig = await call("GET", "/api/v1/public/config");
+    assert.equal(publicConfig.status, 200);
+    assert.ok(!("frps_tls_certificate_pem" in publicConfig.payload));
+
     const consoleTls = await call("GET", "/internal/tls/allow?domain=console.tunnel.example.com");
     assert.equal(consoleTls.status, 204);
     const unassignedTls = await call("GET", "/internal/tls/allow?domain=unassigned.tunnel.example.com");
@@ -287,6 +292,26 @@ export async function runIntegrationSuite(): Promise<void> {
     });
     assert.equal(unchangedPolicies.status, 304);
 
+    const metricsDenied = await call("GET", "/internal/metrics");
+    assert.equal(metricsDenied.status, 401);
+    const metrics = await call("GET", "/internal/metrics", undefined, undefined, {
+      "x-home-tunnel-key": process.env.INTERNAL_SERVICE_KEY!,
+    });
+    assert.equal(metrics.status, 200);
+    assert.match(metrics.headers.get("content-type") ?? "", /^text\/plain; version=0\.0\.4/);
+    const metricsText = metrics.payload as string;
+    assert.match(metricsText, /^home_tunnel_up 1$/m);
+    assert.match(metricsText, /^home_tunnel_uptime_seconds \d+$/m);
+    assert.match(metricsText, /^home_tunnel_users_total 2$/m);
+    assert.match(metricsText, /^home_tunnel_devices_total 1$/m);
+    assert.match(metricsText, /^home_tunnel_connections_total\{enabled="true"\} 1$/m);
+    assert.match(metricsText, /^home_tunnel_connections_total\{enabled="false"\} 0$/m);
+    assert.match(metricsText, /^home_tunnel_active_sessions_total \d+$/m);
+    assert.match(metricsText, /^home_tunnel_websocket_clients 0$/m);
+    assert.match(metricsText, /^home_tunnel_http_requests_total\{class="2xx"\} [1-9]\d*$/m);
+    assert.match(metricsText, /^home_tunnel_http_requests_total\{class="5xx"\} \d+$/m);
+    assert.match(metricsText, /^home_tunnel_backup_last_success_timestamp_seconds 0$/m);
+
     const bucketStart = new Date(Math.floor(Date.now() / 10_000) * 10_000).toISOString();
     const sampleBatch = await call("POST", "/internal/traffic/samples", {
       batch_id: randomUUID(),
@@ -299,7 +324,7 @@ export async function runIntegrationSuite(): Promise<void> {
     assert.equal(sampleBatch.payload.accepted, 1);
     assert.equal(sampleBatch.payload.dropped, 1);
     const storedSample = await database.query<{ upload_bytes: string }>(
-      "SELECT upload_bytes::text FROM traffic_samples WHERE connection_id=$1 AND bucket_start=$2",
+      "SELECT upload_bytes FROM traffic_samples WHERE connection_id=? AND bucket_start=?",
       [connectionId, bucketStart],
     );
     assert.equal(Number(storedSample[0]?.upload_bytes), 100);
@@ -308,13 +333,13 @@ export async function runIntegrationSuite(): Promise<void> {
     oldBucket.setUTCSeconds(0, 0);
     await database.query(
       `INSERT INTO traffic_samples(batch_id,bucket_start,bucket_seconds,user_id,device_id,connection_id,upload_bytes,download_bytes,request_count,error_count)
-       VALUES($1,$2,10,$3,$4,$5,7,8,1,0)`,
+       VALUES(?,?,10,?,?,?,7,8,1,0)`,
       [randomUUID(), oldBucket, userId, deviceId, connectionId],
     );
     const maintenanceResult = await maintenance.runDataMaintenance();
     assert.ok((maintenanceResult?.traffic_samples_archived ?? 0) >= 1);
     const archivedSample = await database.query<{ upload_bytes: string }>(
-      "SELECT upload_bytes::text FROM traffic_hourly WHERE connection_id=$1 AND bucket_start=date_trunc('hour',$2::timestamptz)",
+      "SELECT upload_bytes FROM traffic_hourly WHERE connection_id=? AND bucket_start=home_tunnel_hour(?)",
       [connectionId, oldBucket.toISOString()],
     );
     assert.equal(Number(archivedSample[0]?.upload_bytes), 7);
@@ -347,17 +372,17 @@ export async function runIntegrationSuite(): Promise<void> {
     assert.equal(devicesAfterDelete.status, 200);
     assert.equal(devicesAfterDelete.payload.items.some((item: any) => item.id === deviceId), false);
     const storedDevice = await database.query<{ count: string }>(
-      "SELECT count(*)::text AS count FROM devices WHERE id=$1",
+      "SELECT count(*) AS count FROM devices WHERE id=?",
       [deviceId],
     );
     const storedConnections = await database.query<{ count: string }>(
-      "SELECT count(*)::text AS count FROM connections WHERE device_id=$1",
+      "SELECT count(*) AS count FROM connections WHERE device_id=?",
       [deviceId],
     );
     const storedTraffic = await database.query<{ count: string }>(
-      `SELECT (SELECT count(*) FROM traffic_samples WHERE device_id=$1) +
-              (SELECT count(*) FROM traffic_hourly WHERE device_id=$1) AS count`,
-      [deviceId],
+      `SELECT (SELECT count(*) FROM traffic_samples WHERE device_id=?) +
+              (SELECT count(*) FROM traffic_hourly WHERE device_id=?) AS count`,
+      [deviceId, deviceId],
     );
     assert.equal(Number(storedDevice[0]?.count), 0);
     assert.equal(Number(storedConnections[0]?.count), 0);
@@ -388,7 +413,7 @@ export async function runIntegrationSuite(): Promise<void> {
     assert.equal(filteredAudit.payload.items[0].action, "ConnectionUpdated");
     assert.equal(filteredAudit.payload.items[0].target_type, "Connection");
 
-    const stored = await database.query<{ password_hash: string }>("SELECT password_hash FROM users WHERE id=$1", [userId]);
+    const stored = await database.query<{ password_hash: string }>("SELECT password_hash FROM users WHERE id=?", [userId]);
     assert.notEqual(stored[0]?.password_hash, temporaryPassword);
     assert.notEqual(stored[0]?.password_hash, userNextPassword);
 

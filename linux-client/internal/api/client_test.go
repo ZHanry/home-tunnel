@@ -33,6 +33,42 @@ func TestDiscoverAcceptsSameOriginProfile(t *testing.T) {
 	if profile.APIBaseURL != server.URL+"/api/v1/" || profile.FRPSPort != 7000 {
 		t.Fatalf("unexpected profile: %#v", profile)
 	}
+	if profile.FRPSTLSCertificatePEM != "" {
+		t.Fatalf("profile without a served certificate must stay empty: %#v", profile)
+	}
+}
+
+func TestDiscoverParsesOptionalFrpsTlsCertificate(t *testing.T) {
+	pem := "-----BEGIN CERTIFICATE-----\ntest-only-frps-ca\n-----END CERTIFICATE-----\n"
+	responses := map[string]string{"valid": pem, "invalid": "not-a-pem"}
+	for name, served := range responses {
+		t.Run(name, func(t *testing.T) {
+			var server *httptest.Server
+			server = httptest.NewTLSServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+				_ = json.NewEncoder(response).Encode(map[string]any{
+					"public_base_url":          server.URL,
+					"tunnel_domain":            "tunnel.example.com",
+					"frps_host":                "frps.example.com",
+					"frps_port":                7000,
+					"frps_tls_certificate_pem": served,
+				})
+			}))
+			defer server.Close()
+			profile, err := Discover(context.Background(), server.URL, server.Client())
+			if name == "valid" {
+				if err != nil {
+					t.Fatal(err)
+				}
+				if profile.FRPSTLSCertificatePEM != pem {
+					t.Fatalf("certificate PEM not preserved: %#v", profile)
+				}
+				return
+			}
+			if err == nil {
+				t.Fatal("invalid FRPS certificate PEM was accepted")
+			}
+		})
+	}
 }
 
 func TestLinuxLoginAndRefreshPayloads(t *testing.T) {
@@ -97,11 +133,11 @@ func TestNormalizeRootRejectsCredentialsAndPaths(t *testing.T) {
 		"https://console.example.com/admin",
 		"https://console.example.com/?token=x",
 	} {
-		if _, err := normalizeRoot(value, false); err == nil {
+		if _, err := normalizeRoot(value); err == nil {
 			t.Fatalf("normalizeRoot(%q) unexpectedly succeeded", value)
 		}
 	}
-	if normalized, err := normalizeRoot("console.example.com", false); err != nil || !strings.HasPrefix(normalized.String(), "https://") {
+	if normalized, err := normalizeRoot("console.example.com"); err != nil || !strings.HasPrefix(normalized.String(), "https://") {
 		t.Fatalf("normalization failed: %v, %v", normalized, err)
 	}
 }

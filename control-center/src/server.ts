@@ -104,9 +104,14 @@ async function main(): Promise<void> {
         signal,
       }),
     );
-    server.close();
+    // Hard deadline: never hang forever if a connection or the database
+    // refuses to close (e.g. a maintenance transaction still holds the mutex).
+    setTimeout(() => process.exit(0), 5000).unref();
     maintenance.close();
+    const serverClosed = new Promise<void>((resolve) => server.close(() => resolve()));
+    server.closeAllConnections();
     await realtime.close().catch(() => undefined);
+    await serverClosed;
     await closeDatabase().catch(() => undefined);
     process.exit(0);
   };

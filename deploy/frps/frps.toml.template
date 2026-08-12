@@ -5,6 +5,8 @@ vhostHTTPPort = 8080
 detailedErrorsToClient = false
 
 transport.tls.force = true
+transport.tls.certFile = "/run/secrets/frps_tls_cert"
+transport.tls.keyFile = "/run/secrets/frps_tls_key"
 transport.heartbeatTimeout = 90
 transport.maxPoolCount = 10
 transport.tcpKeepalive = 7200

@@ -28,6 +28,7 @@ services:
       FRPS_PLUGIN_KEY_FILE: /run/secrets/frps_plugin_key
       LEASE_SIGNING_KEY_FILE: /run/secrets/lease_signing_key
       BOOTSTRAP_ADMIN_PASSWORD_FILE: /run/secrets/bootstrap_admin_password
+      FRPS_TLS_CERT_FILE: /run/secrets/frps_tls_cert
       BOOTSTRAP_ADMIN_USERNAME: ${HOME_TUNNEL_BOOTSTRAP_ADMIN_USERNAME:-admin}
       GATEWAY_HEALTH_URL: http://traffic-gateway:8080/healthz
       FRPS_HOST: frps
@@ -40,6 +41,7 @@ services:
       - frps_plugin_key
       - lease_signing_key
       - bootstrap_admin_password
+      - frps_tls_cert
     volumes:
       - sqlite-data:/data
       - ./deploy/downloads:/app/downloads:ro
@@ -114,6 +116,8 @@ services:
       - "${HOME_TUNNEL_FRPS_BIND_ADDRESS:-0.0.0.0}:${HOME_TUNNEL_FRPS_PORT:-7000}:7000/tcp"
     secrets:
       - frps_plugin_key
+      - frps_tls_cert
+      - frps_tls_key
     tmpfs:
       - /run/frp:size=8m,noexec,nosuid,nodev,uid=10001,gid=10001,mode=0700
       - /tmp:size=8m,noexec,nosuid,nodev
@@ -157,6 +161,7 @@ services:
     tmpfs:
       - /tmp:size=16m,noexec,nosuid,nodev
     networks: [control, edge]
+    read_only: true
     cap_drop: [ALL]
     cap_add: [NET_BIND_SERVICE]
     security_opt: [no-new-privileges:true]
@@ -185,3 +190,7 @@ secrets:
     file: ./deploy/secrets/lease_signing_key
   bootstrap_admin_password:
     file: ./deploy/secrets/bootstrap_admin_password
+  frps_tls_cert:
+    file: ./deploy/secrets/frps_tls_cert.pem
+  frps_tls_key:
+    file: ./deploy/secrets/frps_tls_key.pem

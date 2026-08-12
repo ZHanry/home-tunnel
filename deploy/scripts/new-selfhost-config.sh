@@ -17,7 +17,7 @@ printf '%s' "$console_host" | grep -Eq '^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$' 
 printf '%s' "$frps_public_host" | grep -Eq '^[A-Za-z0-9.-]{1,253}$' || { echo "invalid FRPS host" >&2; exit 64; }
 printf '%s' "$acme_email" | grep -Eq '^[^[:space:]@]+@[^[:space:]@]+$' || { echo "invalid ACME email" >&2; exit 64; }
 
-script_dir="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+script_dir="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
 deploy_root="$(dirname "$script_dir")"
 workspace_root="$(dirname "$deploy_root")"
 environment_path="$workspace_root/.env"
@@ -34,7 +34,29 @@ openssl rand -hex 32 > "$secret_root/internal_service_key"
 openssl rand -hex 32 > "$secret_root/frps_plugin_key"
 openssl rand -hex 32 > "$secret_root/lease_signing_key"
 printf 'Ht-%s-A7!\n' "$(openssl rand -hex 18)" > "$secret_root/bootstrap_admin_password"
-chmod 0600 "$secret_root"/*
+
+# Ten-year self-signed FRPS TLS certificate: the control center serves the
+# public part through /api/v1/public/config so managed clients can pin the
+# FRPS identity. Skip generation when both files already exist (idempotent).
+if [ ! -e "$secret_root/frps_tls_cert.pem" ] || [ ! -e "$secret_root/frps_tls_key.pem" ]; then
+  case "$frps_public_host" in
+    *[!0-9.]*) frps_tls_san="DNS:$frps_public_host" ;;
+    *) frps_tls_san="IP:$frps_public_host,DNS:$frps_public_host" ;;
+  esac
+  openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:P-256 -sha256 \
+    -days 3650 -nodes \
+    -keyout "$secret_root/frps_tls_key.pem" \
+    -out "$secret_root/frps_tls_cert.pem" \
+    -subj "/CN=$frps_public_host" \
+    -addext "subjectAltName=$frps_tls_san" 2>/dev/null
+fi
+# Secret files must stay readable by the non-root container user (uid 10001):
+# compose bind mounts them with host ownership, so 0600 root-owned files would be
+# unreadable inside the containers. World-read 0644 on the files is safe because
+# the 0700 directory above already blocks other host users from reaching them
+# (bind mount path resolution is done by the docker daemon, not the container).
+chmod 0644 "$secret_root"/*
+chmod 0700 "$secret_root"
 
 cat > "$environment_path" <<EOF
 HOME_TUNNEL_VERSION=2.3.0
@@ -49,5 +71,5 @@ HOME_TUNNEL_BOOTSTRAP_ADMIN_USERNAME=admin
 EOF
 chmod 0600 "$environment_path"
 
-echo "Created $environment_path and four secret files below $secret_root"
+echo "Created $environment_path and the secret files below $secret_root"
 echo "Read deploy/secrets/bootstrap_admin_password locally for the one-time password."

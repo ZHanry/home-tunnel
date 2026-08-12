@@ -72,6 +72,10 @@ publicRouter.get("/config", (_request, response) => {
     tunnel_domain: config.tunnelDomain,
     frps_host: config.publicFrpsHost,
     frps_port: config.publicFrpsPort,
+    // 未配置 FRPS 证书时该字段不出现，旧客户端与旧部署行为不变。
+    ...(config.frpsTlsCertificatePem === null
+      ? {}
+      : { frps_tls_certificate_pem: config.frpsTlsCertificatePem }),
   });
 });
 

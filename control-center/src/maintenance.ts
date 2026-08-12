@@ -1,4 +1,5 @@
-import type { DatabaseClient } from "./db.js";
+import { setImmediate as yieldEventLoop } from "node:timers/promises";
+import { startDatabaseBackups } from "./backup.js";
 import { transaction } from "./db.js";
 
 const batchSize = 5_000;
@@ -12,37 +13,41 @@ type MaintenanceStats = {
   outbox_events_deleted: number;
 };
 
-function placeholders(count: number, offset = 0): string {
-  return Array.from({ length: count }, (_value, index) => `$${offset + index + 1}`).join(",");
+function placeholders(count: number): string {
+  return Array.from({ length: count }, () => "?").join(",");
 }
 
+// Each batch commits in its own transaction and yields the event loop afterwards
+// so the global database mutex is never held for the whole maintenance run.
 async function deleteByIds(
-  client: DatabaseClient,
   table: string,
   where: string,
   values: unknown[],
 ): Promise<number> {
   let total = 0;
   for (let batch = 0; batch < maximumBatchesPerRun; batch += 1) {
-    const rows = await client.query<{ id: number }>(
-      `SELECT id FROM ${table} WHERE ${where} ORDER BY id LIMIT ${batchSize}`,
-      values,
-    );
-    const ids = rows.rows.map((row) => row.id);
-    if (!ids.length) break;
-    const result = await client.query(
-      `DELETE FROM ${table} WHERE id IN (${placeholders(ids.length)})`,
-      ids,
-    );
-    total += result.rowCount;
-    if (ids.length < batchSize) break;
+    const deleted = await transaction(async (client) => {
+      const rows = await client.query<{ id: number }>(
+        `SELECT id FROM ${table} WHERE ${where} ORDER BY id LIMIT ${batchSize}`,
+        values,
+      );
+      const ids = rows.rows.map((row) => row.id);
+      if (!ids.length) return 0;
+      const result = await client.query(
+        `DELETE FROM ${table} WHERE id IN (${placeholders(ids.length)})`,
+        ids,
+      );
+      return result.rowCount;
+    });
+    total += deleted;
+    if (deleted < batchSize) break;
+    await yieldEventLoop();
   }
   return total;
 }
 
-async function archiveTrafficSamples(client: DatabaseClient, cutoff: Date): Promise<number> {
-  let total = 0;
-  for (let batch = 0; batch < maximumBatchesPerRun; batch += 1) {
+async function archiveTrafficSamplesBatch(cutoff: Date): Promise<{ archived: number; selectedCount: number }> {
+  return transaction(async (client) => {
     const selected = await client.query<{
       id: number;
       bucket_start: Date;
@@ -53,13 +58,13 @@ async function archiveTrafficSamples(client: DatabaseClient, cutoff: Date): Prom
       download_bytes: number;
       request_count: number;
       error_count: number;
-    }>(
+    }    >(
       `SELECT id,bucket_start,user_id,device_id,connection_id,
               upload_bytes,download_bytes,request_count,error_count
-         FROM traffic_samples WHERE bucket_start < $1 ORDER BY bucket_start,id LIMIT ${batchSize}`,
+         FROM traffic_samples WHERE bucket_start < ? ORDER BY bucket_start,id LIMIT ${batchSize}`,
       [cutoff],
     );
-    if (!selected.rows.length) break;
+    if (!selected.rows.length) return { archived: 0, selectedCount: 0 };
     const aggregates = new Map<string, {
       bucketStart: string;
       userId: string;
@@ -95,13 +100,13 @@ async function archiveTrafficSamples(client: DatabaseClient, cutoff: Date): Prom
       await client.query(
         `INSERT INTO traffic_hourly(
            bucket_start,user_id,device_id,connection_id,upload_bytes,download_bytes,request_count,error_count)
-         VALUES($1,$2,$3,$4,$5,$6,$7,$8)
+         VALUES(?,?,?,?,?,?,?,?)
          ON CONFLICT(connection_id,bucket_start) DO UPDATE SET
            upload_bytes=traffic_hourly.upload_bytes+excluded.upload_bytes,
            download_bytes=traffic_hourly.download_bytes+excluded.download_bytes,
            request_count=traffic_hourly.request_count+excluded.request_count,
            error_count=traffic_hourly.error_count+excluded.error_count,
-           updated_at=now()`,
+           updated_at=home_tunnel_now()`,
         [
           aggregate.bucketStart,
           aggregate.userId,
@@ -119,30 +124,42 @@ async function archiveTrafficSamples(client: DatabaseClient, cutoff: Date): Prom
       `DELETE FROM traffic_samples WHERE id IN (${placeholders(ids.length)})`,
       ids,
     );
-    total += deleted.rowCount;
-    if (selected.rows.length < batchSize) break;
+    return { archived: deleted.rowCount, selectedCount: selected.rows.length };
+  });
+}
+
+async function archiveTrafficSamples(cutoff: Date): Promise<number> {
+  let total = 0;
+  for (let batch = 0; batch < maximumBatchesPerRun; batch += 1) {
+    const { archived, selectedCount } = await archiveTrafficSamplesBatch(cutoff);
+    total += archived;
+    if (selectedCount < batchSize) break;
+    await yieldEventLoop();
   }
   return total;
 }
 
-async function deleteTrafficHourly(client: DatabaseClient, cutoff: Date): Promise<number> {
+async function deleteTrafficHourly(cutoff: Date): Promise<number> {
   let total = 0;
   for (let batch = 0; batch < maximumBatchesPerRun; batch += 1) {
-    const selected = await client.query<{ connection_id: string; bucket_start: Date }>(
-      `SELECT connection_id,bucket_start FROM traffic_hourly
-        WHERE bucket_start < $1 ORDER BY bucket_start LIMIT ${batchSize}`,
-      [cutoff],
-    );
-    if (!selected.rows.length) break;
-    let parameter = 1;
-    const tuples = selected.rows.map(() => `($${parameter++},$${parameter++})`).join(",");
-    const values = selected.rows.flatMap((row) => [row.connection_id, row.bucket_start]);
-    const deleted = await client.query(
-      `DELETE FROM traffic_hourly WHERE (connection_id,bucket_start) IN (${tuples})`,
-      values,
-    );
-    total += deleted.rowCount;
-    if (selected.rows.length < batchSize) break;
+    const result = await transaction(async (client) => {
+      const selected = await client.query<{ connection_id: string; bucket_start: Date }>(
+        `SELECT connection_id,bucket_start FROM traffic_hourly
+          WHERE bucket_start < ? ORDER BY bucket_start LIMIT ${batchSize}`,
+        [cutoff],
+      );
+      if (!selected.rows.length) return { deleted: 0, selectedCount: 0 };
+      const tuples = selected.rows.map(() => "(?,?)").join(",");
+      const values = selected.rows.flatMap((row) => [row.connection_id, row.bucket_start]);
+      const deleted = await client.query(
+        `DELETE FROM traffic_hourly WHERE (connection_id,bucket_start) IN (${tuples})`,
+        values,
+      );
+      return { deleted: deleted.rowCount, selectedCount: selected.rows.length };
+    });
+    total += result.deleted;
+    if (result.selectedCount < batchSize) break;
+    await yieldEventLoop();
   }
   return total;
 }
@@ -155,23 +172,21 @@ export async function runDataMaintenance(now = new Date()): Promise<MaintenanceS
   const sessionCutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   const outboxCutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-  return transaction(async (client) => ({
-    traffic_samples_archived: await archiveTrafficSamples(client, trafficCutoff),
-    traffic_hourly_deleted: await deleteTrafficHourly(client, hourlyCutoff),
-    audit_events_deleted: await deleteByIds(client, "audit_events", "created_at < $1", [auditCutoff]),
+  return {
+    traffic_samples_archived: await archiveTrafficSamples(trafficCutoff),
+    traffic_hourly_deleted: await deleteTrafficHourly(hourlyCutoff),
+    audit_events_deleted: await deleteByIds("audit_events", "created_at < ?", [auditCutoff]),
     sessions_deleted: await deleteByIds(
-      client,
       "sessions",
-      "(revoked_at IS NOT NULL AND revoked_at < $1) OR refresh_expires_at < $1",
-      [sessionCutoff],
+      "(revoked_at IS NOT NULL AND revoked_at < ?) OR refresh_expires_at < ?",
+      [sessionCutoff, sessionCutoff],
     ),
     outbox_events_deleted: await deleteByIds(
-      client,
       "outbox_events",
-      "delivered_at IS NOT NULL AND delivered_at < $1 AND id < (SELECT max(id) FROM outbox_events)",
+      "delivered_at IS NOT NULL AND delivered_at < ? AND id < (SELECT max(id) FROM outbox_events)",
       [outboxCutoff],
     ),
-  }));
+  };
 }
 
 export function startDataMaintenance(): { close: () => void } {
@@ -201,11 +216,15 @@ export function startDataMaintenance(): { close: () => void } {
   const intervalTimer = setInterval(execute, 6 * 60 * 60 * 1000);
   initialTimer.unref();
   intervalTimer.unref();
+  // Scheduled database backups share the maintenance lifecycle; their errors
+  // are contained inside the backup module and never reach the data tasks.
+  const backups = startDatabaseBackups();
   return {
     close: () => {
       closed = true;
       clearTimeout(initialTimer);
       clearInterval(intervalTimer);
+      backups.close();
     },
   };
 }

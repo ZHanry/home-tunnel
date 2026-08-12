@@ -26,6 +26,7 @@ public partial class MainWindow : Window
     private readonly DispatcherTimer _syncTimer = new() { Interval = TimeSpan.FromMinutes(3) };
     private readonly DispatcherTimer _heartbeatTimer = new() { Interval = TimeSpan.FromSeconds(30) };
     private readonly SemaphoreSlim _syncLock = new(1, 1);
+    private int _syncPending;
     private readonly System.Drawing.Icon? _trayIcon;
     private readonly Forms.NotifyIcon _tray;
     private ApiClient _api;
@@ -52,11 +53,11 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         _state = _stateStore.Load();
+        _logger = new SafeLogger(_stateStore.LogDirectory);
         App.ApplyTheme(_state.Theme);
         InitializeComponent();
         ApplyWorkAreaBounds();
         MigrateLegacyServerProfile();
-        _logger = new SafeLogger(_stateStore.LogDirectory);
         _supervisor = new FrpcSupervisor(_stateStore, _logger);
         _supervisor.StatusChanged += snapshot => Dispatcher.Invoke(() => ApplyAgentStatus(snapshot));
         _diagnostics = new DiagnosticsService(_stateStore);
@@ -70,12 +71,12 @@ public partial class MainWindow : Window
 
         _trayIcon = LoadTrayIcon();
         _tray = CreateTrayIcon();
-        _syncTimer.Tick += async (_, _) => await SynchronizeAsync(showBusy: false);
-        _heartbeatTimer.Tick += async (_, _) => await HeartbeatAsync();
+        _syncTimer.Tick += (_, _) => RunSafely(() => SynchronizeAsync(showBusy: false), "SYNC_TIMER_FAILED");
+        _heartbeatTimer.Tick += (_, _) => RunSafely(HeartbeatAsync, "HEARTBEAT_TIMER_FAILED");
         AutoStartCheckBox.IsChecked = _state.StartWithWindows;
         UpdateThemeToggleText();
         _initializing = false;
-        Loaded += async (_, _) =>
+        Loaded += (_, _) => RunSafely(async () =>
         {
 #if DEBUG
             if (string.Equals(Environment.GetEnvironmentVariable("HOME_TUNNEL_UI_QA"), "1", StringComparison.Ordinal))
@@ -92,7 +93,22 @@ public partial class MainWindow : Window
                 else UsernameBox.Focus();
             }
             await CheckForUpdatesAsync(manual: false);
-        };
+        }, "WINDOW_LOADED_FAILED");
+    }
+
+    /// <summary>包装 fire-and-forget 的异步 UI 回调，未处理异常统一写入脱敏日志。</summary>
+    private void RunSafely(Func<Task> action, string eventCode) => _ = RunSafelyCoreAsync(action, eventCode);
+
+    private async Task RunSafelyCoreAsync(Func<Task> action, string eventCode)
+    {
+        try
+        {
+            await action();
+        }
+        catch (Exception error)
+        {
+            _logger.Warn(eventCode, SafeMessage(error));
+        }
     }
 
 #if DEBUG
@@ -214,9 +230,11 @@ public partial class MainWindow : Window
                     State = index % 2 == 0 ? "Online" : "Waiting",
                 });
             }
-            Dispatcher.BeginInvoke(
-                ConnectionsScrollViewer.ScrollToEnd,
-                DispatcherPriority.ApplicationIdle);
+            Dispatcher.BeginInvoke(() =>
+            {
+                if (ConnectionsList.Template?.FindName("ConnectionsScrollViewer", ConnectionsList) is ScrollViewer scrollViewer)
+                    scrollViewer.ScrollToEnd();
+            }, DispatcherPriority.ApplicationIdle);
         }
         ApplyAgentStatus(new AgentSnapshot(
             "Online",
@@ -261,17 +279,18 @@ public partial class MainWindow : Window
         tray.BalloonTipClicked += (_, _) => ShowWindow();
         tray.ContextMenuStrip.Items.Add("显示主界面", null, (_, _) => ShowWindow());
         tray.ContextMenuStrip.Items.Add("暂停 / 恢复隧道", null, (_, _) =>
-            Dispatcher.BeginInvoke(async () => await TogglePauseAsync()));
+            Dispatcher.BeginInvoke(() => RunSafely(TogglePauseAsync, "TRAY_PAUSE_FAILED")));
         _trayUpdateItem = new Forms.ToolStripMenuItem("检查更新");
-        _trayUpdateItem.Click += (_, _) => Dispatcher.BeginInvoke(async () =>
+        _trayUpdateItem.Click += (_, _) => Dispatcher.BeginInvoke(() => RunSafely(async () =>
         {
             ShowWindow();
             await CheckForUpdatesAsync(manual: true);
-        });
+        }, "TRAY_UPDATE_FAILED"));
         tray.ContextMenuStrip.Items.Add(_trayUpdateItem);
         tray.ContextMenuStrip.Items.Add("导出诊断", null, (_, _) => ExportDiagnostics());
         tray.ContextMenuStrip.Items.Add(new Forms.ToolStripSeparator());
-        tray.ContextMenuStrip.Items.Add("完全退出并停止隧道", null, async (_, _) => await ExitCompletelyAsync());
+        tray.ContextMenuStrip.Items.Add("完全退出并停止隧道", null, (_, _) =>
+            Dispatcher.BeginInvoke(() => RunSafely(ExitCompletelyAsync, "TRAY_EXIT_FAILED")));
         return tray;
     }
 
@@ -341,6 +360,7 @@ public partial class MainWindow : Window
         _state.FrpsHost = profile.FrpsHost;
         _state.FrpsPort = profile.FrpsPort;
         _state.TunnelDomain = profile.TunnelDomain;
+        _state.FrpsTlsCertificatePem = profile.FrpsTlsCertificatePem;
         ServerAddressBox.Text = profile.PublicBaseUri.AbsoluteUri.TrimEnd('/');
         CheckUpdateLoginButton.IsEnabled = true;
 
@@ -900,7 +920,15 @@ public partial class MainWindow : Window
     private async Task SynchronizeAsync(bool showBusy, CancellationToken cancellationToken = default)
     {
         if (_paused || string.IsNullOrWhiteSpace(_state.DeviceId) || MainView.Visibility != Visibility.Visible) return;
-        if (!await _syncLock.WaitAsync(0, cancellationToken)) return;
+        if (!await _syncLock.WaitAsync(0, cancellationToken))
+        {
+            // 已有同步在进行：登记待处理标记，由持锁方在结束后补跑一轮，
+            // 避免 realtime 推送被静默丢弃后要等 3 分钟定时器兜底。
+            Interlocked.Exchange(ref _syncPending, 1);
+            // 再抢一次锁，弥补“持锁方刚检查完标记、这里才置位”的窗口。
+            if (!await _syncLock.WaitAsync(0, cancellationToken)) return;
+        }
+        Interlocked.Exchange(ref _syncPending, 0);
         try
         {
             if (showBusy)
@@ -956,6 +984,8 @@ public partial class MainWindow : Window
             }
             _syncLock.Release();
         }
+        if (Interlocked.Exchange(ref _syncPending, 0) == 1)
+            await SynchronizeAsync(showBusy: false, cancellationToken);
     }
 
     private async Task RepairClientAsync()
@@ -1065,6 +1095,20 @@ public partial class MainWindow : Window
             {
                 break;
             }
+            catch (ApiException error) when (
+                error.StatusCode == 401 ||
+                error.ErrorCode is "DEVICE_REVOKED" or "USER_DISABLED" or "SESSION_REVOKED")
+            {
+                // 会话/设备已被撤销，重试没有意义：退出循环并走与 SynchronizeAsync
+                // 相同的本地登出流程。
+                _logger.Warn("REALTIME_REVOKED", SafeMessage(error));
+                await Dispatcher.InvokeAsync(async () =>
+                {
+                    await LocalLogoutAsync(requestServer: false);
+                    LoginError.Text = "账号或设备已被撤销，请联系管理员。";
+                }, DispatcherPriority.Background).Task.Unwrap();
+                return;
+            }
             catch (Exception error)
             {
                 _logger.Warn("REALTIME_RECONNECT", SafeMessage(error));
@@ -1149,18 +1193,34 @@ public partial class MainWindow : Window
         PauseButton.Content = pause ? "正在暂停…" : "正在恢复…";
         try
         {
-            _paused = pause;
-            if (_paused)
+            if (pause)
             {
-                StatusHeadlineText.Text = "隧道已暂停";
+                // 操作成功后再翻转状态，失败时保持原状态避免 UI 与实际不一致。
                 await _supervisor.StopAsync("用户已暂停隧道");
+                _paused = true;
+                StatusHeadlineText.Text = "隧道已暂停";
             }
             else
             {
+                _paused = false;
                 StatusHeadlineText.Text = "正在恢复隧道";
                 _state.LastConfigVersion = 0;
-                await SynchronizeAsync(showBusy: false);
+                try
+                {
+                    await SynchronizeAsync(showBusy: false);
+                }
+                catch
+                {
+                    _paused = true;
+                    StatusHeadlineText.Text = "隧道已暂停";
+                    throw;
+                }
             }
+        }
+        catch (Exception error)
+        {
+            _logger.Warn("PAUSE_TOGGLE_FAILED", SafeMessage(error));
+            BrandDialog.Show(this, "操作未完成", pause ? "暂停隧道时发生异常，请重试。" : "恢复隧道时发生异常，请重试。", BrandDialogTone.Warning);
         }
         finally
         {

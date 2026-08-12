@@ -306,10 +306,28 @@
 
       <!-- Row 2: Scrollable Connection Cards Workspace -->
       <Grid Grid.Row="2" Margin="20,0,20,16">
-        <ScrollViewer x:Name="ConnectionsScrollViewer"
-                      VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled"
-                      PanningMode="VerticalOnly">
-          <ItemsControl x:Name="ConnectionsList">
+        <!-- ScrollViewer 位于 ItemsControl 模板内部并启用 CanContentScroll，
+             使 VirtualizingStackPanel 的 UI 虚拟化生效（连接上限 100 条）。 -->
+        <ItemsControl x:Name="ConnectionsList"
+                      VirtualizingPanel.IsVirtualizing="True"
+                      VirtualizingPanel.VirtualizationMode="Recycling"
+                      VirtualizingPanel.ScrollUnit="Pixel"
+                      ScrollViewer.CanContentScroll="True">
+          <ItemsControl.Template>
+            <ControlTemplate TargetType="ItemsControl">
+              <ScrollViewer x:Name="ConnectionsScrollViewer" Focusable="False"
+                            CanContentScroll="{TemplateBinding ScrollViewer.CanContentScroll}"
+                            VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled"
+                            PanningMode="VerticalOnly">
+                <ItemsPresenter />
+              </ScrollViewer>
+            </ControlTemplate>
+          </ItemsControl.Template>
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <VirtualizingStackPanel />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
               <DataTemplate>
                 <Border Style="{StaticResource CardStyle}" Padding="0" Margin="0,0,0,10"
@@ -405,8 +423,7 @@
                 </Border>
               </DataTemplate>
             </ItemsControl.ItemTemplate>
-          </ItemsControl>
-        </ScrollViewer>
+        </ItemsControl>
 
         <!-- Empty State View -->
         <Grid Panel.ZIndex="5" Background="{DynamicResource PageBrush}">

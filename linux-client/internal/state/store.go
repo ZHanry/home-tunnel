@@ -10,11 +10,17 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
 	"github.com/ZHanry/home-tunnel/linux-client/internal/model"
 )
+
+// ErrStateDamaged reports that the persisted state file could not be decoded
+// and was moved aside. Any device credential stored in it is no longer
+// available; the device must be enrolled again.
+var ErrStateDamaged = errors.New("state file was damaged and preserved for inspection")
 
 type Store struct {
 	Path string
@@ -39,7 +45,7 @@ func (store Store) Load() (model.State, error) {
 		if err != nil {
 			return value, err
 		}
-		return value, fmt.Errorf("decode state: %w (preserved as %s)", err, damaged)
+		return value, fmt.Errorf("%w: decode state: %v (preserved as %s)", ErrStateDamaged, err, damaged)
 	}
 	if value.InstallID == "" {
 		value.InstallID, err = randomID(16)
@@ -79,7 +85,26 @@ func (store Store) Save(value model.State) error {
 	if err := os.Rename(temporaryPath, store.Path); err != nil {
 		return fmt.Errorf("replace state: %w", err)
 	}
+	if err := syncDirectory(directory); err != nil {
+		return fmt.Errorf("flush state directory: %w", err)
+	}
 	return os.Chmod(store.Path, 0o600)
+}
+
+// syncDirectory fsyncs the directory so the rename above survives a power
+// loss; state.json holds the only copy of the device credential. Windows does
+// not support fsync on directories opened read-only, so tests running there
+// skip this step (the shipped client is Linux-only).
+func syncDirectory(path string) error {
+	if runtime.GOOS == "windows" {
+		return nil
+	}
+	directory, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer directory.Close()
+	return directory.Sync()
 }
 
 func Fingerprint(installID string) (string, error) {

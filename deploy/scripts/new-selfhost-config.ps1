@@ -57,6 +57,57 @@ if ($PSCmdlet.ShouldProcess($workspaceRoot, "create local self-host configuratio
     foreach ($name in $secretNames) {
         [IO.File]::WriteAllText((Join-Path $secretRoot $name), $values[$name] + "`n", [Text.UTF8Encoding]::new($false))
     }
+    # Ten-year self-signed FRPS TLS certificate: the control center serves the
+    # public part through /api/v1/public/config so managed clients can pin the
+    # FRPS identity. Skip generation when both files already exist (idempotent).
+    $certPath = Join-Path $secretRoot "frps_tls_cert.pem"
+    $keyPath = Join-Path $secretRoot "frps_tls_key.pem"
+    if (-not ((Test-Path -LiteralPath $certPath) -and (Test-Path -LiteralPath $keyPath))) {
+        $key = [Security.Cryptography.ECDsa]::Create([Security.Cryptography.ECCurve+NamedCurves]::nistP256)
+        try {
+            $request = [Security.Cryptography.X509Certificates.CertificateRequest]::new(
+                "CN=$FrpsPublicHost",
+                $key,
+                [Security.Cryptography.HashAlgorithmName]::SHA256)
+            $sanBuilder = [Security.Cryptography.X509Certificates.SubjectAlternativeNameBuilder]::new()
+            $parsedIp = $null
+            if ([Net.IPAddress]::TryParse($FrpsPublicHost, [ref]$parsedIp)) {
+                $sanBuilder.AddIpAddress($parsedIp)
+            }
+            $sanBuilder.AddDnsName($FrpsPublicHost)
+            $request.CertificateExtensions.Add($sanBuilder.Build())
+            $notBefore = [DateTimeOffset]::UtcNow.AddMinutes(-5)
+            $certificate = $request.CreateSelfSigned($notBefore, $notBefore.AddDays(3650))
+            try {
+                $certPem = "-----BEGIN CERTIFICATE-----`n" +
+                    [Convert]::ToBase64String($certificate.Export([Security.Cryptography.X509Certificates.X509ContentType]::Cert), "InsertLineBreaks").Replace("`r`n", "`n") +
+                    "`n-----END CERTIFICATE-----`n"
+                $keyPem = "-----BEGIN PRIVATE KEY-----`n" +
+                    [Convert]::ToBase64String($key.ExportPkcs8PrivateKey(), "InsertLineBreaks").Replace("`r`n", "`n") +
+                    "`n-----END PRIVATE KEY-----`n"
+                [IO.File]::WriteAllText($certPath, $certPem, [Text.UTF8Encoding]::new($false))
+                [IO.File]::WriteAllText($keyPath, $keyPem, [Text.UTF8Encoding]::new($false))
+            }
+            finally {
+                $certificate.Dispose()
+            }
+        }
+        finally {
+            $key.Dispose()
+        }
+    }
+
+    # Secret files must stay readable by the non-root container user (uid 10001):
+    # compose bind mounts them with host ownership, so 0600 root-owned files would
+    # be unreadable inside the containers. World-read 0644 on the files is safe
+    # because the 0700 directory blocks other host users from reaching them (bind
+    # mount path resolution is done by the docker daemon, not the container).
+    if ($IsLinux -or $IsMacOS) {
+        chmod 0700 $secretRoot
+        foreach ($name in $secretNames + @("frps_tls_cert.pem", "frps_tls_key.pem")) {
+            chmod 0644 (Join-Path $secretRoot $name)
+        }
+    }
 
     $environment = @"
 HOME_TUNNEL_VERSION=2.3.0
@@ -73,7 +124,7 @@ HOME_TUNNEL_BOOTSTRAP_ADMIN_USERNAME=admin
     $values.Clear()
 
     Write-Output "Created $environmentPath"
-    Write-Output "Created four untracked secret files below $secretRoot"
+    Write-Output "Created the untracked secret files below $secretRoot"
     Write-Output "Bootstrap username: admin"
     Write-Output "Read deploy/secrets/bootstrap_admin_password locally for the one-time password."
 }

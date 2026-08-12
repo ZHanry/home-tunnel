@@ -90,13 +90,33 @@ frps_plugin_key="$(openssl rand -hex 32)"
 bootstrap_password="Ht-$(openssl rand -hex 24)-B7!"
 admin_password="Ht-$(openssl rand -hex 24)-M7!"
 write_secret internal_service_key "$(openssl rand -hex 32)"
-write_secret frps_plugin_key_control "$frps_plugin_key"
-write_secret frps_plugin_key_frps "$frps_plugin_key"
+write_secret frps_plugin_key "$frps_plugin_key"
 write_secret lease_signing_key "$(openssl rand -hex 32)"
 write_secret bootstrap_admin_password "$bootstrap_password"
 write_secret admin_final_password "$admin_password"
 write_secret backup_passphrase "$(openssl rand -hex 48)"
 unset frps_plugin_key bootstrap_password admin_password
+
+# Ten-year self-signed FRPS TLS certificate: FRPS serves it on TCP 7000 and the
+# control center publishes the public part so managed clients pin the FRPS
+# identity. Skip generation when both files already exist (idempotent).
+frps_public_host="${HOME_TUNNEL_FRPS_PUBLIC_HOST:?HOME_TUNNEL_FRPS_PUBLIC_HOST is required for the FRPS TLS certificate}"
+if [ ! -e "$root/secrets/frps_tls_cert.pem" ] || [ ! -e "$root/secrets/frps_tls_key.pem" ]; then
+  case "$frps_public_host" in
+    *[!0-9.]*) frps_tls_san="DNS:$frps_public_host" ;;
+    *) frps_tls_san="IP:$frps_public_host,DNS:$frps_public_host" ;;
+  esac
+  openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:P-256 -sha256 \
+    -days 3650 -nodes \
+    -keyout "$root/secrets/frps_tls_key.pem" \
+    -out "$root/secrets/frps_tls_cert.pem" \
+    -subj "/CN=$frps_public_host" \
+    -addext "subjectAltName=$frps_tls_san" 2>/dev/null
+  for frps_tls_file in frps_tls_cert.pem frps_tls_key.pem; do
+    chown 10001:10001 "$root/secrets/$frps_tls_file"
+    chmod 0400 "$root/secrets/$frps_tls_file"
+  done
+fi
 
 if [ "$preloaded_images" -eq 0 ]; then
   docker load -i "$release/images/home-tunnel-images.tar" >/dev/null

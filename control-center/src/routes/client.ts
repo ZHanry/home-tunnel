@@ -55,8 +55,8 @@ router.post(
         config_version: string;
         created_at: Date;
       }>(
-        `SELECT id::text,user_id::text,status,config_version::text,created_at
-           FROM devices WHERE user_id=$1 AND fingerprint_hash=$2 AND revoked_at IS NULL FOR UPDATE`,
+        `SELECT id,user_id,status,config_version,created_at
+           FROM devices WHERE user_id=? AND fingerprint_hash=? AND revoked_at IS NULL`,
         [actor.userId, body.fingerprint_hash.toLowerCase()],
       );
       let deviceId: string;
@@ -68,9 +68,9 @@ router.post(
         configVersion = Number(existing.rows[0].config_version);
         createdAt = existing.rows[0].created_at;
         await client.query(
-          `UPDATE devices SET name=$2,install_id=$3,credential_hash=$4,client_version=$5,
-             last_seen_at=now(),updated_at=now() WHERE id=$1`,
-          [deviceId, body.name, body.install_id, tokenHash(credential), body.client_version ?? null],
+          `UPDATE devices SET name=?,install_id=?,credential_hash=?,client_version=?,
+             last_seen_at=home_tunnel_now(),updated_at=home_tunnel_now() WHERE id=?`,
+          [body.name, body.install_id, tokenHash(credential), body.client_version ?? null, deviceId],
         );
       } else {
         deviceId = randomUUID();
@@ -79,7 +79,7 @@ router.post(
         await client.query(
           `INSERT INTO devices(
              id,user_id,name,install_id,fingerprint_hash,credential_hash,client_version,last_seen_at)
-           VALUES($1,$2,$3,$4,$5,$6,$7,now())`,
+           VALUES(?,?,?,?,?,?,?,home_tunnel_now())`,
           [
             deviceId,
             actor.userId,
@@ -91,7 +91,7 @@ router.post(
           ],
         );
       }
-      await client.query("UPDATE sessions SET device_id=$2,updated_at=now() WHERE id=$1", [actor.sessionId, deviceId]);
+      await client.query("UPDATE sessions SET device_id=?,updated_at=home_tunnel_now() WHERE id=?", [deviceId, actor.sessionId]);
       await audit(client, request, existing.rows[0] ? "DeviceCredentialRotated" : "DeviceRegistered", "Device", deviceId, null, {
         name: body.name,
         install_id_hash: tokenHash(body.install_id),
@@ -118,8 +118,8 @@ router.post(
     const credential = opaqueToken(48);
     await transaction(async (client) => {
       const result = await client.query(
-        `UPDATE devices SET credential_hash=$2,updated_at=now() WHERE id=$1 AND user_id=$3 AND status='active' RETURNING id`,
-        [actor.deviceId, tokenHash(credential), actor.userId],
+        `UPDATE devices SET credential_hash=?,updated_at=home_tunnel_now() WHERE id=? AND user_id=? AND status='active' RETURNING id`,
+        [tokenHash(credential), actor.deviceId, actor.userId],
       );
       if (!result.rows[0]) throw new HttpError(423, "DEVICE_REVOKED", "设备已撤销");
       await audit(client, request, "DeviceCredentialRotated", "Device", actor.deviceId, null, null);
@@ -129,8 +129,8 @@ router.post(
 );
 
 const connectionSelect = `
-  SELECT c.*,rs.state,rs.applied_version::text,rs.last_error_code,
-         tp.bandwidth_limit_bps,tp.version::text AS policy_version
+  SELECT c.*,rs.state,rs.applied_version,rs.last_error_code,
+         tp.bandwidth_limit_bps,tp.version AS policy_version
     FROM connections c
     LEFT JOIN runtime_states rs ON rs.connection_id=c.id
     LEFT JOIN traffic_policies tp ON tp.scope_type='connection' AND tp.scope_id=c.id`;
@@ -140,15 +140,10 @@ router.get(
   asyncHandler(async (request, response) => {
     const actor = requirePasswordNormal(request);
     const rows = await query<ConnectionRow>(
-      `${connectionSelect} WHERE c.user_id=$1 AND c.deleted_at IS NULL ORDER BY c.updated_at DESC`,
+      `${connectionSelect} WHERE c.user_id=? AND c.deleted_at IS NULL ORDER BY c.updated_at DESC`,
       [actor.userId],
     );
-    response.json({
-      items: rows.map((row) => ({
-        ...publicConnection(row),
-        public_url: `https://${row.subdomain}.${config.tunnelDomain}`,
-      })),
-    });
+    response.json({ items: rows.map((row) => publicConnection(row)) });
   }),
 );
 
@@ -162,10 +157,7 @@ router.post(
       await audit(client, request, "ConnectionCreated", "Connection", connection.id, null, publicConnection(connection));
       return connection;
     });
-    response.status(201).json({
-      ...publicConnection(created),
-      public_url: `https://${created.subdomain}.${config.tunnelDomain}`,
-    });
+    response.status(201).json(publicConnection(created));
   }),
 );
 
@@ -174,11 +166,11 @@ router.get(
   asyncHandler(async (request, response) => {
     const actor = requirePasswordNormal(request);
     const row = await one<ConnectionRow>(
-      `${connectionSelect} WHERE c.id=$1 AND c.user_id=$2 AND c.deleted_at IS NULL`,
+      `${connectionSelect} WHERE c.id=? AND c.user_id=? AND c.deleted_at IS NULL`,
       [request.params.connectionId, actor.userId],
     );
     if (!row) throw new HttpError(404, "OWNERSHIP_MISMATCH", "连接不存在");
-    response.json({ ...publicConnection(row), public_url: `https://${row.subdomain}.${config.tunnelDomain}` });
+    response.json(publicConnection(row));
   }),
 );
 
@@ -194,7 +186,7 @@ router.patch(
       await audit(client, request, "ConnectionUpdated", "Connection", connectionId, publicConnection(changed.before), publicConnection(changed.after));
       return changed.after;
     });
-    response.json({ ...publicConnection(updated), public_url: `https://${updated.subdomain}.${config.tunnelDomain}` });
+    response.json(publicConnection(updated));
   }),
 );
 
@@ -228,9 +220,9 @@ type DeviceLeaseSubject = {
 
 async function loadDeviceLeaseSubject(userId: string, deviceId: string): Promise<DeviceLeaseSubject> {
   const device = await one<DeviceLeaseSubject>(
-    `SELECT d.id::text,d.user_id::text,d.config_version::text,d.status,u.status AS user_status,u.token_version::text
+    `SELECT d.id,d.user_id,d.config_version,d.status,u.status AS user_status,u.token_version
             ,d.lease_expires_at
-       FROM devices d JOIN users u ON u.id=d.user_id WHERE d.id=$1 AND d.user_id=$2`,
+       FROM devices d JOIN users u ON u.id=d.user_id WHERE d.id=? AND d.user_id=?`,
     [deviceId, userId],
   );
   if (!device) throw new HttpError(404, "OWNERSHIP_MISMATCH", "设备不存在");
@@ -252,10 +244,10 @@ async function issueDeviceLease(device: DeviceLeaseSubject, seconds: number) {
     exp,
     jti: randomUUID(),
   });
-  await query("UPDATE devices SET lease_expires_at=to_timestamp($2),last_seen_at=now(),updated_at=now() WHERE id=$1", [
-    device.id,
-    exp,
-  ]);
+  await query(
+    "UPDATE devices SET lease_expires_at=home_tunnel_from_unix(?),last_seen_at=home_tunnel_now(),updated_at=home_tunnel_now() WHERE id=?",
+    [exp, device.id],
+  );
   return { lease, expires_at: new Date(exp * 1000).toISOString(), config_version: Number(device.config_version) };
 }
 
@@ -281,13 +273,12 @@ router.post(
     let connections: ReturnType<typeof publicConnection>[] = [];
     if (fullSync) {
       const rows = await query<ConnectionRow>(
-        `${connectionSelect} WHERE c.device_id=$1 AND c.deleted_at IS NULL ORDER BY c.created_at`,
+        `${connectionSelect} WHERE c.device_id=? AND c.deleted_at IS NULL ORDER BY c.created_at`,
         [body.device_id],
       );
       connections = rows.map((row) => ({
         ...publicConnection(row),
         proxy_name: `ht_${row.id.replaceAll("-", "")}_v${Number(row.version)}`,
-        public_url: `https://${row.subdomain}.${config.tunnelDomain}`,
       }));
     }
     const renewalBoundary = Date.now() + 15 * 60 * 1000;
@@ -340,27 +331,28 @@ router.post(
     }
     await transaction(async (client) => {
       const updated = await client.query(
-        `UPDATE devices SET applied_config_version=GREATEST(applied_config_version,$3),
-           client_version=$4,agent_version=$5,last_seen_at=now(),updated_at=now()
-         WHERE id=$1 AND user_id=$2 AND status='active' RETURNING id`,
-        [body.device_id, actor.userId, body.applied_config_version, body.client_version ?? null, body.agent_version ?? null],
+        `UPDATE devices SET applied_config_version=max(applied_config_version,?),
+           client_version=?,agent_version=?,last_seen_at=home_tunnel_now(),updated_at=home_tunnel_now()
+         WHERE id=? AND user_id=? AND status='active' RETURNING id`,
+        [body.applied_config_version, body.client_version ?? null, body.agent_version ?? null, body.device_id, actor.userId],
       );
       if (!updated.rows[0]) throw new HttpError(423, "DEVICE_REVOKED", "设备已撤销");
       for (const state of body.connections) {
         await client.query(
           `UPDATE runtime_states SET
-             applied_version=GREATEST(applied_version,$3),state=$4,last_error_code=$5,last_error_summary=$6,
-             observed_at=now(),updated_at=now()
-           WHERE connection_id=$1 AND $3 <= desired_version
+             applied_version=max(applied_version,?),state=?,last_error_code=?,last_error_summary=?,
+             observed_at=home_tunnel_now(),updated_at=home_tunnel_now()
+           WHERE connection_id=? AND ? <= desired_version
              AND EXISTS(SELECT 1 FROM connections c
-               WHERE c.id=runtime_states.connection_id AND c.device_id=$2 AND c.user_id=$7)`,
+               WHERE c.id=runtime_states.connection_id AND c.device_id=? AND c.user_id=?)`,
           [
-            state.connection_id,
-            body.device_id,
             state.applied_version,
             state.state,
             state.error_code ?? null,
             state.error_summary ?? null,
+            state.connection_id,
+            state.applied_version,
+            body.device_id,
             actor.userId,
           ],
         );
@@ -398,20 +390,26 @@ router.post(
     if (!actor.deviceId || actor.deviceId !== body.device_id) throw new HttpError(404, "OWNERSHIP_MISMATCH", "设备不存在");
     await transaction(async (client) => {
       for (const report of body.reports) {
+        // The stored observed_at is produced by home_tunnel_now() with millisecond
+        // precision; normalize the client value to the same ISO format so the
+        // lexicographic `? >= observed_at` comparison stays correct.
+        const observedAt = new Date(Date.parse(report.observed_at)).toISOString();
         await client.query(
-          `UPDATE runtime_states SET applied_version=GREATEST(applied_version,$3),state=$4,
-             last_error_code=$5,last_error_summary=$6,observed_at=$7,updated_at=now()
-           WHERE connection_id=$1 AND $3 <= desired_version AND $7 >= observed_at
+          `UPDATE runtime_states SET applied_version=max(applied_version,?),state=?,
+             last_error_code=?,last_error_summary=?,observed_at=?,updated_at=home_tunnel_now()
+           WHERE connection_id=? AND ? <= desired_version AND ? >= observed_at
              AND EXISTS(SELECT 1 FROM connections c
-               WHERE c.id=runtime_states.connection_id AND c.device_id=$2 AND c.user_id=$8)`,
+               WHERE c.id=runtime_states.connection_id AND c.device_id=? AND c.user_id=?)`,
           [
-            report.connection_id,
-            body.device_id,
             report.applied_version,
             report.state,
             report.error_code ?? null,
             report.error_summary ?? null,
-            report.observed_at,
+            observedAt,
+            report.connection_id,
+            report.applied_version,
+            observedAt,
+            body.device_id,
             actor.userId,
           ],
         );
@@ -445,14 +443,14 @@ router.get(
       download_bytes: string;
       request_count: string;
     }>(
-      `SELECT connection_id::text,sum(upload_bytes)::text AS upload_bytes,
-              sum(download_bytes)::text AS download_bytes,sum(request_count)::text AS request_count
+      `SELECT connection_id,sum(upload_bytes) AS upload_bytes,
+              sum(download_bytes) AS download_bytes,sum(request_count) AS request_count
          FROM (
-           SELECT connection_id,upload_bytes,download_bytes,request_count FROM traffic_samples WHERE user_id=$1
+           SELECT connection_id,upload_bytes,download_bytes,request_count FROM traffic_samples WHERE user_id=?
            UNION ALL
-           SELECT connection_id,upload_bytes,download_bytes,request_count FROM traffic_hourly WHERE user_id=$1
+           SELECT connection_id,upload_bytes,download_bytes,request_count FROM traffic_hourly WHERE user_id=?
          ) samples GROUP BY connection_id`,
-      [actor.userId],
+      [actor.userId, actor.userId],
     );
     response.json({
       items: rows.map((row) => ({

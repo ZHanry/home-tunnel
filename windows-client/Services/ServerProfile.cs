@@ -13,9 +13,11 @@ public sealed record ServerProfile(
     Uri ApiBaseUri,
     string FrpsHost,
     int FrpsPort,
-    string TunnelDomain)
+    string TunnelDomain,
+    string? FrpsTlsCertificatePem)
 {
     private const int MaximumConfigurationBytes = 32 * 1024;
+    private const int MaximumCertificatePemChars = 16 * 1024;
     private static readonly Regex DomainPattern = new(
         "^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$",
         RegexOptions.CultureInvariant);
@@ -88,13 +90,21 @@ public sealed record ServerProfile(
             throw new InvalidDataException("服务器返回的 FRPS 地址无效。");
         if (value.FrpsPort is < 1 or > 65535)
             throw new InvalidDataException("服务器返回的 FRPS 端口无效。");
+        // 可选字段：服务端未配置 FRPS 证书时不出现，客户端行为保持不变。
+        var certificatePem = string.IsNullOrWhiteSpace(value.FrpsTlsCertificatePem) ? null : value.FrpsTlsCertificatePem;
+        if (certificatePem is not null &&
+            (certificatePem.Length > MaximumCertificatePemChars ||
+             !certificatePem.Contains("-----BEGIN CERTIFICATE-----", StringComparison.Ordinal) ||
+             !certificatePem.Contains("-----END CERTIFICATE-----", StringComparison.Ordinal)))
+            throw new InvalidDataException("服务器返回的 FRPS 证书无效。");
 
         return new ServerProfile(
             canonicalOrigin,
             new Uri(canonicalOrigin, "api/v1/"),
             frpsHost,
             value.FrpsPort,
-            tunnelDomain);
+            tunnelDomain,
+            certificatePem);
     }
 
     private static bool SameOrigin(Uri left, Uri right) =>
@@ -106,5 +116,6 @@ public sealed record ServerProfile(
         [property: JsonPropertyName("public_base_url")] string? PublicBaseUrl,
         [property: JsonPropertyName("tunnel_domain")] string? TunnelDomain,
         [property: JsonPropertyName("frps_host")] string? FrpsHost,
-        [property: JsonPropertyName("frps_port")] int FrpsPort);
+        [property: JsonPropertyName("frps_port")] int FrpsPort,
+        [property: JsonPropertyName("frps_tls_certificate_pem")] string? FrpsTlsCertificatePem = null);
 }

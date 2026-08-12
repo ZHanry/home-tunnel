@@ -48,7 +48,7 @@ type Client struct {
 
 func Discover(ctx context.Context, address string, transport *http.Client) (model.Profile, error) {
 	var profile model.Profile
-	requested, err := normalizeRoot(address, false)
+	requested, err := normalizeRoot(address)
 	if err != nil {
 		return profile, err
 	}
@@ -86,15 +86,16 @@ func Discover(ctx context.Context, address string, transport *http.Client) (mode
 		return profile, errors.New("server configuration response is empty or too large")
 	}
 	var value struct {
-		PublicBaseURL string `json:"public_base_url"`
-		TunnelDomain  string `json:"tunnel_domain"`
-		FRPSHost      string `json:"frps_host"`
-		FRPSPort      int    `json:"frps_port"`
+		PublicBaseURL         string `json:"public_base_url"`
+		TunnelDomain          string `json:"tunnel_domain"`
+		FRPSHost              string `json:"frps_host"`
+		FRPSPort              int    `json:"frps_port"`
+		FRPSTLSCertificatePEM string `json:"frps_tls_certificate_pem"`
 	}
 	if err := json.Unmarshal(data, &value); err != nil {
 		return profile, fmt.Errorf("decode server configuration: %w", err)
 	}
-	canonical, err := normalizeRoot(value.PublicBaseURL, false)
+	canonical, err := normalizeRoot(value.PublicBaseURL)
 	if err != nil {
 		return profile, fmt.Errorf("invalid canonical server origin: %w", err)
 	}
@@ -112,12 +113,22 @@ func Discover(ctx context.Context, address string, transport *http.Client) (mode
 	if value.FRPSPort < 1 || value.FRPSPort > 65535 {
 		return profile, errors.New("server returned an invalid FRPS port")
 	}
+	// 可选字段：服务端未配置 FRPS 证书时不出现，客户端保持历史行为。
+	certificatePEM := value.FRPSTLSCertificatePEM
+	if strings.TrimSpace(certificatePEM) == "" {
+		certificatePEM = ""
+	} else if len(certificatePEM) > 16*1024 ||
+		!strings.Contains(certificatePEM, "-----BEGIN CERTIFICATE-----") ||
+		!strings.Contains(certificatePEM, "-----END CERTIFICATE-----") {
+		return profile, errors.New("server returned an invalid FRPS TLS certificate")
+	}
 	return model.Profile{
-		PublicBaseURL: canonical.String(),
-		APIBaseURL:    canonical.ResolveReference(&url.URL{Path: "/api/v1/"}).String(),
-		FRPSHost:      host,
-		FRPSPort:      value.FRPSPort,
-		TunnelDomain:  domain,
+		PublicBaseURL:         canonical.String(),
+		APIBaseURL:            canonical.ResolveReference(&url.URL{Path: "/api/v1/"}).String(),
+		FRPSHost:              host,
+		FRPSPort:              value.FRPSPort,
+		TunnelDomain:          domain,
+		FRPSTLSCertificatePEM: certificatePEM,
 	}, nil
 }
 
@@ -234,6 +245,24 @@ func nullable(value string) any {
 	return value
 }
 
+// AccessToken returns the current session access token for callers that
+// attach their own Authorization header (the realtime WebSocket upgrade). It
+// mirrors authJSON by refreshing the session first when the token is about to
+// expire, and is safe for concurrent use.
+func (client *Client) AccessToken(ctx context.Context) (string, error) {
+	client.mu.Lock()
+	defer client.mu.Unlock()
+	if client.refresh != "" && client.accessEnds.Before(time.Now().Add(time.Minute)) {
+		if err := client.refreshSession(ctx); err != nil {
+			return "", err
+		}
+	}
+	if client.access == "" {
+		return "", errors.New("no active control-center session")
+	}
+	return client.access, nil
+}
+
 func (client *Client) authJSON(ctx context.Context, method, path string, body, target any) error {
 	if client.refresh != "" && client.accessEnds.Before(time.Now().Add(time.Minute)) {
 		if err := client.refreshSession(ctx); err != nil {
@@ -337,7 +366,7 @@ func (client *Client) setSession(access, refresh string, expiry time.Time) {
 	client.accessEnds = expiry
 }
 
-func normalizeRoot(value string, allowHTTP bool) (*url.URL, error) {
+func normalizeRoot(value string) (*url.URL, error) {
 	input := strings.TrimSpace(value)
 	if !strings.Contains(input, "://") {
 		input = "https://" + input
@@ -346,7 +375,7 @@ func normalizeRoot(value string, allowHTTP bool) (*url.URL, error) {
 	if err != nil || parsed.Host == "" || parsed.User != nil || parsed.RawQuery != "" || parsed.Fragment != "" || (parsed.Path != "" && parsed.Path != "/") {
 		return nil, errors.New("server address must be an HTTPS root origin")
 	}
-	if parsed.Scheme != "https" && !(allowHTTP && parsed.Scheme == "http") {
+	if parsed.Scheme != "https" {
 		return nil, errors.New("server address must use HTTPS")
 	}
 	parsed.Path = "/"

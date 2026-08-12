@@ -1,9 +1,10 @@
-import { randomUUID } from "node:crypto";
-import { Router } from "express";
+import { Router, type Response } from "express";
 import { z } from "zod";
+import { backupLastSuccessAt } from "../backup.js";
 import { config } from "../config.js";
 import { databaseEvents, one, query, transaction } from "../db.js";
-import { asyncHandler, HttpError } from "../http.js";
+import { asyncHandler, HttpError, httpRequestCounts } from "../http.js";
+import { getWebsocketClientCount } from "../realtime.js";
 import { constantTimeStringEqual, verifyLease } from "../security.js";
 import { parseBody } from "../validation.js";
 
@@ -31,7 +32,7 @@ router.get(
     const allowed = await one<{ ok: number }>(
       `SELECT 1 AS ok FROM connections c
          JOIN users u ON u.id=c.user_id JOIN devices d ON d.id=c.device_id
-        WHERE lower(c.subdomain)=lower($1) AND c.deleted_at IS NULL AND c.enabled=true
+        WHERE lower(c.subdomain)=lower(?) AND c.deleted_at IS NULL AND c.enabled=true
           AND u.status='active' AND d.status='active' LIMIT 1`,
       [subdomain],
     );
@@ -75,7 +76,7 @@ router.get(
   "/policies/sync",
   asyncHandler(async (request, response) => {
     requireInternalKey(request.header("x-home-tunnel-key"));
-    const revision = await one<{ revision: string }>("SELECT COALESCE(max(id),0)::text AS revision FROM outbox_events");
+    const revision = await one<{ revision: string }>("SELECT COALESCE(max(id),0) AS revision FROM outbox_events");
     const revisionNumber = Number(revision?.revision ?? 0);
     const etag = `"${revisionNumber}"`;
     const expiresAt = new Date(Date.now() + config.policySnapshotSeconds * 1000);
@@ -105,14 +106,14 @@ router.get(
       user_burst_bytes: string | null;
       user_policy_version: string;
     }>(
-      `SELECT c.id::text AS connection_id,c.user_id::text,c.device_id::text,c.subdomain,c.enabled,
-              c.version::text AS connection_version,u.status AS user_status,d.status AS device_status,
-              (d.lease_expires_at IS NOT NULL AND d.lease_expires_at > now()) AS device_lease_valid,
+      `SELECT c.id AS connection_id,c.user_id,c.device_id,c.subdomain,c.enabled,
+              c.version AS connection_version,u.status AS user_status,d.status AS device_status,
+              (d.lease_expires_at IS NOT NULL AND d.lease_expires_at > home_tunnel_now()) AS device_lease_valid,
               d.lease_expires_at AS device_lease_expires_at,
               cp.bandwidth_limit_bps AS connection_limit_bps,cp.burst_bytes AS connection_burst_bytes,
-              cp.version::text AS connection_policy_version,
+              cp.version AS connection_policy_version,
               up.bandwidth_limit_bps AS user_limit_bps,up.burst_bytes AS user_burst_bytes,
-              up.version::text AS user_policy_version
+              up.version AS user_policy_version
          FROM connections c JOIN users u ON u.id=c.user_id JOIN devices d ON d.id=c.device_id
          LEFT JOIN traffic_policies cp ON cp.scope_type='connection' AND cp.scope_id=c.id
          LEFT JOIN traffic_policies up ON up.scope_type='user' AND up.scope_id=u.id
@@ -172,7 +173,7 @@ router.post(
     );
     const accepted = await transaction(async (client) => {
       const connectionIds = [...new Set(body.samples.map((sample) => sample.connection_id))];
-      const parameters = connectionIds.map((_id, index) => `$${index + 1}`).join(",");
+      const parameters = connectionIds.map(() => "?").join(",");
       const subjects = connectionIds.length
         ? await client.query<{ id: string; user_id: string; device_id: string }>(
             `SELECT id,user_id,device_id FROM connections
@@ -211,7 +212,7 @@ router.post(
           `INSERT INTO traffic_samples(
              batch_id,bucket_start,bucket_seconds,user_id,device_id,connection_id,
              upload_bytes,download_bytes,request_count,error_count)
-           VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+           VALUES(?,?,?,?,?,?,?,?,?,?)
            ON CONFLICT(connection_id,bucket_start,bucket_seconds) DO UPDATE SET
              upload_bytes=max(traffic_samples.upload_bytes,excluded.upload_bytes),
              download_bytes=max(traffic_samples.download_bytes,excluded.download_bytes),
@@ -281,8 +282,8 @@ async function activePluginSubject(user: PluginUser) {
     token_version: string;
     config_version: string;
   }>(
-    `SELECT d.status AS device_status,u.status AS user_status,u.token_version::text,d.config_version::text
-       FROM devices d JOIN users u ON u.id=d.user_id WHERE d.id=$1 AND d.user_id=$2`,
+    `SELECT d.status AS device_status,u.status AS user_status,u.token_version,d.config_version
+       FROM devices d JOIN users u ON u.id=d.user_id WHERE d.id=? AND d.user_id=?`,
     [lease.device_id, lease.user_id],
   );
   if (
@@ -297,18 +298,24 @@ async function activePluginSubject(user: PluginUser) {
   return { lease, subject };
 }
 
-function pluginAccept(response: Parameters<Parameters<typeof router.post>[1]>[1], content?: unknown): void {
+function pluginAccept(response: Response, content?: unknown): void {
   response.json({ reject: false, unchange: true, ...(content === undefined ? {} : { content }) });
 }
 
-function pluginReject(response: Parameters<Parameters<typeof router.post>[1]>[1], reason: string): void {
+function pluginReject(response: Response, reason: string): void {
   response.json({ reject: true, reject_reason: reason, unchange: true });
 }
 
-function parseProxyName(proxyName: string): { connectionIdCompact: string; version: number } | null {
+// Restores a validated 32-hex compact id to canonical UUID form so lookups can
+// use an indexed equality on connections.id instead of replace(id,'-','').
+function compactIdToUuid(compact: string): string {
+  return `${compact.slice(0, 8)}-${compact.slice(8, 12)}-${compact.slice(12, 16)}-${compact.slice(16, 20)}-${compact.slice(20)}`;
+}
+
+function parseProxyName(proxyName: string): { connectionId: string; version: number } | null {
   const match = proxyName.match(/^ht_([0-9a-f]{32})_v([1-9][0-9]*)$/i);
   if (!match?.[1] || !match[2]) return null;
-  return { connectionIdCompact: match[1].toLowerCase(), version: Number(match[2]) };
+  return { connectionId: compactIdToUuid(match[1].toLowerCase()), version: Number(match[2]) };
 }
 
 function parseManagedProxyName(proxyName: string, deviceId: string) {
@@ -342,8 +349,8 @@ router.post(
         token_version: string;
         config_version: string;
       }>(
-        `SELECT d.status AS device_status,u.status AS user_status,u.token_version::text,d.config_version::text
-           FROM devices d JOIN users u ON u.id=d.user_id WHERE d.id=$1 AND d.user_id=$2`,
+        `SELECT d.status AS device_status,u.status AS user_status,u.token_version,d.config_version
+           FROM devices d JOIN users u ON u.id=d.user_id WHERE d.id=? AND d.user_id=?`,
         [lease.device_id, lease.user_id],
       );
       if (!subject || subject.user_status !== "active") {
@@ -361,10 +368,10 @@ router.post(
         pluginReject(response, "VERSION_STALE");
         return;
       }
-      await query("UPDATE devices SET last_seen_at=now(),lease_expires_at=to_timestamp($2),updated_at=now() WHERE id=$1", [
-        lease.device_id,
-        lease.exp,
-      ]);
+      await query(
+        "UPDATE devices SET last_seen_at=home_tunnel_now(),lease_expires_at=home_tunnel_from_unix(?),updated_at=home_tunnel_now() WHERE id=?",
+        [lease.exp, lease.device_id],
+      );
       pluginAccept(response);
       return;
     }
@@ -390,11 +397,11 @@ router.post(
         user_status: string;
         device_status: string;
       }>(
-        `SELECT c.id::text,c.user_id::text,c.device_id::text,c.version::text,c.subdomain,c.enabled,
+        `SELECT c.id,c.user_id,c.device_id,c.version,c.subdomain,c.enabled,
                 u.status AS user_status,d.status AS device_status
            FROM connections c JOIN users u ON u.id=c.user_id JOIN devices d ON d.id=c.device_id
-          WHERE replace(c.id::text,'-','')=$1 AND c.deleted_at IS NULL`,
-        [parsed.connectionIdCompact],
+          WHERE c.id=? AND c.deleted_at IS NULL`,
+        [parsed.connectionId],
       );
       const requestedSubdomain = text(content.subdomain).toLowerCase();
       const customDomains = Array.isArray(content.custom_domains ?? content.customDomains)
@@ -417,8 +424,8 @@ router.post(
         return;
       }
       await query(
-        `UPDATE runtime_states SET state='Applying',observed_at=now(),updated_at=now()
-          WHERE connection_id=$1 AND desired_version=$2`,
+        `UPDATE runtime_states SET state='Applying',observed_at=home_tunnel_now(),updated_at=home_tunnel_now()
+          WHERE connection_id=? AND desired_version=?`,
         [connection.id, parsed.version],
       );
       pluginAccept(response);
@@ -432,7 +439,7 @@ router.post(
         pluginReject(response, "LEASE_EXPIRED");
         return;
       }
-      await query("UPDATE devices SET last_seen_at=now(),updated_at=now() WHERE id=$1", [user.deviceId]);
+      await query("UPDATE devices SET last_seen_at=home_tunnel_now(),updated_at=home_tunnel_now() WHERE id=?", [user.deviceId]);
       pluginAccept(response);
       return;
     }
@@ -445,11 +452,11 @@ router.post(
         return;
       }
       const result = await query<{ connection_id: string }>(
-        `UPDATE runtime_states SET state='Offline',observed_at=now(),updated_at=now()
-          WHERE desired_version=$2 AND connection_id IN (
-            SELECT id FROM connections WHERE replace(id,'-','')=$1 AND device_id=$3
+        `UPDATE runtime_states SET state='Offline',observed_at=home_tunnel_now(),updated_at=home_tunnel_now()
+          WHERE desired_version=? AND connection_id IN (
+            SELECT id FROM connections WHERE id=? AND device_id=?
           ) RETURNING connection_id`,
-        [parsed.connectionIdCompact, parsed.version, user.deviceId],
+        [parsed.version, parsed.connectionId, user.deviceId],
       );
       if (!result[0]) {
         pluginReject(response, "SUBJECT_MISMATCH");
@@ -473,6 +480,69 @@ router.get(
       components: [{ component: "sqlite", status: database?.ok === 1 ? "healthy" : "unhealthy" }],
       at: new Date().toISOString(),
     });
+  }),
+);
+
+router.get(
+  "/metrics",
+  asyncHandler(async (request, response) => {
+    requireInternalKey(request.header("x-home-tunnel-key"));
+    // A single static aggregate statement so the prepared-statement cache in
+    // db.ts serves every scrape after the first one.
+    const totals = await one<{
+      users_total: number;
+      devices_total: number;
+      connections_enabled: number;
+      connections_disabled: number;
+      active_sessions: number;
+    }>(
+      `SELECT
+        (SELECT count(*) FROM users) AS users_total,
+        (SELECT count(*) FROM devices) AS devices_total,
+        (SELECT count(*) FROM connections WHERE deleted_at IS NULL AND enabled=true) AS connections_enabled,
+        (SELECT count(*) FROM connections WHERE deleted_at IS NULL AND enabled=false) AS connections_disabled,
+        (SELECT count(*) FROM sessions WHERE revoked_at IS NULL AND access_expires_at > home_tunnel_now()) AS active_sessions`,
+    );
+    const requests = httpRequestCounts();
+    const backupTimestampSeconds = Math.floor(backupLastSuccessAt() / 1000);
+    const lines = [
+      "# HELP home_tunnel_up Control center process is serving requests.",
+      "# TYPE home_tunnel_up gauge",
+      "home_tunnel_up 1",
+      "# HELP home_tunnel_uptime_seconds Seconds since the control center process started.",
+      "# TYPE home_tunnel_uptime_seconds gauge",
+      `home_tunnel_uptime_seconds ${Math.floor(process.uptime())}`,
+      "# HELP home_tunnel_users_total Number of user accounts.",
+      "# TYPE home_tunnel_users_total gauge",
+      `home_tunnel_users_total ${Number(totals?.users_total ?? 0)}`,
+      "# HELP home_tunnel_devices_total Number of registered devices.",
+      "# TYPE home_tunnel_devices_total gauge",
+      `home_tunnel_devices_total ${Number(totals?.devices_total ?? 0)}`,
+      "# HELP home_tunnel_connections_total Number of non-deleted connections by enabled flag.",
+      "# TYPE home_tunnel_connections_total gauge",
+      `home_tunnel_connections_total{enabled="true"} ${Number(totals?.connections_enabled ?? 0)}`,
+      `home_tunnel_connections_total{enabled="false"} ${Number(totals?.connections_disabled ?? 0)}`,
+      "# HELP home_tunnel_active_sessions_total Number of sessions that are neither revoked nor expired.",
+      "# TYPE home_tunnel_active_sessions_total gauge",
+      `home_tunnel_active_sessions_total ${Number(totals?.active_sessions ?? 0)}`,
+      "# HELP home_tunnel_websocket_clients Connected realtime WebSocket clients.",
+      "# TYPE home_tunnel_websocket_clients gauge",
+      `home_tunnel_websocket_clients ${getWebsocketClientCount()}`,
+      "# HELP home_tunnel_http_requests_total HTTP responses grouped by status class.",
+      "# TYPE home_tunnel_http_requests_total counter",
+      `home_tunnel_http_requests_total{class="2xx"} ${requests["2xx"]}`,
+      `home_tunnel_http_requests_total{class="3xx"} ${requests["3xx"]}`,
+      `home_tunnel_http_requests_total{class="4xx"} ${requests["4xx"]}`,
+      `home_tunnel_http_requests_total{class="5xx"} ${requests["5xx"]}`,
+      "# HELP home_tunnel_backup_last_success_timestamp_seconds Unix time of the last successful database backup, 0 when none has completed.",
+      "# TYPE home_tunnel_backup_last_success_timestamp_seconds gauge",
+      `home_tunnel_backup_last_success_timestamp_seconds ${backupTimestampSeconds}`,
+    ];
+    response.setHeader("cache-control", "no-store");
+    // response.end keeps the header exactly as set; response.send would
+    // re-order the parameters when appending its own charset.
+    response.setHeader("content-type", "text/plain; version=0.0.4; charset=utf-8");
+    response.end(`${lines.join("\n")}\n`);
   }),
 );
 

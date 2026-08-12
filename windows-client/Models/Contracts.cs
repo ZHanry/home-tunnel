@@ -81,6 +81,8 @@ public sealed class LocalState
     public string FrpsHost { get; set; } = "";
     public int FrpsPort { get; set; }
     public string TunnelDomain { get; set; } = "";
+    /// <summary>服务端下发的 FRPS 自签证书 PEM；旧状态文件无该字段时为 null，保持历史行为。</summary>
+    public string? FrpsTlsCertificatePem { get; set; }
     public bool StartWithWindows { get; set; }
     public string Theme { get; set; } = "light";
     public string? DismissedUpdateVersion { get; set; }

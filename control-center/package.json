@@ -9,7 +9,7 @@
     "preview": "node scripts/preview.mjs",
     "preview:ui": "node scripts/ui-preview.mjs",
     "start": "node dist/server.js",
-    "test": "node --test dist/security.test.js",
+    "test": "node --test dist/security.test.js dist/db.test.js dist/backup.test.js dist/public.test.js && node scripts/run-integration.mjs",
     "test:public": "node --test dist/public.test.js",
     "test:integration": "node scripts/run-integration.mjs"
   },

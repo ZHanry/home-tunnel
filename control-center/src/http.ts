@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { NextFunction, Request, RequestHandler, Response } from "express";
 import type { DatabaseClient } from "./db.js";
 import { config } from "./config.js";
-import { one, query } from "./db.js";
+import { one } from "./db.js";
 import { constantTimeStringEqual, opaqueToken, PasswordWorkQueueFullError, tokenHash } from "./security.js";
 import type { AuthenticatedActor, AuthenticatedRequest } from "./types.js";
 
@@ -25,9 +25,28 @@ export function asyncHandler(
   };
 }
 
+const httpResponseClassCounts: Record<"2xx" | "3xx" | "4xx" | "5xx", number> = {
+  "2xx": 0,
+  "3xx": 0,
+  "4xx": 0,
+  "5xx": 0,
+};
+
+// Process-local counters for /internal/metrics; they reset on restart, which
+// is the normal Prometheus counter contract.
+export function httpRequestCounts(): Readonly<typeof httpResponseClassCounts> {
+  return httpResponseClassCounts;
+}
+
 export function requestContext(request: AuthenticatedRequest, response: Response, next: NextFunction): void {
   const candidate = request.header("x-request-id");
   request.requestId = candidate && /^[0-9a-f-]{36}$/i.test(candidate) ? candidate : randomUUID();
+  response.once("finish", () => {
+    const statusClass = Math.floor(response.statusCode / 100);
+    if (statusClass >= 2 && statusClass <= 5) {
+      httpResponseClassCounts[`${statusClass}xx` as keyof typeof httpResponseClassCounts] += 1;
+    }
+  });
   response.setHeader("x-request-id", request.requestId);
   response.setHeader("x-content-type-options", "nosniff");
   response.setHeader("x-frame-options", "DENY");
@@ -35,7 +54,7 @@ export function requestContext(request: AuthenticatedRequest, response: Response
   response.setHeader("permissions-policy", "camera=(), microphone=(), geolocation=()");
   response.setHeader(
     "content-security-policy",
-    "default-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'; connect-src 'self' wss:; img-src 'self' data:; style-src 'self'; script-src 'self'",
+    "default-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'; connect-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'",
   );
   next();
 }
@@ -117,13 +136,13 @@ export const authenticate: RequestHandler = asyncHandler(async (request, _respon
     return;
   }
   const session = await one<SessionRow>(
-    `SELECT s.id::text AS session_id, s.user_id::text, s.device_id::text,
+    `SELECT s.id AS session_id, s.user_id, s.device_id,
             u.username, u.display_name, u.role, u.status, u.password_state,
-            u.token_version::text, s.token_version::text AS session_token_version,
+            u.token_version, s.token_version AS session_token_version,
             s.csrf_token_hash
        FROM sessions s JOIN users u ON u.id=s.user_id
-      WHERE s.access_token_hash=$1 AND s.revoked_at IS NULL
-        AND s.access_expires_at > now()`,
+      WHERE s.access_token_hash=? AND s.revoked_at IS NULL
+        AND s.access_expires_at > home_tunnel_now()`,
     [tokenHash(token)],
   );
   if (!session) {
@@ -206,7 +225,7 @@ export async function issueSession(
     `INSERT INTO sessions(
        id,user_id,device_id,token_family,token_version,access_token_hash,refresh_token_hash,
        csrf_token_hash,access_expires_at,refresh_expires_at)
-     VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+     VALUES(?,?,?,?,?,?,?,?,?,?)`,
     [
       sessionId,
       user.id,
@@ -261,7 +280,7 @@ export async function audit(
   await client.query(
     `INSERT INTO audit_events(
        actor_type,actor_id,action,target_type,target_id,before_value,after_value,request_id,source_ip)
-     VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+     VALUES(?,?,?,?,?,?,?,?,?)`,
     [
       actorOverride?.type ?? (actor ? "user" : "anonymous"),
       actorOverride?.id ?? actor?.userId ?? null,
@@ -274,12 +293,6 @@ export async function audit(
       sourceIp(request),
     ],
   );
-}
-
-export async function revokeTokenFamily(family: string): Promise<void> {
-  await query("UPDATE sessions SET revoked_at=COALESCE(revoked_at,now()), updated_at=now() WHERE token_family=$1", [
-    family,
-  ]);
 }
 
 export function errorMiddleware(

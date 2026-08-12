@@ -40,6 +40,9 @@ public sealed class UpdateService : IDisposable
     private readonly string _downloadDirectory;
     private readonly JsonSerializerOptions _json = new(JsonSerializerDefaults.Web);
 
+    /// <summary>下载期间连续无数据的最长时间；超过即中断本次下载（保留已下载片段以便续传）。</summary>
+    internal TimeSpan DownloadIdleTimeout { get; set; } = TimeSpan.FromSeconds(60);
+
     public UpdateService() : this(ProductionReleaseEndpoint, CreateProductionHandler()) { }
 
     public UpdateService(HttpMessageHandler handler) : this(ProductionReleaseEndpoint, handler) { }
@@ -132,11 +135,15 @@ public sealed class UpdateService : IDisposable
             resumeAt = 0;
         }
 
+        // TCP 半开时读操作可能永远不返回：每次网络等待前重置空闲超时，
+        // 让停滞的下载在有限时间内失败并保留 .part 以便续传。
+        using var idleTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        idleTimeout.CancelAfter(DownloadIdleTimeout);
         using var response = await SendWithTrustedRedirectsAsync(
             result.DownloadUri,
             RequestKind.Installer,
             resumeAt > 0 ? resumeAt : null,
-            cancellationToken);
+            idleTimeout.Token);
         ValidateDownloadResponse(response);
 
         var append = resumeAt > 0 && response.StatusCode == HttpStatusCode.PartialContent;
@@ -155,7 +162,7 @@ public sealed class UpdateService : IDisposable
         if (response.Content.Headers.ContentLength is { } responseLength && responseLength != expectedRemaining)
             throw new InvalidDataException("更新安装包大小与发布信息不一致。");
 
-        await using (var source = await response.Content.ReadAsStreamAsync(cancellationToken))
+        await using (var source = await response.Content.ReadAsStreamAsync(idleTimeout.Token))
         await using (var destination = new FileStream(
             partialPath,
             append ? FileMode.Append : FileMode.Create,
@@ -169,7 +176,16 @@ public sealed class UpdateService : IDisposable
             progress?.Report(new UpdateDownloadProgress(received, result.Release.SizeBytes));
             while (true)
             {
-                var count = await source.ReadAsync(buffer, cancellationToken);
+                idleTimeout.CancelAfter(DownloadIdleTimeout);
+                int count;
+                try
+                {
+                    count = await source.ReadAsync(buffer, idleTimeout.Token);
+                }
+                catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+                {
+                    throw new TaskCanceledException("更新下载长时间没有收到数据，本次下载已中断；已下载的有效片段会保留。");
+                }
                 if (count == 0) break;
                 received += count;
                 if (received > result.Release.SizeBytes)

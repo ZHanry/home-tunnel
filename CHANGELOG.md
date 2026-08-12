@@ -4,6 +4,33 @@ All notable changes to Home Tunnel are documented in this file. The project foll
 
 ## [Unreleased]
 
+### Security
+
+- Added FRPS TLS server identity verification: deployment scripts generate a persistent certificate, the control center distributes it over HTTPS discovery, clients pin it and the managed Agent enforces the pinned CA and server name before connecting.
+- Rewrote the managed Agent validation as an allowlist: the parsed FRP configuration must match a template completed with FRP defaults field by field, so unknown or future FRP options are rejected by default (previously a blocklist).
+- Verified the optional Authenticode signer thumbprint of the Windows Agent binary instead of only displaying it.
+- Hardened secrets handling, container isolation (read-only Caddy), systemd sandboxing and the console Caddy site no longer depends on control-center availability for certificate issuance.
+
+### Fixed
+
+- Traffic gateway no longer crashes when a client resets the connection mid-upload; upstream requests now use keep-alive pooling with response-header timeouts.
+- Control center no longer stalls all requests during data maintenance or device deletion; both now run in small batched transactions.
+- Fixed WebSocket upgrade socket leaks, unbounded rate-limiter and traffic-sample buffers, timestamp comparison mismatches, and incomplete graceful shutdown.
+- Fixed Windows client Agent supervision races that could spawn duplicate or orphaned Agent processes, restart tunnels after an explicit pause, or leave stale connection status.
+- Fixed the `deploy/compose.yaml` secrets and FRPS environment variable drift that broke documented self-host deployments.
+- Linux client persists state durably (directory fsync), retries transient startup failures with backoff, and reports Agent restart cool-downs.
+
+### Added
+
+- WebSocket realtime sync for the Linux client (standard-library RFC 6455 client) with polling retained as fallback.
+- Automatic daily SQLite snapshots with retention, plus Prometheus metrics endpoints on the control center (`/internal/metrics`) and traffic gateway (`/metrics`).
+- Real per-connection tunnel status in the Windows client parsed from Agent logs, update download idle timeouts, and UI virtualization for large connection lists.
+- End-to-end proxy tests for the traffic gateway and a CI job that builds the official Windows Agent baseline artifact.
+
+### Changed
+
+- Removed the runtime PostgreSQL-to-SQLite SQL translation layer; all queries are now native SQLite with cached prepared statements.
+
 ## [2.3.0] - 2026-08-12
 
 - Added a headless `amd64`/`arm64` Linux client with secure enrollment, systemd hardening, lease renewal, heartbeats, restricted Agent supervision and pinned release packaging.

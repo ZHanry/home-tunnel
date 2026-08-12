@@ -5,10 +5,10 @@
     }
 }
 
+# The console host is statically known, so it uses regular ACME issuance at
+# startup instead of on-demand TLS; this keeps console certificate issuance
+# independent of control-center availability.
 {$HOME_TUNNEL_CONSOLE_HOST} {
-    tls {
-        on_demand
-    }
     encode zstd gzip
     reverse_proxy control-center:8080
 }

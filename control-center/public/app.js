@@ -258,10 +258,22 @@ async function api(path, options = {}, canRefresh = true) {
   return data;
 }
 
+// 登录后待改密时，登录密码保存在闭包变量中传递，避免写入隐藏的 DOM 输入框。
+let pendingCurrentPassword = null;
+
+function setPendingCurrentPassword(password) {
+  pendingCurrentPassword = password;
+  const input = document.querySelector("#current-password");
+  input.value = "";
+  input.required = password == null;
+  input.closest(".field").classList.toggle("hidden", password != null);
+}
+
 function showLogin(message = "") {
   document.body.classList.add("auth-active");
   state.me = null;
   state.csrf = "";
+  setPendingCurrentPassword(null);
   window.clearTimeout(state.socketReconnectTimer);
   state.socketReconnectTimer = null;
   state.socket?.close();
@@ -762,7 +774,7 @@ loginForm.addEventListener("submit", async (event) => {
     if (result.password_change_required) {
       loginForm.classList.add("hidden");
       passwordForm.classList.remove("hidden");
-      document.querySelector("#current-password").value = form.get("password");
+      setPendingCurrentPassword(form.get("password"));
       document.querySelector("#new-password").focus();
     } else {
       await showApp();
@@ -801,7 +813,7 @@ passwordForm.addEventListener("submit", async (event) => {
   const original = button.textContent;
   button.textContent = "正在保存…";
   try {
-    await api("/api/v1/auth/password/change", { method: "POST", body: JSON.stringify({ current_password: form.get("current_password"), new_password: form.get("new_password") }) }, false);
+    await api("/api/v1/auth/password/change", { method: "POST", body: JSON.stringify({ current_password: pendingCurrentPassword ?? form.get("current_password"), new_password: form.get("new_password") }) }, false);
     passwordForm.reset();
     showLogin("密码已修改，请使用新密码重新登录");
   } catch (error) {

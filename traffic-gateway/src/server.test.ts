@@ -5,7 +5,7 @@ process.env.INTERNAL_SERVICE_KEY = "11".repeat(32);
 process.env.SAMPLE_BUCKET_SECONDS = "10";
 process.env.MAX_BODY_CHUNK_BYTES = String(64 * 1024);
 
-const { HierarchicalLimiter, PolicyStore, SampleCollector } = await import("./server.js");
+const { HierarchicalLimiter, PolicyStore, SampleCollector, ThrottleTransform } = await import("./server.js");
 
 function policy(id: string, subdomain: string, enabled = true) {
   return {
@@ -19,7 +19,7 @@ function policy(id: string, subdomain: string, enabled = true) {
     connection_limit_bps: null,
     connection_burst_bytes: null,
     connection_policy_version: 1,
-    user_limit_bps: 8 * 1024 * 1024,
+    user_limit_bps: (8 * 1024 * 1024) as number | null,
     user_burst_bytes: null,
     user_policy_version: 1,
   };
@@ -124,6 +124,104 @@ test("sample retries send cumulative bucket totals without double counting", asy
   assert.equal(uploads[1]?.[0]?.download_bytes, 25);
   assert.equal(uploads[1]?.[0]?.request_count, 1);
   assert.equal(uploads[1]?.[0]?.error_count, 1);
+});
+
+test("sample buffer drops oldest buckets when the cap is exceeded", async () => {
+  let now = 1000;
+  let fail = true;
+  const uploads: Array<Array<Record<string, unknown>>> = [];
+  const collector = new SampleCollector(
+    () => now,
+    async (items) => {
+      if (fail) throw new Error("control center down");
+      uploads.push(items.map((item) => ({ ...item })));
+    },
+    3,
+  );
+  const first = policy("connection-1", "first");
+  const second = policy("connection-2", "second");
+  collector.record(first, "upload", 1);
+  collector.record(second, "upload", 1);
+  await collector.flush();
+  now = 11_000;
+  collector.record(first, "upload", 2);
+  now = 21_000;
+  collector.record(first, "upload", 3);
+  fail = false;
+  now = 31_000;
+  await collector.flush();
+  assert.equal(uploads.length, 1);
+  const batch = uploads[0] ?? [];
+  assert.equal(batch.length, 2);
+  assert.deepEqual(batch.map((item) => item.upload_bytes), [2, 3]);
+  assert.ok(!batch.some((item) => item.connection_id === "connection-2"));
+});
+
+test("sample buffer never evicts the current bucket", async () => {
+  const now = 1000;
+  let fail = true;
+  const uploads: Array<Array<Record<string, unknown>>> = [];
+  const collector = new SampleCollector(
+    () => now,
+    async (items) => {
+      if (fail) throw new Error("control center down");
+      uploads.push(items.map((item) => ({ ...item })));
+    },
+    1,
+  );
+  collector.record(policy("connection-1", "first"), "upload", 1);
+  collector.record(policy("connection-2", "second"), "upload", 2);
+  fail = false;
+  await collector.flush();
+  assert.equal(uploads[0]?.length, 2);
+});
+
+test("unlimited connections take the synchronous fast path and skip the limiter", async () => {
+  const store = new PolicyStore();
+  const unlimited = { ...policy("connection-1", "service"), user_limit_bps: null, connection_limit_bps: null };
+  const limited = policy("connection-2", "second");
+  store.apply(snapshot([unlimited, limited]));
+  const limiter = new HierarchicalLimiter(store);
+  let acquireCalls = 0;
+  const originalAcquire = limiter.acquire.bind(limiter);
+  limiter.acquire = async (connectionId, requestedBytes, signal) => {
+    acquireCalls += 1;
+    return originalAcquire(connectionId, requestedBytes, signal);
+  };
+  let now = 1000;
+  const uploads: Array<Array<Record<string, unknown>>> = [];
+  const collector = new SampleCollector(
+    () => now,
+    async (items) => {
+      uploads.push(items.map((item) => ({ ...item })));
+    },
+  );
+  const fast = new ThrottleTransform("connection-1", "download", new AbortController(), store, limiter, collector);
+  const received = new Promise<Buffer>((resolve) => fast.once("data", resolve));
+  fast.write(Buffer.from("hello"));
+  assert.equal((await received).toString(), "hello");
+  assert.equal(acquireCalls, 0);
+  now = 11_000;
+  await collector.flush();
+  assert.equal(uploads[0]?.[0]?.download_bytes, 5);
+
+  const slow = new ThrottleTransform("connection-2", "download", new AbortController(), store, limiter, collector);
+  const slowReceived = new Promise<Buffer>((resolve) => slow.once("data", resolve));
+  slow.write(Buffer.from("world"));
+  await slowReceived;
+  assert.equal(acquireCalls, 1);
+});
+
+test("the fast path still enforces policy revocation", async () => {
+  const store = new PolicyStore();
+  const unlimited = { ...policy("connection-1", "service"), user_limit_bps: null, connection_limit_bps: null };
+  store.apply(snapshot([unlimited]));
+  const transform = new ThrottleTransform("connection-1", "download", new AbortController(), store, new HierarchicalLimiter(store), new SampleCollector(() => 1000, async () => undefined));
+  transform.resume();
+  store.apply(snapshot([{ ...unlimited, enabled: false }]));
+  const failure = new Promise<Error>((resolve) => transform.once("error", resolve));
+  transform.write(Buffer.from("blocked"));
+  assert.equal((await failure).message, "POLICY_REVOKED");
 });
 
 test("sample identity changes replace a stale bucket instead of poisoning its batch", async () => {

@@ -25,6 +25,14 @@ type processRecord struct {
 	done    chan error
 }
 
+const (
+	// restartFailureLimit caps consecutive automatic restarts before the
+	// supervisor pauses; restartCooldown bounds how long that pause lasts so
+	// the agent is not permanently dead until the next successful sync.
+	restartFailureLimit = 5
+	restartCooldown     = 10 * time.Minute
+)
+
 type Supervisor struct {
 	operationMu     sync.Mutex
 	mu              sync.Mutex
@@ -32,6 +40,8 @@ type Supervisor struct {
 	runtimeDir      string
 	expectedHash    string
 	profile         model.Profile
+	trustedCaPath   string
+	tlsCaSha256     string
 	process         *processRecord
 	stopping        bool
 	applying        bool
@@ -39,6 +49,7 @@ type Supervisor struct {
 	leaseExpiry     time.Time
 	restartFailures int
 	nextRestart     time.Time
+	restartGaveUpAt time.Time
 }
 
 func New(agentPath, runtimeDir, expectedHash string, profile model.Profile, initialLeaseExpiry *time.Time) (*Supervisor, error) {
@@ -49,6 +60,11 @@ func New(agentPath, runtimeDir, expectedHash string, profile model.Profile, init
 	supervisor := &Supervisor{
 		agentPath: agentPath, runtimeDir: runtimeDir,
 		expectedHash: strings.ToLower(strings.TrimSpace(expectedHash)), profile: profile,
+	}
+	// 服务重启后 Tick 可能直接用 lkg 配置拉起 Agent，此时 frps-ca.pem 与
+	// --tls-ca-sha256 必须已经就绪，所以在构造时就写入（Apply 会再次覆盖写）。
+	if err := supervisor.syncTrustedCa(); err != nil {
+		return nil, err
 	}
 	if initialLeaseExpiry != nil {
 		supervisor.leaseExpiry = initialLeaseExpiry.UTC()
@@ -64,6 +80,11 @@ func New(agentPath, runtimeDir, expectedHash string, profile model.Profile, init
 	})
 	if len(files) > 0 {
 		supervisor.lastKnownGood = files[0]
+		// Older last-known-good files still contain stale lease tokens; only
+		// the newest one is ever used, so remove the rest at startup.
+		for _, stale := range files[1:] {
+			secureDelete(stale)
+		}
 	}
 	return supervisor, nil
 }
@@ -81,7 +102,11 @@ func (supervisor *Supervisor) Apply(ctx context.Context, state *model.State, syn
 	if err := supervisor.inspectAgent(); err != nil {
 		return err
 	}
-	configuration, err := RenderConfig(state.Profile, syncResponse)
+	// 每次应用前覆盖写受管 CA 文件，保证磁盘内容与状态中的 PEM 一致。
+	if err := supervisor.syncTrustedCa(); err != nil {
+		return err
+	}
+	configuration, err := RenderConfig(state.Profile, syncResponse, supervisor.trustedCaPath)
 	if err != nil {
 		return err
 	}
@@ -142,6 +167,7 @@ func (supervisor *Supervisor) Apply(ctx context.Context, state *model.State, syn
 	supervisor.leaseExpiry = syncResponse.Lease.ExpiresAt
 	supervisor.restartFailures = 0
 	supervisor.nextRestart = time.Time{}
+	supervisor.restartGaveUpAt = time.Time{}
 	supervisor.applying = false
 	supervisor.mu.Unlock()
 	state.AppliedConfigVersion = syncResponse.TargetConfigVersion
@@ -182,8 +208,21 @@ func (supervisor *Supervisor) Tick(now time.Time) (string, string) {
 	if lkg == "" || leaseExpiry.IsZero() {
 		return "Offline", "agent has no applied configuration"
 	}
-	if failures > 5 {
-		return "Error", "agent exceeded the automatic restart limit"
+	if failures > restartFailureLimit {
+		supervisor.mu.Lock()
+		if supervisor.restartGaveUpAt.IsZero() {
+			supervisor.restartGaveUpAt = now
+		}
+		cooldownEnds := supervisor.restartGaveUpAt.Add(restartCooldown)
+		if now.Before(cooldownEnds) {
+			supervisor.mu.Unlock()
+			return "Error", fmt.Sprintf("agent exceeded the automatic restart limit; retrying after %s", cooldownEnds.UTC().Format(time.RFC3339))
+		}
+		// The cooldown elapsed: allow a fresh round of restart attempts.
+		supervisor.restartFailures = 0
+		supervisor.nextRestart = time.Time{}
+		supervisor.restartGaveUpAt = time.Time{}
+		supervisor.mu.Unlock()
 	}
 	if now.Before(nextRestart) {
 		return "Degraded", fmt.Sprintf("agent restart scheduled for %s", nextRestart.UTC().Format(time.RFC3339))
@@ -303,12 +342,36 @@ func (supervisor *Supervisor) recordRestartFailure() {
 }
 
 func (supervisor *Supervisor) arguments(command, configPath string) []string {
-	return []string{
+	arguments := []string{
 		command, "--config", configPath,
 		"--server", supervisor.profile.FRPSHost,
 		"--port", strconv.Itoa(supervisor.profile.FRPSPort),
 		"--domain", supervisor.profile.TunnelDomain,
 	}
+	if supervisor.tlsCaSha256 != "" {
+		arguments = append(arguments, "--tls-ca-sha256", supervisor.tlsCaSha256)
+	}
+	return arguments
+}
+
+// syncTrustedCa 把服务端下发的 FRPS 证书 PEM 写入运行时目录并记录文件字节的
+// SHA-256；未下发证书时清空状态，客户端行为与历史版本一致。
+func (supervisor *Supervisor) syncTrustedCa() error {
+	pem := supervisor.profile.FRPSTLSCertificatePEM
+	if strings.TrimSpace(pem) == "" {
+		supervisor.trustedCaPath = ""
+		supervisor.tlsCaSha256 = ""
+		return nil
+	}
+	path := filepath.Join(supervisor.runtimeDir, "frps-ca.pem")
+	content := []byte(pem)
+	if err := os.WriteFile(path, content, 0o600); err != nil {
+		return fmt.Errorf("write managed FRPS CA file: %w", err)
+	}
+	digest := sha256.Sum256(content)
+	supervisor.trustedCaPath = path
+	supervisor.tlsCaSha256 = hex.EncodeToString(digest[:])
+	return nil
 }
 
 func (supervisor *Supervisor) writePending(configuration string) (string, error) {
@@ -356,7 +419,9 @@ func (supervisor *Supervisor) inspectAgent() error {
 	return nil
 }
 
-func RenderConfig(profile model.Profile, syncResponse model.SyncResponse) (string, error) {
+// RenderConfig 生成受管 FRP 配置。trustedCaPath 非空时固定 FRPS 的信任锚
+// （transport.tls.trustedCaFile/serverName），为空时输出与历史版本完全一致。
+func RenderConfig(profile model.Profile, syncResponse model.SyncResponse, trustedCaPath string) (string, error) {
 	if syncResponse.Lease == nil || strings.TrimSpace(syncResponse.Lease.Value) == "" {
 		return "", errors.New("cannot render configuration without a lease")
 	}
@@ -367,6 +432,10 @@ func RenderConfig(profile model.Profile, syncResponse model.SyncResponse) (strin
 	builder.WriteString("loginFailExit = true\n")
 	builder.WriteString("transport.tls.enable = true\n")
 	builder.WriteString("transport.tls.disableCustomTLSFirstByte = true\n")
+	if trustedCaPath != "" {
+		fmt.Fprintf(&builder, "transport.tls.trustedCaFile = %s\n", toml(trustedCaPath))
+		fmt.Fprintf(&builder, "transport.tls.serverName = %s\n", toml(profile.FRPSHost))
+	}
 	builder.WriteString("transport.heartbeatInterval = 30\n")
 	builder.WriteString("transport.heartbeatTimeout = 90\n")
 	fmt.Fprintf(&builder, "metadatas.home_tunnel_lease = %s\n", toml(syncResponse.Lease.Value))
@@ -447,11 +516,4 @@ func enabledCount(connections []model.Connection) int {
 		}
 	}
 	return count
-}
-
-func min(left, right int) int {
-	if left < right {
-		return left
-	}
-	return right
 }

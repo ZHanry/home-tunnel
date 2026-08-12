@@ -25,10 +25,13 @@ internal static class Program
             TestServerAddressValidation();
             await TestServerDiscoveryAsync();
             TestOptimizedSynchronization();
+            TestManagedConfigRendering();
+            TestAgentProxyLogParsing();
             TestTrustedDownloadUrls();
             await TestReleaseValidationAsync();
             await TestGitHubRedirectPolicyAsync();
             await TestVerifiedBackgroundDownloadAsync();
+            await TestDownloadIdleTimeoutAsync();
             if (string.Equals(Environment.GetEnvironmentVariable("HOME_TUNNEL_SKIP_AGENT_TESTS"), "1", StringComparison.Ordinal))
                 Console.WriteLine("SKIP: managed Agent binary integration checks");
             else
@@ -145,6 +148,98 @@ internal static class Program
         Assert(!ApiClient.IsConfigurationChangeEvent(
             """{"event":"realtime.connected","payload":{}}""", deviceId),
             "realtime handshake does not trigger synchronization");
+    }
+
+    private static void TestManagedConfigRendering()
+    {
+        var state = new LocalState
+        {
+            FrpsHost = ProductConfiguration.FrpsHost,
+            FrpsPort = ProductConfiguration.FrpsPort,
+            TunnelDomain = ProductConfiguration.TunnelDomain,
+        };
+        var sync = new SyncResponse(
+            "11111111-1111-1111-1111-111111111111",
+            true,
+            3,
+            [new TunnelConnection { Id = "1111-2222", Subdomain = "app", LocalScheme = "http", LocalHost = "127.0.0.1", LocalPort = 8080, Enabled = true, Version = 3 }],
+            "hash",
+            new LeaseInfo("signed-lease", DateTimeOffset.UtcNow.AddHours(1), 3),
+            DateTimeOffset.UtcNow);
+
+        var withoutCa = FrpcSupervisor.RenderConfig(state, sync, null);
+        Assert(!withoutCa.Contains("trustedCaFile", StringComparison.Ordinal), "config without CA omits trustedCaFile");
+        Assert(!withoutCa.Contains("serverName", StringComparison.Ordinal), "config without CA omits serverName");
+        Assert(withoutCa.Contains($"serverAddr = \"{ProductConfiguration.FrpsHost}\"", StringComparison.Ordinal), "config keeps the discovered FRPS host");
+
+        var caPath = @"C:\Users\test user\HomeTunnel\runtime\frps-ca.pem";
+        var withCa = FrpcSupervisor.RenderConfig(state, sync, caPath);
+        Assert(
+            withCa.Contains($"transport.tls.trustedCaFile = \"{caPath.Replace("\\", "\\\\")}\"", StringComparison.Ordinal),
+            "config with CA pins the TOML-escaped trusted CA path");
+        Assert(
+            withCa.Contains($"transport.tls.serverName = \"{ProductConfiguration.FrpsHost}\"", StringComparison.Ordinal),
+            "config with CA pins the FRPS server name");
+        Assert(
+            withCa.IndexOf("transport.tls.trustedCaFile", StringComparison.Ordinal) <
+                withCa.IndexOf("transport.heartbeatInterval", StringComparison.Ordinal),
+            "CA pinning lines are rendered in the common transport section");
+    }
+
+    private static void TestAgentProxyLogParsing()
+    {
+        Assert(
+            FrpcSupervisor.TryParseProxyStartEvent(
+                "2026-08-12 17:00:00.123 [I] [control.go:172] [abcd1234] [device-1.ht_conn_v3] start proxy success",
+                out var successName,
+                out var success) && success && successName == "device-1.ht_conn_v3",
+            "FRP proxy start success log line is parsed");
+        Assert(
+            FrpcSupervisor.TryParseProxyStartEvent(
+                "2026-08-12 17:00:01.456 [W] [control.go:170] [abcd1234] [device-1.ht_conn_v3] start error: port already used",
+                out var errorName,
+                out var errorSuccess) && !errorSuccess && errorName == "device-1.ht_conn_v3",
+            "FRP proxy start error log line is parsed");
+        Assert(
+            !FrpcSupervisor.TryParseProxyStartEvent(
+                "2026-08-12 17:00:00.001 [I] [service.go:306] login to server success, get run id [abcd1234]",
+                out _,
+                out _),
+            "unrelated FRP log line is ignored");
+        Assert(
+            !FrpcSupervisor.TryParseProxyStartEvent("", out _, out _),
+            "empty log line is ignored");
+
+        var generated = new TunnelConnection { Id = "1111-2222", Version = 7, ProxyName = null };
+        Assert(FrpcSupervisor.ProxyNameFor(generated) == "ht_11112222_v7", "generated proxy name matches rendered config");
+        var explicitName = new TunnelConnection { Id = "1111-2222", Version = 7, ProxyName = "custom_name" };
+        Assert(FrpcSupervisor.ProxyNameFor(explicitName) == "custom_name", "explicit proxy name is preserved");
+    }
+
+    private static async Task TestDownloadIdleTimeoutAsync()
+    {
+        var payload = ReleasePayload("2.3.1", GitHubDownloadUri("2.3.1").AbsoluteUri, 1_000_000, new string('a', 64));
+        var root = Path.Combine(Path.GetTempPath(), $"HomeTunnel-IdleTimeout-Test-{Guid.NewGuid():N}");
+        try
+        {
+            using var service = new UpdateService(
+                UpdateService.ProductionReleaseEndpoint,
+                new StallingDownloadHandler(payload, 1_000_000),
+                root)
+            {
+                DownloadIdleTimeout = TimeSpan.FromMilliseconds(400),
+            };
+            var result = await service.CheckAsync(CancellationToken.None);
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            await AssertThrowsAsync<TaskCanceledException>(
+                () => service.DownloadAsync(result, null, CancellationToken.None),
+                "stalled installer download aborts after the idle timeout");
+            Assert(watch.Elapsed < TimeSpan.FromSeconds(15), "idle timeout aborts the stalled download promptly");
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
     }
 
     private static void TestTrustedDownloadUrls()
@@ -337,9 +432,67 @@ internal static class Program
             var invalid = await RunAgentAsync(agent, ["verify", "--config", invalidConfig, .. trustArguments]);
             Assert(invalid.ExitCode != 0, "generic TCP proxy configuration is rejected");
 
+            var validText = await File.ReadAllTextAsync(validConfig);
+            var rejectedVariants = new (string Name, string Content)[]
+            {
+                ("subdomain escape", validText.Replace(
+                    $"customDomains = [\"agent-test.{ProductConfiguration.TunnelDomain}\"]",
+                    $"customDomains = [\"agent-test.{ProductConfiguration.TunnelDomain}\"]\nsubdomain = \"evil\"",
+                    StringComparison.Ordinal)),
+                ("dns server override", validText.Replace(
+                    "user = \"test-device\"",
+                    "user = \"test-device\"\ndnsServer = \"198.51.100.53\"",
+                    StringComparison.Ordinal)),
+                ("stun server override", validText.Replace(
+                    "user = \"test-device\"",
+                    "user = \"test-device\"\nnatHoleStunServer = \"attacker.example:3478\"",
+                    StringComparison.Ordinal)),
+                ("tcp mux disabled", validText.Replace(
+                    "user = \"test-device\"",
+                    "user = \"test-device\"\ntransport.tcpMux = false",
+                    StringComparison.Ordinal)),
+                ("pool count override", validText.Replace(
+                    "user = \"test-device\"",
+                    "user = \"test-device\"\ntransport.poolCount = 8",
+                    StringComparison.Ordinal)),
+                ("login fail exit disabled", validText.Replace(
+                    "loginFailExit = true",
+                    "loginFailExit = false",
+                    StringComparison.Ordinal)),
+            };
+            foreach (var (name, content) in rejectedVariants)
+            {
+                var variantConfig = Path.Combine(root, $"rejected-{rejectedVariants.TakeWhile(v => v.Name != name).Count()}.toml");
+                await File.WriteAllTextAsync(variantConfig, content);
+                var rejected = await RunAgentAsync(agent, ["verify", "--config", variantConfig, .. trustArguments]);
+                Assert(rejected.ExitCode != 0, $"managed surface violation is rejected: {name}");
+            }
+
             var mismatchedServer = await RunAgentAsync(agent,
                 ["verify", "--config", validConfig, "--server", "frps.other.example", "--port", "7000", "--domain", ProductConfiguration.TunnelDomain]);
             Assert(mismatchedServer.ExitCode != 0, "config that differs from the user-selected server is rejected");
+
+            // 服务端下发 FRPS 证书的场景：配置固定 CA 与 serverName，Agent 复核文件哈希。
+            var caBytes = new UTF8Encoding(false).GetBytes(
+                "-----BEGIN CERTIFICATE-----\ntest-only-frps-ca\n-----END CERTIFICATE-----\n");
+            var caPath = Path.Combine(root, "frps-ca.pem");
+            await File.WriteAllBytesAsync(caPath, caBytes);
+            var caSha256 = Convert.ToHexString(SHA256.HashData(caBytes)).ToLowerInvariant();
+            var caConfig = Path.Combine(root, "managed-ca.toml");
+            await File.WriteAllTextAsync(caConfig, (await File.ReadAllTextAsync(validConfig)).Replace(
+                "transport.tls.disableCustomTLSFirstByte = true",
+                "transport.tls.disableCustomTLSFirstByte = true\n" +
+                $"transport.tls.trustedCaFile = \"{caPath.Replace("\\", "\\\\")}\"\n" +
+                $"transport.tls.serverName = \"{ProductConfiguration.FrpsHost}\"",
+                StringComparison.Ordinal));
+            var caAccepted = await RunAgentAsync(agent,
+                ["verify", "--config", caConfig, .. trustArguments, "--tls-ca-sha256", caSha256]);
+            Assert(caAccepted.ExitCode == 0, "managed config pinning the delivered FRPS CA is accepted");
+            var caHashMismatch = await RunAgentAsync(agent,
+                ["verify", "--config", caConfig, .. trustArguments, "--tls-ca-sha256", new string('0', 64)]);
+            Assert(caHashMismatch.ExitCode != 0, "CA file that differs from the client-written hash is rejected");
+            var caWithoutFlag = await RunAgentAsync(agent, ["verify", "--config", caConfig, .. trustArguments]);
+            Assert(caWithoutFlag.ExitCode != 0, "config with trustedCaFile but no --tls-ca-sha256 is rejected");
 
             var genericCli = await RunAgentAsync(agent, "tcp", "--server", "evil.example");
             Assert(genericCli.ExitCode != 0, "generic FRPC command line is rejected");
@@ -483,6 +636,65 @@ internal static class Program
             RequestMessage = request,
             Content = content,
         };
+    }
+
+    private sealed class StallingDownloadHandler(string metadata, long installerSize) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            if (request.RequestUri?.AbsolutePath.EndsWith("latest.json", StringComparison.Ordinal) == true)
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(metadata, Encoding.UTF8, "application/json"),
+                    RequestMessage = request,
+                });
+            }
+
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StallingContent(installerSize),
+                RequestMessage = request,
+            });
+        }
+    }
+
+    private sealed class StallingContent(long length) : HttpContent
+    {
+        protected override Task<Stream> CreateContentReadStreamAsync() => Task.FromResult<Stream>(new StallingStream());
+
+        protected override async Task SerializeToStreamAsync(Stream stream, System.Net.TransportContext? context) =>
+            await Task.Delay(Timeout.InfiniteTimeSpan);
+
+        protected override bool TryComputeLength(out long computedLength)
+        {
+            computedLength = length;
+            return true;
+        }
+    }
+
+    private sealed class StallingStream : Stream
+    {
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => false;
+        public override long Length => throw new NotSupportedException();
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        {
+            await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+            return 0;
+        }
+
+        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
+            ReadAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
+
+        public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+        public override void Flush() { }
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
     }
 
     private sealed class UpdateHandler(string metadata, byte[] installer) : HttpMessageHandler

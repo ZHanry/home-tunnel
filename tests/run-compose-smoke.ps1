@@ -18,8 +18,7 @@ try {
     $composePrepared = $true
     $secrets = @{
         internal_service_key = "11" * 32
-        frps_plugin_key_control = "22" * 32
-        frps_plugin_key_frps = "22" * 32
+        frps_plugin_key = "22" * 32
         lease_signing_key = "33" * 32
         bootstrap_admin_password = "Local-Bootstrap-Only-Q8-safe"
     }
@@ -31,6 +30,38 @@ try {
         )
     }
 
+    # FRPS actually loads this key pair and the control center validates the
+    # PEM at startup, so the smoke stack needs a real throwaway certificate.
+    $smokeKey = [Security.Cryptography.ECDsa]::Create([Security.Cryptography.ECCurve+NamedCurves]::nistP256)
+    try {
+        $smokeRequest = [Security.Cryptography.X509Certificates.CertificateRequest]::new(
+            "CN=203.0.113.10",
+            $smokeKey,
+            [Security.Cryptography.HashAlgorithmName]::SHA256)
+        $smokeSan = [Security.Cryptography.X509Certificates.SubjectAlternativeNameBuilder]::new()
+        $smokeSan.AddIpAddress([Net.IPAddress]::Parse("203.0.113.10"))
+        $smokeSan.AddDnsName("203.0.113.10")
+        $smokeRequest.CertificateExtensions.Add($smokeSan.Build())
+        $smokeNotBefore = [DateTimeOffset]::UtcNow.AddMinutes(-5)
+        $smokeCertificate = $smokeRequest.CreateSelfSigned($smokeNotBefore, $smokeNotBefore.AddDays(30))
+        try {
+            $smokeCertPem = "-----BEGIN CERTIFICATE-----`n" +
+                [Convert]::ToBase64String($smokeCertificate.Export([Security.Cryptography.X509Certificates.X509ContentType]::Cert), "InsertLineBreaks").Replace("`r`n", "`n") +
+                "`n-----END CERTIFICATE-----`n"
+            $smokeKeyPem = "-----BEGIN PRIVATE KEY-----`n" +
+                [Convert]::ToBase64String($smokeKey.ExportPkcs8PrivateKey(), "InsertLineBreaks").Replace("`r`n", "`n") +
+                "`n-----END PRIVATE KEY-----`n"
+            [IO.File]::WriteAllText((Join-Path $testRoot "secrets\frps_tls_cert.pem"), $smokeCertPem, [Text.UTF8Encoding]::new($false))
+            [IO.File]::WriteAllText((Join-Path $testRoot "secrets\frps_tls_key.pem"), $smokeKeyPem, [Text.UTF8Encoding]::new($false))
+        }
+        finally {
+            $smokeCertificate.Dispose()
+        }
+    }
+    finally {
+        $smokeKey.Dispose()
+    }
+
     & docker network inspect home-tunnel-edge *> $null
     if ($LASTEXITCODE -ne 0) {
         & docker network create --label com.home-tunnel.local-smoke=true home-tunnel-edge *> $null
@@ -38,8 +69,7 @@ try {
         $networkCreated = $true
     }
 
-    $env:FRPS_BIND_ADDRESS = "127.0.0.1"
-    $env:FRPS_HOST_PORT = "17000"
+    $env:HOME_TUNNEL_FRPS_BIND_ADDRESS = "127.0.0.1"
     $env:HOME_TUNNEL_PUBLIC_BASE_URL = "https://console.tunnel.example.com"
     $env:HOME_TUNNEL_TUNNEL_DOMAIN = "tunnel.example.com"
     $env:HOME_TUNNEL_FRPS_PUBLIC_HOST = "203.0.113.10"

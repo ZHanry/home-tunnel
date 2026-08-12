@@ -7,7 +7,7 @@
     "build": "tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json --noEmit",
     "start": "node dist/server.js",
-    "test": "node --test dist/server.test.js"
+    "test": "node --test dist/server.test.js dist/server.e2e.test.js"
   },
   "devDependencies": {
     "@types/node": "22.17.1",

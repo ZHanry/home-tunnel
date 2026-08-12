@@ -28,6 +28,7 @@ services:
       FRPS_PLUGIN_KEY_FILE: /run/secrets/frps_plugin_key
       LEASE_SIGNING_KEY_FILE: /run/secrets/lease_signing_key
       BOOTSTRAP_ADMIN_PASSWORD_FILE: /run/secrets/bootstrap_admin_password
+      FRPS_TLS_CERT_FILE: /run/secrets/frps_tls_cert
       BOOTSTRAP_ADMIN_USERNAME: ${HOME_TUNNEL_BOOTSTRAP_ADMIN_USERNAME:-admin}
       ACCESS_TOKEN_SECONDS: "900"
       REFRESH_TOKEN_SECONDS: "2592000"
@@ -41,14 +42,11 @@ services:
       CADDY_PORT: "80"
       BACKUP_STATUS_FILE: /run/home-tunnel-status/backup.json
     secrets:
-      - source: internal_service_key
-        target: internal_service_key
-      - source: frps_plugin_key_control
-        target: frps_plugin_key
-      - source: lease_signing_key
-        target: lease_signing_key
-      - source: bootstrap_admin_password
-        target: bootstrap_admin_password
+      - internal_service_key
+      - frps_plugin_key
+      - lease_signing_key
+      - bootstrap_admin_password
+      - frps_tls_cert
     volumes:
       - sqlite-data:/data
       - ./status:/run/home-tunnel-status:ro
@@ -92,8 +90,7 @@ services:
       POLICY_RECONNECT_MS: "3000"
       SAMPLE_BUCKET_SECONDS: "60"
     secrets:
-      - source: internal_service_key
-        target: internal_service_key
+      - internal_service_key
     tmpfs:
       - /tmp:size=16m,noexec,nosuid,nodev,uid=10001,gid=10001,mode=0700
     networks: [control, edge]
@@ -122,10 +119,11 @@ services:
     depends_on:
       control-center: { condition: service_healthy }
     ports:
-      - "${FRPS_BIND_ADDRESS:-0.0.0.0}:${FRPS_HOST_PORT:-7000}:7000/tcp"
+      - "${HOME_TUNNEL_FRPS_BIND_ADDRESS:-0.0.0.0}:${HOME_TUNNEL_FRPS_PORT:-7000}:7000/tcp"
     secrets:
-      - source: frps_plugin_key_frps
-        target: frps_plugin_key
+      - frps_plugin_key
+      - frps_tls_cert
+      - frps_tls_key
     tmpfs:
       - /run/frp:size=8m,noexec,nosuid,nodev,uid=10001,gid=10001,mode=0700
       - /tmp:size=8m,noexec,nosuid,nodev
@@ -161,11 +159,13 @@ networks:
 secrets:
   internal_service_key:
     file: ./secrets/internal_service_key
-  frps_plugin_key_control:
-    file: ./secrets/frps_plugin_key_control
-  frps_plugin_key_frps:
-    file: ./secrets/frps_plugin_key_frps
+  frps_plugin_key:
+    file: ./secrets/frps_plugin_key
   lease_signing_key:
     file: ./secrets/lease_signing_key
   bootstrap_admin_password:
     file: ./secrets/bootstrap_admin_password
+  frps_tls_cert:
+    file: ./secrets/frps_tls_cert.pem
+  frps_tls_key:
+    file: ./secrets/frps_tls_key.pem

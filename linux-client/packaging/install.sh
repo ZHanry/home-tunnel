@@ -26,7 +26,7 @@ client_target=/usr/local/bin/home-tunnel-client
 agent_target=/usr/local/lib/home-tunnel/home-tunnel-agent
 unit_target=/etc/systemd/system/home-tunnel-client.service
 enroll_target=/usr/local/sbin/home-tunnel-enroll
-if [[ -e "$client_target" || -e "$agent_target" || -e "$unit_target" ]] && ! $upgrade; then
+if [[ -e "$client_target" || -e "$agent_target" || -e "$unit_target" || -e "$enroll_target" ]] && ! $upgrade; then
   echo "Home Tunnel Linux client is already installed; use --upgrade to replace binaries" >&2
   exit 1
 fi

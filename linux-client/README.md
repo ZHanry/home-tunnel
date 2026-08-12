@@ -42,6 +42,6 @@ sudo -u home-tunnel home-tunnel-client status
 sudo -u home-tunnel home-tunnel-client status --json
 ```
 
-Connections are currently created and assigned through the control-center administrator UI. The daemon fetches configuration through a three-minute safety poll, sends heartbeats every 30 seconds, renews leases before expiry, stops an expired tunnel, and restarts a crashed Agent up to five times with exponential backoff.
+Connections are currently created and assigned through the control-center administrator UI. The daemon receives configuration changes within seconds over a WebSocket notification channel and keeps a three-minute safety poll as the fallback, sends heartbeats every 30 seconds, renews leases before expiry, stops an expired tunnel, and restarts a crashed Agent up to five times with exponential backoff.
 
-The first Linux release does not yet implement the Windows client's WebSocket change notification or automatic package updater. Configuration changes therefore take up to three minutes to arrive unless the service is restarted.
+The Linux client does not yet implement the Windows client's automatic package updater. While the WebSocket channel is unavailable, configuration changes still arrive within three minutes through the safety poll.

@@ -1,9 +1,10 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import { EventEmitter } from "node:events";
 import { chmodSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
-import { DatabaseSync, type SQLInputValue, type SQLOutputValue } from "node:sqlite";
+import { DatabaseSync, type SQLInputValue, type SQLOutputValue, type StatementSync } from "node:sqlite";
 import { config } from "./config.js";
 import { hashPassword } from "./security.js";
 
@@ -79,48 +80,6 @@ function bindValue(value: unknown): SQLInputValue {
   return JSON.stringify(value);
 }
 
-function intervalSeconds(amount: string, unit: string): number {
-  const value = Number.parseInt(amount, 10);
-  if (unit.startsWith("second")) return value;
-  if (unit.startsWith("minute")) return value * 60;
-  if (unit.startsWith("hour")) return value * 60 * 60;
-  return value * 24 * 60 * 60;
-}
-
-function normalizeSql(text: string): { sql: string; bindingIndexes: number[] } {
-  let sql = text;
-  sql = sql.replace(/\$(\d+)::(?:uuid|text|jsonb|timestamptz|int|integer|bigint|inet)(?:\[\])?/gi, "?$1");
-  sql = sql.replace(/\$(\d+)/g, "?$1");
-  sql = sql.replace(/::(?:uuid|text|jsonb|timestamptz|int|integer|bigint|inet)(?:\[\])?/gi, "");
-  sql = sql.replace(/\bFOR\s+UPDATE(?:\s+OF\s+[a-z_][a-z0-9_]*)?(?:\s+SKIP\s+LOCKED)?/gi, "");
-  sql = sql.replace(/\bILIKE\b/gi, "LIKE");
-  sql = sql.replace(/\bGREATEST\s*\(/gi, "max(");
-  sql = sql.replace(
-    /now\(\)\s*\+\s*make_interval\(secs\s*=>\s*\?(\d+)\)/gi,
-    "home_tunnel_add_seconds(home_tunnel_now(), ?$1)",
-  );
-  sql = sql.replace(
-    /now\(\)\s*-\s*make_interval\(hours\s*=>\s*\?(\d+)\)/gi,
-    "home_tunnel_add_seconds(home_tunnel_now(), -3600 * ?$1)",
-  );
-  sql = sql.replace(
-    /now\(\)\s*([+-])\s*interval\s*'(\d+)\s+(seconds?|minutes?|hours?|days?)'/gi,
-    (_match, sign: string, amount: string, unit: string) => {
-      const seconds = intervalSeconds(amount, unit) * (sign === "-" ? -1 : 1);
-      return `home_tunnel_add_seconds(home_tunnel_now(), ${seconds})`;
-    },
-  );
-  sql = sql.replace(/\bto_timestamp\s*\(/gi, "home_tunnel_from_unix(");
-  sql = sql.replace(/\bdate_trunc\s*\(\s*'hour'\s*,/gi, "home_tunnel_hour(");
-  sql = sql.replace(/\bnow\(\)/gi, "home_tunnel_now()");
-  const bindingIndexes: number[] = [];
-  sql = sql.replace(/\?(\d+)/g, (_match, index: string) => {
-    bindingIndexes.push(Number(index) - 1);
-    return "?";
-  });
-  return { sql: sql.trim(), bindingIndexes };
-}
-
 function databaseError(error: unknown): never {
   if (error instanceof Error && error.message.includes("UNIQUE constraint failed")) {
     Object.assign(error, { code: "23505", constraint: error.message });
@@ -164,30 +123,58 @@ const mutex = new Mutex();
 export const databaseEvents = new EventEmitter();
 databaseEvents.setMaxListeners(128);
 
+type PreparedQuery = {
+  statement: StatementSync;
+  hasRows: boolean;
+  touchesOutbox: boolean;
+};
+
+// All application SQL is written as static template strings, so caching the
+// prepared StatementSync avoids re-preparing on every call. The cap is
+// defensive: only IN-list queries with a variable placeholder count generate
+// new keys.
+const statementCacheLimit = 500;
+const statementCache = new Map<string, PreparedQuery>();
+
+// All queries are written in native SQLite dialect with anonymous `?`
+// placeholders. A leftover PostgreSQL-style `$n` placeholder would otherwise
+// be rejected by SQLite with a confusing syntax error (or silently parsed as
+// something else), so fail fast with an explicit message.
+const postgresPlaceholderPattern = /\$\d+/;
+
+function prepareQuery(text: string): PreparedQuery {
+  const cached = statementCache.get(text);
+  if (cached) return cached;
+  if (postgresPlaceholderPattern.test(text)) {
+    throw new Error(
+      `SQL must use SQLite '?' placeholders, found PostgreSQL-style '$n': ${text.trim().slice(0, 120)}`,
+    );
+  }
+  const statement = database.prepare(text);
+  const entry: PreparedQuery = {
+    statement,
+    hasRows: statement.columns().length > 0,
+    touchesOutbox: /\bINSERT\s+INTO\s+outbox_events\b/i.test(text),
+  };
+  if (statementCache.size >= statementCacheLimit) statementCache.clear();
+  statementCache.set(text, entry);
+  return entry;
+}
+
 class SqliteClient implements DatabaseClient {
   outboxChanged = false;
 
   async query<T extends DatabaseRow = DatabaseRow>(text: string, values: unknown[] = []): Promise<QueryResult<T>> {
-    const { sql, bindingIndexes } = normalizeSql(text);
     try {
-      const statement = database.prepare(sql);
-      const orderedValues = bindingIndexes.length
-        ? bindingIndexes.map((index) => {
-            if (index < 0 || index >= values.length) {
-              throw new Error(`Missing SQLite binding for parameter $${index + 1}`);
-            }
-            return values[index];
-          })
-        : values;
-      const bindings = orderedValues.map(bindValue);
-      const hasRows = statement.columns().length > 0;
+      const { statement, hasRows, touchesOutbox } = prepareQuery(text);
+      const bindings = values.map(bindValue);
       if (hasRows) {
         const rows = statement.all(...bindings).map((row) => decodeRow<T>(row));
-        if (/\bINSERT\s+INTO\s+outbox_events\b/i.test(sql)) this.outboxChanged = true;
+        if (touchesOutbox) this.outboxChanged = true;
         return { rows, rowCount: rows.length };
       }
       const result = statement.run(...bindings);
-      if (/\bINSERT\s+INTO\s+outbox_events\b/i.test(sql)) this.outboxChanged = true;
+      if (touchesOutbox) this.outboxChanged = true;
       return { rows: [], rowCount: Number(result.changes) };
     } catch (error) {
       databaseError(error);
@@ -199,7 +186,20 @@ function emitOutboxChanged(): void {
   queueMicrotask(() => databaseEvents.emit("outbox"));
 }
 
+// Detects accidental use of the module-level query()/transaction() from inside
+// a transaction callback, which would deadlock on the mutex. Independent
+// concurrent callers are unaffected: they run in their own async context and
+// simply queue on the mutex.
+const transactionContext = new AsyncLocalStorage<true>();
+
+function assertNotInTransaction(entryPoint: string): void {
+  if (transactionContext.getStore()) {
+    throw new Error(`${entryPoint} must not be called inside transaction(); use the transaction client instead`);
+  }
+}
+
 export async function query<T extends DatabaseRow = DatabaseRow>(text: string, values: unknown[] = []): Promise<T[]> {
+  assertNotInTransaction("query()");
   return mutex.run(async () => {
     const client = new SqliteClient();
     const result = await client.query<T>(text, values);
@@ -214,19 +214,22 @@ export async function one<T extends DatabaseRow = DatabaseRow>(text: string, val
 }
 
 export async function transaction<T>(operation: (client: DatabaseClient) => Promise<T>): Promise<T> {
-  return mutex.run(async () => {
-    const client = new SqliteClient();
-    database.exec("BEGIN IMMEDIATE");
-    try {
-      const value = await operation(client);
-      database.exec("COMMIT");
-      if (client.outboxChanged) emitOutboxChanged();
-      return value;
-    } catch (error) {
-      database.exec("ROLLBACK");
-      throw error;
-    }
-  });
+  assertNotInTransaction("transaction()");
+  return mutex.run(async () =>
+    transactionContext.run(true, async () => {
+      const client = new SqliteClient();
+      database.exec("BEGIN IMMEDIATE");
+      try {
+        const value = await operation(client);
+        database.exec("COMMIT");
+        if (client.outboxChanged) emitOutboxChanged();
+        return value;
+      } catch (error) {
+        database.exec("ROLLBACK");
+        throw error;
+      }
+    }),
+  );
 }
 
 export const pool = {
@@ -238,6 +241,9 @@ export const pool = {
 
 export async function migrate(): Promise<void> {
   await mutex.run(async () => {
+    // DDL can invalidate cached prepared statements; drop them so any query
+    // issued after (re-)migration is prepared against the new schema.
+    statementCache.clear();
     database.exec(`
       CREATE TABLE IF NOT EXISTS schema_migrations (
         version INTEGER PRIMARY KEY,
@@ -284,24 +290,35 @@ export async function bootstrapAdmin(): Promise<void> {
   await transaction(async (client) => {
     await client.query(
       `INSERT INTO users(id,username,display_name,password_hash,password_state,temporary_password_expires_at,role)
-       VALUES($1,$2,$3,$4,'must_change',home_tunnel_add_seconds(home_tunnel_now(),$5),'admin')`,
+       VALUES(?,?,?,?,'must_change',home_tunnel_add_seconds(home_tunnel_now(),?),'admin')`,
       [userId, config.bootstrapAdminUsername, "系统管理员", passwordHash, config.temporaryPasswordSeconds],
     );
     await client.query(
       `INSERT INTO traffic_policies(id,scope_type,scope_id,bandwidth_limit_bps)
-       VALUES($1,'user',$2,NULL)`,
+       VALUES(?,'user',?,NULL)`,
       [policyId, userId],
     );
     await client.query(
       `INSERT INTO audit_events(actor_type,action,target_type,target_id,after_value,request_id)
-       VALUES('system','BootstrapAdminCreated','User',$1,$2,$3)`,
+       VALUES('system','BootstrapAdminCreated','User',?,?,?)`,
       [userId, JSON.stringify({ username: config.bootstrapAdminUsername, role: "admin" }), randomUUID()],
     );
   });
 }
 
+// Writes a consistent point-in-time snapshot of the whole database to
+// targetPath via VACUUM INTO. Runs on the shared mutex so it never interleaves
+// with an open transaction; VACUUM INTO itself must not run inside one.
+export async function backupDatabase(targetPath: string): Promise<void> {
+  assertNotInTransaction("backupDatabase()");
+  await mutex.run(async () => {
+    database.exec(`VACUUM INTO '${targetPath.replaceAll("'", "''")}'`);
+  });
+}
+
 export async function closeDatabase(): Promise<void> {
   await mutex.run(async () => {
+    statementCache.clear();
     database.exec("PRAGMA optimize");
     database.close();
   });
