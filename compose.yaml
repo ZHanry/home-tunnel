@@ -36,6 +36,9 @@ services:
       CADDY_HOST: caddy
       CADDY_PORT: "80"
       BACKUP_STATUS_FILE: /run/home-tunnel-status/backup.json
+      ALERT_WEBHOOK_URL: ${HOME_TUNNEL_ALERT_WEBHOOK_URL:-}
+      ALERT_TELEGRAM_BOT_TOKEN: ${HOME_TUNNEL_ALERT_TELEGRAM_BOT_TOKEN:-}
+      ALERT_TELEGRAM_CHAT_ID: ${HOME_TUNNEL_ALERT_TELEGRAM_CHAT_ID:-}
     secrets:
       - internal_service_key
       - frps_plugin_key

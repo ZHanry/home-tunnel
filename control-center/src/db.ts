@@ -109,6 +109,12 @@ database.function("home_tunnel_hour", (value) => {
   date.setUTCMinutes(0, 0, 0);
   return date.toISOString();
 });
+// UTC 自然月月初（ISO），供月度配额把 traffic_samples/traffic_hourly 的
+// bucket_start（同为 ISO 文本）做字典序比较，无需在每条 SQL 里传参。
+database.function("home_tunnel_month_start", () => {
+  const now = new Date();
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
+});
 database.exec(`
   PRAGMA foreign_keys = ON;
   PRAGMA journal_mode = WAL;

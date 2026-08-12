@@ -25,12 +25,14 @@ import {
   type ConnectionRow,
   updateConnection,
 } from "../domain.js";
+import { configuredAlertChannels, sendAlert } from "../notifications.js";
+import { triggerQuotaEnforcement } from "../quota.js";
 import {
   generateTemporaryPassword,
   hashPassword,
   normalizeUsername,
 } from "../security.js";
-import { nullableBandwidth, parseBody } from "../validation.js";
+import { nullableBandwidth, nullableMonthlyQuota, parseBody } from "../validation.js";
 import { config } from "../config.js";
 import { APP_VERSION } from "../version.js";
 
@@ -105,11 +107,19 @@ function adminGuard(request: Parameters<typeof requireAdmin>[0]) {
   return actor;
 }
 
+// month_to_date_bytes：samples + hourly 两表（不重叠）自 UTC 月初的合计，
+// 子查询命中 (user_id,bucket_start) 索引；列表接口 LIMIT 100 规模可接受，
+// 详情接口复用同一查询即为精确值。
 const userFields = `
   u.id,u.username,u.display_name,u.role,u.status,u.password_state,u.token_version,u.version,
-  u.created_at,u.updated_at,tp.bandwidth_limit_bps,tp.version AS policy_version,
+  u.created_at,u.updated_at,u.quota_suspended_at,
+  tp.bandwidth_limit_bps,tp.monthly_quota_bytes,tp.version AS policy_version,
   (SELECT count(*) FROM devices d WHERE d.user_id=u.id AND d.status='active') AS device_count,
-  (SELECT count(*) FROM connections c WHERE c.user_id=u.id AND c.deleted_at IS NULL) AS connection_count`;
+  (SELECT count(*) FROM connections c WHERE c.user_id=u.id AND c.deleted_at IS NULL) AS connection_count,
+  (COALESCE((SELECT sum(ts.upload_bytes+ts.download_bytes) FROM traffic_samples ts
+              WHERE ts.user_id=u.id AND ts.bucket_start>=home_tunnel_month_start()),0)
+   +COALESCE((SELECT sum(th.upload_bytes+th.download_bytes) FROM traffic_hourly th
+              WHERE th.user_id=u.id AND th.bucket_start>=home_tunnel_month_start()),0)) AS month_to_date_bytes`;
 
 type UserSummary = {
   id: string;
@@ -122,19 +132,37 @@ type UserSummary = {
   version: string;
   created_at: Date;
   updated_at: Date;
+  quota_suspended_at: Date | null;
   bandwidth_limit_bps: string | null;
+  monthly_quota_bytes: string | null;
   policy_version: string;
   device_count: number;
   connection_count: number;
+  month_to_date_bytes: string | number;
 };
 
+// 显式字段白名单：部分调用方把 `UPDATE users ... RETURNING *` 的整行并入
+// 该函数入参，逐字段构造可确保 password_hash、quota_warned_at 等内部列
+// 永远不会进入 API 响应。
 function publicUser(row: UserSummary) {
   return {
-    ...row,
+    id: row.id,
+    username: row.username,
+    display_name: row.display_name,
+    role: row.role,
+    status: row.status,
+    password_state: row.password_state,
     token_version: Number(row.token_version),
     version: Number(row.version),
-    policy_version: Number(row.policy_version),
+    created_at: row.created_at,
+    updated_at: row.updated_at,
     bandwidth_limit_bps: row.bandwidth_limit_bps == null ? null : Number(row.bandwidth_limit_bps),
+    monthly_quota_bytes: row.monthly_quota_bytes == null ? null : Number(row.monthly_quota_bytes),
+    month_to_date_bytes: Number(row.month_to_date_bytes ?? 0),
+    quota_suspended: row.quota_suspended_at != null,
+    policy_version: Number(row.policy_version),
+    device_count: Number(row.device_count ?? 0),
+    connection_count: Number(row.connection_count ?? 0),
   };
 }
 
@@ -637,8 +665,8 @@ router.get(
   asyncHandler(async (request, response) => {
     requireAdmin(request);
     requirePasswordNormal(request);
-    const policy = await one<{ scope_type: string; scope_id: string; bandwidth_limit_bps: string | null; burst_bytes: string | null; version: string; updated_at: Date }>(
-      `SELECT scope_type,scope_id,bandwidth_limit_bps,burst_bytes,version,updated_at
+    const policy = await one<{ scope_type: string; scope_id: string; bandwidth_limit_bps: string | null; monthly_quota_bytes: string | null; burst_bytes: string | null; version: string; updated_at: Date }>(
+      `SELECT scope_type,scope_id,bandwidth_limit_bps,monthly_quota_bytes,burst_bytes,version,updated_at
          FROM traffic_policies WHERE scope_type=? AND scope_id=?`,
       [request.params.scopeType, request.params.scopeId],
     );
@@ -646,6 +674,7 @@ router.get(
     response.json({
       ...policy,
       bandwidth_limit_bps: policy.bandwidth_limit_bps == null ? null : Number(policy.bandwidth_limit_bps),
+      monthly_quota_bytes: policy.monthly_quota_bytes == null ? null : Number(policy.monthly_quota_bytes),
       burst_bytes: policy.burst_bytes == null ? null : Number(policy.burst_bytes),
       version: Number(policy.version),
     });
@@ -659,13 +688,24 @@ router.patch(
     const scopeType = pathParam(request, "scopeType");
     const scopeId = pathParam(request, "scopeId");
     const body = parseBody(
-      z.object({ bandwidth_limit_bps: nullableBandwidth, expected_version: z.number().int().positive().optional() }),
+      z.object({
+        bandwidth_limit_bps: nullableBandwidth,
+        monthly_quota_bytes: nullableMonthlyQuota.optional(),
+        expected_version: z.number().int().positive().optional(),
+      }),
       request.body,
     );
+    // 月度配额是用户级概念：连接级策略不接受该字段，避免写入永不被读取的死数据。
+    const quotaProvided = Object.hasOwn(body, "monthly_quota_bytes");
+    if (quotaProvided && scopeType !== "user") {
+      throw new HttpError(400, "VALIDATION_ERROR", "月度配额仅适用于用户级策略", {
+        field_errors: { monthly_quota_bytes: "仅用户级策略支持配额" },
+      });
+    }
     const expected = parseExpectedVersion(request, body.expected_version);
     const result = await transaction(async (client) => {
-      const current = await client.query<{ scope_type: string; scope_id: string; bandwidth_limit_bps: string | null; version: string }>(
-        `SELECT scope_type,scope_id,bandwidth_limit_bps,version FROM traffic_policies
+      const current = await client.query<{ scope_type: string; scope_id: string; bandwidth_limit_bps: string | null; monthly_quota_bytes: string | null; version: string }>(
+        `SELECT scope_type,scope_id,bandwidth_limit_bps,monthly_quota_bytes,version FROM traffic_policies
           WHERE scope_type=? AND scope_id=?`,
         [scopeType, scopeId],
       );
@@ -674,10 +714,14 @@ router.patch(
       if (Number(policy.version) !== expected) {
         throw new HttpError(409, "VERSION_CONFLICT", "策略已被其他操作修改", { current_version: Number(policy.version) });
       }
+      // 未提供配额字段时保留原值；提供则采用新值（可为 null = 取消配额）。
+      const nextQuota = quotaProvided
+        ? body.monthly_quota_bytes ?? null
+        : policy.monthly_quota_bytes == null ? null : Number(policy.monthly_quota_bytes);
       const updated = await client.query<{ version: string; updated_at: Date }>(
-        `UPDATE traffic_policies SET bandwidth_limit_bps=?,version=version+1,updated_at=home_tunnel_now()
+        `UPDATE traffic_policies SET bandwidth_limit_bps=?,monthly_quota_bytes=?,version=version+1,updated_at=home_tunnel_now()
           WHERE scope_type=? AND scope_id=? AND version=? RETURNING version,updated_at`,
-        [body.bandwidth_limit_bps, scopeType, scopeId, expected],
+        [body.bandwidth_limit_bps, nextQuota, scopeType, scopeId, expected],
       );
       if (!updated.rows[0]) throw new HttpError(409, "VERSION_CONFLICT", "策略已被其他操作修改");
       if (scopeType === "user") {
@@ -716,17 +760,43 @@ router.patch(
       }
       await audit(client, request, "TrafficPolicyUpdated", "TrafficPolicy", scopeId, {
         bandwidth_limit_bps: policy.bandwidth_limit_bps == null ? null : Number(policy.bandwidth_limit_bps),
+        monthly_quota_bytes: policy.monthly_quota_bytes == null ? null : Number(policy.monthly_quota_bytes),
         version: Number(policy.version),
-      }, { bandwidth_limit_bps: body.bandwidth_limit_bps, version: Number(updated.rows[0].version) });
-      return updated.rows[0];
+      }, { bandwidth_limit_bps: body.bandwidth_limit_bps, monthly_quota_bytes: nextQuota, version: Number(updated.rows[0].version) });
+      return { ...updated.rows[0], monthly_quota_bytes: nextQuota };
     });
+    // 配额可能已从"超额"变为"未超额"（或反之）：立即触发一次检查，
+    // 不阻塞响应；失败只记日志，下一个定时 tick 兜底。
+    if (quotaProvided && scopeType === "user") triggerQuotaEnforcement();
     response.json({
       scope_type: scopeType,
       scope_id: scopeId,
       bandwidth_limit_bps: body.bandwidth_limit_bps,
+      monthly_quota_bytes: result.monthly_quota_bytes,
       version: Number(result.version),
       updated_at: result.updated_at,
     });
+  }),
+);
+
+router.post(
+  "/alerts/test",
+  asyncHandler(async (request, response) => {
+    const actor = adminGuard(request);
+    const channels = configuredAlertChannels();
+    if (!channels.webhook && !channels.telegram) {
+      throw new HttpError(409, "NO_ALERT_CHANNEL", "尚未配置任何告警通道");
+    }
+    // subject_id 带时间戳确保唯一，去重窗口不会吞掉管理员反复触发的测试。
+    const outcome = await sendAlert({
+      event_type: "alert.test",
+      severity: "info",
+      title: "Home Tunnel 告警测试",
+      message: `由管理员 ${actor.username} 手动触发的测试告警。`,
+      subject_id: `test:${Date.now()}`,
+      details: { requested_by: actor.username },
+    });
+    response.json({ configured: channels, delivered: outcome.delivered, results: outcome.results });
   }),
 );
 

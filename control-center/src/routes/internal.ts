@@ -5,6 +5,7 @@ import { config } from "../config.js";
 import { databaseEvents, one, query, transaction } from "../db.js";
 import { parseStoredAllowlist } from "../domain.js";
 import { asyncHandler, HttpError, httpRequestCounts } from "../http.js";
+import { alertDeliveryCounts } from "../notifications.js";
 import { getWebsocketClientCount } from "../realtime.js";
 import { constantTimeStringEqual, verifyLease } from "../security.js";
 import { parseBody } from "../validation.js";
@@ -30,11 +31,13 @@ router.get(
       response.status(404).end();
       return;
     }
+    // 被配额挂起的用户等价于不可用：与策略快照的 enabled 条件保持一致，
+    // 不再为其子域授权证书签发。
     const allowed = await one<{ ok: number }>(
       `SELECT 1 AS ok FROM connections c
          JOIN users u ON u.id=c.user_id JOIN devices d ON d.id=c.device_id
         WHERE lower(c.subdomain)=lower(?) AND c.deleted_at IS NULL AND c.enabled=true
-          AND u.status='active' AND d.status='active' LIMIT 1`,
+          AND u.status='active' AND u.quota_suspended_at IS NULL AND d.status='active' LIMIT 1`,
       [subdomain],
     );
     response.status(allowed?.ok === 1 ? 204 : 404).end();
@@ -97,6 +100,7 @@ router.get(
       enabled: boolean;
       connection_version: string;
       user_status: string;
+      user_quota_suspended_at: Date | null;
       device_status: string;
       device_lease_valid: boolean;
       device_lease_expires_at: Date | null;
@@ -112,7 +116,8 @@ router.get(
       user_policy_version: string;
     }>(
       `SELECT c.id AS connection_id,c.user_id,c.device_id,c.subdomain,c.enabled,
-              c.version AS connection_version,u.status AS user_status,d.status AS device_status,
+              c.version AS connection_version,u.status AS user_status,
+              u.quota_suspended_at AS user_quota_suspended_at,d.status AS device_status,
               (d.lease_expires_at IS NOT NULL AND d.lease_expires_at > home_tunnel_now()) AS device_lease_valid,
               d.lease_expires_at AS device_lease_expires_at,
               c.access_ip_allowlist,c.access_basic_user,c.access_basic_hash,c.access_policy_version,
@@ -135,8 +140,14 @@ router.get(
         user_id: row.user_id,
         device_id: row.device_id,
         subdomain: row.subdomain,
+        // 配额挂起是网关层软停用：enabled 多条件 AND 中加入
+        // quota_suspended_at IS NULL，连接与设备配置本身保持不变。
         enabled:
-          row.enabled && row.user_status === "active" && row.device_status === "active" && row.device_lease_valid,
+          row.enabled &&
+          row.user_status === "active" &&
+          row.user_quota_suspended_at == null &&
+          row.device_status === "active" &&
+          row.device_lease_valid,
         device_lease_expires_at: row.device_lease_expires_at?.toISOString() ?? null,
         connection_version: Number(row.connection_version),
         access_ip_allowlist: parseStoredAllowlist(row.access_ip_allowlist),
@@ -506,6 +517,8 @@ router.get(
       connections_disabled: number;
       connections_access_protected: number;
       active_sessions: number;
+      quota_suspended_users: number;
+      devices_offline: number;
     }>(
       `SELECT
         (SELECT count(*) FROM users) AS users_total,
@@ -514,9 +527,12 @@ router.get(
         (SELECT count(*) FROM connections WHERE deleted_at IS NULL AND enabled=false) AS connections_disabled,
         (SELECT count(*) FROM connections WHERE deleted_at IS NULL
            AND (access_ip_allowlist IS NOT NULL OR access_basic_user IS NOT NULL)) AS connections_access_protected,
-        (SELECT count(*) FROM sessions WHERE revoked_at IS NULL AND access_expires_at > home_tunnel_now()) AS active_sessions`,
+        (SELECT count(*) FROM sessions WHERE revoked_at IS NULL AND access_expires_at > home_tunnel_now()) AS active_sessions,
+        (SELECT count(*) FROM users WHERE quota_suspended_at IS NOT NULL) AS quota_suspended_users,
+        (SELECT count(*) FROM devices WHERE offline_alerted_at IS NOT NULL) AS devices_offline`,
     );
     const requests = httpRequestCounts();
+    const alerts = alertDeliveryCounts();
     const backupTimestampSeconds = Math.floor(backupLastSuccessAt() / 1000);
     const lines = [
       "# HELP home_tunnel_up Control center process is serving requests.",
@@ -553,6 +569,18 @@ router.get(
       "# HELP home_tunnel_backup_last_success_timestamp_seconds Unix time of the last successful database backup, 0 when none has completed.",
       "# TYPE home_tunnel_backup_last_success_timestamp_seconds gauge",
       `home_tunnel_backup_last_success_timestamp_seconds ${backupTimestampSeconds}`,
+      "# HELP home_tunnel_quota_suspended_users_total Users currently suspended for exceeding the monthly traffic quota.",
+      "# TYPE home_tunnel_quota_suspended_users_total gauge",
+      `home_tunnel_quota_suspended_users_total ${Number(totals?.quota_suspended_users ?? 0)}`,
+      "# HELP home_tunnel_devices_offline_total Devices currently flagged offline by the alert checker.",
+      "# TYPE home_tunnel_devices_offline_total gauge",
+      `home_tunnel_devices_offline_total ${Number(totals?.devices_offline ?? 0)}`,
+      "# HELP home_tunnel_alerts_sent_total Alert delivery attempts by channel and final result.",
+      "# TYPE home_tunnel_alerts_sent_total counter",
+      `home_tunnel_alerts_sent_total{channel="webhook",result="ok"} ${alerts.webhook.ok}`,
+      `home_tunnel_alerts_sent_total{channel="webhook",result="error"} ${alerts.webhook.error}`,
+      `home_tunnel_alerts_sent_total{channel="telegram",result="ok"} ${alerts.telegram.ok}`,
+      `home_tunnel_alerts_sent_total{channel="telegram",result="error"} ${alerts.telegram.error}`,
     ];
     response.setHeader("cache-control", "no-store");
     // response.end keeps the header exactly as set; response.send would

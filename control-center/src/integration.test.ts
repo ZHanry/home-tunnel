@@ -15,11 +15,13 @@ export async function runIntegrationSuite(): Promise<void> {
   process.env.COOKIE_SECURE = "false";
   process.env.ONLINE_LEASE_SECONDS = "86400";
 
-  const [{ createApplication }, database, maintenance] = await Promise.all([
+  const [{ createApplication }, database, maintenance, quota] = await Promise.all([
     import("./server.js"),
     import("./db.js"),
     import("./maintenance.js"),
+    import("./quota.js"),
   ]);
+  const noopAlert = async () => ({ delivered: false, deduplicated: false, results: [] });
   const app = await createApplication(true);
   const server = app.listen(0, "127.0.0.1");
   await once(server, "listening");
@@ -415,6 +417,10 @@ export async function runIntegrationSuite(): Promise<void> {
     assert.match(metricsText, /^home_tunnel_http_requests_total\{class="2xx"\} [1-9]\d*$/m);
     assert.match(metricsText, /^home_tunnel_http_requests_total\{class="5xx"\} \d+$/m);
     assert.match(metricsText, /^home_tunnel_backup_last_success_timestamp_seconds 0$/m);
+    assert.match(metricsText, /^home_tunnel_quota_suspended_users_total \d+$/m);
+    assert.match(metricsText, /^home_tunnel_devices_offline_total \d+$/m);
+    assert.match(metricsText, /^home_tunnel_alerts_sent_total\{channel="webhook",result="ok"\} \d+$/m);
+    assert.match(metricsText, /^home_tunnel_alerts_sent_total\{channel="telegram",result="error"\} \d+$/m);
 
     const bucketStart = new Date(Math.floor(Date.now() / 10_000) * 10_000).toISOString();
     const sampleBatch = await call("POST", "/internal/traffic/samples", {
@@ -432,6 +438,74 @@ export async function runIntegrationSuite(): Promise<void> {
       [connectionId, bucketStart],
     );
     assert.equal(Number(storedSample[0]?.upload_bytes), 100);
+
+    // 功能 2：月度配额端到端。此刻该用户当月已写入 150 字节（100+50）。
+    // 用基线-增量断言，避免依赖此处连接是否恰好处于 enabled 基线状态。
+    const preQuotaSnapshot = await call("GET", "/internal/policies/sync", undefined, undefined, {
+      "x-home-tunnel-key": process.env.INTERNAL_SERVICE_KEY!,
+    });
+    const enabledBaseline = preQuotaSnapshot.payload.connections.find(
+      (item: any) => item.connection_id === connectionId,
+    )?.enabled;
+    const quotaPolicy = await call("GET", `/api/v1/admin/traffic-policies/user/${userId}`, undefined, adminToken);
+    assert.equal(quotaPolicy.status, 200);
+    const quotaSetLow = await call(
+      "PATCH",
+      `/api/v1/admin/traffic-policies/user/${userId}`,
+      { bandwidth_limit_bps: quotaPolicy.payload.bandwidth_limit_bps, monthly_quota_bytes: 100 },
+      adminToken,
+      { "if-match": `"${quotaPolicy.payload.version}"` },
+    );
+    assert.equal(quotaSetLow.status, 200);
+    assert.equal(quotaSetLow.payload.monthly_quota_bytes, 100);
+    // 设置配额时 PATCH 已异步触发一次检查；这里再同步跑一次确保状态确定（幂等），
+    // 并断言最终状态而非某次调用的计数，避免与异步触发竞争。计数行为由 quota.test.ts 覆盖。
+    await quota.runQuotaEnforcement(noopAlert);
+    const suspendedSnapshot = await call("GET", "/internal/policies/sync", undefined, undefined, {
+      "x-home-tunnel-key": process.env.INTERNAL_SERVICE_KEY!,
+    });
+    assert.equal(
+      suspendedSnapshot.payload.connections.find((item: any) => item.connection_id === connectionId)?.enabled,
+      false,
+    );
+    const suspendedUser = await call("GET", `/api/v1/admin/users/${userId}`, undefined, adminToken);
+    assert.equal(suspendedUser.payload.quota_suspended, true);
+    assert.ok(Number(suspendedUser.payload.month_to_date_bytes) >= 150);
+    assert.equal(suspendedUser.payload.monthly_quota_bytes, 100);
+    // 取消配额（置 null）后，超额挂起应在下次检查中自动解除，连接回到基线状态。
+    const quotaAfterSuspend = await call("GET", `/api/v1/admin/traffic-policies/user/${userId}`, undefined, adminToken);
+    const quotaClear = await call(
+      "PATCH",
+      `/api/v1/admin/traffic-policies/user/${userId}`,
+      { bandwidth_limit_bps: quotaAfterSuspend.payload.bandwidth_limit_bps, monthly_quota_bytes: null },
+      adminToken,
+      { "if-match": `"${quotaAfterSuspend.payload.version}"` },
+    );
+    assert.equal(quotaClear.status, 200);
+    assert.equal(quotaClear.payload.monthly_quota_bytes, null);
+    await quota.runQuotaEnforcement(noopAlert);
+    const restoredUser = await call("GET", `/api/v1/admin/users/${userId}`, undefined, adminToken);
+    assert.equal(restoredUser.payload.quota_suspended, false);
+    const restoredSnapshot = await call("GET", "/internal/policies/sync", undefined, undefined, {
+      "x-home-tunnel-key": process.env.INTERNAL_SERVICE_KEY!,
+    });
+    assert.equal(
+      restoredSnapshot.payload.connections.find((item: any) => item.connection_id === connectionId)?.enabled,
+      enabledBaseline,
+    );
+    // 连接级策略不接受月度配额字段。
+    const quotaOnConnection = await call(
+      "PATCH",
+      `/api/v1/admin/traffic-policies/connection/${connectionId}`,
+      { bandwidth_limit_bps: null, monthly_quota_bytes: 1000 },
+      adminToken,
+      { "if-match": `"1"` },
+    );
+    assert.equal(quotaOnConnection.status, 400);
+    // 测试环境未配置任何告警通道：测试端点返回 409。
+    const alertTest = await call("POST", "/api/v1/admin/alerts/test", {}, adminToken);
+    assert.equal(alertTest.status, 409);
+    assert.equal(alertTest.payload.error_code, "NO_ALERT_CHANNEL");
 
     const oldBucket = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000);
     oldBucket.setUTCSeconds(0, 0);

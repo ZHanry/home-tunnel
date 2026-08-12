@@ -1,6 +1,7 @@
 import { setImmediate as yieldEventLoop } from "node:timers/promises";
 import { startDatabaseBackups } from "./backup.js";
 import { transaction } from "./db.js";
+import { startQuotaAndAlertChecks } from "./quota.js";
 
 const batchSize = 5_000;
 const maximumBatchesPerRun = 20;
@@ -219,12 +220,16 @@ export function startDataMaintenance(): { close: () => void } {
   // Scheduled database backups share the maintenance lifecycle; their errors
   // are contained inside the backup module and never reach the data tasks.
   const backups = startDatabaseBackups();
+  // 月度配额强制与设备离线告警检查器：独立定时器（约 60 秒首跑、每 5 分钟
+  // 一次），同样挂在维护生命周期上统一关闭。
+  const quotaChecks = startQuotaAndAlertChecks();
   return {
     close: () => {
       closed = true;
       clearTimeout(initialTimer);
       clearInterval(intervalTimer);
       backups.close();
+      quotaChecks.close();
     },
   };
 }

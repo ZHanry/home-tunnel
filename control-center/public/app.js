@@ -186,6 +186,7 @@ function statusBadge(status) {
     applying: "应用中",
     online: "在线",
     offline: "离线",
+    quota_suspended: "配额停用",
   }[normalized] ?? normalized;
   return `<span class="status-badge ${tone}">${escapeHtml(label)}</span>`;
 }
@@ -452,7 +453,7 @@ async function renderUsers(renderId = state.renderId) {
   if (renderId !== state.renderId) return;
   state.users = data.items;
   viewContent.innerHTML = `
-    <section class="panel table-panel">${state.users.length ? `<table class="data-table"><thead><tr><th>用户</th><th>角色</th><th>状态</th><th>设备 / 连接</th><th>账号上限</th><th><span class="visually-hidden">操作</span></th></tr></thead><tbody>${state.users.map((user) => `<tr><td data-label="用户"><span class="cell-primary">${escapeHtml(user.display_name)}</span><span class="cell-secondary mono">${escapeHtml(user.username)}</span></td><td data-label="角色">${user.role === "admin" ? "管理员" : "普通用户"}</td><td data-label="状态">${statusBadge(user.status)} ${user.password_state === "must_change" ? statusBadge("must_change") : ""}</td><td data-label="设备 / 连接" class="mono">${user.device_count} / ${user.connection_count}</td><td data-label="账号上限" class="mono">${formatBps(user.bandwidth_limit_bps)}</td><td class="actions-cell" data-label="操作"><div class="actions"><button class="button button-quiet button-small" data-action="user-policy" data-id="${user.id}">限速</button><button class="button button-quiet button-small" data-action="reset-password" data-id="${user.id}">重置密码</button><button class="button ${user.status === "active" ? "button-danger" : "button-secondary"} button-small" data-action="toggle-user" data-id="${user.id}" data-status="${user.status}">${user.status === "active" ? "禁用" : "恢复"}</button></div></td></tr>`).join("")}</tbody></table>` : emptyState("还没有用户", "创建首个普通用户并将一次性临时密码安全交付给本人。")}</section>`;
+    <section class="panel table-panel">${state.users.length ? `<table class="data-table"><thead><tr><th>用户</th><th>角色</th><th>状态</th><th>设备 / 连接</th><th>账号上限</th><th>本月流量</th><th><span class="visually-hidden">操作</span></th></tr></thead><tbody>${state.users.map((user) => `<tr><td data-label="用户"><span class="cell-primary">${escapeHtml(user.display_name)}</span><span class="cell-secondary mono">${escapeHtml(user.username)}</span></td><td data-label="角色">${user.role === "admin" ? "管理员" : "普通用户"}</td><td data-label="状态">${statusBadge(user.status)} ${user.password_state === "must_change" ? statusBadge("must_change") : ""} ${user.quota_suspended ? statusBadge("quota_suspended") : ""}</td><td data-label="设备 / 连接" class="mono">${user.device_count} / ${user.connection_count}</td><td data-label="账号上限" class="mono">${formatBps(user.bandwidth_limit_bps)}</td><td data-label="本月流量" class="mono">${formatBytes(user.month_to_date_bytes)}${user.monthly_quota_bytes ? ` / ${formatBytes(user.monthly_quota_bytes)}` : ""}</td><td class="actions-cell" data-label="操作"><div class="actions"><button class="button button-quiet button-small" data-action="user-policy" data-id="${user.id}">限速</button><button class="button button-quiet button-small" data-action="reset-password" data-id="${user.id}">重置密码</button><button class="button ${user.status === "active" ? "button-danger" : "button-secondary"} button-small" data-action="toggle-user" data-id="${user.id}" data-status="${user.status}">${user.status === "active" ? "禁用" : "恢复"}</button></div></td></tr>`).join("")}</tbody></table>` : emptyState("还没有用户", "创建首个普通用户并将一次性临时密码安全交付给本人。")}</section>`;
 }
 
 async function renderDevices(renderId = state.renderId) {
@@ -594,14 +595,15 @@ async function openUserPolicy(userId) {
   const user = state.users.find((item) => item.id === userId);
   if (!user) return;
   openModal({
-    title: `账号限速 · ${user.username}`,
-    eyebrow: "带宽策略",
-    body: `<div class="notice"><strong>动态共享带宽池</strong><span>该用户全部活跃连接共享此上限；上传和下载共同消耗。</span></div>${field("bandwidth_mbps", "账号带宽上限 (Mbps)", user.bandwidth_limit_bps == null ? "" : user.bandwidth_limit_bps / 1_000_000, { type: "number", required: false, min: 0.1, helper: "留空表示不限速" })}`,
+    title: `账号带宽与配额 · ${user.username}`,
+    eyebrow: "带宽与配额策略",
+    body: `<div class="notice"><strong>动态共享带宽池</strong><span>该用户全部活跃连接共享此上限；上传和下载共同消耗。</span></div>${field("bandwidth_mbps", "账号带宽上限 (Mbps)", user.bandwidth_limit_bps == null ? "" : user.bandwidth_limit_bps / 1_000_000, { type: "number", required: false, min: 0.1, helper: "留空表示不限速" })}<div class="notice"><strong>月度流量配额</strong><span>按自然月（UTC）统计上传+下载合计；达到配额后网关暂停该用户全部连接，次月自动恢复。本月已用 ${formatBytes(user.month_to_date_bytes)}${user.quota_suspended ? "（当前已因超额停用）" : ""}。</span></div>${field("monthly_quota_gib", "月度配额 (GiB)", user.monthly_quota_bytes == null ? "" : (user.monthly_quota_bytes / (1024 ** 3)).toFixed(2), { type: "number", required: false, min: 0.1, helper: "留空表示不限配额" })}`,
     onSubmit: async (form) => {
       const raw = String(form.get("bandwidth_mbps") ?? "").trim();
-      await api(`/api/v1/admin/traffic-policies/user/${user.id}`, { method: "PATCH", headers: { "if-match": `"${user.policy_version}"` }, body: JSON.stringify({ bandwidth_limit_bps: raw ? Math.round(Number(raw) * 1_000_000) : null }) });
+      const quotaRaw = String(form.get("monthly_quota_gib") ?? "").trim();
+      await api(`/api/v1/admin/traffic-policies/user/${user.id}`, { method: "PATCH", headers: { "if-match": `"${user.policy_version}"` }, body: JSON.stringify({ bandwidth_limit_bps: raw ? Math.round(Number(raw) * 1_000_000) : null, monthly_quota_bytes: quotaRaw ? Math.round(Number(quotaRaw) * (1024 ** 3)) : null }) });
       modal.close("saved");
-      toast("账号限速策略已更新");
+      toast("账号带宽与配额策略已更新");
       await renderUsers();
     },
   });

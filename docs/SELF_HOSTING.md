@@ -127,6 +127,12 @@ The control center also snapshots its own database. Shortly after startup and th
 
 The managed updater also detects deployments created by older releases with PostgreSQL and exits before changing containers or data. Export or migrate that database before switching profiles.
 
+### Traffic quotas and alerts
+
+Each user can be given a monthly traffic quota (upload + download, per UTC calendar month) from the admin console. When a user reaches the quota the control center suspends them at the gateway layer: their connections stop serving public traffic and on-demand certificates are no longer authorized, but the connection and device configuration are left untouched, so no tunnel is reconfigured or restarted. Usage resets at the start of each month and suspended users are restored automatically; lowering usage or raising the quota also restores them on the next check (which runs about once a minute). Clearing a user's quota removes the limit and lifts any active suspension.
+
+Optional alerts are delivered to an outbound webhook and/or Telegram. Set `HOME_TUNNEL_ALERT_WEBHOOK_URL`, `HOME_TUNNEL_ALERT_TELEGRAM_BOT_TOKEN` and `HOME_TUNNEL_ALERT_TELEGRAM_CHAT_ID` in `.env` (blank disables a channel; Telegram needs both the token and the chat id). Alerts fire on quota warning (80%), suspension and restoration, and on device offline (no heartbeat for five minutes) and recovery. Deliveries have a five-second timeout, retry once, are de-duplicated per subject within a ten-minute window, and never block or fail control-center operations — failures are only logged. Use the admin console's "test alert" action to verify channel configuration. Certificate-issuance failures happen inside Caddy and are not covered by these alerts.
+
 ## Current scope
 
 - Windows 10/11 x64 graphical client

@@ -107,6 +107,35 @@ function tunnelDomain(): string {
   return value;
 }
 
+// 告警 Webhook：可选；配置后必须是 HTTPS 端点，生产环境拒绝文档占位域名。
+function alertWebhookUrl(): string | null {
+  const value = process.env.ALERT_WEBHOOK_URL?.trim();
+  if (!value) return null;
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new Error("ALERT_WEBHOOK_URL is invalid");
+  }
+  if (url.protocol !== "https:") throw new Error("ALERT_WEBHOOK_URL must use https://");
+  if (nodeEnvironment === "production" && isDocumentationPlaceholder(url.hostname)) {
+    throw new Error("ALERT_WEBHOOK_URL must not use a documentation placeholder in production");
+  }
+  return value;
+}
+
+// Telegram 告警：token 走 secret 双通道（_FILE 优先于内联），与 chat_id 必须
+// 成对配置，只配一半直接启动失败，避免误以为告警已生效。
+function alertTelegram(): { botToken: string; chatId: string } | null {
+  const botToken = secret("ALERT_TELEGRAM_BOT_TOKEN", "ALERT_TELEGRAM_BOT_TOKEN_FILE", false);
+  const chatId = process.env.ALERT_TELEGRAM_CHAT_ID?.trim() ?? "";
+  if (!botToken && !chatId) return null;
+  if (!botToken || !chatId) {
+    throw new Error("ALERT_TELEGRAM_BOT_TOKEN(_FILE) and ALERT_TELEGRAM_CHAT_ID must be configured together");
+  }
+  return { botToken, chatId };
+}
+
 const sqlitePath = process.env.SQLITE_PATH?.trim() || "/data/home-tunnel.db";
 
 export const config = {
@@ -156,4 +185,8 @@ export const config = {
   caddyHost: process.env.CADDY_HOST ?? "caddy",
   caddyPort: integer("CADDY_PORT", 80),
   backupStatusFile: process.env.BACKUP_STATUS_FILE ?? "/run/home-tunnel-status/backup.json",
+  alerts: {
+    webhookUrl: alertWebhookUrl(),
+    telegram: alertTelegram(),
+  },
 };
