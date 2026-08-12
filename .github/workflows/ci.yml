@@ -173,7 +173,7 @@ jobs:
           gateway_version=$(node -p "require('./traffic-gateway/package.json').version")
           app_version=$(sed -n 's/^export const APP_VERSION = "\([^"]*\)";$/\1/p' control-center/src/version.ts)
           windows_project_version=$(sed -n 's/.*<Version>\([^<]*\)<\/Version>.*/\1/p' windows-client/HomeTunnel.Client.csproj)
-          windows_agent_version=$(sed -n 's/^\$agentVersion = "\([^"]*\)"$/\1/p' windows-client/build-agent.ps1)
+          windows_agent_version=$(tr -d '\r' < windows-client/build-agent.ps1 | sed -n 's/^\$agentVersion = "\([^"]*\)"$/\1/p')
           root_compose_versions=$(sed -n 's/.*{HOME_TUNNEL_VERSION:-\([^}]*\)}.*/\1/p' compose.yaml | sort -u)
           deploy_compose_versions=$(grep -oE 'home-tunnel/(control-center|traffic-gateway):[0-9][0-9.]*' deploy/compose.yaml | sed 's/.*://' | sort -u)
           echo "model=$model_version env=$env_version release=$release_version control_center=$control_center_version gateway=$gateway_version app=$app_version windows_project=$windows_project_version windows_agent=$windows_agent_version root_compose=$root_compose_versions deploy_compose=$deploy_compose_versions"
