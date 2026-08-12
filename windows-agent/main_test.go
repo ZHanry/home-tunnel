@@ -43,6 +43,31 @@ localIP = "127.0.0.1"
 localPort = 5088
 `
 
+const validManagedTCPConfig = `serverAddr = "203.0.113.10"
+serverPort = 7000
+user = "test-device"
+loginFailExit = true
+transport.tls.enable = true
+transport.tls.disableCustomTLSFirstByte = true
+transport.heartbeatInterval = 30
+transport.heartbeatTimeout = 90
+metadatas.home_tunnel_lease = "test-only-lease"
+log.to = "console"
+log.level = "info"
+
+[[proxies]]
+name = "ht_tcp_test_v1"
+type = "tcp"
+remotePort = 10001
+transport.useEncryption = true
+transport.useCompression = true
+healthCheck.type = "tcp"
+healthCheck.timeoutSeconds = 3
+healthCheck.intervalSeconds = 10
+localIP = "127.0.0.1"
+localPort = 22
+`
+
 func loadConfig(t *testing.T, content string) error {
 	t.Helper()
 	return loadConfigWithTrust(t, content, trustProfile{server: testServer, port: testPort, domain: testDomain})
@@ -85,6 +110,65 @@ func tomlQuote(value string) string {
 func TestValidManagedConfigAccepted(t *testing.T) {
 	if err := loadConfig(t, validManagedConfig); err != nil {
 		t.Fatalf("valid managed config rejected: %v", err)
+	}
+}
+
+func TestAuthorizedManagedTCPConfigAccepted(t *testing.T) {
+	trust := trustProfile{
+		server: testServer, port: testPort, domain: testDomain,
+		allowedTCPPorts: map[int]struct{}{10001: {}},
+	}
+	if err := loadConfigWithTrust(t, validManagedTCPConfig, trust); err != nil {
+		t.Fatalf("authorized TCP config rejected: %v", err)
+	}
+}
+
+func TestTCPRemotePortMustBeAuthorized(t *testing.T) {
+	trust := trustProfile{
+		server: testServer, port: testPort, domain: testDomain,
+		allowedTCPPorts: map[int]struct{}{10002: {}},
+	}
+	if err := loadConfigWithTrust(t, validManagedTCPConfig, trust); err == nil {
+		t.Fatal("untrusted TCP remote port was accepted")
+	}
+}
+
+func TestManagedAndAuthorizedCustomDomainsAccepted(t *testing.T) {
+	config := strings.Replace(
+		validManagedConfig,
+		`customDomains = ["agent-test.tunnel.example.com"]`,
+		`customDomains = ["agent-test.tunnel.example.com", "home.example.net"]`,
+		1,
+	)
+	trust := trustProfile{
+		server: testServer, port: testPort, domain: testDomain,
+		allowedCustomDomains: map[string]struct{}{"home.example.net": {}},
+	}
+	if err := loadConfigWithTrust(t, config, trust); err != nil {
+		t.Fatalf("authorized custom domain rejected: %v", err)
+	}
+}
+
+func TestCustomDomainRequiresManagedDomainAndAuthorization(t *testing.T) {
+	for name, domains := range map[string]string{
+		"untrusted":       `"agent-test.tunnel.example.com", "evil.example.net"`,
+		"missing managed": `"home.example.net"`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			config := strings.Replace(
+				validManagedConfig,
+				`"agent-test.tunnel.example.com"`,
+				domains,
+				1,
+			)
+			trust := trustProfile{
+				server: testServer, port: testPort, domain: testDomain,
+				allowedCustomDomains: map[string]struct{}{"home.example.net": {}},
+			}
+			if err := loadConfigWithTrust(t, config, trust); err == nil {
+				t.Fatalf("%s custom-domain config was accepted", name)
+			}
+		})
 	}
 }
 

@@ -14,6 +14,7 @@ function policy(id: string, subdomain: string, enabled = true) {
     user_id: "user-1",
     device_id: "device-1",
     subdomain,
+    custom_domains: [] as string[],
     enabled,
     device_lease_expires_at: new Date(Date.now() + 60_000).toISOString(),
     connection_version: 1,
@@ -50,6 +51,14 @@ test("host authorization accepts one managed label and rejects unsafe hosts", ()
   assert.equal(store.host("console.tunnel.example.com").error, "reserved");
   assert.equal(store.host("missing.tunnel.example.com").error, "not_found");
   assert.equal(store.host("service.tunnel.example.com,evil.example").error, "invalid");
+});
+
+test("verified custom domains resolve to the same policy and keep unknown hosts closed", () => {
+  const store = new PolicyStore();
+  store.apply(snapshot([{ ...policy("connection-1", "service"), custom_domains: ["home.example.net"] }]));
+  assert.equal(store.host("home.example.net").policy?.connection_id, "connection-1");
+  assert.equal(store.host("HOME.EXAMPLE.NET:443").policy?.connection_id, "connection-1");
+  assert.equal(store.host("unknown.example.net").error, "invalid");
 });
 
 test("policy disable, version change, and snapshot expiry close active streams", async () => {

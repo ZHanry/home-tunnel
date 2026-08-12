@@ -162,7 +162,10 @@ internal static class Program
             "11111111-1111-1111-1111-111111111111",
             true,
             3,
-            [new TunnelConnection { Id = "1111-2222", Subdomain = "app", LocalScheme = "http", LocalHost = "127.0.0.1", LocalPort = 8080, Enabled = true, Version = 3 }],
+            [
+                new TunnelConnection { Id = "1111-2222", Subdomain = "app", CustomDomains = ["home.example.net"], LocalScheme = "http", LocalHost = "127.0.0.1", LocalPort = 8080, Enabled = true, Version = 3 },
+                new TunnelConnection { Id = "tcp-3333", Subdomain = "ssh", ProxyType = "tcp", TcpRemotePort = 10001, LocalHost = "127.0.0.1", LocalPort = 22, Enabled = true, Version = 4 },
+            ],
             "hash",
             new LeaseInfo("signed-lease", DateTimeOffset.UtcNow.AddHours(1), 3),
             DateTimeOffset.UtcNow);
@@ -171,6 +174,8 @@ internal static class Program
         Assert(!withoutCa.Contains("trustedCaFile", StringComparison.Ordinal), "config without CA omits trustedCaFile");
         Assert(!withoutCa.Contains("serverName", StringComparison.Ordinal), "config without CA omits serverName");
         Assert(withoutCa.Contains($"serverAddr = \"{ProductConfiguration.FrpsHost}\"", StringComparison.Ordinal), "config keeps the discovered FRPS host");
+        Assert(withoutCa.Contains($"customDomains = [\"app.{ProductConfiguration.TunnelDomain}\", \"home.example.net\"]", StringComparison.Ordinal), "config renders the managed and verified custom domains");
+        Assert(withoutCa.Contains("type = \"tcp\"", StringComparison.Ordinal) && withoutCa.Contains("remotePort = 10001", StringComparison.Ordinal), "config renders an administrator-authorized TCP proxy");
 
         var caPath = @"C:\Users\test user\HomeTunnel\runtime\frps-ca.pem";
         var withCa = FrpcSupervisor.RenderConfig(state, sync, caPath);

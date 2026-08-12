@@ -33,6 +33,7 @@ type TestPolicy = {
   user_id: string;
   device_id: string;
   subdomain: string;
+  custom_domains: string[];
   enabled: boolean;
   device_lease_expires_at: string | null;
   connection_version: number;
@@ -54,6 +55,7 @@ function gatewayPolicy(id: string, subdomain: string, overrides: Partial<TestPol
     user_id: "user-e2e",
     device_id: "device-e2e",
     subdomain,
+    custom_domains: [],
     enabled: true,
     device_lease_expires_at: new Date(Date.now() + 3_600_000).toISOString(),
     connection_version: 1,

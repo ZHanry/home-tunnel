@@ -59,7 +59,7 @@ app.get("/api/v1/public/releases/latest", (_request, response) => response.json(
 app.post("/api/v1/auth/refresh", (_request, response) => response.json({ csrf_token: "local-ui-preview" }));
 app.get("/api/v1/auth/me", (_request, response) => response.json({ id: "preview-admin", username: "admin", display_name: "系统管理员", role: "admin" }));
 app.post("/api/v1/auth/logout", (_request, response) => response.sendStatus(204));
-app.get("/api/v1/admin/summary", (_request, response) => response.json({ users: 2, online_devices: 1, connections: 2, online_connections: 1, upload_24h: 348_127_232, download_24h: 1_492_611_072 }));
+app.get("/api/v1/admin/summary", (_request, response) => response.json({ users: 2, online_devices: 1, connections: 2, online_connections: 1, upload_24h: 348_127_232, download_24h: 1_492_611_072, tcp_tunnels: { enabled: true, port_start: 10000, port_end: 10099 } }));
 app.get("/api/v1/admin/system/health", (_request, response) => response.json({
   status: "healthy",
   components: [
@@ -75,7 +75,7 @@ app.get("/api/v1/admin/traffic/summary", (_request, response) => response.json({
 ] }));
 app.get("/api/v1/admin/users", (_request, response) => response.json({ items: users }));
 app.get("/api/v1/admin/devices", (_request, response) => response.json({ items: devices }));
-app.get("/api/v1/admin/connections", (_request, response) => response.json({ items: connections }));
+app.get("/api/v1/admin/connections", (_request, response) => response.json({ items: connections, tcp_tunnels: { enabled: true, port_start: 10000, port_end: 10099 } }));
 app.get("/api/v1/admin/audit-events", (request, response) => {
   const query = String(request.query.q ?? "").toLowerCase();
   const action = String(request.query.action ?? "");

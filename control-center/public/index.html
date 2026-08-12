@@ -7,8 +7,8 @@
     <meta name="theme-color" content="#f8fafc">
     <meta name="description" content="Home Tunnel 让家里的 Web 服务拥有安全、稳定的 HTTPS 访问地址。">
     <title>Home Tunnel — 随时安全访问家里的服务</title>
-    <script src="/theme.js?v=2.3.0-themes"></script>
-    <link rel="stylesheet" href="/v2.css?v=2.3.0-ui3">
+    <script src="/theme.js?v=2.3.0-locale"></script>
+    <link rel="stylesheet" href="/v2.css?v=2.3.0-ui5">
   </head>
   <body>
     <a id="skip-link" class="skip-link" href="#landing-content">跳到主要内容</a>
@@ -21,6 +21,7 @@
             <span>Home Tunnel</span>
           </a>
           <div class="marketing-nav-actions">
+            <button class="button button-quiet locale-toggle" type="button" data-locale-toggle aria-label="Switch to English" title="Switch to English">EN</button>
             <button class="icon-button theme-toggle" type="button" data-theme-toggle
                     aria-label="切换至深色主题" title="切换至深色主题" aria-pressed="false">
               <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2Z"/></svg>
@@ -103,7 +104,7 @@
           <div class="platform-heading">
             <p class="eyebrow">同一套安全边界</p>
             <h2 id="platform-title">按设备选择运行方式</h2>
-            <p>两种客户端都只接受控制中心签发的 HTTP/HTTPS 配置和短期租约，不提供通用 FRP 命令行。</p>
+            <p>两种客户端都只接受控制中心签发的 HTTP/HTTPS、自定义域名与管理员授权 TCP 配置和短期租约，不提供通用 FRP 命令行。</p>
           </div>
           <div class="platform-grid">
             <article class="platform-card platform-card-windows">
@@ -129,6 +130,7 @@
 
     <main id="auth-screen" class="auth-screen hidden" aria-labelledby="auth-title">
       <section class="auth-card">
+        <button class="button button-quiet locale-toggle auth-locale-toggle" type="button" data-locale-toggle aria-label="Switch to English" title="Switch to English">EN</button>
         <button class="icon-button theme-toggle auth-theme-toggle" type="button" data-theme-toggle
                 aria-label="切换至深色主题" title="切换至深色主题" aria-pressed="false">
           <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2Z"/></svg>
@@ -200,6 +202,7 @@
         <div class="sidebar-session"><span class="status-dot status-ok"></span><div><strong>安全会话</strong><small>权限已验证</small></div></div>
         <div class="sidebar-footer">
           <div class="user-chip"><span id="user-avatar">A</span><div><strong id="current-user">管理员</strong><small>admin</small></div></div>
+          <button class="button button-quiet locale-toggle" type="button" data-locale-toggle aria-label="Switch to English" title="Switch to English">EN</button>
           <button class="icon-button theme-toggle" type="button" data-theme-toggle
                   aria-label="切换至深色主题" title="切换至深色主题" aria-pressed="false">
             <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2Z"/></svg>
@@ -235,6 +238,6 @@
     </dialog>
 
     <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
-    <script src="/app.js?v=2.3.0-ui3" defer></script>
+    <script src="/app.js?v=2.3.0-ui5" defer></script>
   </body>
 </html>

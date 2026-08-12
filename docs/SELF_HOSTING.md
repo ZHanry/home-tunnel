@@ -141,4 +141,6 @@ Optional alerts are delivered to an outbound webhook and/or Telegram. Set `HOME_
 - One public tunnel domain per server deployment
 - Prebuilt and source-buildable `amd64` and `arm64` server containers
 
-Raw TCP/UDP forwarding, a macOS client and a single-binary server are not part of the current release.
+Raw UDP forwarding and a single-binary server are not part of the current release. TCP tunnels are an administrator-only advanced feature and remain disabled unless `deploy/compose.tcp.yaml` is explicitly added. Before enabling it, choose `HOME_TUNNEL_TCP_PORT_START`/`HOME_TUNNEL_TCP_PORT_END`, restrict the same range in the host firewall, and start with `docker compose -f compose.yaml -f deploy/compose.tcp.yaml up -d`.
+
+TCP traffic bypasses the HTTP gateway, so HTTP Basic Auth, IP allowlists, traffic accounting and bandwidth quotas do not apply to it. Disabling a TCP connection pushes a stop configuration to the managed client; for an immediate hard cutoff of a disconnected or hostile client, also block the assigned port in the host firewall or restart FRPS without the TCP override.

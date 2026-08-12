@@ -155,7 +155,7 @@ func Run(ctx context.Context, options RunOptions) error {
 		return fmt.Errorf("authenticate device: %w", err)
 	}
 	runtimeDirectory := filepath.Join(filepath.Dir(options.StatePath), "runtime")
-	supervisor, err := agent.New(options.AgentPath, runtimeDirectory, options.ExpectedAgentHash, profile, state.LeaseExpiresAt)
+	supervisor, err := agent.New(options.AgentPath, runtimeDirectory, options.ExpectedAgentHash, profile, state.LeaseExpiresAt, state.CachedConnections)
 	if err != nil {
 		return err
 	}

@@ -40,6 +40,8 @@ export const connectionInputSchema = z.object({
   local_host: z.string().trim().min(1).max(255),
   local_port: z.number().int().min(1).max(65_535),
   enabled: z.boolean().default(true),
+  proxy_type: z.enum(["http", "tcp"]).default("http"),
+  tcp_remote_port: z.number().int().min(1).max(65_535).nullable().optional(),
   bandwidth_limit_bps: z.number().int().positive().max(10_000_000_000).nullable().optional(),
   access: connectionAccessSchema.optional(),
 });
@@ -48,7 +50,7 @@ export const connectionInputSchema = z.object({
 // PATCH 解析都注入 enabled=true（把纯 ACL 编辑误判成 Agent 变更，还会隐式
 // re-enable 已停用的连接）。先覆盖掉 default 再 partial。
 export const connectionPatchSchema = connectionInputSchema
-  .extend({ enabled: z.boolean() })
+  .extend({ enabled: z.boolean(), proxy_type: z.enum(["http", "tcp"]) })
   .partial()
   .extend({ expected_version: z.number().int().positive().optional() });
 
@@ -64,6 +66,8 @@ export type ConnectionRow = {
   local_scheme: "http" | "https";
   local_host: string;
   local_port: number;
+  proxy_type?: "http" | "tcp";
+  tcp_remote_port?: string | number | null;
   enabled: boolean;
   version: string | number;
   deleted_at: Date | null;
@@ -80,6 +84,7 @@ export type ConnectionRow = {
   policy_version?: string | number;
   username?: string;
   device_name?: string;
+  custom_domains?: string[];
 };
 
 export function parseStoredAllowlist(value: string | null | undefined): string[] | null {
@@ -94,17 +99,24 @@ export function parseStoredAllowlist(value: string | null | undefined): string[]
   }
 }
 
-export function publicConnection(row: ConnectionRow) {
+export function publicConnection(row: ConnectionRow, customDomains: string[] = row.custom_domains ?? []) {
   return {
     id: row.id,
     user_id: row.user_id,
     device_id: row.device_id,
     name: row.name,
     subdomain: row.subdomain,
-    public_url: `https://${row.subdomain}.${config.tunnelDomain}`,
+    public_url: (row.proxy_type ?? "http") === "http" ? `https://${row.subdomain}.${config.tunnelDomain}` : null,
+    public_endpoint:
+      (row.proxy_type ?? "http") === "tcp" && row.tcp_remote_port != null
+        ? `${config.publicFrpsHost}:${Number(row.tcp_remote_port)}`
+        : null,
+    custom_domains: customDomains,
     local_scheme: row.local_scheme,
     local_host: row.local_host,
     local_port: Number(row.local_port),
+    proxy_type: row.proxy_type ?? "http",
+    tcp_remote_port: row.tcp_remote_port == null ? null : Number(row.tcp_remote_port),
     enabled: row.enabled,
     version: Number(row.version),
     state: row.state ?? (row.enabled ? "Pending" : "Disabled"),
@@ -179,6 +191,14 @@ export async function createConnection(
     throw new HttpError(404, "OWNERSHIP_MISMATCH", "设备不存在");
   }
   if (device.rows[0].status !== "active") throw new HttpError(423, "DEVICE_REVOKED", "设备已撤销");
+  validateProxySettings(input.proxy_type, input.tcp_remote_port ?? null, input.enabled);
+  if (input.proxy_type === "tcp") {
+    const occupied = await client.query<{ id: string }>(
+      "SELECT id FROM connections WHERE proxy_type='tcp' AND tcp_remote_port=? AND deleted_at IS NULL LIMIT 1",
+      [input.tcp_remote_port],
+    );
+    if (occupied.rows[0]) throw new HttpError(409, "TCP_PORT_CONFLICT", "该 TCP 公网端口已被占用");
+  }
   const connectionId = randomUUID();
   const access = input.access;
   const accessAllowlistJson = access?.ip_allowlist?.length ? JSON.stringify(access.ip_allowlist) : null;
@@ -186,9 +206,9 @@ export async function createConnection(
   const accessBasicHash = access?.basic_auth ? hashBasicPassword(access.basic_auth.password) : null;
   const connection = await client.query<ConnectionRow>(
     `INSERT INTO connections(
-       id,user_id,device_id,name,subdomain,local_scheme,local_host,local_port,enabled,
+       id,user_id,device_id,name,subdomain,local_scheme,local_host,local_port,enabled,proxy_type,tcp_remote_port,
        access_ip_allowlist,access_basic_user,access_basic_hash)
-     VALUES(?,?,?,?,?,?,?,?,?,?,?,?) RETURNING *`,
+     VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?) RETURNING *`,
     [
       connectionId,
       userId,
@@ -199,6 +219,8 @@ export async function createConnection(
       input.local_host,
       input.local_port,
       input.enabled,
+      input.proxy_type,
+      input.tcp_remote_port ?? null,
       accessAllowlistJson,
       accessBasicUser,
       accessBasicHash,
@@ -245,6 +267,8 @@ const agentPatchFields = [
   "local_port",
   "enabled",
   "bandwidth_limit_bps",
+  "proxy_type",
+  "tcp_remote_port",
 ] as const;
 
 export async function updateConnection(
@@ -283,9 +307,25 @@ export async function updateConnection(
         { field_errors: { subdomain: subdomainError } },
       );
     }
+    const proxyType = patch.proxy_type ?? current.proxy_type ?? "http";
+    const tcpRemotePort = Object.hasOwn(patch, "tcp_remote_port")
+      ? patch.tcp_remote_port ?? null
+      : proxyType === "http"
+        ? null
+        : current.tcp_remote_port ?? null;
+    const enabled = patch.enabled ?? current.enabled;
+    validateProxySettings(proxyType, tcpRemotePort == null ? null : Number(tcpRemotePort), enabled);
+    if (proxyType === "tcp") {
+      const occupied = await client.query<{ id: string }>(
+        `SELECT id FROM connections
+          WHERE proxy_type='tcp' AND tcp_remote_port=? AND id<>? AND deleted_at IS NULL LIMIT 1`,
+        [tcpRemotePort, connectionId],
+      );
+      if (occupied.rows[0]) throw new HttpError(409, "TCP_PORT_CONFLICT", "该 TCP 公网端口已被占用");
+    }
     const updated = await client.query<ConnectionRow>(
       `UPDATE connections SET
-         name=?,subdomain=?,local_scheme=?,local_host=?,local_port=?,enabled=?,
+         name=?,subdomain=?,local_scheme=?,local_host=?,local_port=?,enabled=?,proxy_type=?,tcp_remote_port=?,
          version=version+1,updated_at=home_tunnel_now()
         WHERE id=? AND version=? AND deleted_at IS NULL RETURNING *`,
       [
@@ -294,7 +334,9 @@ export async function updateConnection(
         patch.local_scheme ?? current.local_scheme,
         patch.local_host ?? current.local_host,
         patch.local_port ?? current.local_port,
-        patch.enabled ?? current.enabled,
+        enabled,
+        proxyType,
+        tcpRemotePort,
         connectionId,
         expectedVersion,
       ],
@@ -376,6 +418,23 @@ export async function updateConnection(
   return { before: current, after };
 }
 
+function validateProxySettings(proxyType: "http" | "tcp", remotePort: number | null, enabled = true): void {
+  if (proxyType === "http") {
+    if (remotePort !== null) throw new HttpError(400, "VALIDATION_ERROR", "HTTP 连接不能设置 TCP 远程端口");
+    return;
+  }
+  if (!config.tcpTunnels.enabled && enabled) {
+    throw new HttpError(403, "TCP_TUNNELS_DISABLED", "部署未启用 TCP 隧道高级特性");
+  }
+  if (!Number.isInteger(remotePort) || remotePort! < config.tcpTunnels.portStart || remotePort! > config.tcpTunnels.portEnd) {
+    throw new HttpError(
+      400,
+      "TCP_PORT_NOT_ALLOWED",
+      `TCP 远程端口必须位于 ${config.tcpTunnels.portStart}-${config.tcpTunnels.portEnd}`,
+    );
+  }
+}
+
 export async function deleteConnection(
   client: DatabaseClient,
   connectionId: string,
@@ -408,6 +467,7 @@ export async function deleteConnection(
     `UPDATE runtime_states SET desired_version=?,state='Disabled',updated_at=home_tunnel_now() WHERE connection_id=?`,
     [Number(deleted.rows[0].version), connectionId],
   );
+  await client.query("DELETE FROM custom_domains WHERE connection_id=?", [connectionId]);
   await bumpDeviceConfig(
     client,
     current.device_id,

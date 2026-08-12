@@ -34,25 +34,27 @@ const (
 )
 
 type Supervisor struct {
-	operationMu     sync.Mutex
-	mu              sync.Mutex
-	agentPath       string
-	runtimeDir      string
-	expectedHash    string
-	profile         model.Profile
-	trustedCaPath   string
-	tlsCaSha256     string
-	process         *processRecord
-	stopping        bool
-	applying        bool
-	lastKnownGood   string
-	leaseExpiry     time.Time
-	restartFailures int
-	nextRestart     time.Time
-	restartGaveUpAt time.Time
+	operationMu          sync.Mutex
+	mu                   sync.Mutex
+	agentPath            string
+	runtimeDir           string
+	expectedHash         string
+	profile              model.Profile
+	trustedCaPath        string
+	tlsCaSha256          string
+	allowedCustomDomains []string
+	allowedTCPPorts      []int
+	process              *processRecord
+	stopping             bool
+	applying             bool
+	lastKnownGood        string
+	leaseExpiry          time.Time
+	restartFailures      int
+	nextRestart          time.Time
+	restartGaveUpAt      time.Time
 }
 
-func New(agentPath, runtimeDir, expectedHash string, profile model.Profile, initialLeaseExpiry *time.Time) (*Supervisor, error) {
+func New(agentPath, runtimeDir, expectedHash string, profile model.Profile, initialLeaseExpiry *time.Time, connections ...[]model.Connection) (*Supervisor, error) {
 	if err := os.MkdirAll(runtimeDir, 0o700); err != nil {
 		return nil, fmt.Errorf("create runtime directory: %w", err)
 	}
@@ -68,6 +70,10 @@ func New(agentPath, runtimeDir, expectedHash string, profile model.Profile, init
 	}
 	if initialLeaseExpiry != nil {
 		supervisor.leaseExpiry = initialLeaseExpiry.UTC()
+	}
+	if len(connections) > 0 {
+		supervisor.allowedCustomDomains = collectCustomDomains(connections[0])
+		supervisor.allowedTCPPorts = collectTCPPorts(connections[0])
 	}
 	files, _ := filepath.Glob(filepath.Join(runtimeDir, "lkg-*.toml"))
 	sort.Slice(files, func(left, right int) bool {
@@ -110,11 +116,21 @@ func (supervisor *Supervisor) Apply(ctx context.Context, state *model.State, syn
 	if err != nil {
 		return err
 	}
+	keepPending := false
+	previousAllowedDomains := append([]string(nil), supervisor.allowedCustomDomains...)
+	previousAllowedTCPPorts := append([]int(nil), supervisor.allowedTCPPorts...)
+	supervisor.allowedCustomDomains = collectCustomDomains(syncResponse.Connections)
+	supervisor.allowedTCPPorts = collectTCPPorts(syncResponse.Connections)
+	defer func() {
+		if !keepPending {
+			supervisor.allowedCustomDomains = previousAllowedDomains
+			supervisor.allowedTCPPorts = previousAllowedTCPPorts
+		}
+	}()
 	pending, err := supervisor.writePending(configuration)
 	if err != nil {
 		return err
 	}
-	keepPending := false
 	defer func() {
 		if !keepPending {
 			secureDelete(pending)
@@ -351,7 +367,50 @@ func (supervisor *Supervisor) arguments(command, configPath string) []string {
 	if supervisor.tlsCaSha256 != "" {
 		arguments = append(arguments, "--tls-ca-sha256", supervisor.tlsCaSha256)
 	}
+	if len(supervisor.allowedCustomDomains) > 0 {
+		arguments = append(arguments, "--allow-custom-domains", strings.Join(supervisor.allowedCustomDomains, ","))
+	}
+	if len(supervisor.allowedTCPPorts) > 0 {
+		ports := make([]string, 0, len(supervisor.allowedTCPPorts))
+		for _, port := range supervisor.allowedTCPPorts {
+			ports = append(ports, strconv.Itoa(port))
+		}
+		arguments = append(arguments, "--allow-tcp-ports", strings.Join(ports, ","))
+	}
 	return arguments
+}
+
+func collectCustomDomains(connections []model.Connection) []string {
+	seen := make(map[string]struct{})
+	for _, connection := range connections {
+		for _, value := range connection.CustomDomains {
+			domain := strings.ToLower(strings.Trim(strings.TrimSpace(value), "."))
+			if domain != "" {
+				seen[domain] = struct{}{}
+			}
+		}
+	}
+	result := make([]string, 0, len(seen))
+	for domain := range seen {
+		result = append(result, domain)
+	}
+	sort.Strings(result)
+	return result
+}
+
+func collectTCPPorts(connections []model.Connection) []int {
+	seen := make(map[int]struct{})
+	for _, connection := range connections {
+		if connection.ProxyType == "tcp" && connection.TCPRemotePort > 0 {
+			seen[connection.TCPRemotePort] = struct{}{}
+		}
+	}
+	result := make([]int, 0, len(seen))
+	for port := range seen {
+		result = append(result, port)
+	}
+	sort.Ints(result)
+	return result
 }
 
 // syncTrustedCa 把服务端下发的 FRPS 证书 PEM 写入运行时目录并记录文件字节的
@@ -451,14 +510,29 @@ func RenderConfig(profile model.Profile, syncResponse model.SyncResponse, truste
 		}
 		builder.WriteString("\n[[proxies]]\n")
 		fmt.Fprintf(&builder, "name = %s\n", toml(proxyName))
-		builder.WriteString("type = \"http\"\n")
-		fmt.Fprintf(&builder, "customDomains = [%s]\n", toml(connection.Subdomain+"."+profile.TunnelDomain))
+		isTCP := connection.ProxyType == "tcp"
+		if isTCP {
+			if connection.TCPRemotePort < 1 {
+				return "", fmt.Errorf("TCP connection %q is missing remote port", connection.ID)
+			}
+			builder.WriteString("type = \"tcp\"\n")
+			fmt.Fprintf(&builder, "remotePort = %d\n", connection.TCPRemotePort)
+		} else {
+			builder.WriteString("type = \"http\"\n")
+			domains := []string{connection.Subdomain + "." + profile.TunnelDomain}
+			domains = append(domains, connection.CustomDomains...)
+			quotedDomains := make([]string, 0, len(domains))
+			for _, domain := range domains {
+				quotedDomains = append(quotedDomains, toml(domain))
+			}
+			fmt.Fprintf(&builder, "customDomains = [%s]\n", strings.Join(quotedDomains, ", "))
+		}
 		builder.WriteString("transport.useEncryption = true\n")
 		builder.WriteString("transport.useCompression = true\n")
 		builder.WriteString("healthCheck.type = \"tcp\"\n")
 		builder.WriteString("healthCheck.timeoutSeconds = 3\n")
 		builder.WriteString("healthCheck.intervalSeconds = 10\n")
-		if connection.LocalScheme == "https" {
+		if !isTCP && connection.LocalScheme == "https" {
 			builder.WriteString("[proxies.plugin]\n")
 			builder.WriteString("type = \"http2https\"\n")
 			fmt.Fprintf(&builder, "localAddr = %s\n", toml(fmt.Sprintf("%s:%d", connection.LocalHost, connection.LocalPort)))

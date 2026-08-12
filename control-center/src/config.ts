@@ -26,7 +26,16 @@ function nonNegativeInteger(name: string, fallback: number): number {
 function boolean(name: string, fallback: boolean): boolean {
   const raw = process.env[name];
   if (!raw) return fallback;
-  return raw === "1" || raw.toLowerCase() === "true";
+  const normalized = raw.trim().toLowerCase();
+  if (normalized === "1" || normalized === "true") return true;
+  if (normalized === "0" || normalized === "false") return false;
+  throw new Error(`${name} must be true, false, 1, or 0`);
+}
+
+function port(name: string, fallback: number): number {
+  const value = integer(name, fallback);
+  if (value > 65_535) throw new Error(`${name} must be between 1 and 65535`);
+  return value;
 }
 
 function secret(name: string, fileName: string, required = true): string {
@@ -137,6 +146,10 @@ function alertTelegram(): { botToken: string; chatId: string } | null {
 }
 
 const sqlitePath = process.env.SQLITE_PATH?.trim() || "/data/home-tunnel.db";
+const tcpTunnelEnabled = boolean("TCP_TUNNEL_ENABLED", false);
+const tcpPortStart = port("TCP_PORT_START", 10_000);
+const tcpPortEnd = port("TCP_PORT_END", 10_099);
+if (tcpPortStart > tcpPortEnd) throw new Error("TCP_PORT_START must not exceed TCP_PORT_END");
 
 export const config = {
   nodeEnv: nodeEnvironment,
@@ -182,6 +195,11 @@ export const config = {
   gatewayHealthUrl: process.env.GATEWAY_HEALTH_URL ?? "http://home-tunnel-traffic-gateway:8080/healthz",
   frpsHost: process.env.FRPS_HOST ?? "home-tunnel-frps",
   frpsPort: integer("FRPS_PORT", 7000),
+  tcpTunnels: {
+    enabled: tcpTunnelEnabled,
+    portStart: tcpPortStart,
+    portEnd: tcpPortEnd,
+  },
   caddyHost: process.env.CADDY_HOST ?? "caddy",
   caddyPort: integer("CADDY_PORT", 80),
   backupStatusFile: process.env.BACKUP_STATUS_FILE ?? "/run/home-tunnel-status/backup.json",

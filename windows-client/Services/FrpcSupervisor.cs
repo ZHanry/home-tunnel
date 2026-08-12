@@ -19,7 +19,13 @@ public sealed record AgentIntegritySnapshot(
     string ExpectedSha256,
     string? ActualSha256,
     string? ExpectedSignerThumbprint);
-internal sealed record AgentTrustProfile(string Server, int Port, string Domain, string? TlsCaSha256 = null);
+internal sealed record AgentTrustProfile(
+    string Server,
+    int Port,
+    string Domain,
+    IReadOnlyList<string> AllowedCustomDomains,
+    IReadOnlyList<int> AllowedTcpPorts,
+    string? TlsCaSha256 = null);
 
 public sealed partial class FrpcSupervisor : IDisposable
 {
@@ -27,7 +33,7 @@ public sealed partial class FrpcSupervisor : IDisposable
     public const string FrpVersion = "0.62.1";
     public const string BinaryFileName = "HomeTunnel.Agent.exe";
     internal const string FrpsCaFileName = "frps-ca.pem";
-    private const string DevelopmentSha256 = "79fe1aca57639e3592a16135695d4ba1b5c0a77872104f4c6f4e609188555024";
+    private const string DevelopmentSha256 = "0e20f534e51b8918f56bfc1f85f008476c1009c227c339449baf46215c2fde13";
     public static string ExpectedSha256 { get; } = ReadAssemblyMetadata("HomeTunnelAgentSha256") ?? DevelopmentSha256;
     public static string? ExpectedSignerThumbprint { get; } = NormalizeOptional(ReadAssemblyMetadata("HomeTunnelAgentSignerThumbprint"));
 
@@ -114,7 +120,23 @@ public sealed partial class FrpcSupervisor : IDisposable
             var pending = Path.Combine(_store.RuntimeDirectory, $"pending-{Guid.NewGuid():N}.toml");
             await File.WriteAllTextAsync(pending, RenderConfig(state, sync, caPath), new UTF8Encoding(false), cancellationToken);
             Report("Applying", $"正在应用配置 v{sync.TargetConfigVersion}", lease.ExpiresAt, state.AppliedConfigVersion);
-            var trustProfile = new AgentTrustProfile(state.FrpsHost, state.FrpsPort, state.TunnelDomain, caSha256);
+            var allowedCustomDomains = sync.Connections
+                .SelectMany(connection => connection.CustomDomains)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Order(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+            var trustProfile = new AgentTrustProfile(
+                state.FrpsHost,
+                state.FrpsPort,
+                state.TunnelDomain,
+                allowedCustomDomains,
+                sync.Connections
+                    .Where(connection => connection.ProxyType == "tcp" && connection.TcpRemotePort.HasValue)
+                    .Select(connection => connection.TcpRemotePort!.Value)
+                    .Distinct()
+                    .Order()
+                    .ToArray(),
+                caSha256);
 
             var verification = await RunAndCaptureAsync(binary, "verify", pending, trustProfile, TimeSpan.FromSeconds(12), cancellationToken);
             if (verification.ExitCode != 0)
@@ -405,14 +427,25 @@ public sealed partial class FrpcSupervisor : IDisposable
             builder.AppendLine();
             builder.AppendLine("[[proxies]]");
             builder.AppendLine($"name = {Toml(ProxyNameFor(connection))}");
-            builder.AppendLine("type = \"http\"");
-            builder.AppendLine($"customDomains = [{Toml(connection.Subdomain + "." + state.TunnelDomain)}]");
+            if (connection.ProxyType == "tcp")
+            {
+                builder.AppendLine("type = \"tcp\"");
+                builder.AppendLine($"remotePort = {connection.TcpRemotePort ?? throw new InvalidOperationException("TCP 连接缺少远程端口")}");
+            }
+            else
+            {
+                builder.AppendLine("type = \"http\"");
+                var domains = new[] { connection.Subdomain + "." + state.TunnelDomain }
+                    .Concat(connection.CustomDomains)
+                    .Select(Toml);
+                builder.AppendLine($"customDomains = [{string.Join(", ", domains)}]");
+            }
             builder.AppendLine("transport.useEncryption = true");
             builder.AppendLine("transport.useCompression = true");
             builder.AppendLine("healthCheck.type = \"tcp\"");
             builder.AppendLine("healthCheck.timeoutSeconds = 3");
             builder.AppendLine("healthCheck.intervalSeconds = 10");
-            if (connection.LocalScheme == "https")
+            if (connection.ProxyType != "tcp" && connection.LocalScheme == "https")
             {
                 builder.AppendLine("[proxies.plugin]");
                 builder.AppendLine("type = \"http2https\"");
@@ -442,6 +475,16 @@ public sealed partial class FrpcSupervisor : IDisposable
         start.ArgumentList.Add(trustProfile.Port.ToString(System.Globalization.CultureInfo.InvariantCulture));
         start.ArgumentList.Add("--domain");
         start.ArgumentList.Add(trustProfile.Domain);
+        if (trustProfile.AllowedCustomDomains.Count > 0)
+        {
+            start.ArgumentList.Add("--allow-custom-domains");
+            start.ArgumentList.Add(string.Join(",", trustProfile.AllowedCustomDomains));
+        }
+        if (trustProfile.AllowedTcpPorts.Count > 0)
+        {
+            start.ArgumentList.Add("--allow-tcp-ports");
+            start.ArgumentList.Add(string.Join(",", trustProfile.AllowedTcpPorts));
+        }
         if (trustProfile.TlsCaSha256 is not null)
         {
             start.ArgumentList.Add("--tls-ca-sha256");

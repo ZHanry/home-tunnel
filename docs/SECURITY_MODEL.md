@@ -17,7 +17,8 @@ The managed Agent is built from pinned FRP 0.62.1 source and rejects generic FRP
 
 - the FRPS host and port returned by the user-selected HTTPS control center;
 - a signed Home Tunnel lease and a single metadata field;
-- HTTP proxies only, with a hostname under the selected server's tunnel suffix;
+- HTTP proxies with exactly one hostname under the selected server's tunnel suffix plus only server-verified custom domains;
+- TCP proxies only when the control center has assigned the exact remote port and passed it through the separate `--allow-tcp-ports` trust argument; UDP and all other proxy types remain forbidden;
 - direct TCP transport with required TLS and heartbeat values;
 - no visitors, virtual networking, external includes, local web UI or arbitrary plugins;
 - bounded local targets and connection count.

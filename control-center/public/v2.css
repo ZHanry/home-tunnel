@@ -856,6 +856,8 @@ html, body, .landing-screen, .auth-screen, .app-shell { background: var(--page);
 
 .theme-toggle { flex: 0 0 auto; border-color: var(--border); background: var(--surface); color: var(--muted); }
 .theme-toggle:hover { color: var(--primary); background: var(--primary-soft); }
+.locale-toggle { min-width: 42px; padding-inline: 10px; font-weight: 700; }
+.auth-locale-toggle { position: absolute; top: 16px; right: 64px; }
 .theme-icon { width: 19px; height: 19px; }
 .theme-icon-sun { display: none; }
 :root[data-theme="dark"] .theme-icon-moon { display: none; }

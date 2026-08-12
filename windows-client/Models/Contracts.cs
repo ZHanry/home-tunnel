@@ -31,7 +31,10 @@ public sealed class TunnelConnection
     [JsonPropertyName("device_id")] public string DeviceId { get; set; } = "";
     [JsonPropertyName("name")] public string Name { get; set; } = "";
     [JsonPropertyName("subdomain")] public string Subdomain { get; set; } = "";
+    [JsonPropertyName("proxy_type")] public string ProxyType { get; set; } = "http";
+    [JsonPropertyName("tcp_remote_port")] public int? TcpRemotePort { get; set; }
     [JsonPropertyName("public_url")] public string PublicUrl { get; set; } = "";
+    [JsonPropertyName("custom_domains")] public List<string> CustomDomains { get; set; } = [];
     [JsonPropertyName("local_scheme")] public string LocalScheme { get; set; } = "http";
     [JsonPropertyName("local_host")] public string LocalHost { get; set; } = "127.0.0.1";
     [JsonPropertyName("local_port")] public int LocalPort { get; set; }

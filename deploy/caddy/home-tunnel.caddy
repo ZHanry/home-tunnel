@@ -13,4 +13,11 @@ console.tunnel.example.com {
     }
     reverse_proxy home-tunnel-traffic-gateway:8080
 }
+
+https:// {
+    tls {
+        on_demand
+    }
+    reverse_proxy home-tunnel-traffic-gateway:8080
+}
 # END HOME TUNNEL v1.2

@@ -73,8 +73,10 @@ test("public landing page and GitHub-hosted EXE redirects stay available without
     assert.match(landing.body.toString("utf8"), /Windows 图形客户端/);
     assert.match(landing.body.toString("utf8"), /Linux 无界面服务/);
     assert.match(landing.body.toString("utf8"), /systemctl status home-tunnel-client/);
-    assert.match(landing.body.toString("utf8"), /app\.js\?v=2\.3\.0-ui3/);
-    assert.match(landing.body.toString("utf8"), /v2\.css\?v=2\.3\.0-ui3/);
+    assert.match(landing.body.toString("utf8"), /app\.js\?v=2\.3\.0-ui5/);
+    assert.match(landing.body.toString("utf8"), /v2\.css\?v=2\.3\.0-ui5/);
+    assert.match(landing.body.toString("utf8"), /theme\.js\?v=2\.3\.0-locale/);
+    assert.match(landing.body.toString("utf8"), /data-locale-toggle/);
     assert.doesNotMatch(landing.body.toString("utf8"), /实时同步正常|系统健康|受管请求路径/);
     assert.match(landing.body.toString("utf8"), /id="page-actions"/);
     assert.match(
@@ -91,12 +93,22 @@ test("public landing page and GitHub-hosted EXE redirects stay available without
     assert.equal(publicConfigValue.frps_port, 7000);
     assert.equal(publicConfigValue.frps_tls_certificate_pem, frpsCertificatePem);
 
-    const stylesheet = await request(origin + "/v2.css?v=2.3.0-ui3");
+    const stylesheet = await request(origin + "/v2.css?v=2.3.0-ui5");
     assert.equal(stylesheet.status, 200);
     assert.equal(stylesheet.headers["cache-control"], "public, max-age=31536000, immutable");
 
-    const applicationScript = await request(origin + "/app.js?v=2.3.0-ui3");
+    const themeScript = await request(origin + "/theme.js?v=2.3.0-locale");
+    assert.equal(themeScript.status, 200);
+    assert.match(themeScript.body.toString("utf8"), /ht_locale/);
+
+    const applicationScript = await request(origin + "/app.js?v=2.3.0-ui5");
     assert.equal(applicationScript.status, 200);
+    assert.match(applicationScript.body.toString("utf8"), /const zhToEn =/);
+    assert.match(applicationScript.body.toString("utf8"), /Switch to English/);
+    assert.match(applicationScript.body.toString("utf8"), /function updateDocumentMetadata\(\)/);
+    assert.match(applicationScript.body.toString("utf8"), /Home Tunnel — Secure access to services at home/);
+    assert.match(applicationScript.body.toString("utf8"), /record\.type === "characterData"/);
+    assert.match(applicationScript.body.toString("utf8"), /toLocaleString\(localeTag\(\)/);
     assert.equal(applicationScript.headers["cache-control"], "public, max-age=31536000, immutable");
     assert.match(applicationScript.body.toString("utf8"), /data-action="delete-device"/);
     assert.match(applicationScript.body.toString("utf8"), /凭据、会话、租约、连接和流量明细将被删除/);

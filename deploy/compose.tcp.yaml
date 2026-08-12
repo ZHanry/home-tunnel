@@ -1,0 +1,19 @@
+# TCP 隧道默认关闭。管理员确认端口范围和主机防火墙后，显式叠加本文件：
+# Portable root profile:
+# docker compose -f compose.yaml -f deploy/compose.tcp.yaml up -d
+# ARM64 deploy profile (from deploy/):
+# docker compose -f compose.yaml -f compose.tcp.yaml up -d
+services:
+  control-center:
+    environment:
+      TCP_TUNNEL_ENABLED: "true"
+      TCP_PORT_START: "${HOME_TUNNEL_TCP_PORT_START:-10000}"
+      TCP_PORT_END: "${HOME_TUNNEL_TCP_PORT_END:-10099}"
+
+  frps:
+    environment:
+      TCP_TUNNEL_ENABLED: "true"
+      TCP_PORT_START: "${HOME_TUNNEL_TCP_PORT_START:-10000}"
+      TCP_PORT_END: "${HOME_TUNNEL_TCP_PORT_END:-10099}"
+    ports:
+      - "${HOME_TUNNEL_TCP_BIND_ADDRESS:-0.0.0.0}:${HOME_TUNNEL_TCP_PORT_START:-10000}-${HOME_TUNNEL_TCP_PORT_END:-10099}:${HOME_TUNNEL_TCP_PORT_START:-10000}-${HOME_TUNNEL_TCP_PORT_END:-10099}/tcp"

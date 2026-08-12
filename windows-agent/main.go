@@ -18,6 +18,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 	"syscall"
 
@@ -46,9 +47,11 @@ var (
 )
 
 type trustProfile struct {
-	server string
-	port   int
-	domain string
+	server               string
+	port                 int
+	domain               string
+	allowedCustomDomains map[string]struct{}
+	allowedTCPPorts      map[int]struct{}
 	// tlsCaSha256 是客户端写入 frps-ca.pem 后计算的文件字节 SHA-256（小写
 	// 十六进制）。为空表示服务端未下发 FRPS 证书，保持历史行为。
 	tlsCaSha256 string
@@ -72,12 +75,14 @@ func execute(args []string) error {
 	command := args[0]
 	flags := flag.NewFlagSet(command, flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
-	var configPath, server, domain, tlsCaSha256 string
+	var configPath, server, domain, tlsCaSha256, allowedCustomDomains, allowedTCPPorts string
 	var port int
 	flags.StringVar(&configPath, "config", "", "managed configuration path")
 	flags.StringVar(&server, "server", "", "user-selected FRPS host")
 	flags.IntVar(&port, "port", 0, "user-selected FRPS port")
 	flags.StringVar(&domain, "domain", "", "user-selected tunnel domain")
+	flags.StringVar(&allowedCustomDomains, "allow-custom-domains", "", "comma-separated server-authorized custom domains")
+	flags.StringVar(&allowedTCPPorts, "allow-tcp-ports", "", "comma-separated server-authorized TCP remote ports")
 	flags.StringVar(&tlsCaSha256, "tls-ca-sha256", "", "expected SHA-256 of the managed FRPS CA file")
 	if err := flags.Parse(args[1:]); err != nil || flags.NArg() != 0 {
 		return errors.New("受管启动参数无效")
@@ -86,11 +91,21 @@ func execute(args []string) error {
 	if tlsCaSha256 != "" && !sha256HexPattern.MatchString(tlsCaSha256) {
 		return errors.New("受管 CA 哈希参数无效")
 	}
+	allowed, err := parseAllowedCustomDomains(allowedCustomDomains)
+	if err != nil {
+		return err
+	}
+	tcpPorts, err := parseAllowedTCPPorts(allowedTCPPorts)
+	if err != nil {
+		return err
+	}
 	trust := trustProfile{
-		server:      strings.TrimSpace(server),
-		port:        port,
-		domain:      strings.ToLower(strings.Trim(strings.TrimSpace(domain), ".")),
-		tlsCaSha256: tlsCaSha256,
+		server:               strings.TrimSpace(server),
+		port:                 port,
+		domain:               strings.ToLower(strings.Trim(strings.TrimSpace(domain), ".")),
+		allowedCustomDomains: allowed,
+		allowedTCPPorts:      tcpPorts,
+		tlsCaSha256:          tlsCaSha256,
 	}
 	if err := validateTrustProfile(trust); err != nil {
 		return err
@@ -196,6 +211,50 @@ func validTunnelDomain(value string) bool {
 	return true
 }
 
+func parseAllowedCustomDomains(value string) (map[string]struct{}, error) {
+	allowed := make(map[string]struct{})
+	if strings.TrimSpace(value) == "" {
+		return allowed, nil
+	}
+	parts := strings.Split(value, ",")
+	if len(parts) > 100 {
+		return nil, errors.New("自定义域名允许集超过上限")
+	}
+	for _, part := range parts {
+		domain := strings.ToLower(strings.Trim(strings.TrimSpace(part), "."))
+		if !validTunnelDomain(domain) {
+			return nil, errors.New("自定义域名允许集无效")
+		}
+		if _, exists := allowed[domain]; exists {
+			return nil, errors.New("自定义域名允许集包含重复项")
+		}
+		allowed[domain] = struct{}{}
+	}
+	return allowed, nil
+}
+
+func parseAllowedTCPPorts(value string) (map[int]struct{}, error) {
+	allowed := make(map[int]struct{})
+	if strings.TrimSpace(value) == "" {
+		return allowed, nil
+	}
+	parts := strings.Split(value, ",")
+	if len(parts) > 1000 {
+		return nil, errors.New("TCP 端口允许集超过上限")
+	}
+	for _, part := range parts {
+		port, err := strconv.Atoi(strings.TrimSpace(part))
+		if err != nil || port < 1 || port > 65535 {
+			return nil, errors.New("TCP 端口允许集无效")
+		}
+		if _, exists := allowed[port]; exists {
+			return nil, errors.New("TCP 端口允许集包含重复项")
+		}
+		allowed[port] = struct{}{}
+	}
+	return allowed, nil
+}
+
 // validateManagedSurface 以白名单方式校验受管配置：先对少数合法可变字段做格式
 // 校验并拷贝进按受管模板构造的期望配置，其余字段全部交给 FRP 的 Complete()
 // 填充默认值，最后整体 DeepEqual。任何模板未声明的字段（包括 FRP 升级引入的
@@ -271,7 +330,7 @@ func validateManagedSurface(common *v1.ClientCommonConfig, all v1.ClientConfig, 
 		return errors.New("连接数量超过上限")
 	}
 	for _, proxy := range proxies {
-		if err := validateManagedProxy(proxy, common.User, trust.domain); err != nil {
+		if err := validateManagedProxy(proxy, common.User, trust); err != nil {
 			return err
 		}
 	}
@@ -357,14 +416,40 @@ func validateTrustedCaFile(path, expectedSha256 string) error {
 // customDomains 里唯一的受管域名，以及本地后端：localIP+localPort（HTTP 直连）
 // 或 http2https 插件的 localAddr+hostHeaderRewrite（HTTPS 后端）。校验可变项
 // 格式后拷贝进期望配置，Complete 填充默认值，其余字段偏离模板即拒绝。
-func validateManagedProxy(proxy v1.ProxyConfigurer, user, tunnelDomain string) error {
-	httpProxy, ok := proxy.(*v1.HTTPProxyConfig)
-	if !ok {
-		return errors.New("只允许 HTTP 类型连接")
+func validateManagedProxy(proxy v1.ProxyConfigurer, user string, trust trustProfile) error {
+	switch typed := proxy.(type) {
+	case *v1.HTTPProxyConfig:
+		return validateManagedHTTPProxy(typed, user, trust)
+	case *v1.TCPProxyConfig:
+		return validateManagedTCPProxy(typed, user, trust)
+	default:
+		return errors.New("只允许 HTTP 或管理员授权的 TCP 类型连接")
 	}
+}
+
+func validateManagedHTTPProxy(httpProxy *v1.HTTPProxyConfig, user string, trust trustProfile) error {
 	base := httpProxy.GetBaseConfig()
-	if len(httpProxy.CustomDomains) != 1 || !isManagedDomain(httpProxy.CustomDomains[0], tunnelDomain) {
-		return errors.New("公网域名不属于 Home Tunnel")
+	if len(httpProxy.CustomDomains) < 1 || len(httpProxy.CustomDomains) > 101 {
+		return errors.New("公网域名数量无效")
+	}
+	managedCount := 0
+	seenDomains := make(map[string]struct{}, len(httpProxy.CustomDomains))
+	for _, value := range httpProxy.CustomDomains {
+		domain := strings.ToLower(strings.Trim(strings.TrimSpace(value), "."))
+		if _, exists := seenDomains[domain]; exists {
+			return errors.New("公网域名包含重复项")
+		}
+		seenDomains[domain] = struct{}{}
+		if isManagedDomain(domain, trust.domain) {
+			managedCount++
+			continue
+		}
+		if _, allowed := trust.allowedCustomDomains[domain]; !allowed {
+			return errors.New("自定义域名不在控制中心允许集内")
+		}
+	}
+	if managedCount != 1 {
+		return errors.New("配置必须包含且只能包含一个 Home Tunnel 受管域名")
 	}
 	// subdomain 与 customDomains 并存时可绕过受管域名约束，保留明确错误。
 	if httpProxy.SubDomain != "" {
@@ -380,7 +465,7 @@ func validateManagedProxy(proxy v1.ProxyConfigurer, user, tunnelDomain string) e
 				IntervalSeconds: 10,
 			},
 		},
-		DomainConfig: v1.DomainConfig{CustomDomains: []string{httpProxy.CustomDomains[0]}},
+		DomainConfig: v1.DomainConfig{CustomDomains: append([]string(nil), httpProxy.CustomDomains...)},
 	}
 	if base.Plugin.ClientPluginOptions == nil {
 		if base.LocalPort < 1 || base.LocalPort > 65535 || !validLocalHost(base.LocalIP) {
@@ -415,6 +500,41 @@ func validateManagedProxy(proxy v1.ProxyConfigurer, user, tunnelDomain string) e
 	expected.Name = base.Name
 	if !reflect.DeepEqual(httpProxy, &expected) {
 		return templateMismatchError(fmt.Sprintf("连接 %q ", base.Name), *httpProxy, expected)
+	}
+	return nil
+}
+
+func validateManagedTCPProxy(tcpProxy *v1.TCPProxyConfig, user string, trust trustProfile) error {
+	base := tcpProxy.GetBaseConfig()
+	if _, allowed := trust.allowedTCPPorts[tcpProxy.RemotePort]; !allowed {
+		return errors.New("TCP 远程端口不在控制中心允许集内")
+	}
+	if base.LocalPort < 1 || base.LocalPort > 65535 || !validLocalHost(base.LocalIP) {
+		return errors.New("本地 TCP 目标无效")
+	}
+	if base.Plugin.ClientPluginOptions != nil {
+		return errors.New("TCP 连接不允许客户端插件")
+	}
+	expected := v1.TCPProxyConfig{
+		ProxyBaseConfig: v1.ProxyBaseConfig{
+			Type: "tcp",
+			ProxyBackend: v1.ProxyBackend{
+				LocalIP:   base.LocalIP,
+				LocalPort: base.LocalPort,
+			},
+			Transport: v1.ProxyTransport{UseEncryption: true, UseCompression: true},
+			HealthCheck: v1.HealthCheckConfig{
+				Type:            "tcp",
+				TimeoutSeconds:  3,
+				IntervalSeconds: 10,
+			},
+		},
+		RemotePort: tcpProxy.RemotePort,
+	}
+	expected.Complete(user)
+	expected.Name = base.Name
+	if !reflect.DeepEqual(tcpProxy, &expected) {
+		return templateMismatchError(fmt.Sprintf("TCP 连接 %q ", base.Name), *tcpProxy, expected)
 	}
 	return nil
 }

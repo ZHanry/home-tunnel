@@ -5,7 +5,7 @@
   <p><a href="https://github.com/ZHanry/home-tunnel/actions/workflows/ci.yml"><img src="https://github.com/ZHanry/home-tunnel/actions/workflows/ci.yml/badge.svg" alt="CI"></a></p>
 </div>
 
-Home Tunnel 把 FRP、自动 HTTPS、访问策略、管理后台、Windows 图形客户端和 Linux 无界面服务组合成一套完整工具。它适合安全发布 NAS、Home Assistant、开发预览等私网 HTTP/HTTPS 服务，同时保留可审计、可限速、可立即停止的集中控制。
+Home Tunnel 把 FRP、自动 HTTPS、访问策略、管理后台、Windows 图形客户端和 Linux 无界面服务组合成一套完整工具。它适合安全发布 NAS、Home Assistant、开发预览等私网 HTTP/HTTPS 服务，也支持经管理员显式开启、固定端口分配的高级 TCP 隧道，同时保留可审计、可限速、可立即停止的集中控制。
 
 > 当前版本为 `2.3.0`。服务端默认提供 `amd64`/`arm64` 预构建镜像，也保留源码构建方式；客户端包括 Windows 10/11 x64 图形版和 Linux `amd64`/`arm64` systemd 服务版。客户端不内置任何运营者域名或 IP，首次注册时由用户填写自己的控制中心 HTTPS 地址。
 
@@ -77,7 +77,7 @@ Windows/Linux 客户端 ─REST（Windows 另有 WebSocket）→ 控制中心
   -AppId "{{11111111-2222-3333-4444-555555555555}}"
 ```
 
-Agent 会核对生成配置中的 FRPS 地址、端口和隧道后缀是否与客户端从所选控制中心取得的配置一致，同时继续拒绝通用 FRP 命令、TCP/UDP 转发、访客配置和任意插件。
+Agent 会核对生成配置中的 FRPS 地址、端口、隧道后缀、自定义域名允许集与 TCP 远程端口允许集是否与客户端从所选控制中心取得的配置一致，同时继续拒绝通用 FRP 命令、UDP 转发、访客配置和任意插件。TCP 默认关闭，只有管理员显式启用并分配端口后才会被 Agent 接受。
 
 ## Linux 无界面客户端
 

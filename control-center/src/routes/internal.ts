@@ -22,24 +22,26 @@ router.get(
       return;
     }
     const suffix = `.${config.tunnelDomain}`;
-    if (!domain.endsWith(suffix)) {
-      response.status(404).end();
-      return;
-    }
-    const subdomain = domain.slice(0, -suffix.length);
-    if (!/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(subdomain)) {
-      response.status(404).end();
-      return;
-    }
     // 被配额挂起的用户等价于不可用：与策略快照的 enabled 条件保持一致，
     // 不再为其子域授权证书签发。
-    const allowed = await one<{ ok: number }>(
-      `SELECT 1 AS ok FROM connections c
-         JOIN users u ON u.id=c.user_id JOIN devices d ON d.id=c.device_id
-        WHERE lower(c.subdomain)=lower(?) AND c.deleted_at IS NULL AND c.enabled=true
-          AND u.status='active' AND u.quota_suspended_at IS NULL AND d.status='active' LIMIT 1`,
-      [subdomain],
-    );
+    const subdomain = domain.endsWith(suffix) ? domain.slice(0, -suffix.length) : "";
+    const isManaged = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(subdomain);
+    const allowed = isManaged
+      ? await one<{ ok: number }>(
+          `SELECT 1 AS ok FROM connections c
+             JOIN users u ON u.id=c.user_id JOIN devices d ON d.id=c.device_id
+            WHERE lower(c.subdomain)=lower(?) AND c.proxy_type='http' AND c.deleted_at IS NULL AND c.enabled=true
+              AND u.status='active' AND u.quota_suspended_at IS NULL AND d.status='active' LIMIT 1`,
+          [subdomain],
+        )
+      : await one<{ ok: number }>(
+          `SELECT 1 AS ok FROM custom_domains cd JOIN connections c ON c.id=cd.connection_id
+             JOIN users u ON u.id=c.user_id JOIN devices d ON d.id=c.device_id
+            WHERE lower(cd.domain)=lower(?) AND cd.status='verified'
+              AND c.proxy_type='http' AND c.deleted_at IS NULL AND c.enabled=true AND u.status='active'
+              AND u.quota_suspended_at IS NULL AND d.status='active' LIMIT 1`,
+          [domain],
+        );
     response.status(allowed?.ok === 1 ? 204 : 404).end();
   }),
 );
@@ -108,6 +110,7 @@ router.get(
       access_basic_user: string | null;
       access_basic_hash: string | null;
       access_policy_version: string;
+      custom_domains: string;
       connection_limit_bps: string | null;
       connection_burst_bytes: string | null;
       connection_policy_version: string;
@@ -116,11 +119,13 @@ router.get(
       user_policy_version: string;
     }>(
       `SELECT c.id AS connection_id,c.user_id,c.device_id,c.subdomain,c.enabled,
-              c.version AS connection_version,u.status AS user_status,
+               c.version AS connection_version,u.status AS user_status,
               u.quota_suspended_at AS user_quota_suspended_at,d.status AS device_status,
               (d.lease_expires_at IS NOT NULL AND d.lease_expires_at > home_tunnel_now()) AS device_lease_valid,
               d.lease_expires_at AS device_lease_expires_at,
-              c.access_ip_allowlist,c.access_basic_user,c.access_basic_hash,c.access_policy_version,
+               c.access_ip_allowlist,c.access_basic_user,c.access_basic_hash,c.access_policy_version,
+               (SELECT json_group_array(cd.domain) FROM custom_domains cd
+                 WHERE cd.connection_id=c.id AND cd.status='verified') AS custom_domains,
               cp.bandwidth_limit_bps AS connection_limit_bps,cp.burst_bytes AS connection_burst_bytes,
               cp.version AS connection_policy_version,
               up.bandwidth_limit_bps AS user_limit_bps,up.burst_bytes AS user_burst_bytes,
@@ -128,7 +133,7 @@ router.get(
          FROM connections c JOIN users u ON u.id=c.user_id JOIN devices d ON d.id=c.device_id
          LEFT JOIN traffic_policies cp ON cp.scope_type='connection' AND cp.scope_id=c.id
          LEFT JOIN traffic_policies up ON up.scope_type='user' AND up.scope_id=u.id
-        WHERE c.deleted_at IS NULL`,
+        WHERE c.deleted_at IS NULL AND c.proxy_type='http'`,
     );
     response.json({
       revision: revisionNumber,
@@ -140,6 +145,14 @@ router.get(
         user_id: row.user_id,
         device_id: row.device_id,
         subdomain: row.subdomain,
+        custom_domains: (() => {
+          try {
+            const value = JSON.parse(row.custom_domains) as unknown;
+            return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+          } catch {
+            return [];
+          }
+        })(),
         // 配额挂起是网关层软停用：enabled 多条件 AND 中加入
         // quota_suspended_at IS NULL，连接与设备配置本身保持不变。
         enabled:
@@ -404,7 +417,7 @@ router.post(
       const parsed = parseManagedProxyName(proxyName, deviceId);
       const activeSubject = await activePluginSubject(user);
       const proxyType = text(content.proxy_type ?? content.proxyType).toLowerCase();
-      if (!parsed || !activeSubject || proxyType !== "http") {
+      if (!parsed || !activeSubject || (proxyType !== "http" && proxyType !== "tcp")) {
         pluginReject(response, "PROXY_NOT_ALLOWED");
         return;
       }
@@ -414,11 +427,16 @@ router.post(
         device_id: string;
         version: string;
         subdomain: string;
+        custom_domains: string;
+        proxy_type: string;
+        tcp_remote_port: string | null;
         enabled: boolean;
         user_status: string;
         device_status: string;
       }>(
-        `SELECT c.id,c.user_id,c.device_id,c.version,c.subdomain,c.enabled,
+        `SELECT c.id,c.user_id,c.device_id,c.version,c.subdomain,c.enabled,c.proxy_type,c.tcp_remote_port,
+                (SELECT json_group_array(cd.domain) FROM custom_domains cd
+                  WHERE cd.connection_id=c.id AND cd.status='verified') AS custom_domains,
                 u.status AS user_status,d.status AS device_status
            FROM connections c JOIN users u ON u.id=c.user_id JOIN devices d ON d.id=c.device_id
           WHERE c.id=? AND c.deleted_at IS NULL`,
@@ -428,8 +446,32 @@ router.post(
       const customDomains = Array.isArray(content.custom_domains ?? content.customDomains)
         ? (content.custom_domains ?? content.customDomains) as unknown[]
         : [];
-      const customDomainAllowed = customDomains.length === 0 ||
-        (customDomains.length === 1 && text(customDomains[0]).toLowerCase() === `${connection?.subdomain}.${config.tunnelDomain}`);
+      let allowedDomains: string[] = [];
+      try {
+        const parsedDomains = JSON.parse(connection?.custom_domains ?? "[]") as unknown;
+        allowedDomains = Array.isArray(parsedDomains)
+          ? parsedDomains.filter((item): item is string => typeof item === "string").map((item) => item.toLowerCase())
+          : [];
+      } catch {
+        allowedDomains = [];
+      }
+      const requestedDomains = customDomains.map((item) => text(item).toLowerCase());
+      const managedDomain = `${connection?.subdomain}.${config.tunnelDomain}`.toLowerCase();
+      const customDomainAllowed = requestedDomains.length === allowedDomains.length + 1 &&
+        requestedDomains.includes(managedDomain) &&
+        requestedDomains.every((domain) => domain === managedDomain || allowedDomains.includes(domain)) &&
+        new Set(requestedDomains).size === requestedDomains.length;
+      const remotePort = Number(content.remote_port ?? content.remotePort ?? 0);
+      const tcpAllowed = proxyType === "tcp" &&
+        config.tcpTunnels.enabled &&
+        connection?.proxy_type === "tcp" &&
+        Number.isInteger(remotePort) &&
+        remotePort >= config.tcpTunnels.portStart &&
+        remotePort <= config.tcpTunnels.portEnd &&
+        remotePort === Number(connection.tcp_remote_port) &&
+        customDomains.length === 0 &&
+        requestedSubdomain === "";
+      const httpAllowed = proxyType === "http" && connection?.proxy_type === "http" && customDomainAllowed;
       if (
         !connection ||
         connection.user_id !== activeSubject.lease.user_id ||
@@ -439,7 +481,7 @@ router.post(
         connection.user_status !== "active" ||
         connection.device_status !== "active" ||
         (requestedSubdomain && requestedSubdomain !== connection.subdomain) ||
-        !customDomainAllowed
+        !(httpAllowed || tcpAllowed)
       ) {
         pluginReject(response, connection && Number(connection.version) !== parsed.version ? "VERSION_STALE" : "PROXY_NOT_ALLOWED");
         return;

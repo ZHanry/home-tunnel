@@ -40,21 +40,24 @@ type DeviceRegistration struct {
 }
 
 type Connection struct {
-	ID               string `json:"id"`
-	DeviceID         string `json:"device_id"`
-	Name             string `json:"name"`
-	Subdomain        string `json:"subdomain"`
-	PublicURL        string `json:"public_url"`
-	LocalScheme      string `json:"local_scheme"`
-	LocalHost        string `json:"local_host"`
-	LocalPort        int    `json:"local_port"`
-	Enabled          bool   `json:"enabled"`
-	Version          int64  `json:"version"`
-	State            string `json:"state"`
-	AppliedVersion   int64  `json:"applied_version"`
-	LastErrorCode    string `json:"last_error_code,omitempty"`
-	LastErrorSummary string `json:"-"`
-	ProxyName        string `json:"proxy_name,omitempty"`
+	ID               string   `json:"id"`
+	DeviceID         string   `json:"device_id"`
+	Name             string   `json:"name"`
+	Subdomain        string   `json:"subdomain"`
+	ProxyType        string   `json:"proxy_type"`
+	TCPRemotePort    int      `json:"tcp_remote_port"`
+	PublicURL        string   `json:"public_url"`
+	CustomDomains    []string `json:"custom_domains"`
+	LocalScheme      string   `json:"local_scheme"`
+	LocalHost        string   `json:"local_host"`
+	LocalPort        int      `json:"local_port"`
+	Enabled          bool     `json:"enabled"`
+	Version          int64    `json:"version"`
+	State            string   `json:"state"`
+	AppliedVersion   int64    `json:"applied_version"`
+	LastErrorCode    string   `json:"last_error_code,omitempty"`
+	LastErrorSummary string   `json:"-"`
+	ProxyName        string   `json:"proxy_name,omitempty"`
 }
 
 type Lease struct {

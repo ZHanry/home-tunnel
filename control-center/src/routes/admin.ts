@@ -35,6 +35,14 @@ import {
 import { nullableBandwidth, nullableMonthlyQuota, parseBody } from "../validation.js";
 import { config } from "../config.js";
 import { APP_VERSION } from "../version.js";
+import {
+  applyVerifiedCustomDomain,
+  createCustomDomain,
+  deleteCustomDomain,
+  publicCustomDomain,
+  verifyCustomDomainDns,
+  type CustomDomainRow,
+} from "../custom-domains.js";
 
 const router = Router();
 
@@ -193,6 +201,11 @@ router.get(
       ...summary,
       upload_24h: Number(summary?.upload_24h ?? 0),
       download_24h: Number(summary?.download_24h ?? 0),
+      tcp_tunnels: {
+        enabled: config.tcpTunnels.enabled,
+        port_start: config.tcpTunnels.portStart,
+        port_end: config.tcpTunnels.portEnd,
+      },
       at: new Date().toISOString(),
     });
   }),
@@ -541,6 +554,7 @@ const deleteDeviceHandler = asyncHandler(async (request, response) => {
     await client.query("DELETE FROM traffic_hourly WHERE device_id=?", [deviceId]);
     await client.query("DELETE FROM traffic_samples WHERE device_id=?", [deviceId]);
     for (const connectionId of connectionIds) {
+      await client.query("DELETE FROM custom_domains WHERE connection_id=?", [connectionId]);
       await client.query("DELETE FROM runtime_states WHERE connection_id=?", [connectionId]);
       await client.query(
         "DELETE FROM traffic_policies WHERE scope_type='connection' AND scope_id=?",
@@ -575,6 +589,19 @@ const connectionSelect = `
     LEFT JOIN runtime_states rs ON rs.connection_id=c.id
     LEFT JOIN traffic_policies tp ON tp.scope_type='connection' AND tp.scope_id=c.id`;
 
+async function customDomainsByConnection(connectionIds: string[]): Promise<Map<string, string[]>> {
+  if (!connectionIds.length) return new Map();
+  const rows = await query<{ connection_id: string; domain: string }>(
+    `SELECT connection_id,domain FROM custom_domains
+      WHERE status='verified' AND connection_id IN (${connectionIds.map(() => "?").join(",")})
+      ORDER BY domain`,
+    connectionIds,
+  );
+  const result = new Map<string, string[]>();
+  for (const row of rows) result.set(row.connection_id, [...(result.get(row.connection_id) ?? []), row.domain]);
+  return result;
+}
+
 router.get(
   "/connections",
   asyncHandler(async (request, response) => {
@@ -589,7 +616,15 @@ router.get(
        ORDER BY c.updated_at DESC LIMIT 250`,
       [userId, userId, search, search, search, search],
     );
-    response.json({ items: rows.map((row) => publicConnection(row)) });
+    const domains = await customDomainsByConnection(rows.map((row) => row.id));
+    response.json({
+      items: rows.map((row) => publicConnection(row, domains.get(row.id) ?? [])),
+      tcp_tunnels: {
+        enabled: config.tcpTunnels.enabled,
+        port_start: config.tcpTunnels.portStart,
+        port_end: config.tcpTunnels.portEnd,
+      },
+    });
   }),
 );
 
@@ -623,7 +658,8 @@ router.get(
       request.params.connectionId,
     ]);
     if (!row) throw new HttpError(404, "NOT_FOUND", "连接不存在");
-    response.json(publicConnection(row));
+    const domains = await customDomainsByConnection([row.id]);
+    response.json(publicConnection(row, domains.get(row.id) ?? []));
   }),
 );
 
@@ -655,6 +691,79 @@ router.delete(
     await transaction(async (client) => {
       const deleted = await deleteConnection(client, connectionId, expected);
       await audit(client, request, "ConnectionDeleted", "Connection", connectionId, publicConnection(deleted), { deleted: true });
+    });
+    response.status(204).end();
+  }),
+);
+
+router.get(
+  "/connections/:connectionId/custom-domains",
+  asyncHandler(async (request, response) => {
+    requireAdmin(request);
+    requirePasswordNormal(request);
+    const connectionId = pathParam(request, "connectionId");
+    const rows = await query<CustomDomainRow>(
+      `SELECT cd.*,c.subdomain FROM custom_domains cd JOIN connections c ON c.id=cd.connection_id
+        WHERE cd.connection_id=? AND c.deleted_at IS NULL ORDER BY cd.created_at`,
+      [connectionId],
+    );
+    if (!rows.length && !(await one("SELECT id FROM connections WHERE id=? AND deleted_at IS NULL", [connectionId]))) {
+      throw new HttpError(404, "NOT_FOUND", "连接不存在");
+    }
+    response.json({ items: rows.map(publicCustomDomain) });
+  }),
+);
+
+router.post(
+  "/connections/:connectionId/custom-domains",
+  asyncHandler(async (request, response) => {
+    adminGuard(request);
+    const connectionId = pathParam(request, "connectionId");
+    const body = parseBody(z.object({ domain: z.string().trim().min(4).max(253) }), request.body);
+    const created = await transaction(async (client) => {
+      const domain = await createCustomDomain(client, connectionId, body.domain);
+      await audit(client, request, "CustomDomainCreated", "CustomDomain", domain.id, null, {
+        connection_id: connectionId,
+        domain: domain.domain,
+        status: domain.status,
+      });
+      return domain;
+    });
+    response.status(201).json(publicCustomDomain(created));
+  }),
+);
+
+router.post(
+  "/custom-domains/:domainId/verify",
+  asyncHandler(async (request, response) => {
+    adminGuard(request);
+    const domainId = pathParam(request, "domainId");
+    const checked = await verifyCustomDomainDns(domainId);
+    const verified = await transaction(async (client) => {
+      const domain = await applyVerifiedCustomDomain(client, domainId, checked.domain, checked.verification_token);
+      await audit(client, request, "CustomDomainVerified", "CustomDomain", domain.id, null, {
+        connection_id: domain.connection_id,
+        domain: domain.domain,
+        status: domain.status,
+      });
+      return domain;
+    });
+    response.json(publicCustomDomain(verified));
+  }),
+);
+
+router.delete(
+  "/custom-domains/:domainId",
+  asyncHandler(async (request, response) => {
+    adminGuard(request);
+    const domainId = pathParam(request, "domainId");
+    await transaction(async (client) => {
+      const domain = await deleteCustomDomain(client, domainId);
+      await audit(client, request, "CustomDomainDeleted", "CustomDomain", domain.id, {
+        connection_id: domain.connection_id,
+        domain: domain.domain,
+        status: domain.status,
+      }, { deleted: true });
     });
     response.status(204).end();
   }),

@@ -19,3 +19,12 @@
     }
     reverse_proxy traffic-gateway:8080
 }
+
+# 自定义域名无法由静态通配符覆盖；控制中心的 ask 端点只对已验证、当前可用
+# 的域名授权证书，流量仍交给同一网关复用门禁、限速与配额。
+https:// {
+    tls {
+        on_demand
+    }
+    reverse_proxy traffic-gateway:8080
+}

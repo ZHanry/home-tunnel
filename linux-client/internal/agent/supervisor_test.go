@@ -21,8 +21,9 @@ func TestRenderConfigMatchesManagedSurface(t *testing.T) {
 	}, model.SyncResponse{
 		DeviceID: "device-id", Lease: &model.Lease{Value: "signed-lease", ExpiresAt: expires},
 		Connections: []model.Connection{
-			{ID: "11111111-2222-3333-4444-555555555555", Subdomain: "http-app", LocalScheme: "http", LocalHost: "127.0.0.1", LocalPort: 8080, Enabled: true, Version: 2},
+			{ID: "11111111-2222-3333-4444-555555555555", Subdomain: "http-app", CustomDomains: []string{"home.example.net"}, LocalScheme: "http", LocalHost: "127.0.0.1", LocalPort: 8080, Enabled: true, Version: 2},
 			{ID: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", Subdomain: "secure-app", LocalScheme: "https", LocalHost: "nas.lan", LocalPort: 8443, Enabled: true, Version: 3},
+			{ID: "tcp-connection", Subdomain: "ssh", ProxyType: "tcp", TCPRemotePort: 10001, LocalHost: "127.0.0.1", LocalPort: 22, Enabled: true, Version: 4},
 			{ID: "disabled", Subdomain: "disabled", LocalScheme: "http", LocalHost: "127.0.0.1", LocalPort: 9, Enabled: false},
 		},
 	}, "")
@@ -32,10 +33,13 @@ func TestRenderConfigMatchesManagedSurface(t *testing.T) {
 	for _, expected := range []string{
 		`serverAddr = "frps.example.com"`,
 		`metadatas.home_tunnel_lease = "signed-lease"`,
-		`customDomains = ["http-app.tunnel.example.com"]`,
+		`customDomains = ["http-app.tunnel.example.com", "home.example.net"]`,
 		`localIP = "127.0.0.1"`,
 		`type = "http2https"`,
 		`localAddr = "nas.lan:8443"`,
+		`type = "tcp"`,
+		`remotePort = 10001`,
+		`localPort = 22`,
 	} {
 		if !strings.Contains(configuration, expected) {
 			t.Fatalf("configuration missing %q:\n%s", expected, configuration)
@@ -133,6 +137,31 @@ func TestSupervisorWritesTrustedCaAndArguments(t *testing.T) {
 		if argument == "--tls-ca-sha256" {
 			t.Fatal("profile without a certificate must not pass --tls-ca-sha256")
 		}
+	}
+}
+
+func TestSupervisorPassesCustomDomainAllowlist(t *testing.T) {
+	supervisor, err := New(
+		filepath.Join(t.TempDir(), "missing-agent"),
+		filepath.Join(t.TempDir(), "runtime"),
+		"development",
+		model.Profile{FRPSHost: "frps.example.com", FRPSPort: 7000, TunnelDomain: "tunnel.example.com"},
+		nil,
+		[]model.Connection{
+			{CustomDomains: []string{"HOME.example.net", "blog.example.net"}},
+			{ProxyType: "tcp", TCPRemotePort: 10002},
+			{ProxyType: "tcp", TCPRemotePort: 10001},
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	arguments := strings.Join(supervisor.arguments("verify", "config.toml"), " ")
+	if !strings.Contains(arguments, "--allow-custom-domains blog.example.net,home.example.net") {
+		t.Fatalf("arguments missing normalized custom-domain allowlist: %s", arguments)
+	}
+	if !strings.Contains(arguments, "--allow-tcp-ports 10001,10002") {
+		t.Fatalf("arguments missing sorted TCP port allowlist: %s", arguments)
 	}
 }
 

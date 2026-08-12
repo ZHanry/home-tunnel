@@ -3,6 +3,14 @@ import { Router } from "express";
 import { z } from "zod";
 import { config } from "../config.js";
 import {
+  applyVerifiedCustomDomain,
+  createCustomDomain,
+  deleteCustomDomain,
+  publicCustomDomain,
+  verifyCustomDomainDns,
+  type CustomDomainRow,
+} from "../custom-domains.js";
+import {
   connectionInputSchema,
   connectionPatchSchema,
   createConnection,
@@ -135,6 +143,19 @@ const connectionSelect = `
     LEFT JOIN runtime_states rs ON rs.connection_id=c.id
     LEFT JOIN traffic_policies tp ON tp.scope_type='connection' AND tp.scope_id=c.id`;
 
+async function customDomainsByConnection(connectionIds: string[]): Promise<Map<string, string[]>> {
+  if (!connectionIds.length) return new Map();
+  const rows = await query<{ connection_id: string; domain: string }>(
+    `SELECT connection_id,domain FROM custom_domains
+      WHERE status='verified' AND connection_id IN (${connectionIds.map(() => "?").join(",")})
+      ORDER BY domain`,
+    connectionIds,
+  );
+  const result = new Map<string, string[]>();
+  for (const row of rows) result.set(row.connection_id, [...(result.get(row.connection_id) ?? []), row.domain]);
+  return result;
+}
+
 router.get(
   "/client/connections",
   asyncHandler(async (request, response) => {
@@ -143,7 +164,8 @@ router.get(
       `${connectionSelect} WHERE c.user_id=? AND c.deleted_at IS NULL ORDER BY c.updated_at DESC`,
       [actor.userId],
     );
-    response.json({ items: rows.map((row) => publicConnection(row)) });
+    const domains = await customDomainsByConnection(rows.map((row) => row.id));
+    response.json({ items: rows.map((row) => publicConnection(row, domains.get(row.id) ?? [])) });
   }),
 );
 
@@ -151,7 +173,12 @@ router.post(
   "/client/connections",
   asyncHandler(async (request, response) => {
     const actor = clientGuard(request);
-    const body = parseBody(connectionInputSchema.extend({ device_id: z.string().uuid() }), request.body);
+    const body = parseBody(
+      connectionInputSchema
+        .omit({ proxy_type: true, tcp_remote_port: true })
+        .extend({ device_id: z.string().uuid(), proxy_type: z.literal("http").default("http") }),
+      request.body,
+    );
     const created = await transaction(async (client) => {
       const connection = await createConnection(client, actor.userId, body.device_id, body);
       // 审计补充 Basic 用户名（口令与哈希绝不入审计）。
@@ -174,7 +201,8 @@ router.get(
       [request.params.connectionId, actor.userId],
     );
     if (!row) throw new HttpError(404, "OWNERSHIP_MISMATCH", "连接不存在");
-    response.json(publicConnection(row));
+    const domains = await customDomainsByConnection([row.id]);
+    response.json(publicConnection(row, domains.get(row.id) ?? []));
   }),
 );
 
@@ -183,7 +211,10 @@ router.patch(
   asyncHandler(async (request, response) => {
     const actor = clientGuard(request);
     const connectionId = pathParam(request, "connectionId");
-    const patch = parseBody(connectionPatchSchema.omit({ bandwidth_limit_bps: true }), request.body);
+    const patch = parseBody(
+      connectionPatchSchema.omit({ bandwidth_limit_bps: true, proxy_type: true, tcp_remote_port: true }),
+      request.body,
+    );
     const expected = parseExpectedVersion(request, patch.expected_version);
     const updated = await transaction(async (client) => {
       const changed = await updateConnection(client, connectionId, expected, patch, actor.userId);
@@ -283,8 +314,12 @@ router.post(
         `${connectionSelect} WHERE c.device_id=? AND c.deleted_at IS NULL ORDER BY c.created_at`,
         [body.device_id],
       );
+      const domains = await customDomainsByConnection(rows.map((row) => row.id));
       connections = rows.map((row) => ({
-        ...publicConnection(row),
+        ...publicConnection({
+          ...row,
+          enabled: row.enabled && ((row.proxy_type ?? "http") === "http" || config.tcpTunnels.enabled),
+        }, domains.get(row.id) ?? []),
         proxy_name: `ht_${row.id.replaceAll("-", "")}_v${Number(row.version)}`,
       }));
     }
@@ -368,6 +403,88 @@ router.post(
     const serverTime = Date.now();
     const clientTime = body.clock_utc ? Date.parse(body.clock_utc) : serverTime;
     response.json({ ok: true, server_time: new Date(serverTime).toISOString(), clock_skew_seconds: Math.round((clientTime - serverTime) / 1000) });
+  }),
+);
+
+router.get(
+  "/client/connections/:connectionId/custom-domains",
+  asyncHandler(async (request, response) => {
+    const actor = requirePasswordNormal(request);
+    const connectionId = pathParam(request, "connectionId");
+    const rows = await query<CustomDomainRow>(
+      `SELECT cd.*,c.subdomain FROM custom_domains cd JOIN connections c ON c.id=cd.connection_id
+        WHERE cd.connection_id=? AND c.user_id=? AND c.deleted_at IS NULL ORDER BY cd.created_at`,
+      [connectionId, actor.userId],
+    );
+    if (!rows.length) {
+      const connection = await one<{ id: string }>(
+        "SELECT id FROM connections WHERE id=? AND user_id=? AND deleted_at IS NULL",
+        [connectionId, actor.userId],
+      );
+      if (!connection) throw new HttpError(404, "OWNERSHIP_MISMATCH", "连接不存在");
+    }
+    response.json({ items: rows.map(publicCustomDomain) });
+  }),
+);
+
+router.post(
+  "/client/connections/:connectionId/custom-domains",
+  asyncHandler(async (request, response) => {
+    const actor = clientGuard(request);
+    const connectionId = pathParam(request, "connectionId");
+    const body = parseBody(z.object({ domain: z.string().trim().min(4).max(253) }), request.body);
+    const created = await transaction(async (client) => {
+      const domain = await createCustomDomain(client, connectionId, body.domain, actor.userId);
+      await audit(client, request, "CustomDomainCreated", "CustomDomain", domain.id, null, {
+        connection_id: connectionId,
+        domain: domain.domain,
+        status: domain.status,
+      });
+      return domain;
+    });
+    response.status(201).json(publicCustomDomain(created));
+  }),
+);
+
+router.post(
+  "/client/custom-domains/:domainId/verify",
+  asyncHandler(async (request, response) => {
+    const actor = clientGuard(request);
+    const domainId = pathParam(request, "domainId");
+    const checked = await verifyCustomDomainDns(domainId, actor.userId);
+    const verified = await transaction(async (client) => {
+      const domain = await applyVerifiedCustomDomain(
+        client,
+        domainId,
+        checked.domain,
+        checked.verification_token,
+        actor.userId,
+      );
+      await audit(client, request, "CustomDomainVerified", "CustomDomain", domain.id, null, {
+        connection_id: domain.connection_id,
+        domain: domain.domain,
+        status: domain.status,
+      });
+      return domain;
+    });
+    response.json(publicCustomDomain(verified));
+  }),
+);
+
+router.delete(
+  "/client/custom-domains/:domainId",
+  asyncHandler(async (request, response) => {
+    const actor = clientGuard(request);
+    const domainId = pathParam(request, "domainId");
+    await transaction(async (client) => {
+      const domain = await deleteCustomDomain(client, domainId, actor.userId);
+      await audit(client, request, "CustomDomainDeleted", "CustomDomain", domain.id, {
+        connection_id: domain.connection_id,
+        domain: domain.domain,
+        status: domain.status,
+      }, { deleted: true });
+    });
+    response.status(204).end();
   }),
 );
 

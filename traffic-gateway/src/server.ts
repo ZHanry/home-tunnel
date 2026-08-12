@@ -57,6 +57,7 @@ type Policy = {
   user_id: string;
   device_id: string;
   subdomain: string;
+  custom_domains?: string[];
   enabled: boolean;
   device_lease_expires_at: string | null;
   connection_version: number;
@@ -190,6 +191,7 @@ type ActiveClose = () => void;
 
 export class PolicyStore {
   private bySubdomain = new Map<string, Policy>();
+  private byCustomDomain = new Map<string, Policy>();
   private byConnection = new Map<string, Policy>();
   private active = new Map<string, Set<ActiveClose>>();
   // 按 connection_id 预编译的白名单规则；无效条目在 apply 时剔除并告警，
@@ -217,6 +219,7 @@ export class PolicyStore {
       throw new Error("invalid tunnel domain in policy snapshot");
     }
     const nextBySubdomain = new Map<string, Policy>();
+    const nextByCustomDomain = new Map<string, Policy>();
     const nextByConnection = new Map<string, Policy>();
     const nextAllowRules = new Map<string, CidrRule[]>();
     for (const policy of snapshot.connections) {
@@ -226,6 +229,23 @@ export class PolicyStore {
       }
       if (policy.device_lease_expires_at !== null && !Number.isFinite(Date.parse(policy.device_lease_expires_at))) {
         throw new Error("invalid device lease expiry in policy snapshot");
+      }
+      policy.custom_domains = Array.isArray(policy.custom_domains)
+        ? policy.custom_domains
+            .filter((domain): domain is string => typeof domain === "string")
+            .map((domain) => domain.trim().replace(/\.$/, "").toLowerCase())
+        : [];
+      for (const customDomain of policy.custom_domains) {
+        if (
+          !/^[a-z0-9](?:[a-z0-9.-]{0,251}[a-z0-9])?$/.test(customDomain) ||
+          customDomain.includes("..") ||
+          customDomain === domain ||
+          customDomain.endsWith(`.${domain}`) ||
+          nextByCustomDomain.has(customDomain)
+        ) {
+          throw new Error("invalid or duplicate custom domain in policy snapshot");
+        }
+        nextByCustomDomain.set(customDomain, policy);
       }
       // 归一化门禁字段：兼容尚未升级的控制中心（字段缺失视为未启用）。
       policy.access_ip_allowlist = Array.isArray(policy.access_ip_allowlist)
@@ -270,6 +290,7 @@ export class PolicyStore {
       }
     }
     this.bySubdomain = nextBySubdomain;
+    this.byCustomDomain = nextByCustomDomain;
     this.byConnection = nextByConnection;
     this.allowRules = nextAllowRules;
     this.revision = snapshot.revision;
@@ -327,7 +348,10 @@ export class PolicyStore {
     if (!hostHeader || hostHeader.includes(",") || /[\s/\\]/.test(hostHeader)) return { error: "invalid" };
     const host = hostHeader.replace(/:\d+$/, "").toLowerCase();
     const suffix = `.${this.domain}`;
-    if (!host.endsWith(suffix)) return { error: "invalid" };
+    if (!host.endsWith(suffix)) {
+      const customPolicy = this.byCustomDomain.get(host);
+      return this.authorized(customPolicy) ? { policy: customPolicy } : { error: "invalid" };
+    }
     const subdomain = host.slice(0, -suffix.length);
     if (!subdomain || subdomain.includes(".") || !/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(subdomain)) {
       return { error: "invalid" };

@@ -14,12 +14,16 @@ export async function runIntegrationSuite(): Promise<void> {
   process.env.LEASE_SIGNING_KEY ??= "33".repeat(32);
   process.env.COOKIE_SECURE = "false";
   process.env.ONLINE_LEASE_SECONDS = "86400";
+  process.env.TCP_TUNNEL_ENABLED = "true";
+  process.env.TCP_PORT_START = "10000";
+  process.env.TCP_PORT_END = "10099";
 
-  const [{ createApplication }, database, maintenance, quota] = await Promise.all([
+  const [{ createApplication }, database, maintenance, quota, customDomains] = await Promise.all([
     import("./server.js"),
     import("./db.js"),
     import("./maintenance.js"),
     import("./quota.js"),
+    import("./custom-domains.js"),
   ]);
   const noopAlert = async () => ({ delivered: false, deduplicated: false, results: [] });
   const app = await createApplication(true);
@@ -167,6 +171,36 @@ export async function runIntegrationSuite(): Promise<void> {
     assert.equal(createdConnection.status, 201);
     const connectionId = createdConnection.payload.id as string;
 
+    // ---- 自定义域名（功能 3）：TXT + CNAME 双验证，测试解析器不出网 ----
+    const customDomain = `home-${suffix}.example.net`;
+    const pendingDomain = await call("POST", `/api/v1/client/connections/${connectionId}/custom-domains`, {
+      domain: customDomain,
+    }, userToken);
+    assert.equal(pendingDomain.status, 201);
+    assert.equal(pendingDomain.payload.status, "pending");
+    assert.equal(pendingDomain.payload.verification.txt_name, `_home-tunnel.${customDomain}`);
+    assert.equal(pendingDomain.payload.verification.cname_target, `it-${suffix}.tunnel.example.com`);
+    const customDomainId = pendingDomain.payload.id as string;
+    customDomains.setDnsResolverForTests({
+      resolveTxt: async (name: string) => name === pendingDomain.payload.verification.txt_name
+        ? [[pendingDomain.payload.verification.txt_value]]
+        : [],
+      resolveCname: async (name: string) => name === customDomain
+        ? [pendingDomain.payload.verification.cname_target + "."]
+        : [],
+    });
+    const verifiedDomain = await call("POST", `/api/v1/client/custom-domains/${customDomainId}/verify`, {}, userToken);
+    assert.equal(verifiedDomain.status, 200);
+    assert.equal(verifiedDomain.payload.status, "verified");
+    customDomains.setDnsResolverForTests(null);
+    const customTls = await call("GET", `/internal/tls/allow?domain=${encodeURIComponent(customDomain)}`);
+    assert.equal(customTls.status, 204);
+    const verifiedConnectionVersion = Number((await database.query<{ version: string }>(
+      "SELECT version FROM connections WHERE id=?",
+      [connectionId],
+    ))[0]?.version);
+    assert.equal(verifiedConnectionVersion, 2);
+
     const policyEvents = await fetch(origin + "/internal/policies/events", {
       headers: { "x-home-tunnel-key": process.env.INTERNAL_SERVICE_KEY!, accept: "text/event-stream" },
     });
@@ -180,9 +214,9 @@ export async function runIntegrationSuite(): Promise<void> {
 
     const firstUpdate = await call("PATCH", `/api/v1/client/connections/${connectionId}`, {
       name: "Integration Tunnel Updated",
-    }, userToken, { "if-match": '"1"' });
+    }, userToken, { "if-match": `"${verifiedConnectionVersion}"` });
     assert.equal(firstUpdate.status, 200);
-    assert.equal(firstUpdate.payload.version, 2);
+    assert.equal(firstUpdate.payload.version, 3);
     const pushed = await Promise.race([
       pushedPolicyEvent,
       new Promise<never>((_resolve, reject) => setTimeout(() => reject(new Error("policy push timed out")), 2_000)),
@@ -191,23 +225,23 @@ export async function runIntegrationSuite(): Promise<void> {
     await policyReader.cancel();
     const staleUpdate = await call("PATCH", `/api/v1/client/connections/${connectionId}`, {
       name: "Stale Update Must Not Win",
-    }, userToken, { "if-match": '"1"' });
+    }, userToken, { "if-match": `"${verifiedConnectionVersion}"` });
     assert.equal(staleUpdate.status, 409);
     assert.equal(staleUpdate.payload.error_code, "VERSION_CONFLICT");
 
     // ---- 网关访问控制（功能 1）：schema 校验、ACL-only 编辑、快照契约 ----
     const invalidCidr = await call("PATCH", `/api/v1/client/connections/${connectionId}`, {
       access: { ip_allowlist: ["not-a-cidr"] },
-    }, userToken, { "if-match": '"2"' });
+    }, userToken, { "if-match": '"3"' });
     assert.equal(invalidCidr.status, 400);
     assert.equal(invalidCidr.payload.error_code, "VALIDATION_ERROR");
     const shortGatePassword = await call("PATCH", `/api/v1/client/connections/${connectionId}`, {
       access: { basic_auth: { username: "svc", password: "short" } },
-    }, userToken, { "if-match": '"2"' });
+    }, userToken, { "if-match": '"3"' });
     assert.equal(shortGatePassword.status, 400);
     const colonGateUser = await call("PATCH", `/api/v1/client/connections/${connectionId}`, {
       access: { basic_auth: { username: "svc:bad", password: "long enough pass" } },
-    }, userToken, { "if-match": '"2"' });
+    }, userToken, { "if-match": '"3"' });
     assert.equal(colonGateUser.status, 400);
 
     const configVersionBeforeAcl = Number((await database.query<{ config_version: string }>(
@@ -224,10 +258,10 @@ export async function runIntegrationSuite(): Promise<void> {
         ip_allowlist: ["203.0.113.0/24", "2001:db8::/64"],
         basic_auth: { username: "svc", password: "gate pass 42!" },
       },
-    }, userToken, { "if-match": '"2"' });
+    }, userToken, { "if-match": '"3"' });
     assert.equal(aclUpdate.status, 200);
     // ACL-only 编辑：连接 version 不变（Agent 无需重配），只有门禁版本递增
-    assert.equal(aclUpdate.payload.version, 2);
+    assert.equal(aclUpdate.payload.version, 3);
     assert.equal(aclUpdate.payload.access_policy_version, 2);
     assert.deepEqual(aclUpdate.payload.access_ip_allowlist, ["203.0.113.0/24", "2001:db8::/64"]);
     assert.equal(aclUpdate.payload.access_basic_auth_enabled, true);
@@ -269,9 +303,9 @@ export async function runIntegrationSuite(): Promise<void> {
     // 关闭 Basic Auth（basic_auth: null）：白名单保留，门禁版本再次递增
     const aclClearBasic = await call("PATCH", `/api/v1/client/connections/${connectionId}`, {
       access: { basic_auth: null },
-    }, userToken, { "if-match": '"2"' });
+    }, userToken, { "if-match": '"3"' });
     assert.equal(aclClearBasic.status, 200);
-    assert.equal(aclClearBasic.payload.version, 2);
+    assert.equal(aclClearBasic.payload.version, 3);
     assert.equal(aclClearBasic.payload.access_policy_version, 3);
     assert.equal(aclClearBasic.payload.access_basic_auth_enabled, false);
     assert.deepEqual(aclClearBasic.payload.access_ip_allowlist, ["203.0.113.0/24", "2001:db8::/64"]);
@@ -279,7 +313,7 @@ export async function runIntegrationSuite(): Promise<void> {
     // 清除白名单（ip_allowlist: null）：连接回到完全开放
     const aclClearAllowlist = await call("PATCH", `/api/v1/client/connections/${connectionId}`, {
       access: { ip_allowlist: null },
-    }, userToken, { "if-match": '"2"' });
+    }, userToken, { "if-match": '"3"' });
     assert.equal(aclClearAllowlist.status, 200);
     assert.equal(aclClearAllowlist.payload.access_ip_allowlist, null);
     assert.equal(aclClearAllowlist.payload.access_policy_version, 4);
@@ -304,6 +338,7 @@ export async function runIntegrationSuite(): Promise<void> {
     }, userToken);
     assert.equal(sync.status, 200);
     assert.equal(sync.payload.connections.length, 1);
+    assert.deepEqual(sync.payload.connections[0].custom_domains, [customDomain]);
     const lease = sync.payload.lease.lease as string;
     const proxyName = sync.payload.connections[0].proxy_name as string;
     const legacyUnchangedSync = await call("POST", "/api/v1/client/sync", {
@@ -345,11 +380,18 @@ export async function runIntegrationSuite(): Promise<void> {
         user: { user: deviceId, metas: { home_tunnel_lease: lease }, run_id: "integration-run" },
         proxy_name: `${deviceId}.${proxyName}`,
         proxy_type: "http",
-        custom_domains: [`it-${suffix}.tunnel.example.com`],
+        custom_domains: [`it-${suffix}.tunnel.example.com`, customDomain],
         subdomain: "",
       },
     });
     assert.equal(pluginProxy.payload.reject, false);
+    const customPolicy = await call("GET", "/internal/policies/sync", undefined, undefined, {
+      "x-home-tunnel-key": process.env.INTERNAL_SERVICE_KEY!,
+    });
+    assert.deepEqual(
+      customPolicy.payload.connections.find((item: any) => item.connection_id === connectionId)?.custom_domains,
+      [customDomain],
+    );
     const forgedProxy = await call("POST", `${pluginBase}?version=0.1.0&op=NewProxy`, {
       version: "0.1.0",
       op: "NewProxy",
@@ -357,7 +399,7 @@ export async function runIntegrationSuite(): Promise<void> {
         user: { user: deviceId, metas: { home_tunnel_lease: lease }, run_id: "integration-run" },
         proxy_name: `${deviceId}.${proxyName}`,
         proxy_type: "http",
-        custom_domains: ["forged.tunnel.example.com"],
+        custom_domains: [`it-${suffix}.tunnel.example.com`, "forged.example.net"],
       },
     });
     assert.equal(forgedProxy.payload.reject, true);
@@ -385,6 +427,110 @@ export async function runIntegrationSuite(): Promise<void> {
     });
     assert.equal(pluginClose.payload.reject, false);
 
+    // 功能 4：只有管理员可以分配 TCP 公网端口；同步、FRPS 插件两端都按
+    // 服务端固定端口校验，不能由客户端替换或夹带 HTTP 域名字段。
+    const clientTcpDenied = await call("POST", "/api/v1/client/connections", {
+      device_id: deviceId,
+      name: "forbidden-tcp",
+      subdomain: `forbidden-${suffix}`,
+      proxy_type: "tcp",
+      tcp_remote_port: 10001,
+      local_scheme: "http",
+      local_host: "127.0.0.1",
+      local_port: 22,
+      enabled: true,
+    }, userToken);
+    assert.equal(clientTcpDenied.status, 400);
+
+    const adminTcp = await call("POST", "/api/v1/admin/connections", {
+      user_id: userId,
+      device_id: deviceId,
+      name: "admin-tcp",
+      subdomain: `tcp-${suffix}`,
+      proxy_type: "tcp",
+      tcp_remote_port: 10001,
+      local_scheme: "http",
+      local_host: "127.0.0.1",
+      local_port: 22,
+      enabled: true,
+    }, adminToken);
+    assert.equal(adminTcp.status, 201);
+    assert.equal(adminTcp.payload.proxy_type, "tcp");
+    assert.equal(adminTcp.payload.public_endpoint, "203.0.113.10:10001");
+    const tcpId = adminTcp.payload.id as string;
+
+    const duplicateTcp = await call("POST", "/api/v1/admin/connections", {
+      user_id: userId,
+      device_id: deviceId,
+      name: "duplicate-tcp",
+      subdomain: `tcp-duplicate-${suffix}`,
+      proxy_type: "tcp",
+      tcp_remote_port: 10001,
+      local_scheme: "http",
+      local_host: "127.0.0.1",
+      local_port: 2222,
+      enabled: true,
+    }, adminToken);
+    assert.equal(duplicateTcp.status, 409);
+    assert.equal(duplicateTcp.payload.error_code, "TCP_PORT_CONFLICT");
+
+    const tcpDomainDenied = await call("POST", `/api/v1/admin/connections/${tcpId}/custom-domains`, {
+      domain: `tcp-${suffix}.example.net`,
+    }, adminToken);
+    assert.equal(tcpDomainDenied.status, 409);
+
+    const tcpSync = await call("POST", "/api/v1/client/sync", {
+      device_id: deviceId,
+      last_config_version: 0,
+    }, userToken);
+    const tcpConnection = tcpSync.payload.connections.find((item: any) => item.id === tcpId);
+    assert.equal(tcpConnection.proxy_type, "tcp");
+    assert.equal(tcpConnection.tcp_remote_port, 10001);
+    const tcpLease = tcpSync.payload.lease.lease as string;
+    const tcpProxyName = tcpConnection.proxy_name as string;
+    const tcpProxy = await call("POST", `${pluginBase}?version=0.1.0&op=NewProxy`, {
+      version: "0.1.0",
+      op: "NewProxy",
+      content: {
+        user: { user: deviceId, metas: { home_tunnel_lease: tcpLease }, run_id: "tcp-run" },
+        proxy_name: `${deviceId}.${tcpProxyName}`,
+        proxy_type: "tcp",
+        remote_port: 10001,
+      },
+    });
+    assert.equal(tcpProxy.payload.reject, false);
+    await database.query("UPDATE connections SET tcp_remote_port=9999 WHERE id=?", [tcpId]);
+    const outOfRangeTcp = await call("POST", `${pluginBase}?version=0.1.0&op=NewProxy`, {
+      version: "0.1.0",
+      op: "NewProxy",
+      content: {
+        user: { user: deviceId, metas: { home_tunnel_lease: tcpLease }, run_id: "tcp-run" },
+        proxy_name: `${deviceId}.${tcpProxyName}`,
+        proxy_type: "tcp",
+        remote_port: 9999,
+      },
+    });
+    assert.equal(outOfRangeTcp.payload.reject, true);
+    assert.equal(outOfRangeTcp.payload.reject_reason, "PROXY_NOT_ALLOWED");
+    await database.query("UPDATE connections SET tcp_remote_port=10001 WHERE id=?", [tcpId]);
+    const forgedTcp = await call("POST", `${pluginBase}?version=0.1.0&op=NewProxy`, {
+      version: "0.1.0",
+      op: "NewProxy",
+      content: {
+        user: { user: deviceId, metas: { home_tunnel_lease: tcpLease }, run_id: "tcp-run" },
+        proxy_name: `${deviceId}.${tcpProxyName}`,
+        proxy_type: "tcp",
+        remote_port: 10002,
+      },
+    });
+    assert.equal(forgedTcp.payload.reject, true);
+    assert.equal(forgedTcp.payload.reject_reason, "PROXY_NOT_ALLOWED");
+
+    const tcpPolicySnapshot = await call("GET", "/internal/policies/sync", undefined, undefined, {
+      "x-home-tunnel-key": process.env.INTERNAL_SERVICE_KEY!,
+    });
+    assert.equal(tcpPolicySnapshot.payload.connections.some((item: any) => item.connection_id === tcpId), false);
+
     const policiesBefore = await call("GET", "/internal/policies/sync", undefined, undefined, {
       "x-home-tunnel-key": process.env.INTERNAL_SERVICE_KEY!,
     });
@@ -409,7 +555,7 @@ export async function runIntegrationSuite(): Promise<void> {
     assert.match(metricsText, /^home_tunnel_uptime_seconds \d+$/m);
     assert.match(metricsText, /^home_tunnel_users_total 2$/m);
     assert.match(metricsText, /^home_tunnel_devices_total 1$/m);
-    assert.match(metricsText, /^home_tunnel_connections_total\{enabled="true"\} 1$/m);
+    assert.match(metricsText, /^home_tunnel_connections_total\{enabled="true"\} 2$/m);
     assert.match(metricsText, /^home_tunnel_connections_total\{enabled="false"\} 0$/m);
     assert.match(metricsText, /^home_tunnel_connections_access_protected_total 0$/m);
     assert.match(metricsText, /^home_tunnel_active_sessions_total \d+$/m);

@@ -20,7 +20,7 @@
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
     <AgentBinaryPath Condition="'$(AgentBinaryPath)' == ''">assets\HomeTunnel.Agent.exe</AgentBinaryPath>
-    <AgentExpectedSha256 Condition="'$(AgentExpectedSha256)' == ''">79fe1aca57639e3592a16135695d4ba1b5c0a77872104f4c6f4e609188555024</AgentExpectedSha256>
+    <AgentExpectedSha256 Condition="'$(AgentExpectedSha256)' == ''">0e20f534e51b8918f56bfc1f85f008476c1009c227c339449baf46215c2fde13</AgentExpectedSha256>
     <AgentSignerThumbprint Condition="'$(AgentSignerThumbprint)' == ''"></AgentSignerThumbprint>
   </PropertyGroup>
   <PropertyGroup Condition="'$(UpdateQa)' == 'true'">

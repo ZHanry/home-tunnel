@@ -22,6 +22,9 @@ All notable changes to Home Tunnel are documented in this file. The project foll
 
 ### Added
 
+- Verified custom domains with DNS TXT ownership proof and CNAME target checks, Caddy on-demand TLS authorization, exact gateway routing, and Windows/Linux Agent allowlists.
+- Administrator-only TCP tunnels with a globally disabled default, a fixed FRPS allow-port range, per-connection port assignment, FRPS plugin enforcement, and Windows/Linux Agent allowlists.
+- Persistent Simplified Chinese/English switching across the public page, sign-in flow, and administration console.
 - Optional per-user monthly traffic quotas with automatic gateway-layer suspension and next-month restoration, plus outbound webhook and Telegram alerts for quota thresholds and device offline/recovery. Alerts are timed out, retried once, de-duplicated, and never block control-center operations.
 - Optional per-connection gateway access control: an IP allowlist and HTTP Basic Auth gate enforced at the traffic gateway before proxying, configurable from the admin console. ACL-only edits take effect without restarting the tunnel.
 - macOS support for the headless client (darwin `amd64`/`arm64`) with OS-aware paths, launchd packaging and a cross-compiling release script; the Linux systemd path is unchanged.
