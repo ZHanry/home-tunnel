@@ -22,6 +22,8 @@ All notable changes to Home Tunnel are documented in this file. The project foll
 
 ### Added
 
+- Optional per-connection gateway access control: an IP allowlist and HTTP Basic Auth gate enforced at the traffic gateway before proxying, configurable from the admin console. ACL-only edits take effect without restarting the tunnel.
+- macOS support for the headless client (darwin `amd64`/`arm64`) with OS-aware paths, launchd packaging and a cross-compiling release script; the Linux systemd path is unchanged.
 - WebSocket realtime sync for the Linux client (standard-library RFC 6455 client) with polling retained as fallback.
 - Automatic daily SQLite snapshots with retention, plus Prometheus metrics endpoints on the control center (`/internal/metrics`) and traffic gateway (`/metrics`).
 - Real per-connection tunnel status in the Windows client parsed from Agent logs, update download idle timeouts, and UI virtualization for large connection lists.
