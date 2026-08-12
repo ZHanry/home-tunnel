@@ -39,6 +39,41 @@ const toastRegion = document.querySelector("#toast-region");
 const skipLink = document.querySelector("#skip-link");
 const sidebarScrim = document.querySelector(".sidebar-scrim");
 
+const themeStorageKey = "ht_theme";
+
+function currentTheme() {
+  return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+}
+
+function applyTheme(theme, persist = true) {
+  const normalized = theme === "dark" ? "dark" : "light";
+  document.documentElement.dataset.theme = normalized;
+  document.documentElement.style.colorScheme = normalized;
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", normalized === "dark" ? "#0f172a" : "#f8fafc");
+  document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
+    const isDark = normalized === "dark";
+    const label = isDark ? "切换至浅色主题" : "切换至深色主题";
+    button.setAttribute("aria-pressed", String(isDark));
+    button.setAttribute("aria-label", label);
+    button.setAttribute("title", label);
+  });
+  if (persist) {
+    try { window.localStorage.setItem(themeStorageKey, normalized); } catch {}
+  }
+}
+
+document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
+  button.addEventListener("click", () => applyTheme(currentTheme() === "dark" ? "light" : "dark"));
+});
+
+window.addEventListener("storage", (event) => {
+  if (event.key === themeStorageKey && (event.newValue === "light" || event.newValue === "dark")) {
+    applyTheme(event.newValue, false);
+  }
+});
+
+applyTheme(currentTheme(), false);
+
 const viewMeta = {
   dashboard: ["系统总览", "运行状态"],
   users: ["用户管理", "身份与权限"],
@@ -91,7 +126,7 @@ async function loadLatestRelease() {
     const shaNode = document.querySelector("#release-sha");
     shaNode.textContent = release.sha256;
     shaNode.title = release.sha256;
-    releaseNote.textContent = `v${release.version} · ${release.architecture} · ${formatBytes(release.size_bytes)}`;
+    releaseNote.textContent = `Windows v${release.version} · ${release.architecture} · ${formatBytes(release.size_bytes)}`;
   } catch {
     releaseNote.textContent = "前往 GitHub Releases 获取最新版本";
   }
@@ -155,6 +190,25 @@ function statusBadge(status) {
   return `<span class="status-badge ${tone}">${escapeHtml(label)}</span>`;
 }
 
+function componentLabel(component) {
+  return {
+    "control-center": "控制中心",
+    sqlite: "SQLite",
+    outbox: "策略队列",
+    "traffic-gateway": "流量网关",
+    frps: "FRPS",
+    caddy: "Caddy",
+    backup: "备份",
+  }[component] ?? component;
+}
+
+function configState(device) {
+  const applied = Number(device.applied_config_version ?? 0);
+  const target = Number(device.config_version ?? 0);
+  const inSync = applied === target;
+  return `<span class="config-state"><strong class="${inSync ? "" : "drift"}">${inSync ? "已同步" : "待应用"}</strong><small>应用 v${applied} · 目标 v${target}</small></span>`;
+}
+
 function toast(message, type = "success") {
   const item = document.createElement("div");
   item.className = `toast ${type === "error" ? "error" : ""}`;
@@ -205,6 +259,7 @@ async function api(path, options = {}, canRefresh = true) {
 }
 
 function showLogin(message = "") {
+  document.body.classList.add("auth-active");
   state.me = null;
   state.csrf = "";
   window.clearTimeout(state.socketReconnectTimer);
@@ -223,6 +278,7 @@ function showLogin(message = "") {
 }
 
 async function showApp() {
+  document.body.classList.remove("auth-active");
   state.me = await api("/api/v1/auth/me");
   if (state.me.role !== "admin") {
     showLogin("该账号没有管理员后台权限");
@@ -290,20 +346,89 @@ async function renderView(view) {
 }
 
 async function renderDashboard(renderId) {
-  const [summary, traffic] = await Promise.all([
+  const [summary, traffic, health] = await Promise.all([
     api("/api/v1/admin/summary"),
     api("/api/v1/admin/traffic/summary?hours=24"),
+    api("/api/v1/admin/system/health"),
   ]);
   if (renderId !== state.renderId) return;
   const totalTraffic = Number(summary.upload_24h) + Number(summary.download_24h);
   viewContent.innerHTML = `
-    <section class="metrics-grid" aria-label="关键指标">
-      <article class="metric-card"><span class="metric-label">启用用户</span><span class="metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m7-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm13 10v-2a4 4 0 0 0-3-3.9"/></svg></span><div class="metric-value">${Number(summary.users).toLocaleString("zh-CN")}</div><span class="metric-meta">当前处于启用状态的账号</span></article>
-      <article class="metric-card"><span class="metric-label">在线设备</span><span class="metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 2h14a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm3 17h8"/></svg></span><div class="metric-value">${Number(summary.online_devices).toLocaleString("zh-CN")}</div><span class="metric-meta">最近 90 秒内收到有效心跳</span></article>
-      <article class="metric-card"><span class="metric-label">在线 / 总连接</span><span class="metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7m.5 7.5a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7"/></svg></span><div class="metric-value">${Number(summary.online_connections)} / ${Number(summary.connections)}</div><span class="metric-meta">以服务端运行状态为准</span></article>
-      <article class="metric-card"><span class="metric-label">24 小时流量</span><span class="metric-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 16 9 12l3 3 7-8m0 0h-5m5 0v5"/></svg></span><div class="metric-value">${formatBytes(totalTraffic)}</div><span class="metric-meta">上传 ${formatBytes(summary.upload_24h)} · 下载 ${formatBytes(summary.download_24h)}</span></article>
+    <div class="dashboard-hero-layout">
+      <section class="panel tunnel-pulse-card" aria-label="Tunnel Pulse 核心控制台">
+        <div class="pulse-header">
+          <div class="pulse-brand">
+            <span class="pulse-dot"></span>
+            <div>
+              <h3>Tunnel Pulse 穿透主控</h3>
+              <p>实时连接状态与 24 小时数据流转</p>
+            </div>
+          </div>
+          <span class="status-badge ok">网关正常运行</span>
+        </div>
+        <div class="pulse-core-metrics">
+          <div class="pulse-metric-item">
+            <span class="pulse-label">在线 / 总连接</span>
+            <div class="pulse-value-large">${Number(summary.online_connections)} <small>/ ${Number(summary.connections)}</small></div>
+            <span class="pulse-meta">以服务端运行状态为准</span>
+          </div>
+          <div class="pulse-metric-item">
+            <span class="pulse-label">24 小时传输流量</span>
+            <div class="pulse-value-large">${formatBytes(totalTraffic)}</div>
+            <span class="pulse-meta">↑ 上传 ${formatBytes(summary.upload_24h)} · ↓ 下载 ${formatBytes(summary.download_24h)}</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel health-rail-panel" aria-label="系统组件健康状态">
+        <div class="health-rail-header">
+          <div class="health-summary">${statusBadge(health.status)}<span><strong>系统组件</strong><small>${health.components.length} 项实时检查</small></span></div>
+        </div>
+        <div class="health-rail-list">${health.components.map((item) => {
+          const tone = item.status === "healthy" ? "" : item.status === "unhealthy" ? "error" : "warn";
+          const detail = item.latency_ms == null ? "正常" : `${Number(item.latency_ms).toLocaleString("zh-CN")} ms`;
+          return `<div class="health-rail-item ${tone}" title="${escapeHtml(item.status)}">
+            <span class="health-rail-dot"></span>
+            <span class="health-rail-name">${escapeHtml(componentLabel(item.component))}</span>
+            <span class="health-rail-val">${detail}</span>
+          </div>`;
+        }).join("")}</div>
+      </section>
+    </div>
+
+    <section class="stats-strip-grid" aria-label="关键补充统计">
+      <article class="stat-strip-item">
+        <span class="stat-strip-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m7-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm13 10v-2a4 4 0 0 0-3-3.9"/></svg></span>
+        <div class="stat-strip-info">
+          <span class="stat-strip-label">启用账号</span>
+          <strong class="stat-strip-val">${Number(summary.users).toLocaleString("zh-CN")}</strong>
+        </div>
+      </article>
+      <article class="stat-strip-item">
+        <span class="stat-strip-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 2h14a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm3 17h8"/></svg></span>
+        <div class="stat-strip-info">
+          <span class="stat-strip-label">在线设备</span>
+          <strong class="stat-strip-val">${Number(summary.online_devices).toLocaleString("zh-CN")}</strong>
+        </div>
+      </article>
+      <article class="stat-strip-item">
+        <span class="stat-strip-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+        <div class="stat-strip-info">
+          <span class="stat-strip-label">受管域名</span>
+          <strong class="stat-strip-val mono">${escapeHtml(state.tunnelDomain)}</strong>
+        </div>
+      </article>
     </section>
-    <section class="panel table-panel table-section"><div class="panel-header"><h3>流量最高的连接</h3><span class="panel-subtle">过去 24 小时</span></div>${traffic.items.length ? `<table class="data-table"><thead><tr><th>连接</th><th>用户</th><th>上传</th><th>下载</th><th>请求</th></tr></thead><tbody>${traffic.items.slice(0, 6).map((item) => `<tr><td data-label="连接"><span class="cell-primary">${escapeHtml(item.name)}</span><span class="cell-secondary mono">${escapeHtml(item.subdomain)}.${escapeHtml(state.tunnelDomain)}</span></td><td data-label="用户">${escapeHtml(item.username)}</td><td data-label="上传" class="mono">${formatBytes(item.upload_bytes)}</td><td data-label="下载" class="mono">${formatBytes(item.download_bytes)}</td><td data-label="请求" class="mono">${Number(item.requests).toLocaleString("zh-CN")}</td></tr>`).join("")}</tbody></table>` : emptyState("暂无流量样本", "网关收到业务请求后会按 10 秒桶写入样本。")}</section>`;
+
+    <section class="panel table-panel table-section">
+      <div class="panel-header">
+        <div>
+          <h3>流量最高的连接</h3>
+          <span class="panel-subtle">过去 24 小时数据传输排行</span>
+        </div>
+      </div>
+      ${traffic.items.length ? `<table class="data-table"><thead><tr><th>连接</th><th>用户</th><th>上传</th><th>下载</th><th>请求</th></tr></thead><tbody>${traffic.items.slice(0, 6).map((item) => `<tr><td data-label="连接"><span class="cell-primary">${escapeHtml(item.name)}</span><span class="cell-secondary mono">${escapeHtml(item.subdomain)}.${escapeHtml(state.tunnelDomain)}</span></td><td data-label="用户">${escapeHtml(item.username)}</td><td data-label="上传" class="mono">${formatBytes(item.upload_bytes)}</td><td data-label="下载" class="mono">${formatBytes(item.download_bytes)}</td><td data-label="请求" class="mono">${Number(item.requests).toLocaleString("zh-CN")}</td></tr>`).join("")}</tbody></table>` : emptyState("暂无流量样本", "网关收到业务请求后会按 10 秒桶写入样本。")}
+    </section>`;
 }
 
 function emptyState(title, detail) {
@@ -323,7 +448,7 @@ async function renderDevices(renderId = state.renderId) {
   if (renderId !== state.renderId) return;
   state.devices = data.items;
   viewContent.innerHTML = `
-    <section class="panel table-panel">${state.devices.length ? `<table class="data-table"><thead><tr><th>设备</th><th>用户</th><th>状态</th><th>配置版本</th><th class="hide-tablet">最后在线</th><th class="hide-tablet">租约到期</th><th><span class="visually-hidden">操作</span></th></tr></thead><tbody>${state.devices.map((device) => `<tr><td data-label="设备"><span class="cell-primary">${escapeHtml(device.name)}</span><span class="cell-secondary mono">${escapeHtml(device.id.slice(0, 8))} · ${escapeHtml(device.client_version ?? "未知版本")}</span></td><td data-label="用户">${escapeHtml(device.username)}</td><td data-label="状态">${statusBadge(device.status === "active" && device.online ? "active" : device.status === "active" ? "Offline" : device.status)}</td><td data-label="配置版本" class="mono">${device.applied_config_version} / ${device.config_version}</td><td data-label="最后在线" class="hide-tablet">${formatDate(device.last_seen_at)}</td><td data-label="租约到期" class="hide-tablet">${formatDate(device.lease_expires_at)}</td><td class="actions-cell"><div class="actions"><button class="button button-danger button-small" data-action="delete-device" data-id="${device.id}" data-name="${escapeHtml(device.name)}" aria-label="删除设备 ${escapeHtml(device.name)}">删除</button></div></td></tr>`).join("")}</tbody></table>` : emptyState("还没有注册设备", "用户在 Windows 客户端完成首次改密后可注册设备。")}</section>`;
+    <section class="panel table-panel">${state.devices.length ? `<table class="data-table"><thead><tr><th>设备</th><th>用户</th><th>状态</th><th>配置</th><th class="hide-tablet">最后在线</th><th class="hide-tablet">租约到期</th><th><span class="visually-hidden">操作</span></th></tr></thead><tbody>${state.devices.map((device) => `<tr><td data-label="设备"><span class="cell-primary">${escapeHtml(device.name)}</span><span class="cell-secondary mono">${escapeHtml(device.id.slice(0, 8))} · 客户端 ${escapeHtml(device.client_version ?? "未知")} · Agent ${escapeHtml(device.agent_version ?? "未知")}</span></td><td data-label="用户">${escapeHtml(device.username)}</td><td data-label="状态">${statusBadge(device.status === "active" && device.online ? "active" : device.status === "active" ? "Offline" : device.status)}</td><td data-label="配置">${configState(device)}</td><td data-label="最后在线" class="hide-tablet">${formatDate(device.last_seen_at)}</td><td data-label="租约到期" class="hide-tablet">${formatDate(device.lease_expires_at)}</td><td class="actions-cell" data-label="操作"><div class="actions"><button class="button button-danger button-small" data-action="delete-device" data-id="${device.id}" data-name="${escapeHtml(device.name)}" aria-label="删除设备 ${escapeHtml(device.name)}">删除</button></div></td></tr>`).join("")}</tbody></table>` : emptyState("还没有注册设备", "用户可通过 Windows 图形客户端或 Linux 无界面服务完成设备注册。")}</section>`;
 }
 
 async function renderConnections(renderId = state.renderId) {
@@ -463,7 +588,7 @@ async function openCreateConnection() {
   if (!state.users.length) state.users = (await api("/api/v1/admin/users")).items;
   state.devices = (await api("/api/v1/admin/devices")).items.filter((item) => item.status === "active");
   if (!state.devices.length) {
-    toast("请先让用户在 Windows 客户端注册设备", "error");
+    toast("请先让用户通过 Windows 或 Linux 客户端注册设备", "error");
     return;
   }
   const userOptions = state.users.filter((item) => item.status === "active").map((user) => `<option value="${user.id}">${escapeHtml(user.display_name)} · ${escapeHtml(user.username)}</option>`).join("");
@@ -742,6 +867,7 @@ function connectRealtime() {
 (async () => {
   await loadPublicConfig();
   if (!location.pathname.startsWith("/admin")) {
+    document.body.classList.remove("auth-active");
     landingScreen.classList.remove("hidden");
     authScreen.classList.add("hidden");
     appShell.classList.add("hidden");

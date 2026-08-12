@@ -24,8 +24,8 @@ const users = [
   { id: ids.userTwo, username: "ops.demo", display_name: "家庭运维", role: "user", status: "active", password_state: "must_change", device_count: 1, connection_count: 0, bandwidth_limit_bps: null, policy_version: 1 },
 ];
 const devices = [
-  { id: ids.device, user_id: ids.user, username: "lin", name: "书房主机", status: "active", online: true, client_version: "2.2.5", applied_config_version: 12, config_version: 12, last_seen_at: new Date(now - 12_000).toISOString(), lease_expires_at: new Date(now + 21_600_000).toISOString() },
-  { id: ids.deviceTwo, user_id: ids.userTwo, username: "ops.demo", name: "家庭服务器", status: "active", online: false, client_version: "2.2.5", applied_config_version: 4, config_version: 5, last_seen_at: new Date(now - 3_600_000).toISOString(), lease_expires_at: null },
+  { id: ids.device, user_id: ids.user, username: "lin", name: "书房主机", status: "active", online: true, client_version: "2.3.0", agent_version: "2.3.0", applied_config_version: 12, config_version: 12, last_seen_at: new Date(now - 12_000).toISOString(), lease_expires_at: new Date(now + 21_600_000).toISOString() },
+  { id: ids.deviceTwo, user_id: ids.userTwo, username: "ops.demo", name: "家庭服务器", status: "active", online: false, client_version: "2.3.0", agent_version: "2.3.0", applied_config_version: 4, config_version: 5, last_seen_at: new Date(now - 3_600_000).toISOString(), lease_expires_at: null },
 ];
 const connections = [
   { id: ids.connection, user_id: ids.user, username: "lin", device_id: ids.device, device_name: "书房主机", name: "NAS 控制台", subdomain: "nas-home", public_url: "https://nas-home.tunnel.example.com", local_scheme: "http", local_host: "127.0.0.1", local_port: 8080, enabled: true, state: "Online", bandwidth_limit_bps: 20_000_000, version: 12, applied_version: 12 },
@@ -48,13 +48,13 @@ app.use(express.json());
 app.use(express.static(publicDirectory, { etag: false, lastModified: false, maxAge: 0 }));
 
 app.get("/api/v1/public/releases/latest", (_request, response) => response.json({
-  version: "2.2.5",
+  version: "2.3.0",
   architecture: "x64",
-  file_name: "HomeTunnel-Setup-2.2.5-x64.exe",
+  file_name: "HomeTunnel-Setup-2.3.0-x64.exe",
   size_bytes: 58_000_000,
   sha256: "8a69a7cf2b33c64c4af1a48882de163f739f25bd90ea9707146d82d317d777a4",
   released_at: new Date(now).toISOString(),
-  download_url: "https://github.com/ZHanry/home-tunnel/releases/download/v2.2.5/HomeTunnel-Setup-2.2.5-x64.exe",
+  download_url: "https://github.com/ZHanry/home-tunnel/releases/download/v2.3.0/HomeTunnel-Setup-2.3.0-x64.exe",
 }));
 app.post("/api/v1/auth/refresh", (_request, response) => response.json({ csrf_token: "local-ui-preview" }));
 app.get("/api/v1/auth/me", (_request, response) => response.json({ id: "preview-admin", username: "admin", display_name: "系统管理员", role: "admin" }));

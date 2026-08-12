@@ -45,6 +45,7 @@ const deviceLoginLimiter = new FixedWindowLimiter(20, 60_000);
 const refreshLimiter = new FixedWindowLimiter(30, 60_000);
 const passwordChangeLimiter = new FixedWindowLimiter(5, 10 * 60_000);
 const dummyHashPromise = hashPassword("Dummy timing password 2026!");
+const clientTypeSchema = z.enum(["web", "windows", "linux"]);
 
 function publicUser(user: UserRow) {
   return {
@@ -65,7 +66,7 @@ router.post(
       z.object({
         username: z.string().min(1).max(128),
         password: z.string().min(1).max(256),
-        client_type: z.enum(["web", "windows"]).default("windows"),
+        client_type: clientTypeSchema.default("windows"),
       }),
       request.body,
     );
@@ -85,7 +86,7 @@ router.post(
     }
     if (user.status !== "active") throw new HttpError(423, "USER_DISABLED", "账号已禁用");
     if (body.client_type === "web" && user.role !== "admin") {
-      throw new HttpError(403, "FORBIDDEN", "普通用户只能使用 Windows 客户端");
+      throw new HttpError(403, "FORBIDDEN", "普通用户只能使用 Windows 或 Linux 客户端");
     }
     if (
       user.password_state === "must_change" &&
@@ -106,8 +107,8 @@ router.post(
     response.json({
       user: publicUser(user),
       password_change_required: user.password_state === "must_change",
-      access_token: body.client_type === "windows" ? session.accessToken : undefined,
-      refresh_token: body.client_type === "windows" ? session.refreshToken : undefined,
+      access_token: body.client_type !== "web" ? session.accessToken : undefined,
+      refresh_token: body.client_type !== "web" ? session.refreshToken : undefined,
       csrf_token: session.csrfToken,
       access_expires_at: session.accessExpiresAt,
       refresh_expires_at: session.refreshExpiresAt,
@@ -163,7 +164,7 @@ router.post(
 router.post(
   "/refresh",
   asyncHandler(async (request, response) => {
-    const body = parseBody(z.object({ refresh_token: z.string().optional(), client_type: z.enum(["web", "windows"]).default("windows") }), request.body ?? {});
+    const body = parseBody(z.object({ refresh_token: z.string().optional(), client_type: clientTypeSchema.default("windows") }), request.body ?? {});
     const presented = body.refresh_token ?? parseCookies(request).ht_refresh;
     if (!presented) throw new HttpError(401, "SESSION_REVOKED", "刷新令牌缺失");
     const presentedHash = tokenHash(presented);
@@ -242,8 +243,8 @@ router.post(
     }
     if (body.client_type === "web") setSessionCookies(response, rotation.accessToken, rotation.refreshToken);
     response.json({
-      access_token: body.client_type === "windows" ? rotation.accessToken : undefined,
-      refresh_token: body.client_type === "windows" ? rotation.refreshToken : undefined,
+      access_token: body.client_type !== "web" ? rotation.accessToken : undefined,
+      refresh_token: body.client_type !== "web" ? rotation.refreshToken : undefined,
       csrf_token: rotation.csrfToken,
       access_expires_at: rotation.accessExpiresAt.toISOString(),
       refresh_expires_at: rotation.refreshExpiresAt.toISOString(),

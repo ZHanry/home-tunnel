@@ -9,7 +9,7 @@ Requirements:
 - Node.js 22 and pnpm 11
 - .NET 8 SDK on Windows for the desktop client
 - Docker with Compose for integration and container checks
-- Go 1.23 plus `windres` only when rebuilding the managed Windows Agent
+- Go 1.23.12 for the Linux client; `windres` is additionally required when rebuilding the managed Windows Agent
 
 Install and verify the TypeScript services:
 
@@ -32,6 +32,14 @@ Verify the Windows client logic on Windows:
 
 ```powershell
 dotnet run --project .\windows-client-tests\HomeTunnel.Client.Tests.csproj -c Release
+```
+
+Verify the headless Linux client:
+
+```sh
+cd linux-client
+go test ./...
+go build ./cmd/home-tunnel-client
 ```
 
 ## Pull requests

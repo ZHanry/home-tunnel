@@ -3,9 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Home Tunnel" Width="404" SizeToContent="Height" MaxHeight="560"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize" ShowInTaskbar="False"
-        Background="{StaticResource SurfaceBrush}"
+        Background="{DynamicResource SurfaceBrush}"
         UseLayoutRounding="True" SnapsToDevicePixels="True">
-  <Grid Background="{StaticResource SurfaceBrush}">
+  <Grid Background="{DynamicResource SurfaceBrush}">
     <Grid.RowDefinitions>
       <RowDefinition Height="*" />
       <RowDefinition Height="Auto" />
@@ -18,20 +18,20 @@
           <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <Border x:Name="IconBorder" Width="44" Height="44" CornerRadius="12"
-                Background="{StaticResource PrimarySoftBrush}"
-                BorderBrush="{StaticResource PrimaryBorderBrush}" BorderThickness="1"
+                Background="{DynamicResource PrimarySoftBrush}"
+                BorderBrush="{DynamicResource PrimaryBorderBrush}" BorderThickness="1"
                 VerticalAlignment="Top">
           <Viewbox Margin="10">
             <Path x:Name="IconPath" Data="{StaticResource IconShield}"
-                  Stroke="{StaticResource PrimaryBrush}" StrokeThickness="1.8"
+                  Stroke="{DynamicResource PrimaryBrush}" StrokeThickness="1.8"
                   StrokeStartLineCap="Round" StrokeEndLineCap="Round"
                   StrokeLineJoin="Round" Fill="Transparent" />
           </Viewbox>
         </Border>
         <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
-          <TextBlock x:Name="TitleText" Foreground="{StaticResource InkBrush}"
+          <TextBlock x:Name="TitleText" Foreground="{DynamicResource InkBrush}"
                      FontSize="19" FontWeight="SemiBold" TextWrapping="Wrap" />
-          <TextBlock x:Name="EyebrowText" Foreground="{StaticResource MutedBrush}"
+          <TextBlock x:Name="EyebrowText" Foreground="{DynamicResource MutedBrush}"
                      FontSize="12" Margin="0,3,0,0" />
         </StackPanel>
       </Grid>
@@ -40,16 +40,16 @@
                  TextWrapping="Wrap" Margin="0,18,0,0" />
 
       <Border x:Name="DetailsPanel" Visibility="Collapsed"
-              Background="{StaticResource SurfaceMutedBrush}"
-              BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+              Background="{DynamicResource SurfaceMutedBrush}"
+              BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
               CornerRadius="8" Padding="12,10" Margin="0,14,0,0">
-        <TextBlock x:Name="DetailsText" Foreground="{StaticResource TextSecondaryBrush}"
+        <TextBlock x:Name="DetailsText" Foreground="{DynamicResource TextSecondaryBrush}"
                    FontSize="12" LineHeight="19" TextWrapping="Wrap" />
       </Border>
     </StackPanel>
 
-    <Border Grid.Row="1" Background="{StaticResource SurfaceMutedBrush}"
-            BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0"
+    <Border Grid.Row="1" Background="{DynamicResource SurfaceMutedBrush}"
+            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0"
             Padding="16,12">
       <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
         <Button x:Name="CancelButton" Content="取消" Style="{StaticResource SecondaryButtonStyle}"

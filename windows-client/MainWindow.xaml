@@ -2,8 +2,8 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:HomeTunnel.Client"
-        Title="Home Tunnel" Width="460" Height="720" MinWidth="460" MaxWidth="460" MinHeight="520"
-        ResizeMode="NoResize" WindowStartupLocation="CenterScreen" Closing="Window_Closing"
+        Title="Home Tunnel" Width="480" Height="720" MinWidth="440" MaxWidth="680" MinHeight="620"
+        ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterScreen" Closing="Window_Closing"
         UseLayoutRounding="True" SnapsToDevicePixels="True">
   <Window.Resources>
     <local:ConnectionStateConverter x:Key="ConnectionStateConverter" />
@@ -14,290 +14,348 @@
     </Style>
   </Window.Resources>
 
-  <Grid Background="{StaticResource PageBrush}">
-    <!-- Login -->
+  <Grid Background="{DynamicResource PageBrush}">
+    <!-- Login Screen -->
     <Grid x:Name="LoginView">
-      <ScrollViewer VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled">
-        <StackPanel Width="388" Margin="0,30,0,28" HorizontalAlignment="Center">
-          <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,22">
-            <Border Width="48" Height="48" Background="{StaticResource PrimaryBrush}" CornerRadius="13">
-              <Viewbox Margin="9">
-                <Grid Width="24" Height="24">
-                  <Path Data="{StaticResource IconLogoPortal}" Stroke="White" StrokeThickness="1.8"
-                        StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
-                  <Path Data="{StaticResource IconLogoFlow}" Stroke="{StaticResource BrandMintBrush}" StrokeThickness="1.8"
-                        StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
-                </Grid>
-              </Viewbox>
-            </Border>
-            <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
-              <TextBlock Text="Home Tunnel" Foreground="{StaticResource InkBrush}" FontWeight="SemiBold" FontSize="19" />
-              <TextBlock Text="家庭服务安全隧道" Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="0,3,0,0" />
-            </StackPanel>
-          </StackPanel>
-
-          <Border Style="{StaticResource CardStyle}" Padding="24">
+        <StackPanel Width="388" Margin="0,14" HorizontalAlignment="Center" VerticalAlignment="Center">
+          <!-- Brand Header Symbol -->
+          <Border Background="{DynamicResource SidebarBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="16" Padding="18,14" Margin="0,0,0,14">
             <Border.Effect>
-              <DropShadowEffect BlurRadius="16" ShadowDepth="3" Direction="270" Opacity="0.07" Color="#071A33" />
+              <DropShadowEffect BlurRadius="16" ShadowDepth="4" Direction="270" Opacity="0.08" Color="#000000" />
+            </Border.Effect>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+              <Border Width="46" Height="46" Background="{DynamicResource PrimaryBrush}" CornerRadius="12">
+                <Viewbox Margin="8">
+                  <Grid Width="24" Height="24">
+                    <Path Data="{StaticResource IconLogoPortal}" Stroke="{DynamicResource PrimaryContrastBrush}" StrokeThickness="1.8"
+                          StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
+                    <Path Data="{StaticResource IconLogoFlow}" Stroke="{DynamicResource BrandMintBrush}" StrokeThickness="1.8"
+                          StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
+                  </Grid>
+                </Viewbox>
+              </Border>
+              <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                <TextBlock Text="Home Tunnel" Foreground="{DynamicResource SidebarTextBrush}" FontWeight="Bold" FontSize="20" />
+                <TextBlock Text="家庭服务安全隧道" Foreground="{DynamicResource PrimaryBrush}" FontSize="12" Margin="0,2,0,0" FontWeight="SemiBold" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+
+          <!-- Main Login Form Card -->
+          <Border Style="{StaticResource CardStyle}" Padding="22,18">
+            <Border.Effect>
+              <DropShadowEffect BlurRadius="16" ShadowDepth="3" Direction="270" Opacity="0.06" Color="#000000" />
             </Border.Effect>
             <StackPanel>
               <TextBlock Text="登录" Style="{StaticResource PageTitleTextStyle}" />
-              <TextBlock Text="选择你的 Home Tunnel 服务器并登录" Style="{StaticResource BodyTextStyle}" Margin="0,4,0,13" />
+              <TextBlock Text="选择你的 Home Tunnel 服务器并登录" Style="{StaticResource BodyTextStyle}" Margin="0,3,0,9" />
 
               <Label Content="服务器地址" Target="{Binding ElementName=ServerAddressBox}" />
               <TextBox x:Name="ServerAddressBox" AutomationProperties.Name="服务器地址"
                        AutomationProperties.HelpText="输入控制中心 HTTPS 地址，例如 https://console.tunnel.example.com" />
-              <Label Content="用户名" Target="{Binding ElementName=UsernameBox}" />
+
+              <Label Content="用户名" Target="{Binding ElementName=UsernameBox}" Margin="0,4,0,0" />
               <TextBox x:Name="UsernameBox" AutomationProperties.Name="用户名"
                        AutomationProperties.HelpText="输入管理员分配的 Home Tunnel 用户名" />
+
               <Label Content="密码" Target="{Binding ElementName=PasswordBox}" Margin="0,4,0,0" />
               <PasswordBox x:Name="PasswordBox" AutomationProperties.Name="密码"
                            AutomationProperties.HelpText="输入 Home Tunnel 账号密码"
                            KeyDown="PasswordBox_KeyDown" />
+
               <TextBlock x:Name="LoginError" Text="" Style="{StaticResource ErrorTextStyle}"
                          AutomationProperties.LiveSetting="Assertive" />
-              <Button x:Name="LoginButton" Content="登录 Home Tunnel" MinWidth="338"
-                      Margin="0,18,0,0" Click="LoginButton_Click" IsDefault="True" />
 
-              <Border Background="{StaticResource SurfaceMutedBrush}" BorderBrush="{StaticResource BorderBrush}"
-                      BorderThickness="1" CornerRadius="8" Padding="10,8" Margin="0,14,0,0">
+              <Button x:Name="LoginButton" Content="登录 Home Tunnel" MinWidth="340" Height="42"
+                      Margin="0,13,0,0" Click="LoginButton_Click" IsDefault="True" />
+
+              <Border Background="{DynamicResource SurfaceMutedBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                      BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,11,0,0">
                 <Grid>
                   <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="20" />
                     <ColumnDefinition Width="*" />
                   </Grid.ColumnDefinitions>
                   <Viewbox Width="16" Height="16" VerticalAlignment="Center">
-                    <Path Data="{StaticResource IconShield}" Stroke="{StaticResource SuccessBrush}" StrokeThickness="1.8"
+                    <Path Data="{StaticResource IconShield}" Stroke="{DynamicResource SuccessBrush}" StrokeThickness="1.8"
                           StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
                   </Viewbox>
                   <TextBlock Grid.Column="1" Text="服务器使用 HTTPS 验证，设备凭据由 Windows 安全存储保护"
-                             Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" Margin="8,0,0,0"
-                             VerticalAlignment="Center" />
+                             Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11.5" Margin="8,0,0,0"
+                             VerticalAlignment="Center" TextWrapping="Wrap" />
                 </Grid>
               </Border>
             </StackPanel>
           </Border>
 
-          <Grid Margin="2,12,2,0">
+          <Grid Margin="4,9,4,0">
             <TextBlock x:Name="LoginVersionText" Text="当前版本" Style="{StaticResource CaptionTextStyle}"
                        VerticalAlignment="Center" />
             <Button x:Name="CheckUpdateLoginButton" Content="检查更新"
                     Style="{StaticResource TertiaryButtonStyle}" HorizontalAlignment="Right"
-                    MinWidth="116" Click="CheckUpdateButton_Click"
+                    MinWidth="100" Click="CheckUpdateButton_Click"
                     AutomationProperties.Name="检查 Home Tunnel 更新" />
           </Grid>
         </StackPanel>
-      </ScrollViewer>
     </Grid>
 
-    <!-- First password change -->
+    <!-- First Password Change Screen -->
     <Grid x:Name="PasswordChangeView" Visibility="Collapsed">
-      <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <StackPanel Width="388" Margin="0,24,0,28" HorizontalAlignment="Center">
-          <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,18">
-            <Border Width="44" Height="44" Background="{StaticResource PrimaryBrush}" CornerRadius="12">
-              <Viewbox Margin="9">
-                <Grid Width="24" Height="24">
-                  <Path Data="{StaticResource IconLogoPortal}" Stroke="White" StrokeThickness="1.8"
-                        StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
-                  <Path Data="{StaticResource IconLogoFlow}" Stroke="{StaticResource BrandMintBrush}" StrokeThickness="1.8"
-                        StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
-                </Grid>
-              </Viewbox>
-            </Border>
-            <StackPanel Margin="11,0,0,0" VerticalAlignment="Center">
-              <TextBlock Text="Home Tunnel" Foreground="{StaticResource InkBrush}" FontWeight="SemiBold" FontSize="18" />
-              <TextBlock Text="首次登录安全设置" Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="0,2,0,0" />
-            </StackPanel>
-          </StackPanel>
-
-          <Border Style="{StaticResource CardStyle}" Padding="22">
-            <StackPanel>
-              <TextBlock Text="设置新的登录密码" Foreground="{StaticResource InkBrush}"
-                         FontSize="21" FontWeight="SemiBold" />
-              <TextBlock Text="修改后会为当前电脑注册独立设备身份。"
-                         Style="{StaticResource BodyTextStyle}" TextWrapping="Wrap" Margin="0,5,0,9" />
-              <Border Background="{StaticResource PrimarySoftBrush}" BorderBrush="{StaticResource PrimaryBorderBrush}"
-                      BorderThickness="1" CornerRadius="8" Padding="11,8" Margin="0,0,0,3">
-                <TextBlock Text="新密码至少 12 个字符，且不能包含用户名。"
-                           Foreground="{StaticResource PrimaryHoverBrush}" FontSize="12" TextWrapping="Wrap" />
+        <StackPanel Width="388" Margin="0,14" HorizontalAlignment="Center" VerticalAlignment="Center">
+          <!-- Brand Header Symbol -->
+          <Border Background="{DynamicResource SidebarBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="16" Padding="18,13" Margin="0,0,0,13">
+            <Border.Effect>
+              <DropShadowEffect BlurRadius="16" ShadowDepth="4" Direction="270" Opacity="0.08" Color="#000000" />
+            </Border.Effect>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+              <Border Width="44" Height="44" Background="{DynamicResource PrimaryBrush}" CornerRadius="12">
+                <Viewbox Margin="8">
+                  <Grid Width="24" Height="24">
+                    <Path Data="{StaticResource IconLogoPortal}" Stroke="{DynamicResource PrimaryContrastBrush}" StrokeThickness="1.8"
+                          StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
+                    <Path Data="{StaticResource IconLogoFlow}" Stroke="{DynamicResource BrandMintBrush}" StrokeThickness="1.8"
+                          StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
+                  </Grid>
+                </Viewbox>
               </Border>
+              <StackPanel Margin="13,0,0,0" VerticalAlignment="Center">
+                <TextBlock Text="Home Tunnel" Foreground="{DynamicResource SidebarTextBrush}" FontWeight="Bold" FontSize="19" />
+                <TextBlock Text="首次登录安全设置" Foreground="{DynamicResource PrimaryBrush}" FontSize="11.5" Margin="0,2,0,0" FontWeight="SemiBold" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+
+          <Border Style="{StaticResource CardStyle}" Padding="22,17">
+            <StackPanel>
+              <TextBlock Text="设置新的登录密码" Foreground="{DynamicResource InkBrush}"
+                         FontSize="20" FontWeight="Bold" />
+              <TextBlock Text="修改后会为当前电脑注册独立设备身份。"
+                         Style="{StaticResource BodyTextStyle}" TextWrapping="Wrap" Margin="0,3,0,7" />
+
+              <Border Background="{DynamicResource PrimarySoftBrush}" BorderBrush="{DynamicResource PrimaryBorderBrush}"
+                      BorderThickness="1" CornerRadius="8" Padding="12,7" Margin="0,0,0,4">
+                <TextBlock Text="新密码至少 12 个字符，且不能包含用户名。"
+                           Foreground="{DynamicResource PrimaryHoverBrush}" FontSize="12" TextWrapping="Wrap" />
+              </Border>
+
               <Label Content="当前临时密码" Target="{Binding ElementName=CurrentPasswordBox}" />
               <PasswordBox x:Name="CurrentPasswordBox" AutomationProperties.Name="当前临时密码" />
-              <Label Content="新密码" Target="{Binding ElementName=NewPasswordBox}" Margin="0,2,0,0" />
+
+              <Label Content="新密码" Target="{Binding ElementName=NewPasswordBox}" Margin="0,4,0,0" />
               <PasswordBox x:Name="NewPasswordBox" AutomationProperties.Name="新密码" />
-              <Label Content="确认新密码" Target="{Binding ElementName=ConfirmPasswordBox}" Margin="0,2,0,0" />
+
+              <Label Content="确认新密码" Target="{Binding ElementName=ConfirmPasswordBox}" Margin="0,4,0,0" />
               <PasswordBox x:Name="ConfirmPasswordBox" AutomationProperties.Name="确认新密码" />
+
               <TextBlock x:Name="PasswordChangeError" Text="" Style="{StaticResource ErrorTextStyle}"
                          AutomationProperties.LiveSetting="Assertive" />
-              <Grid Margin="0,18,0,0">
-                <Button Content="返回登录" Style="{StaticResource SecondaryButtonStyle}"
+
+              <Grid Margin="0,13,0,0">
+                <Button Content="返回登录" Style="{StaticResource SecondaryButtonStyle}" Height="40"
                         HorizontalAlignment="Left" Click="CancelPasswordButton_Click" />
-                <Button x:Name="ChangePasswordButton" Content="更新密码" MinWidth="130"
+                <Button x:Name="ChangePasswordButton" Content="更新密码" MinWidth="130" Height="40"
                         HorizontalAlignment="Right" Click="ChangePasswordButton_Click" />
               </Grid>
             </StackPanel>
           </Border>
         </StackPanel>
-      </ScrollViewer>
     </Grid>
 
-    <!-- Main client: one compact surface -->
+    <!-- Main Client Shell: Hero Header + Connections Container -->
     <Grid x:Name="MainView" Visibility="Collapsed">
       <Grid.RowDefinitions>
-        <RowDefinition Height="72" />
         <RowDefinition Height="Auto" />
-        <RowDefinition Height="64" />
+        <RowDefinition Height="58" />
         <RowDefinition Height="*" />
       </Grid.RowDefinitions>
 
-      <!-- 1. Brand bar -->
-      <Border Grid.Row="0" Background="{StaticResource SurfaceBrush}"
-              BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1"
-              Padding="20,0">
-        <Grid>
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="44" />
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="44" />
-          </Grid.ColumnDefinitions>
-          <Border Width="40" Height="40" Background="{StaticResource PrimaryBrush}" CornerRadius="11">
-            <Viewbox Margin="8">
-              <Grid Width="24" Height="24">
-                <Path Data="{StaticResource IconLogoPortal}" Stroke="White" StrokeThickness="1.8"
-                      StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
-                <Path Data="{StaticResource IconLogoFlow}" Stroke="{StaticResource BrandMintBrush}" StrokeThickness="1.8"
-                      StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
-              </Grid>
-            </Viewbox>
-          </Border>
-          <StackPanel Grid.Column="1" Margin="10,0,8,0" VerticalAlignment="Center">
-            <StackPanel Orientation="Horizontal">
-              <TextBlock Text="Home Tunnel" Foreground="{StaticResource InkBrush}"
-                         FontWeight="SemiBold" FontSize="16" />
-              <TextBlock x:Name="MainClientVersionText" Text="v2.2.5"
-                         Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="7,3,0,0" />
-            </StackPanel>
-            <TextBlock x:Name="AccountText" Foreground="{StaticResource MutedBrush}" FontSize="11"
-                       Margin="0,3,0,0" TextTrimming="CharacterEllipsis" />
-          </StackPanel>
-          <Button x:Name="MoreButton" Grid.Column="2" Width="44" MinWidth="44" Height="44"
-                  Style="{StaticResource TertiaryButtonStyle}" Padding="10"
-                  Click="MoreButton_Click" AutomationProperties.Name="更多操作"
-                  AutomationProperties.HelpText="检查更新、导出诊断、开机启动和退出账号">
-            <Grid Width="24" Height="24">
-              <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <Ellipse Width="3.5" Height="3.5" Fill="{StaticResource TextSecondaryBrush}" />
-                <Ellipse Width="3.5" Height="3.5" Fill="{StaticResource TextSecondaryBrush}" Margin="4,0" />
-                <Ellipse Width="3.5" Height="3.5" Fill="{StaticResource TextSecondaryBrush}" />
-              </StackPanel>
-              <Border x:Name="MoreUpdateBadge" Width="9" Height="9" CornerRadius="5"
-                      Background="{StaticResource DangerDotBrush}" BorderBrush="White" BorderThickness="2"
-                      HorizontalAlignment="Right" VerticalAlignment="Top" Visibility="Collapsed" />
-            </Grid>
-          </Button>
-        </Grid>
-      </Border>
-
-      <!-- 2. Status card -->
-      <Border Grid.Row="1" Style="{StaticResource CardStyle}" Margin="20,16,20,0" Padding="15,14">
+      <!-- Row 0: Hero Console (~250px) -->
+      <Border Grid.Row="0" Background="{DynamicResource SidebarBrush}"
+              BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
+              Padding="20,16">
         <Grid>
           <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
           </Grid.RowDefinitions>
-          <Grid Grid.Row="0">
-            <StackPanel>
-              <TextBlock Text="隧道状态" Foreground="{StaticResource MutedBrush}" FontSize="11" />
-              <TextBlock x:Name="StatusHeadlineText" Text="正在连接控制中心"
-                         Foreground="{StaticResource InkBrush}" FontSize="16" FontWeight="SemiBold"
-                         Margin="0,3,0,0" />
+
+          <!-- Top Line: Logo / Version / Account / More Menu -->
+          <Grid Grid.Row="0" Margin="0,0,0,14">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="40" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="40" />
+            </Grid.ColumnDefinitions>
+
+            <Border Width="38" Height="38" Background="{DynamicResource PrimaryBrush}" CornerRadius="10">
+              <Viewbox Margin="7">
+                <Grid Width="24" Height="24">
+                  <Path Data="{StaticResource IconLogoPortal}" Stroke="{DynamicResource PrimaryContrastBrush}" StrokeThickness="1.8"
+                        StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
+                  <Path Data="{StaticResource IconLogoFlow}" Stroke="{DynamicResource BrandMintBrush}" StrokeThickness="1.8"
+                        StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
+                </Grid>
+              </Viewbox>
+            </Border>
+
+            <StackPanel Grid.Column="1" Margin="10,0,8,0" VerticalAlignment="Center">
+              <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Home Tunnel" Foreground="{DynamicResource SidebarTextBrush}"
+                           FontWeight="Bold" FontSize="15" />
+                <TextBlock x:Name="MainClientVersionText" Text="v2.3.0"
+                           Foreground="{DynamicResource PrimaryBrush}" FontSize="11" Margin="7,2,0,0" FontWeight="SemiBold" />
+              </StackPanel>
+              <TextBlock x:Name="AccountText" Foreground="{DynamicResource SidebarMutedBrush}" FontSize="11"
+                         Margin="0,2,0,0" TextTrimming="CharacterEllipsis" />
             </StackPanel>
-            <Border x:Name="AgentStatusBadge" HorizontalAlignment="Right" VerticalAlignment="Center"
-                    Background="{StaticResource SuccessSoftBrush}" BorderBrush="{StaticResource SuccessBorderBrush}"
-                    BorderThickness="1" CornerRadius="13" Padding="9,4">
+
+            <Button x:Name="MoreButton" Grid.Column="2" Width="40" MinWidth="40" Height="40"
+                    Style="{StaticResource TertiaryButtonStyle}" Padding="8" Foreground="{DynamicResource SidebarMutedBrush}"
+                    Click="MoreButton_Click" AutomationProperties.Name="更多操作"
+                    AutomationProperties.HelpText="检查更新、导出诊断、切换主题、开机启动和退出账号">
+              <Grid Width="24" Height="24">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                  <Ellipse Width="3.5" Height="3.5" Fill="{DynamicResource SidebarMutedBrush}" />
+                  <Ellipse Width="3.5" Height="3.5" Fill="{DynamicResource SidebarMutedBrush}" Margin="4,0" />
+                  <Ellipse Width="3.5" Height="3.5" Fill="{DynamicResource SidebarMutedBrush}" />
+                </StackPanel>
+                <Border x:Name="MoreUpdateBadge" Width="9" Height="9" CornerRadius="5"
+                        Background="{DynamicResource DangerDotBrush}" BorderBrush="{DynamicResource SurfaceBrush}" BorderThickness="2"
+                        HorizontalAlignment="Right" VerticalAlignment="Top" Visibility="Collapsed" />
+              </Grid>
+            </Button>
+          </Grid>
+
+          <!-- Middle Line: Status Header & Status Badge -->
+          <Grid Grid.Row="1" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0">
+              <TextBlock Text="受管 HTTP/HTTPS 隧道" Foreground="{DynamicResource PrimaryBrush}" FontSize="11" FontWeight="SemiBold" />
+              <TextBlock x:Name="StatusHeadlineText" Text="正在连接控制中心"
+                         Foreground="{DynamicResource SidebarTextBrush}" FontSize="18" FontWeight="Bold"
+                         Margin="0,2,0,0" />
+            </StackPanel>
+
+            <Border x:Name="AgentStatusBadge" Grid.Column="1" VerticalAlignment="Center"
+                    Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderStrongBrush}"
+                    BorderThickness="1" CornerRadius="13" Padding="10,5">
               <StackPanel Orientation="Horizontal">
                 <Border x:Name="AgentStatusDot" Width="7" Height="7"
-                        Background="{StaticResource SuccessDotBrush}" CornerRadius="4"
+                        Background="{DynamicResource SuccessDotBrush}" CornerRadius="4"
                         Margin="0,0,6,0" VerticalAlignment="Center" />
                 <TextBlock x:Name="AgentStatusText" Text="正在连接"
-                           Foreground="{StaticResource SuccessBrush}" FontWeight="SemiBold" FontSize="11"
+                           Foreground="{DynamicResource SuccessDotBrush}" FontWeight="SemiBold" FontSize="11"
                            AutomationProperties.LiveSetting="Polite" />
               </StackPanel>
             </Border>
           </Grid>
-          <TextBlock x:Name="LeaseStatusText" Grid.Row="1" Text="正在向控制中心请求安全租约"
-                     Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" LineHeight="17"
-                     TextWrapping="Wrap" Margin="0,9,0,0" MaxHeight="36"
-                     AutomationProperties.LiveSetting="Polite" />
-          <Grid Grid.Row="2" Margin="0,12,0,0">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="8" />
-              <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <Button x:Name="SyncButton" Grid.Column="0" Content="立即同步"
-                    Style="{StaticResource SoftButtonStyle}" MinWidth="0"
-                    Click="SyncButton_Click" />
-            <Button x:Name="PauseButton" Grid.Column="2" Content="暂停隧道"
-                    Style="{StaticResource SecondaryButtonStyle}" MinWidth="0"
-                    Click="PauseButton_Click" />
-          </Grid>
+
+          <!-- Bottom Line: Lease Information & Action Strip -->
+          <StackPanel Grid.Row="2">
+            <TextBlock x:Name="LeaseStatusText" Text="正在向控制中心请求安全租约"
+                       Foreground="{DynamicResource SidebarMutedBrush}" FontSize="11" LineHeight="16"
+                       TextWrapping="Wrap" Margin="0,2,0,12" MaxHeight="34"
+                       AutomationProperties.LiveSetting="Polite" />
+
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <Button x:Name="SyncButton" Grid.Column="0" Content="立即同步"
+                      Style="{StaticResource SoftButtonStyle}"
+                      MinWidth="0" Height="38" MinHeight="38"
+                      Click="SyncButton_Click" />
+              <Button x:Name="PauseButton" Grid.Column="2" Content="暂停隧道"
+                      Style="{StaticResource SecondaryButtonStyle}"
+                      MinWidth="0" Height="38" MinHeight="38"
+                      Click="PauseButton_Click" />
+            </Grid>
+          </StackPanel>
         </Grid>
       </Border>
 
-      <!-- 3. Connection heading -->
-      <Grid Grid.Row="2" Margin="20,0">
+      <!-- Row 1: Connection Heading Bar (Command Bar) -->
+      <Grid Grid.Row="1" Margin="20,0">
         <StackPanel VerticalAlignment="Center">
-          <TextBlock Text="连接" Foreground="{StaticResource InkBrush}" FontSize="17" FontWeight="SemiBold" />
+          <TextBlock Text="连接" Foreground="{DynamicResource InkBrush}" FontSize="17" FontWeight="Bold" />
           <TextBlock Text="{Binding ElementName=ConnectionsList, Path=Items.Count, StringFormat={}{0} 条连接}"
-                     Style="{StaticResource CaptionTextStyle}" Margin="0,2,0,0" />
+                     Style="{StaticResource CaptionTextStyle}" Margin="0,1,0,0" />
         </StackPanel>
         <Button x:Name="NewConnectionButton" HorizontalAlignment="Right" VerticalAlignment="Center"
-                MinWidth="132" Click="NewConnectionButton_Click" AutomationProperties.Name="新建连接">
+                MinWidth="124" Height="38" MinHeight="38" Click="NewConnectionButton_Click" AutomationProperties.Name="新建连接">
           <Grid>
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="18" />
               <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <Viewbox Width="17" Height="17">
-              <Path Data="{StaticResource IconPlus}" Stroke="White" StrokeThickness="2"
+            <Viewbox Width="16" Height="16">
+                <Path Data="{StaticResource IconPlus}" Stroke="{DynamicResource PrimaryContrastBrush}" StrokeThickness="2.2"
                     StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
             </Viewbox>
-            <TextBlock Grid.Column="1" Text="新建连接" Margin="7,0,0,0" />
+            <TextBlock Grid.Column="1" Text="新建连接" Margin="6,0,0,0" FontWeight="SemiBold" />
           </Grid>
         </Button>
       </Grid>
 
-      <!-- 4. Scrollable connection cards -->
-      <Grid Grid.Row="3" Margin="20,0,20,16">
-        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+      <!-- Row 2: Scrollable Connection Cards Workspace -->
+      <Grid Grid.Row="2" Margin="20,0,20,16">
+        <ScrollViewer x:Name="ConnectionsScrollViewer"
+                      VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled"
+                      PanningMode="VerticalOnly">
           <ItemsControl x:Name="ConnectionsList">
             <ItemsControl.ItemTemplate>
               <DataTemplate>
-                <Border Style="{StaticResource CardStyle}" Padding="14,13" Margin="0,0,0,10">
+                <Border Style="{StaticResource CardStyle}" Padding="0" Margin="0,0,0,10"
+                        Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}">
+                  <Border.Effect>
+                    <DropShadowEffect BlurRadius="8" ShadowDepth="2" Direction="270" Opacity="0.04" Color="#000000" />
+                  </Border.Effect>
                   <Grid>
                     <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="4" />
                       <ColumnDefinition Width="*" />
-                      <ColumnDefinition Width="52" />
+                      <ColumnDefinition Width="48" />
                     </Grid.ColumnDefinitions>
-                    <StackPanel>
+
+                    <!-- Left 3px Status Rail Accent -->
+                    <Border Grid.Column="0" CornerRadius="3,0,0,3">
+                      <Border.Style>
+                        <Style TargetType="Border">
+                          <Setter Property="Background" Value="{DynamicResource MutedBrush}" />
+                          <Style.Triggers>
+                            <DataTrigger Binding="{Binding State}" Value="Online"><Setter Property="Background" Value="{DynamicResource SuccessDotBrush}" /></DataTrigger>
+                            <DataTrigger Binding="{Binding State}" Value="Applying"><Setter Property="Background" Value="{DynamicResource PrimaryBrush}" /></DataTrigger>
+                            <DataTrigger Binding="{Binding State}" Value="Waiting"><Setter Property="Background" Value="{DynamicResource WarningDotBrush}" /></DataTrigger>
+                            <DataTrigger Binding="{Binding State}" Value="Error"><Setter Property="Background" Value="{DynamicResource DangerDotBrush}" /></DataTrigger>
+                          </Style.Triggers>
+                        </Style>
+                      </Border.Style>
+                    </Border>
+
+                    <!-- Card Body Content -->
+                    <StackPanel Grid.Column="1" Margin="14,12">
                       <Grid>
-                        <TextBlock Text="{Binding Name}" Foreground="{StaticResource InkBrush}"
-                                   FontWeight="SemiBold" FontSize="14" MaxWidth="250"
+                        <TextBlock Text="{Binding Name}" Foreground="{DynamicResource InkBrush}"
+                                   FontWeight="Bold" FontSize="14" MaxWidth="240"
                                    TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"
                                    HorizontalAlignment="Left" />
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                          <Border Width="7" Height="7" CornerRadius="4" Margin="0,0,6,0" VerticalAlignment="Center">
+                          <Border Width="6" Height="6" CornerRadius="3" Margin="0,0,5,0" VerticalAlignment="Center">
                             <Border.Style>
                               <Style TargetType="Border">
-                                <Setter Property="Background" Value="{StaticResource MutedBrush}" />
+                                <Setter Property="Background" Value="{DynamicResource MutedBrush}" />
                                 <Style.Triggers>
-                                  <DataTrigger Binding="{Binding State}" Value="Online"><Setter Property="Background" Value="{StaticResource SuccessDotBrush}" /></DataTrigger>
-                                  <DataTrigger Binding="{Binding State}" Value="Applying"><Setter Property="Background" Value="{StaticResource PrimaryBrush}" /></DataTrigger>
-                                  <DataTrigger Binding="{Binding State}" Value="Waiting"><Setter Property="Background" Value="{StaticResource WarningDotBrush}" /></DataTrigger>
-                                  <DataTrigger Binding="{Binding State}" Value="Error"><Setter Property="Background" Value="{StaticResource DangerDotBrush}" /></DataTrigger>
+                                  <DataTrigger Binding="{Binding State}" Value="Online"><Setter Property="Background" Value="{DynamicResource SuccessDotBrush}" /></DataTrigger>
+                                  <DataTrigger Binding="{Binding State}" Value="Applying"><Setter Property="Background" Value="{DynamicResource PrimaryBrush}" /></DataTrigger>
+                                  <DataTrigger Binding="{Binding State}" Value="Waiting"><Setter Property="Background" Value="{DynamicResource WarningDotBrush}" /></DataTrigger>
+                                  <DataTrigger Binding="{Binding State}" Value="Error"><Setter Property="Background" Value="{DynamicResource DangerDotBrush}" /></DataTrigger>
                                 </Style.Triggers>
                               </Style>
                             </Border.Style>
@@ -306,32 +364,39 @@
                                      FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center">
                             <TextBlock.Style>
                               <Style TargetType="TextBlock">
-                                <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
                                 <Style.Triggers>
-                                  <DataTrigger Binding="{Binding State}" Value="Online"><Setter Property="Foreground" Value="{StaticResource SuccessBrush}" /></DataTrigger>
-                                  <DataTrigger Binding="{Binding State}" Value="Applying"><Setter Property="Foreground" Value="{StaticResource PrimaryBrush}" /></DataTrigger>
-                                  <DataTrigger Binding="{Binding State}" Value="Waiting"><Setter Property="Foreground" Value="{StaticResource WarningBrush}" /></DataTrigger>
-                                  <DataTrigger Binding="{Binding State}" Value="Error"><Setter Property="Foreground" Value="{StaticResource DangerBrush}" /></DataTrigger>
+                                  <DataTrigger Binding="{Binding State}" Value="Online"><Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" /></DataTrigger>
+                                  <DataTrigger Binding="{Binding State}" Value="Applying"><Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}" /></DataTrigger>
+                                  <DataTrigger Binding="{Binding State}" Value="Waiting"><Setter Property="Foreground" Value="{DynamicResource WarningBrush}" /></DataTrigger>
+                                  <DataTrigger Binding="{Binding State}" Value="Error"><Setter Property="Foreground" Value="{DynamicResource DangerBrush}" /></DataTrigger>
                                 </Style.Triggers>
                               </Style>
                             </TextBlock.Style>
                           </TextBlock>
                         </StackPanel>
                       </Grid>
-                      <TextBlock Style="{StaticResource MonoTextStyle}" TextTrimming="CharacterEllipsis"
-                                 ToolTip="{Binding PublicUrl}" Text="{Binding PublicUrl}" Margin="0,8,0,0" />
-                      <TextBlock Foreground="{StaticResource MutedBrush}" FontSize="11"
-                                 TextTrimming="CharacterEllipsis" Margin="0,5,0,0">
+
+                      <!-- Public Address (Level 1) -->
+                      <TextBlock Style="{StaticResource MonoTextStyle}" Foreground="{DynamicResource PrimaryBrush}"
+                                 FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
+                                 ToolTip="{Binding PublicUrl}" Text="{Binding PublicUrl}" Margin="0,6,0,0" />
+
+                      <!-- Local Target Address (Level 2) -->
+                      <TextBlock Foreground="{DynamicResource MutedBrush}" FontSize="11"
+                                 TextTrimming="CharacterEllipsis" Margin="0,4,0,0">
                         <Run Text="本地  " /><Run Text="{Binding LocalScheme}" /><Run Text="://" />
                         <Run Text="{Binding LocalHost}" /><Run Text=":" /><Run Text="{Binding LocalPort}" />
                       </TextBlock>
                     </StackPanel>
-                    <Button Grid.Column="1" Width="44" MinWidth="44" Height="44" Padding="11"
-                            HorizontalAlignment="Right" VerticalAlignment="Center"
+
+                    <!-- Right Edit Action Button -->
+                    <Button Grid.Column="2" Width="40" MinWidth="40" Height="40" Padding="10"
+                            HorizontalAlignment="Center" VerticalAlignment="Center"
                             Style="{StaticResource TertiaryButtonStyle}" Tag="{Binding}"
                             Click="EditConnectionButton_Click" AutomationProperties.Name="编辑连接">
-                      <Viewbox Width="18" Height="18">
-                        <Path Data="{StaticResource IconEdit}" Stroke="{StaticResource PrimaryBrush}"
+                      <Viewbox Width="17" Height="17">
+                        <Path Data="{StaticResource IconEdit}" Stroke="{DynamicResource PrimaryBrush}"
                               StrokeThickness="1.8" StrokeStartLineCap="Round"
                               StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent" />
                       </Viewbox>
@@ -343,7 +408,8 @@
           </ItemsControl>
         </ScrollViewer>
 
-        <Grid Panel.ZIndex="5" Background="{StaticResource PageBrush}">
+        <!-- Empty State View -->
+        <Grid Panel.ZIndex="5" Background="{DynamicResource PageBrush}">
           <Grid.Style>
             <Style TargetType="Grid">
               <Setter Property="Visibility" Value="Collapsed" />
@@ -355,18 +421,18 @@
             </Style>
           </Grid.Style>
           <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="300">
-            <Border Width="48" Height="48" Background="{StaticResource PrimaryBrush}"
+            <Border Width="48" Height="48" Background="{DynamicResource PrimaryBrush}"
                     CornerRadius="13" HorizontalAlignment="Center">
               <Viewbox Margin="10">
                 <Grid Width="24" Height="24">
-                  <Path Data="{StaticResource IconLogoPortal}" Stroke="White" StrokeThickness="1.8"
+                  <Path Data="{StaticResource IconLogoPortal}" Stroke="{DynamicResource PrimaryContrastBrush}" StrokeThickness="1.8"
                         StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
-                  <Path Data="{StaticResource IconLogoFlow}" Stroke="{StaticResource BrandMintBrush}" StrokeThickness="1.8"
+                  <Path Data="{StaticResource IconLogoFlow}" Stroke="{DynamicResource BrandMintBrush}" StrokeThickness="1.8"
                         StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
                 </Grid>
               </Viewbox>
             </Border>
-            <TextBlock Text="还没有连接" Foreground="{StaticResource InkBrush}" FontWeight="SemiBold"
+            <TextBlock Text="还没有连接" Foreground="{DynamicResource InkBrush}" FontWeight="SemiBold"
                        FontSize="16" HorizontalAlignment="Center" Margin="0,13,0,0" />
             <TextBlock Text="创建第一条连接，让家里的服务拥有安全 HTTPS 地址。"
                        Style="{StaticResource CaptionTextStyle}" TextAlignment="Center"
@@ -375,37 +441,42 @@
         </Grid>
       </Grid>
 
+      <!-- Popup Menu -->
       <Popup x:Name="MoreMenuPopup" Placement="Bottom" PlacementTarget="{Binding ElementName=MoreButton}"
              HorizontalOffset="-256" VerticalOffset="4" StaysOpen="False" AllowsTransparency="True"
              PopupAnimation="Fade" Closed="MoreMenuPopup_Closed">
-        <Border Width="304" Background="{StaticResource SurfaceBrush}"
-                BorderBrush="{StaticResource BorderStrongBrush}" BorderThickness="1"
+        <Border Width="304" Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1"
                 CornerRadius="14" Padding="14">
           <Border.Effect>
-            <DropShadowEffect BlurRadius="18" ShadowDepth="5" Direction="270" Opacity="0.14" Color="#071A33" />
+            <DropShadowEffect BlurRadius="18" ShadowDepth="5" Direction="270" Opacity="0.14" Color="#000000" />
           </Border.Effect>
           <StackPanel>
-            <TextBlock Text="更多操作" Foreground="{StaticResource InkBrush}"
+            <TextBlock Text="更多操作" Foreground="{DynamicResource InkBrush}"
                        FontWeight="SemiBold" FontSize="14" Margin="8,2,8,8" />
             <Button x:Name="CheckUpdateMenuButton" Tag="{StaticResource IconDownload}"
                     Style="{StaticResource MenuActionButtonStyle}" Click="CheckUpdateButton_Click">
               <Grid>
                 <TextBlock x:Name="CheckUpdateMenuText" Text="检查更新" HorizontalAlignment="Left" />
                 <Border x:Name="MenuUpdateVersionBadge" HorizontalAlignment="Right"
-                        Background="{StaticResource PrimarySoftBrush}" BorderBrush="{StaticResource PrimaryBorderBrush}"
+                        Background="{DynamicResource PrimarySoftBrush}" BorderBrush="{DynamicResource PrimaryBorderBrush}"
                         BorderThickness="1" CornerRadius="10" Padding="7,2" Visibility="Collapsed">
-                  <TextBlock x:Name="MenuUpdateVersionText" Foreground="{StaticResource PrimaryBrush}"
+                  <TextBlock x:Name="MenuUpdateVersionText" Foreground="{DynamicResource PrimaryBrush}"
                              FontSize="10" FontWeight="SemiBold" />
                 </Border>
               </Grid>
             </Button>
             <Button Content="导出诊断" Tag="{StaticResource IconDocument}"
                     Style="{StaticResource MenuActionButtonStyle}" Click="DiagnosticsButton_Click" />
-            <Border Margin="8,6" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" />
+            <Button x:Name="ThemeToggleButton" Tag="{StaticResource IconMoon}"
+                    Style="{StaticResource MenuActionButtonStyle}" Click="ThemeToggleButton_Click">
+              <TextBlock x:Name="ThemeToggleText" Text="切换到深色主题" HorizontalAlignment="Left" />
+            </Button>
+            <Border Margin="8,6" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" />
             <CheckBox x:Name="AutoStartCheckBox" Content="登录 Windows 后启动"
-                      MinHeight="44" Margin="12,0" Checked="AutoStartCheckBox_Changed"
+                      MinHeight="40" Margin="12,0" Checked="AutoStartCheckBox_Changed"
                       Unchecked="AutoStartCheckBox_Changed" />
-            <Border Margin="8,6" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" />
+            <Border Margin="8,6" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" />
             <Button Content="退出当前账号" Tag="{StaticResource IconLogout}"
                     Style="{StaticResource SidebarDangerButtonStyle}" Margin="0"
                     Click="LogoutButton_Click" />
@@ -414,18 +485,18 @@
       </Popup>
     </Grid>
 
-    <!-- Used only while restoring a protected device session or signing out. -->
-    <Border x:Name="BusyOverlay" Panel.ZIndex="100" Background="{StaticResource OverlayBrush}"
+    <!-- Busy Overlay -->
+    <Border x:Name="BusyOverlay" Panel.ZIndex="100" Background="{DynamicResource OverlayBrush}"
             Visibility="Collapsed">
-      <Border Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}"
+      <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
               BorderThickness="1" CornerRadius="14" Padding="22" Width="336"
               HorizontalAlignment="Center" VerticalAlignment="Center">
         <StackPanel>
-          <TextBlock x:Name="BusyText" Text="正在处理…" Foreground="{StaticResource InkBrush}"
+          <TextBlock x:Name="BusyText" Text="正在处理…" Foreground="{DynamicResource InkBrush}"
                      FontWeight="SemiBold" FontSize="15" HorizontalAlignment="Center"
                      Margin="0,0,0,12" AutomationProperties.LiveSetting="Polite" />
-          <ProgressBar IsIndeterminate="True" Height="4" Foreground="{StaticResource PrimaryBrush}"
-                       Background="{StaticResource PrimaryBorderBrush}" />
+          <ProgressBar IsIndeterminate="True" Height="4" Foreground="{DynamicResource PrimaryBrush}"
+                       Background="{DynamicResource PrimaryBorderBrush}" />
         </StackPanel>
       </Border>
     </Border>

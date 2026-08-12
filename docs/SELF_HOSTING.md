@@ -8,7 +8,7 @@ This guide describes the portable root-level `compose.yaml`. The scripts under `
 - An `amd64` or `arm64` CPU, at least 1 GiB RAM (with swap on small hosts) and 2 GiB free disk space
 - A public IPv4 or IPv6 address reachable on TCP 80, 443 and 7000; UDP 443 is optional for HTTP/3
 - A domain you control
-- A Windows 10/11 x64 machine to run the current desktop client
+- A Windows 10/11 x64 machine for the graphical client, or an `amd64`/`arm64` Linux machine for the headless systemd client
 
 Create DNS records before starting:
 
@@ -68,7 +68,9 @@ cat deploy/secrets/bootstrap_admin_password
 
 Open `https://console.tunnel.example.com/admin`, sign in as `admin`, and change the password immediately. Do not paste the password into an issue, log or shell history.
 
-## 3. Install and connect the Windows client
+## 3. Install and connect a client
+
+### Windows
 
 Download the versioned Windows x64 installer from GitHub Releases. On first launch, enter the control-center root address, for example `https://console.tunnel.example.com`, then sign in with a user created by the administrator. The client retrieves the public FRPS host, port and tunnel suffix from that same HTTPS origin.
 
@@ -82,6 +84,23 @@ To build the generic installer yourself, use Windows with .NET 8, Inno Setup 6, 
 Use a new App ID for your fork so it does not overwrite a different Home Tunnel distribution. The development script creates a temporary self-signed Authenticode certificate. Public distribution should use a trusted code-signing certificate and a protected signing workflow.
 
 The official client checks this project's GitHub Releases directly, so a self-hosted server does not need to store or serve the installer. You may copy only `latest.json` into `deploy/downloads/` if you want the landing page to show the current version, size and SHA-256; its download button still points to GitHub.
+
+### Linux
+
+Build a headless `amd64` or `arm64` package on a Linux build machine with Go 1.23.12:
+
+```sh
+ARCH=amd64 ./linux-client/packaging/build-release.sh
+```
+
+Copy the archive from `outputs/linux/` to the target, verify its adjacent SHA-256 file, extract it, and run:
+
+```sh
+sudo ./install.sh
+sudo home-tunnel-enroll
+```
+
+The enrollment helper registers the device without persisting the account password, then enables `home-tunnel-client.service`. Connections for the Linux device are managed in the control-center administrator UI. See [`linux-client/README.md`](../linux-client/README.md) for status, logs, upgrades and current limitations.
 
 ## Operations
 
@@ -108,9 +127,10 @@ The managed updater also detects deployments created by older releases with Post
 
 ## Current scope
 
-- Windows 10/11 x64 client
+- Windows 10/11 x64 graphical client
+- Linux `amd64`/`arm64` headless systemd client
 - HTTP and HTTPS local targets
 - One public tunnel domain per server deployment
 - Prebuilt and source-buildable `amd64` and `arm64` server containers
 
-Raw TCP/UDP forwarding, macOS/Linux clients and a single-binary server are not part of the current release.
+Raw TCP/UDP forwarding, a macOS client and a single-binary server are not part of the current release.

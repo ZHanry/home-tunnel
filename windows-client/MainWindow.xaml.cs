@@ -51,9 +51,10 @@ public partial class MainWindow : Window
 
     public MainWindow()
     {
+        _state = _stateStore.Load();
+        App.ApplyTheme(_state.Theme);
         InitializeComponent();
         ApplyWorkAreaBounds();
-        _state = _stateStore.Load();
         MigrateLegacyServerProfile();
         _logger = new SafeLogger(_stateStore.LogDirectory);
         _supervisor = new FrpcSupervisor(_stateStore, _logger);
@@ -72,6 +73,7 @@ public partial class MainWindow : Window
         _syncTimer.Tick += async (_, _) => await SynchronizeAsync(showBusy: false);
         _heartbeatTimer.Tick += async (_, _) => await HeartbeatAsync();
         AutoStartCheckBox.IsChecked = _state.StartWithWindows;
+        UpdateThemeToggleText();
         _initializing = false;
         Loaded += async (_, _) =>
         {
@@ -130,7 +132,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (view is not ("main" or "editor" or "empty" or "long"))
+        if (view is not ("main" or "editor" or "new-editor" or "empty" or "long"))
         {
             UsernameBox.Focus();
             return;
@@ -194,19 +196,41 @@ public partial class MainWindow : Window
             Version = 3,
             State = "Waiting",
         });
+        if (view == "long")
+        {
+            for (var index = 4; index <= 9; index++)
+            {
+                _connections.Add(new TunnelConnection
+                {
+                    Id = $"qa-extra-{index}",
+                    Name = $"额外验证连接 {index}",
+                    Subdomain = $"qa-extra-{index}",
+                    PublicUrl = $"https://qa-extra-{index}.{ProductConfiguration.TunnelDomain}",
+                    LocalScheme = "http",
+                    LocalHost = "127.0.0.1",
+                    LocalPort = 3000 + index,
+                    Enabled = true,
+                    Version = index,
+                    State = index % 2 == 0 ? "Online" : "Waiting",
+                });
+            }
+            Dispatcher.BeginInvoke(
+                ConnectionsScrollViewer.ScrollToEnd,
+                DispatcherPriority.ApplicationIdle);
+        }
         ApplyAgentStatus(new AgentSnapshot(
             "Online",
             "配置已同步，3 条连接中有 2 条正在运行",
             DateTimeOffset.Now.AddMinutes(55),
             12));
 
-        if (view == "editor")
+        if (view is "editor" or "new-editor")
         {
             Dispatcher.BeginInvoke(() =>
             {
                 var dialog = new ConnectionDialog(
                     this,
-                    _connections[0],
+                    view == "new-editor" ? null : _connections[0],
                     (_, _) => Task.CompletedTask,
                     (_, _) => Task.CompletedTask);
                 dialog.ShowDialog();
@@ -1216,6 +1240,40 @@ public partial class MainWindow : Window
         await Task.CompletedTask;
     }
 
+    private void ThemeToggleButton_Click(object sender, RoutedEventArgs e)
+    {
+        _state.Theme = App.CurrentTheme == "dark" ? "light" : "dark";
+        App.ApplyTheme(_state.Theme);
+        RefreshAgentStatusTheme();
+        _stateStore.Save(_state);
+        UpdateThemeToggleText();
+    }
+
+    private void UpdateThemeToggleText()
+    {
+        var switchToDark = App.CurrentTheme != "dark";
+        ThemeToggleText.Text = switchToDark ? "切换到深色主题" : "切换到浅色主题";
+        ThemeToggleButton.Tag = FindResource(switchToDark ? "IconMoon" : "IconSun");
+        ThemeToggleButton.ToolTip = ThemeToggleText.Text;
+        System.Windows.Automation.AutomationProperties.SetName(ThemeToggleButton, ThemeToggleText.Text);
+    }
+
+    private void RefreshAgentStatusTheme()
+    {
+        var visual = _agentState switch
+        {
+            "Online" => (Background: "SuccessSoftBrush", Border: "SuccessBorderBrush", Dot: "SuccessDotBrush", Text: "SuccessBrush"),
+            "Applying" => (Background: "PrimarySoftBrush", Border: "PrimaryBorderBrush", Dot: "PrimaryBrush", Text: "PrimaryBrush"),
+            "Degraded" => (Background: "WarningSoftBrush", Border: "WarningBorderBrush", Dot: "WarningDotBrush", Text: "WarningBrush"),
+            "RepairRequired" or "Error" or "ExpiredStop" => (Background: "DangerSoftBrush", Border: "DangerBorderBrush", Dot: "DangerDotBrush", Text: "DangerBrush"),
+            _ => (Background: "SurfaceMutedBrush", Border: "BorderStrongBrush", Dot: "MutedBrush", Text: "TextSecondaryBrush"),
+        };
+        AgentStatusBadge.Background = (MediaBrush)FindResource(visual.Background);
+        AgentStatusBadge.BorderBrush = (MediaBrush)FindResource(visual.Border);
+        AgentStatusDot.Background = (MediaBrush)FindResource(visual.Dot);
+        AgentStatusText.Foreground = (MediaBrush)FindResource(visual.Text);
+    }
+
     private void MoreButton_Click(object sender, RoutedEventArgs e)
     {
         MoreMenuPopup.IsOpen = !MoreMenuPopup.IsOpen;
@@ -1242,10 +1300,7 @@ public partial class MainWindow : Window
             "ExpiredStop" => (Label: "租约已过期", Background: "DangerSoftBrush", Border: "DangerBorderBrush", Dot: "DangerDotBrush", Text: "DangerBrush"),
             _ => (Label: "隧道已停止", Background: "SurfaceMutedBrush", Border: "BorderStrongBrush", Dot: "MutedBrush", Text: "TextSecondaryBrush"),
         };
-        AgentStatusBadge.Background = (MediaBrush)FindResource(visual.Background);
-        AgentStatusBadge.BorderBrush = (MediaBrush)FindResource(visual.Border);
-        AgentStatusDot.Background = (MediaBrush)FindResource(visual.Dot);
-        AgentStatusText.Foreground = (MediaBrush)FindResource(visual.Text);
+        RefreshAgentStatusTheme();
         AgentStatusText.Text = visual.Label;
         StatusHeadlineText.Text = _paused ? "隧道已暂停" : snapshot.State switch
         {
@@ -1305,8 +1360,8 @@ public partial class MainWindow : Window
     private void ApplyWorkAreaBounds()
     {
         var workArea = SystemParameters.WorkArea;
-        Height = Math.Max(520, Math.Min(720, workArea.Height - 16));
-        Width = 460;
+        Height = Math.Max(620, Math.Min(720, workArea.Height - 16));
+        Width = Math.Max(440, Math.Min(480, workArea.Width - 16));
     }
 
     private static string Friendly(Exception error) => error switch

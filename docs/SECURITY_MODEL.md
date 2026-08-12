@@ -1,15 +1,15 @@
 # Security model
 
-Home Tunnel is intended for personal and small trusted-user deployments. It reduces configuration mistakes and limits the Windows Agent's capabilities, but it does not make an exposed local application safe by itself.
+Home Tunnel is intended for personal and small trusted-user deployments. It reduces configuration mistakes and limits the managed Agent's capabilities, but it does not make an exposed local application safe by itself.
 
 ## Trust boundaries
 
 - **Public Internet → Caddy:** Caddy terminates public TLS and only requests on-demand certificates after consulting the control center.
 - **Caddy → gateway/control center:** clear HTTP is carried on isolated Docker networks on the same host.
-- **Windows Agent → FRPS:** FRP TLS is required. The user selects a control-center HTTPS origin; the client discovers its public FRPS address and tunnel suffix, and the Agent requires the generated configuration to match that profile.
+- **Managed Agent → FRPS:** FRP TLS is required. The user selects a control-center HTTPS origin; the client discovers its public FRPS address and tunnel suffix, and the Agent requires the generated configuration to match that profile.
 - **FRPS/gateway → control center:** service calls use generated high-entropy keys and are not published as host ports.
 - **Control center → SQLite:** the single database file is stored in a private Docker volume with mode `0600`; WAL and foreign-key checks are enabled, and no database network listener exists.
-- **Client local state:** device credentials use Windows Credential Manager; non-secret state and redacted logs are stored under the user's local application data directory.
+- **Client local state:** the Windows device credential uses Windows Credential Manager. The Linux device credential and cached configuration use a dedicated system account and a mode-`0600` state file under `/var/lib/home-tunnel`; enrollment passwords and access/refresh tokens are not persisted.
 
 ## Agent restrictions
 

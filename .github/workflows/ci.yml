@@ -64,7 +64,15 @@ jobs:
         with:
           go-version: 1.23.12
       - name: Check Go formatting
-        run: test -z "$(gofmt -l windows-agent/main.go)"
+        run: test -z "$(gofmt -l windows-agent/main.go $(find linux-client -type f -name '*.go'))"
+      - name: Test Linux client
+        working-directory: linux-client
+        run: go test -race ./...
+      - name: Build Linux client controller
+        working-directory: linux-client
+        run: CGO_ENABLED=0 go build ./cmd/home-tunnel-client
+      - name: Check Linux packaging scripts
+        run: bash -n linux-client/packaging/build-release.sh linux-client/packaging/install.sh linux-client/packaging/home-tunnel-enroll
       - name: Prepare non-production Compose inputs
         run: |
           cp .env.example .env

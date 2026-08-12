@@ -45,7 +45,7 @@ internal static class Program
 
     private static void TestSemanticVersions()
     {
-        Assert(AppVersion.Current == "2.2.5", "client version must be 2.2.5");
+        Assert(AppVersion.Current == "2.3.0", "client version must be 2.3.0");
         Assert(
             typeof(AppVersion).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion == AppVersion.Current,
             "public client version metadata does not expose a local source revision");

@@ -116,10 +116,27 @@ export async function runIntegrationSuite(): Promise<void> {
     const userLogin = await call("POST", "/api/v1/auth/login", {
       username: `user-${suffix}`,
       password: userNextPassword,
-      client_type: "windows",
+      client_type: "linux",
     });
     assert.equal(userLogin.status, 200);
-    const userToken = userLogin.payload.access_token as string;
+    assert.equal(typeof userLogin.payload.access_token, "string");
+    assert.equal(typeof userLogin.payload.refresh_token, "string");
+    const linuxRefresh = await call("POST", "/api/v1/auth/refresh", {
+      refresh_token: userLogin.payload.refresh_token,
+      client_type: "linux",
+    });
+    assert.equal(linuxRefresh.status, 200);
+    assert.equal(typeof linuxRefresh.payload.access_token, "string");
+    assert.equal(typeof linuxRefresh.payload.refresh_token, "string");
+    const userToken = linuxRefresh.payload.access_token as string;
+
+    const ordinaryWebLogin = await call("POST", "/api/v1/auth/login", {
+      username: `user-${suffix}`,
+      password: userNextPassword,
+      client_type: "web",
+    });
+    assert.equal(ordinaryWebLogin.status, 403);
+    assert.equal(ordinaryWebLogin.payload.error_code, "FORBIDDEN");
     const registered = await call("POST", "/api/v1/devices/register", {
       name: "Integration Device",
       install_id: `install-${suffix}`,

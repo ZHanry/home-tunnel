@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+if [[ ${EUID:-$(id -u)} -ne 0 ]]; then
+  echo "home-tunnel-enroll must run as root" >&2
+  exit 1
+fi
+if ! id home-tunnel >/dev/null 2>&1; then
+  echo "home-tunnel service account does not exist; run install.sh first" >&2
+  exit 1
+fi
+
+read -r -p "Control-center HTTPS address: " server
+read -r -p "Username: " username
+default_name=$(hostname)
+read -r -p "Device name [$default_name]: " device_name
+device_name=${device_name:-$default_name}
+read -r -s -p "Current or temporary password: " password
+echo
+read -r -s -p "New password (leave empty unless the server requires a change): " new_password
+echo
+
+state_dir=/var/lib/home-tunnel
+install -d -o home-tunnel -g home-tunnel -m 0700 "$state_dir"
+password_file=$(mktemp "$state_dir/.enroll-password.XXXXXX")
+new_password_file=""
+cleanup() {
+  unset password new_password
+  if command -v shred >/dev/null 2>&1; then
+    shred -u -- "$password_file" 2>/dev/null || rm -f -- "$password_file"
+    if [[ -n "$new_password_file" ]]; then
+      shred -u -- "$new_password_file" 2>/dev/null || rm -f -- "$new_password_file"
+    fi
+  else
+    rm -f -- "$password_file" "$new_password_file"
+  fi
+}
+trap cleanup EXIT INT TERM
+chown home-tunnel:home-tunnel "$password_file"
+chmod 0600 "$password_file"
+printf '%s\n' "$password" >"$password_file"
+
+args=(enroll --server "$server" --username "$username" --device-name "$device_name" --password-file "$password_file")
+if [[ -n "$new_password" ]]; then
+  new_password_file=$(mktemp "$state_dir/.enroll-new-password.XXXXXX")
+  chown home-tunnel:home-tunnel "$new_password_file"
+  chmod 0600 "$new_password_file"
+  printf '%s\n' "$new_password" >"$new_password_file"
+  args+=(--new-password-file "$new_password_file")
+fi
+
+runuser -u home-tunnel -- /usr/local/bin/home-tunnel-client "${args[@]}"
+systemctl enable --now home-tunnel-client.service
+systemctl --no-pager --full status home-tunnel-client.service || true

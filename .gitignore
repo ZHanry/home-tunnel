@@ -13,6 +13,7 @@ design-system/
 
 # Locally built or vendored executables
 windows-client/assets/HomeTunnel.Agent.exe
+linux-client/home-tunnel-client
 deploy/frps/frps
 *.exe
 *.msi

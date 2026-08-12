@@ -82,6 +82,7 @@ public sealed class LocalState
     public int FrpsPort { get; set; }
     public string TunnelDomain { get; set; } = "";
     public bool StartWithWindows { get; set; }
+    public string Theme { get; set; } = "light";
     public string? DismissedUpdateVersion { get; set; }
     public DateTimeOffset? DismissedUpdateAtUtc { get; set; }
     public List<TunnelConnection> CachedConnections { get; set; } = [];

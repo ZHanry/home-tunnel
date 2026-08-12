@@ -11,8 +11,8 @@
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <AssemblyName>HomeTunnel</AssemblyName>
     <RootNamespace>HomeTunnel.Client</RootNamespace>
-    <Version>2.2.5</Version>
-    <InformationalVersion>2.2.5</InformationalVersion>
+    <Version>2.3.0</Version>
+    <InformationalVersion>2.3.0</InformationalVersion>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>true</SelfContained>

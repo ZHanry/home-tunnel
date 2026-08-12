@@ -42,16 +42,24 @@ public partial class ConnectionDialog : Window
         _saveAction = saveAction;
         _deleteAction = deleteAction;
         _tunnelDomain = NormalizeTunnelDomain(tunnelDomain);
-        PublicAddressHint.Text = $"发布地址：https://<子域>.{_tunnelDomain}";
+        UpdatePublicAddressHint();
+        SubdomainBox.TextChanged += (_, _) => UpdatePublicAddressHint();
 
         if (_snapshot is null)
         {
             DialogTitleText.Text = "新建连接";
+            DialogSubtitleText.Text = "映射本地服务至公网，生成专属访问地址";
+            HeaderIconPath.Data = (System.Windows.Media.Geometry)FindResource("IconPlus");
             DeleteButton.Visibility = Visibility.Collapsed;
+            EnabledBox.Content = "创建后立即启用公网访问";
         }
         else
         {
             DialogTitleText.Text = "编辑连接";
+            DialogSubtitleText.Text = "修改连接配置与本地服务目标";
+            HeaderIconPath.Data = (System.Windows.Media.Geometry)FindResource("IconEdit");
+            HeaderIconBorder.Background = (System.Windows.Media.Brush)FindResource("SurfaceMutedBrush");
+            HeaderIconBorder.BorderBrush = (System.Windows.Media.Brush)FindResource("BorderStrongBrush");
             ConnectionNameBox.Text = _snapshot.Name;
             SubdomainBox.Text = _snapshot.Subdomain;
             SchemeBox.SelectedIndex = _snapshot.LocalScheme == "https" ? 1 : 0;
@@ -59,11 +67,12 @@ public partial class ConnectionDialog : Window
             LocalHostBox.Text = _snapshot.LocalHost;
             LocalPortBox.Text = _snapshot.LocalPort.ToString();
             DeleteButton.Visibility = _deleteAction is null ? Visibility.Collapsed : Visibility.Visible;
+            EnabledBox.Content = "启用公网访问";
+            UpdatePublicAddressHint();
         }
 
         Loaded += (_, _) =>
         {
-            Height = Math.Max(520, Math.Min(600, SystemParameters.WorkArea.Height - 24));
             _baseline = CaptureForm();
             ConnectionNameBox.Focus();
             ConnectionNameBox.SelectAll();
@@ -75,7 +84,7 @@ public partial class ConnectionDialog : Window
     private async void SaveButton_Click(object sender, RoutedEventArgs e)
     {
         if (_isBusy) return;
-        DialogError.Text = "";
+        ShowDialogError("");
         var value = BuildValue();
         if (value is null) return;
 
@@ -101,11 +110,11 @@ public partial class ConnectionDialog : Window
         }
         catch (ApiException error) when (error.ErrorCode == "VERSION_CONFLICT")
         {
-            DialogError.Text = "这条连接已在其他位置更新。列表已经刷新，请关闭后重新打开并核对最新配置。";
+            ShowDialogError("这条连接已在其他位置更新。列表已经刷新，请关闭后重新打开并核对最新配置。");
         }
         catch (Exception error)
         {
-            DialogError.Text = Friendly(error);
+            ShowDialogError(Friendly(error));
         }
         finally
         {
@@ -128,7 +137,7 @@ public partial class ConnectionDialog : Window
                     : _snapshot.PublicUrl))
             return;
 
-        DialogError.Text = "";
+        ShowDialogError("");
         SetBusy(true, "正在删除连接…");
         try
         {
@@ -139,7 +148,7 @@ public partial class ConnectionDialog : Window
         }
         catch (Exception error)
         {
-            DialogError.Text = Friendly(error);
+            ShowDialogError(Friendly(error));
         }
         finally
         {
@@ -195,7 +204,7 @@ public partial class ConnectionDialog : Window
 
     private void ShowError(string message, System.Windows.Controls.TextBox field, bool selectAll = false)
     {
-        DialogError.Text = message;
+        ShowDialogError(message);
         field.Focus();
         if (selectAll) field.SelectAll();
     }
@@ -204,12 +213,27 @@ public partial class ConnectionDialog : Window
     {
         _isBusy = busy;
         BusyText.Text = message;
-        BusyPanel.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
+        BusyText.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
+        TopProgressBar.Visibility = busy ? Visibility.Visible : Visibility.Hidden;
         FormPanel.IsEnabled = !busy;
         DeleteButton.IsEnabled = !busy;
         CancelButton.IsEnabled = !busy;
         SaveButton.IsEnabled = !busy;
         Mouse.OverrideCursor = busy ? System.Windows.Input.Cursors.Wait : null;
+    }
+
+    private void ShowDialogError(string message)
+    {
+        DialogError.Text = message;
+        ErrorBanner.Visibility = string.IsNullOrWhiteSpace(message)
+            ? Visibility.Collapsed
+            : Visibility.Visible;
+    }
+
+    private void UpdatePublicAddressHint()
+    {
+        var subdomain = SubdomainBox.Text.Trim().ToLowerInvariant();
+        PublicAddressHint.Text = $"https://{(subdomain.Length == 0 ? "<子域>" : subdomain)}.{_tunnelDomain}";
     }
 
     private void RequestClose()
