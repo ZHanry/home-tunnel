@@ -7,11 +7,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"time"
 
 	"github.com/ZHanry/home-tunnel/linux-client/internal/model"
@@ -92,9 +90,10 @@ func (store Store) Save(value model.State) error {
 }
 
 // syncDirectory fsyncs the directory so the rename above survives a power
-// loss; state.json holds the only copy of the device credential. Windows does
-// not support fsync on directories opened read-only, so tests running there
-// skip this step (the shipped client is Linux-only).
+// loss; state.json holds the only copy of the device credential. Linux and
+// macOS both support fsync on a directory opened read-only; Windows does not,
+// so tests running there skip this step (the shipped client targets Linux and
+// macOS).
 func syncDirectory(path string) error {
 	if runtime.GOOS == "windows" {
 		return nil
@@ -116,21 +115,6 @@ func Fingerprint(installID string) (string, error) {
 	material := hostname + "\n" + machineID + "\n" + installID
 	hash := sha256.Sum256([]byte(material))
 	return hex.EncodeToString(hash[:]), nil
-}
-
-func readMachineID() string {
-	for _, path := range []string{"/etc/machine-id", "/var/lib/dbus/machine-id"} {
-		file, err := os.Open(path)
-		if err != nil {
-			continue
-		}
-		data, readErr := io.ReadAll(io.LimitReader(file, 256))
-		file.Close()
-		if readErr == nil && strings.TrimSpace(string(data)) != "" {
-			return strings.TrimSpace(string(data))
-		}
-	}
-	return "machine-id-unavailable"
 }
 
 func randomID(size int) (string, error) {

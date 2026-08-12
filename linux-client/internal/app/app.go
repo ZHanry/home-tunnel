@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -118,7 +119,8 @@ func Run(ctx context.Context, options RunOptions) error {
 	if !state.Enrolled() {
 		return errors.New("client is not enrolled; run home-tunnel-client enroll first")
 	}
-	// systemd restarts alone would replay authentication every RestartSec while
+	// Service-manager restarts alone (systemd RestartSec, launchd
+	// ThrottleInterval) would replay authentication every few seconds while
 	// the control center is unreachable, so transient startup failures are
 	// retried in-process with exponential backoff first.
 	var profile model.Profile
@@ -371,7 +373,8 @@ func (err permanentError) Unwrap() error { return err.cause }
 // retryTransient retries operation with exponential backoff (5s..80s, five
 // retries) unless it reports a permanentError or the context ends. It is the
 // main defense against restart storms when the control center is briefly
-// unavailable; the systemd unit backoff only covers very old systemd versions.
+// unavailable; the service-manager backoff (systemd RestartSec on very old
+// systemd versions, launchd ThrottleInterval) is only the outer safety net.
 func retryTransient(ctx context.Context, description string, operation func() error) error {
 	delay := 5 * time.Second
 	const maximumAttempts = 6
@@ -425,6 +428,9 @@ func markConnections(state *model.State, connectionState, errorCode string) {
 func DefaultDeviceName() string {
 	name, err := os.Hostname()
 	if err != nil || strings.TrimSpace(name) == "" {
+		if runtime.GOOS == "darwin" {
+			return "macOS device"
+		}
 		return "Linux device"
 	}
 	return name

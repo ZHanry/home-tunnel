@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+# macOS counterpart of the Linux home-tunnel-enroll helper: runuser becomes
+# sudo -u, systemctl becomes launchctl, and the state directory follows the
+# macOS default of the client binary.
+
+label=com.hometunnel.client
+service_user=_hometunnel
+state_dir=/usr/local/var/lib/home-tunnel
+plist=/Library/LaunchDaemons/$label.plist
+
+if [[ ${EUID:-$(id -u)} -ne 0 ]]; then
+  echo "home-tunnel-enroll must run as root" >&2
+  exit 1
+fi
+if ! id "$service_user" >/dev/null 2>&1; then
+  echo "$service_user service account does not exist; run install.sh first" >&2
+  exit 1
+fi
+
+read -r -p "Control-center HTTPS address: " server
+read -r -p "Username: " username
+default_name=$(hostname)
+read -r -p "Device name [$default_name]: " device_name
+device_name=${device_name:-$default_name}
+read -r -s -p "Current or temporary password: " password
+echo
+read -r -s -p "New password (leave empty unless the server requires a change): " new_password
+echo
+
+install -d -o "$service_user" -g "$service_user" -m 0700 "$state_dir"
+password_file=$(mktemp "$state_dir/.enroll-password.XXXXXX")
+new_password_file=""
+cleanup() {
+  unset password new_password
+  # macOS has no shred; rm -P overwrites the file contents before unlinking.
+  rm -P -- "$password_file" 2>/dev/null || rm -f -- "$password_file"
+  if [[ -n "$new_password_file" ]]; then
+    rm -P -- "$new_password_file" 2>/dev/null || rm -f -- "$new_password_file"
+  fi
+}
+trap cleanup EXIT INT TERM
+chown "$service_user:$service_user" "$password_file"
+chmod 0600 "$password_file"
+printf '%s\n' "$password" >"$password_file"
+
+args=(enroll --server "$server" --username "$username" --device-name "$device_name" --password-file "$password_file")
+if [[ -n "$new_password" ]]; then
+  new_password_file=$(mktemp "$state_dir/.enroll-new-password.XXXXXX")
+  chown "$service_user:$service_user" "$new_password_file"
+  chmod 0600 "$new_password_file"
+  printf '%s\n' "$new_password" >"$new_password_file"
+  args+=(--new-password-file "$new_password_file")
+fi
+
+sudo -u "$service_user" /usr/local/bin/home-tunnel-client "${args[@]}"
+
+# Equivalent of systemctl enable --now: clear any previous disable record,
+# then load the daemon (RunAtLoad starts it) or restart an already loaded one.
+launchctl enable "system/$label"
+if launchctl print "system/$label" >/dev/null 2>&1; then
+  launchctl kickstart -k "system/$label"
+else
+  launchctl bootstrap system "$plist"
+fi
+launchctl print "system/$label" 2>/dev/null | sed -n '1,15p' || true

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Home Tunnel headless client LaunchDaemon (macOS counterpart of
+  home-tunnel-client.service).
+
+  launchd has no equivalents for the systemd sandbox directives used on Linux
+  (ProtectSystem, SystemCallFilter, RestrictAddressFamilies, and so on).
+  Confinement therefore relies on running as the dedicated unprivileged
+  _hometunnel account with the 0700 data directory created by install.sh.
+
+  Restart semantics compared to the systemd unit:
+  - KeepAlive/SuccessfulExit=false matches Restart=on-failure: a clean exit
+    (for example after the device was revoked) is not restarted.
+  - ThrottleInterval matches RestartSec: launchd waits at least this many
+    seconds between consecutive launches. launchd has no escalating backoff
+    like RestartSteps; the client already retries transient control-center
+    failures in-process with exponential backoff.
+  - ExitTimeOut matches TimeoutStopSec=15s before launchd sends SIGKILL.
+-->
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.hometunnel.client</string>
+	<!--
+	  The state and agent paths below are also the built-in macOS defaults
+	  of the binary; they are passed explicitly so the effective
+	  configuration is visible in one place. HOME_TUNNEL_STATE_PATH and
+	  HOME_TUNNEL_AGENT_PATH environment overrides remain available but are
+	  not needed here.
+	-->
+	<key>ProgramArguments</key>
+	<array>
+		<string>/usr/local/bin/home-tunnel-client</string>
+		<string>run</string>
+		<string>--state</string>
+		<string>/usr/local/var/lib/home-tunnel/state.json</string>
+		<string>--agent</string>
+		<string>/usr/local/lib/home-tunnel/home-tunnel-agent</string>
+	</array>
+	<key>UserName</key>
+	<string>_hometunnel</string>
+	<key>GroupName</key>
+	<string>_hometunnel</string>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>KeepAlive</key>
+	<dict>
+		<key>SuccessfulExit</key>
+		<false/>
+	</dict>
+	<key>ThrottleInterval</key>
+	<integer>10</integer>
+	<key>ExitTimeOut</key>
+	<integer>15</integer>
+	<key>WorkingDirectory</key>
+	<string>/usr/local/var/lib/home-tunnel</string>
+	<key>StandardOutPath</key>
+	<string>/usr/local/var/log/home-tunnel/client.log</string>
+	<key>StandardErrorPath</key>
+	<string>/usr/local/var/log/home-tunnel/client.log</string>
+	<!-- plist integers cannot be octal: 63 is 0077, same as UMask=0077. -->
+	<key>Umask</key>
+	<integer>63</integer>
+</dict>
+</plist>

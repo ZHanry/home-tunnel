@@ -40,7 +40,7 @@ func execute(arguments []string) error {
 	}
 	switch arguments[0] {
 	case "version", "--version", "-version":
-		fmt.Printf("Home Tunnel Linux Client %s (Agent %s)\n", version, agentVersion)
+		fmt.Printf("%s %s (Agent %s)\n", productName(), version, agentVersion)
 		return nil
 	case "enroll":
 		return enroll(arguments[1:])
@@ -93,7 +93,7 @@ func enroll(arguments []string) error {
 	}); err != nil {
 		return err
 	}
-	fmt.Printf("Enrolled %s. Start home-tunnel-client.service to connect.\n", *deviceName)
+	fmt.Printf("Enrolled %s. %s\n", *deviceName, serviceStartHint())
 	return nil
 }
 
@@ -194,20 +194,6 @@ func readSecret(path string) (string, error) {
 	return line, nil
 }
 
-func defaultStatePath() string {
-	if value := strings.TrimSpace(os.Getenv("HOME_TUNNEL_STATE_PATH")); value != "" {
-		return value
-	}
-	return "/var/lib/home-tunnel/state.json"
-}
-
-func defaultAgentPath() string {
-	if value := strings.TrimSpace(os.Getenv("HOME_TUNNEL_AGENT_PATH")); value != "" {
-		return value
-	}
-	return "/usr/local/lib/home-tunnel/home-tunnel-agent"
-}
-
 func valueOrDash(value string) string {
 	if strings.TrimSpace(value) == "" {
 		return "-"
@@ -221,10 +207,10 @@ func usageError() error {
 }
 
 func printUsage(writer io.Writer) {
-	fmt.Fprintln(writer, "Home Tunnel Linux Client")
+	fmt.Fprintln(writer, productName())
 	fmt.Fprintln(writer, "")
 	fmt.Fprintln(writer, "Commands:")
-	fmt.Fprintln(writer, "  enroll  Discover a server and register this Linux device")
+	fmt.Fprintln(writer, "  enroll  Discover a server and register this device")
 	fmt.Fprintln(writer, "  run     Run the synchronization and Agent supervisor loop")
 	fmt.Fprintln(writer, "  status  Show local service state without printing credentials")
 	fmt.Fprintln(writer, "  version Show client and managed Agent versions")
