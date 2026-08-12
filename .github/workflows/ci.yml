@@ -66,7 +66,7 @@ jobs:
       - name: Install windres (mingw binutils)
         shell: pwsh
         run: |
-          choco install mingw -y --no-progress
+          choco install mingw --version=16.1.0 -y --no-progress
           $windres = (Get-Command windres -ErrorAction SilentlyContinue).Source
           if (-not $windres) {
             $windres = Get-ChildItem C:\ProgramData\chocolatey, C:\ProgramData\mingw64 -Recurse `
@@ -84,13 +84,16 @@ jobs:
           $lines | Write-Output
           $sha = ($lines | Where-Object { $_ -like 'AGENT_SHA256=*' } | Select-Object -First 1) -replace '^AGENT_SHA256=', ''
           if ($sha -notmatch '^[0-9a-f]{64}$') { throw 'AGENT_SHA256 line missing from build-agent.ps1 output' }
+          [xml]$project = Get-Content -LiteralPath .\windows-client\HomeTunnel.Client.csproj
+          $expectedSha = ($project.Project.PropertyGroup.AgentExpectedSha256 | Where-Object { $_ } | Select-Object -First 1).InnerText
+          if ($sha -ne $expectedSha) { throw "Agent baseline hash mismatch: built=$sha expected=$expectedSha" }
           $lines | Where-Object { $_ -match '^(AGENT_VERSION|FRP_VERSION|FRP_COMMIT|AGENT_SHA256)=' } |
             Set-Content -LiteralPath agent-baseline.txt
           '## Home Tunnel Agent official baseline' >> $env:GITHUB_STEP_SUMMARY
           '' >> $env:GITHUB_STEP_SUMMARY
           "``AGENT_SHA256=$sha``" >> $env:GITHUB_STEP_SUMMARY
           '' >> $env:GITHUB_STEP_SUMMARY
-          '发布时用该哈希更新 windows-client/HomeTunnel.Client.csproj 的 AgentExpectedSha256。' >> $env:GITHUB_STEP_SUMMARY
+          '该哈希已与 windows-client/HomeTunnel.Client.csproj 的 AgentExpectedSha256 核验一致。' >> $env:GITHUB_STEP_SUMMARY
       # 复用脚本刚下载的同一工具链与 FRP 树，按受管布局跑 Agent 校验逻辑
       # 的 gofmt/vet/test，保证 CI 每次验证白名单校验逻辑本身。
       - name: Run agent Go checks inside the pinned FRP tree
@@ -166,12 +169,17 @@ jobs:
           model_version=$(sed -n 's/^const Version = "\([^"]*\)"$/\1/p' linux-client/internal/model/model.go)
           env_version=$(sed -n 's/^HOME_TUNNEL_VERSION=//p' .env.example)
           release_version=$(sed -n 's/^version=\${VERSION:-\([^}]*\)}$/\1/p' linux-client/packaging/build-release.sh)
+          control_center_version=$(node -p "require('./control-center/package.json').version")
+          gateway_version=$(node -p "require('./traffic-gateway/package.json').version")
+          app_version=$(sed -n 's/^export const APP_VERSION = "\([^"]*\)";$/\1/p' control-center/src/version.ts)
+          windows_project_version=$(sed -n 's/.*<Version>\([^<]*\)<\/Version>.*/\1/p' windows-client/HomeTunnel.Client.csproj)
+          windows_agent_version=$(sed -n 's/^\$agentVersion = "\([^"]*\)"$/\1/p' windows-client/build-agent.ps1)
           root_compose_versions=$(sed -n 's/.*{HOME_TUNNEL_VERSION:-\([^}]*\)}.*/\1/p' compose.yaml | sort -u)
           deploy_compose_versions=$(grep -oE 'home-tunnel/(control-center|traffic-gateway):[0-9][0-9.]*' deploy/compose.yaml | sed 's/.*://' | sort -u)
-          echo "model=$model_version env=$env_version release=$release_version root_compose=$root_compose_versions deploy_compose=$deploy_compose_versions"
-          test -n "$model_version" && test -n "$env_version" && test -n "$release_version"
+          echo "model=$model_version env=$env_version release=$release_version control_center=$control_center_version gateway=$gateway_version app=$app_version windows_project=$windows_project_version windows_agent=$windows_agent_version root_compose=$root_compose_versions deploy_compose=$deploy_compose_versions"
+          test -n "$model_version" && test -n "$env_version" && test -n "$release_version" && test -n "$control_center_version" && test -n "$gateway_version" && test -n "$app_version" && test -n "$windows_project_version" && test -n "$windows_agent_version"
           test -n "$root_compose_versions" && test -n "$deploy_compose_versions"
-          for candidate in "$env_version" "$release_version" $root_compose_versions $deploy_compose_versions; do
+          for candidate in "$env_version" "$release_version" "$control_center_version" "$gateway_version" "$app_version" "$windows_project_version" "$windows_agent_version" $root_compose_versions $deploy_compose_versions; do
             if [ "$candidate" != "$model_version" ]; then
               echo "version mismatch: expected $model_version, found $candidate" >&2
               exit 1

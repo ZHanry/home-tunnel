@@ -5,14 +5,15 @@
   <p><a href="https://github.com/ZHanry/home-tunnel/actions/workflows/ci.yml"><img src="https://github.com/ZHanry/home-tunnel/actions/workflows/ci.yml/badge.svg" alt="CI"></a></p>
 </div>
 
-Home Tunnel 把 FRP、自动 HTTPS、访问策略、管理后台、Windows 图形客户端和 Linux 无界面服务组合成一套完整工具。它适合安全发布 NAS、Home Assistant、开发预览等私网 HTTP/HTTPS 服务，也支持经管理员显式开启、固定端口分配的高级 TCP 隧道，同时保留可审计、可限速、可立即停止的集中控制。
+Home Tunnel 把 FRP、自动 HTTPS、访问策略、管理后台、Windows 图形客户端和 Linux/macOS 无界面服务组合成一套完整工具。它适合安全发布 NAS、Home Assistant、开发预览等私网 HTTP/HTTPS 服务，也支持经管理员显式开启、固定端口分配的高级 TCP 隧道，同时保留可审计、可限速、可立即停止的集中控制。
 
-> 当前版本为 `2.3.0`。服务端默认提供 `amd64`/`arm64` 预构建镜像，也保留源码构建方式；客户端包括 Windows 10/11 x64 图形版和 Linux `amd64`/`arm64` systemd 服务版。客户端不内置任何运营者域名或 IP，首次注册时由用户填写自己的控制中心 HTTPS 地址。
+> 当前版本为 `2.4.0`。服务端默认提供 `amd64`/`arm64` 预构建镜像，也保留源码构建方式；客户端包括 Windows 10/11 x64 图形版，以及 Linux/macOS `amd64`/`arm64` 无界面服务版。客户端不内置任何运营者域名或 IP，首次注册时由用户填写自己的控制中心 HTTPS 地址。
 
 ## 为什么使用 Home Tunnel
 
 - **Windows 友好**：图形化登录、连接管理、系统托盘、自动启动、诊断导出和安全更新。
 - **Linux 服务化**：无界面设备注册、systemd 常驻、租约续签、心跳和 Agent 崩溃恢复。
+- **macOS 服务化**：同一无界面客户端提供 darwin `amd64`/`arm64` 包和 launchd 常驻服务。
 - **自动 HTTPS**：Caddy 作为唯一公网 Web 入口，按已分配域名签发证书。
 - **能力受限的 Agent**：基于固定 FRP 0.62.1 源码构建，只接受与用户所选服务器一致的 Home Tunnel HTTP 隧道配置。
 - **集中策略**：用户、设备、连接、带宽和租约状态统一管理。
@@ -24,9 +25,9 @@ Home Tunnel 把 FRP、自动 HTTPS、访问策略、管理后台、Windows 图�
 ## 工作方式
 
 ```text
-远程浏览器 ─HTTPS→ Caddy ─→ 流量网关 ─→ FRPS ═受管隧道═→ 家中 Windows/Linux 主机
+远程浏览器 ─HTTPS→ Caddy ─→ 流量网关 ─→ FRPS ═受管隧道═→ 家中 Windows/Linux/macOS 主机
 管理员     ─HTTPS→ Caddy ─→ 控制中心 ─→ SQLite
-Windows/Linux 客户端 ─REST（Windows 另有 WebSocket）→ 控制中心
+Windows/Linux/macOS 客户端 ─REST + WebSocket→ 控制中心
 ```
 
 详细的数据流与组件边界见 [架构说明](docs/ARCHITECTURE.md)。
@@ -79,9 +80,9 @@ Windows/Linux 客户端 ─REST（Windows 另有 WebSocket）→ 控制中心
 
 Agent 会核对生成配置中的 FRPS 地址、端口、隧道后缀、自定义域名允许集与 TCP 远程端口允许集是否与客户端从所选控制中心取得的配置一致，同时继续拒绝通用 FRP 命令、UDP 转发、访客配置和任意插件。TCP 默认关闭，只有管理员显式启用并分配端口后才会被 Agent 接受。
 
-## Linux 无界面客户端
+## Linux / macOS 无界面客户端
 
-Linux `amd64`/`arm64` 客户端以 systemd 服务运行，适合 NAS、家庭服务器和树莓派类常开设备。构建、安装、首次注册和运维说明见 [`linux-client/README.md`](linux-client/README.md)。首个版本通过三分钟安全轮询获取配置，尚未包含 Windows 版的 WebSocket 即时通知和自动更新。
+Linux `amd64`/`arm64` 客户端以 systemd 服务运行，macOS `amd64`/`arm64` 客户端以 launchd 服务运行，适合 NAS、家庭服务器和常开设备。两者均通过 WebSocket 接收实时配置通知，并保留三分钟安全轮询；暂不包含 Windows 版的自动更新。构建、安装、首次注册和运维说明见 [`linux-client/README.md`](linux-client/README.md)。
 
 ## 仓库结构
 
@@ -90,7 +91,7 @@ Linux `amd64`/`arm64` 客户端以 systemd 服务运行，适合 NAS、家庭服
 | `control-center/` | REST/WebSocket API、管理后台、发布信息展示和 FRPS 授权插件 |
 | `traffic-gateway/` | Host 授权、流式反向代理、分层限速和流量采样 |
 | `windows-client/` | Windows WPF 客户端和 Inno Setup 打包脚本 |
-| `linux-client/` | Linux 无界面控制进程、systemd 单元及 `amd64`/`arm64` 打包脚本 |
+| `linux-client/` | Linux/macOS 无界面控制进程、systemd/launchd 配置及跨架构打包脚本 |
 | `windows-agent/` | 能力受限的 FRP Agent 源码与第三方许可 |
 | `deploy/` | Caddy、FRPS、配置生成、生产发布、备份和回滚工具 |
 | `tests/` | Compose、安装包和端到端验证脚本 |
@@ -140,10 +141,10 @@ go build ./cmd/home-tunnel-client
 
 ## 路线图
 
-- 为 Linux 客户端增加 WebSocket 即时通知、自动更新和签名发布
+- 为 Linux/macOS 客户端增加自动更新和签名发布
 - 增加自动化数据库备份和恢复演练文档
 - 继续降低空闲内存、镜像体积和低配机器启动峰值
-- 评估 macOS 客户端支持
+- 在真实 macOS 硬件上验证 launchd 安装、注册、崩溃恢复和升级流程
 
 ## 许可证
 

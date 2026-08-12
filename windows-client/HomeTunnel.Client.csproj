@@ -11,8 +11,8 @@
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <AssemblyName>HomeTunnel</AssemblyName>
     <RootNamespace>HomeTunnel.Client</RootNamespace>
-    <Version>2.3.0</Version>
-    <InformationalVersion>2.3.0</InformationalVersion>
+    <Version>2.4.0</Version>
+    <InformationalVersion>2.4.0</InformationalVersion>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>true</SelfContained>
@@ -20,7 +20,7 @@
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
     <AgentBinaryPath Condition="'$(AgentBinaryPath)' == ''">assets\HomeTunnel.Agent.exe</AgentBinaryPath>
-    <AgentExpectedSha256 Condition="'$(AgentExpectedSha256)' == ''">0e20f534e51b8918f56bfc1f85f008476c1009c227c339449baf46215c2fde13</AgentExpectedSha256>
+    <AgentExpectedSha256 Condition="'$(AgentExpectedSha256)' == ''">5368028fe0672dc11675e94db9d9deb501536a23df38bd5a362c2ee5e2775ad1</AgentExpectedSha256>
     <AgentSignerThumbprint Condition="'$(AgentSignerThumbprint)' == ''"></AgentSignerThumbprint>
   </PropertyGroup>
   <PropertyGroup Condition="'$(UpdateQa)' == 'true'">

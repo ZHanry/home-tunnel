@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-const Version = "2.3.0"
+const Version = "2.4.0"
 
 type Profile struct {
 	PublicBaseURL string `json:"public_base_url"`

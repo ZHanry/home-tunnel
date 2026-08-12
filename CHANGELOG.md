@@ -4,6 +4,8 @@ All notable changes to Home Tunnel are documented in this file. The project foll
 
 ## [Unreleased]
 
+## [2.4.0] - 2026-08-13
+
 ### Security
 
 - Added FRPS TLS server identity verification: deployment scripts generate a persistent certificate, the control center distributes it over HTTPS discovery, clients pin it and the managed Agent enforces the pinned CA and server name before connecting.

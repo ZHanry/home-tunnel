@@ -15,6 +15,8 @@ try {
 
     New-Item -ItemType Directory -Path $testRoot, (Join-Path $testRoot "secrets"), (Join-Path $testRoot "status"), (Join-Path $testRoot "downloads") | Out-Null
     Copy-Item -LiteralPath (Join-Path $workspace "deploy\compose.yaml") -Destination (Join-Path $testRoot "compose.yaml")
+    Copy-Item -LiteralPath (Join-Path $workspace "deploy\compose.tcp.yaml") -Destination (Join-Path $testRoot "compose.tcp.yaml")
+    $composeArgs = @("-f", (Join-Path $testRoot "compose.yaml"), "-f", (Join-Path $testRoot "compose.tcp.yaml"))
     $composePrepared = $true
     $secrets = @{
         internal_service_key = "11" * 32
@@ -35,12 +37,11 @@ try {
     $smokeKey = [Security.Cryptography.ECDsa]::Create([Security.Cryptography.ECCurve+NamedCurves]::nistP256)
     try {
         $smokeRequest = [Security.Cryptography.X509Certificates.CertificateRequest]::new(
-            "CN=203.0.113.10",
+            "CN=frps.home-tunnel.test",
             $smokeKey,
             [Security.Cryptography.HashAlgorithmName]::SHA256)
         $smokeSan = [Security.Cryptography.X509Certificates.SubjectAlternativeNameBuilder]::new()
-        $smokeSan.AddIpAddress([Net.IPAddress]::Parse("203.0.113.10"))
-        $smokeSan.AddDnsName("203.0.113.10")
+        $smokeSan.AddDnsName("frps.home-tunnel.test")
         $smokeRequest.CertificateExtensions.Add($smokeSan.Build())
         $smokeNotBefore = [DateTimeOffset]::UtcNow.AddMinutes(-5)
         $smokeCertificate = $smokeRequest.CreateSelfSigned($smokeNotBefore, $smokeNotBefore.AddDays(30))
@@ -70,12 +71,19 @@ try {
     }
 
     $env:HOME_TUNNEL_FRPS_BIND_ADDRESS = "127.0.0.1"
-    $env:HOME_TUNNEL_PUBLIC_BASE_URL = "https://console.tunnel.example.com"
-    $env:HOME_TUNNEL_TUNNEL_DOMAIN = "tunnel.example.com"
-    $env:HOME_TUNNEL_FRPS_PUBLIC_HOST = "203.0.113.10"
+    $env:HOME_TUNNEL_PUBLIC_BASE_URL = "https://console.home-tunnel.test"
+    $env:HOME_TUNNEL_TUNNEL_DOMAIN = "tunnel.home-tunnel.test"
+    $env:HOME_TUNNEL_FRPS_PUBLIC_HOST = "frps.home-tunnel.test"
     $env:HOME_TUNNEL_FRPS_PORT = "17000"
-    & docker compose -f (Join-Path $testRoot "compose.yaml") up -d
-    if ($LASTEXITCODE -ne 0) { throw "Compose smoke start failed" }
+    $env:HOME_TUNNEL_TCP_BIND_ADDRESS = "127.0.0.1"
+    $env:HOME_TUNNEL_TCP_PORT_START = "11000"
+    $env:HOME_TUNNEL_TCP_PORT_END = "11009"
+    & docker compose @composeArgs up -d
+    if ($LASTEXITCODE -ne 0) {
+        & docker compose @composeArgs ps -a
+        & docker compose @composeArgs logs --no-color --tail 100
+        throw "Compose smoke start failed"
+    }
 
     foreach ($name in @("home-tunnel-control-center", "home-tunnel-frps", "home-tunnel-traffic-gateway")) {
         $healthy = $false
@@ -106,11 +114,13 @@ try {
     }
     & docker exec home-tunnel-control-center node --input-type=module -e "import { DatabaseSync } from 'node:sqlite'; const db=new DatabaseSync(process.env.SQLITE_PATH,{readOnly:true}); console.log(db.prepare('SELECT max(version) AS version FROM schema_migrations').get().version); db.close()"
     if ($LASTEXITCODE -ne 0) { throw "Migration query failed" }
-    & docker compose -f (Join-Path $testRoot "compose.yaml") ps
+    & docker exec home-tunnel-frps grep -F "allowPorts = [{ start = 11000, end = 11009 }]" /run/frp/frps.toml
+    if ($LASTEXITCODE -ne 0) { throw "FRPS TCP allowPorts configuration was not applied" }
+    & docker compose @composeArgs ps
 }
 finally {
     if ($composePrepared) {
-        & docker compose -f (Join-Path $testRoot "compose.yaml") down -v --remove-orphans *> $null
+        & docker compose @composeArgs down -v --remove-orphans *> $null
     }
     if ($networkCreated) {
         $label = (& docker network inspect -f "{{index .Labels `"com.home-tunnel.local-smoke`"}}" home-tunnel-edge 2>$null).Trim()
@@ -128,4 +138,4 @@ finally {
     }
 }
 
-Write-Output "Local ARM64 Compose smoke resources removed."
+Write-Output "Local Compose smoke resources removed."

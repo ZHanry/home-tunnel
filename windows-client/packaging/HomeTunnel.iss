@@ -1,5 +1,5 @@
 #ifndef MyAppVersion
-  #define MyAppVersion "2.3.0"
+  #define MyAppVersion "2.4.0"
 #endif
 #ifndef PublishDir
   #error PublishDir must be supplied by build-exe.ps1

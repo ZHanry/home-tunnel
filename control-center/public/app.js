@@ -54,8 +54,8 @@ const zhToEn = {
   "无需公网 IP 或路由器端口映射，为 NAS、Home Assistant 和开发服务提供独立 HTTPS 地址、集中策略与可审计访问。": "Give your NAS, Home Assistant, and development services dedicated HTTPS addresses, centralized policies, and auditable access—without a public IP or router port forwarding.",
   "选择客户端平台": "Choose a client platform",
   "Windows 图形客户端": "Windows desktop client",
-  "Home Tunnel 2.3.0 Windows 图形客户端预览": "Home Tunnel 2.3.0 Windows desktop client preview",
-  "Linux 服务版": "Linux service",
+  "Home Tunnel 2.4.0 Windows 图形客户端预览": "Home Tunnel 2.4.0 Windows desktop client preview",
+  "Linux / macOS 服务版": "Linux / macOS service",
   "正在获取最新版本…": "Checking the latest release…",
   "查看 SHA-256": "View SHA-256",
   "隧道状态": "Tunnel status",
@@ -71,7 +71,7 @@ const zhToEn = {
   "在线": "Online",
   "开始使用 Home Tunnel": "Get started with Home Tunnel",
   "安装受管客户端": "Install a managed client",
-  "Windows 使用图形界面，Linux 作为 systemd 服务运行。": "Use the desktop app on Windows or run the systemd service on Linux.",
+  "Windows 使用图形界面，Linux/macOS 作为系统服务运行。": "Use the desktop app on Windows or run the system service on Linux/macOS.",
   "创建连接": "Create connection",
   "切换至浅色主题": "Switch to light theme",
   "切换至深色主题": "Switch to dark theme",
@@ -86,11 +86,11 @@ const zhToEn = {
   "系统托盘、开机启动、诊断与安全更新": "System tray, startup, diagnostics, and secure updates",
   "设备凭据写入 Windows Credential Manager": "Device credentials stored in Windows Credential Manager",
   "前往最新版本": "Get the latest release",
-  "Linux 无界面服务": "Linux headless service",
-  "Linux 客户端安装摘要": "Linux client installation summary",
-  "适合 NAS、家庭服务器和常开的 Linux 主机；配置最长约 3 分钟同步，不含 GUI 与自动更新。": "Designed for NAS devices, home servers, and always-on Linux hosts. Configuration sync can take up to about three minutes; no GUI or automatic updates are included.",
+  "Linux / macOS 无界面服务": "Linux / macOS headless service",
+  "Linux / macOS 客户端安装摘要": "Linux / macOS client installation summary",
+  "适合 NAS、家庭服务器和常开的 Linux/macOS 主机；支持实时配置通知，不含 GUI 与自动更新。": "Designed for NAS devices, home servers, and always-on Linux/macOS hosts, with realtime configuration notifications but no GUI or automatic updates.",
   "查看安装与运维说明": "View installation and operations guide",
-  "Windows x64 图形版 · Linux amd64 / arm64 服务版": "Windows x64 desktop · Linux amd64 / arm64 service",
+  "Windows x64 图形版 · Linux / macOS amd64 / arm64 服务版": "Windows x64 desktop · Linux / macOS amd64 / arm64 service",
   "返回 Home Tunnel 产品首页": "Back to the Home Tunnel home page",
   "登录控制中心": "Sign in to Control Center",
   "使用管理员账号继续。": "Continue with an administrator account.",
@@ -108,7 +108,7 @@ const zhToEn = {
   "保存新密码": "Save new password",
   "返回产品首页": "Back to product home",
   "主导航": "Main navigation",
-  "控制中心 v2.3.0": "Control Center v2.3.0",
+  "控制中心 v2.4.0": "Control Center v2.4.0",
   "工作区": "Workspace",
   "系统总览": "Overview",
   "用户管理": "Users",
@@ -177,7 +177,7 @@ const zhToEn = {
   "未知": "Unknown",
   "删除": "Delete",
   "还没有注册设备": "No registered devices yet",
-  "用户可通过 Windows 图形客户端或 Linux 无界面服务完成设备注册。": "Users can register devices with the Windows desktop client or Linux headless service.",
+  "用户可通过 Windows 图形客户端或 Linux/macOS 无界面服务完成设备注册。": "Users can register devices with the Windows desktop client or Linux/macOS headless service.",
   "归属": "Owner",
   "访问控制": "Access control",
   "本地目标": "Local target",
@@ -312,7 +312,7 @@ const zhToEn = {
   "关闭后无法再次查看；旧密码和全部旧会话已失效。": "It cannot be viewed again after closing. The old password and all previous sessions are invalid.",
   "已复制；请通过安全渠道交付": "Copied; deliver it through a secure channel",
   "浏览器未允许访问剪贴板，请手动选择并复制临时密码。": "Clipboard access was denied; select and copy the temporary password manually.",
-  "请先让用户通过 Windows 或 Linux 客户端注册设备": "Ask the user to register a device with the Windows or Linux client first",
+  "请先让用户通过 Windows、Linux 或 macOS 客户端注册设备": "Ask the user to register a device with the Windows, Linux, or macOS client first",
   "动作、操作者、目标或 Request ID": "Action, actor, target, or Request ID",
   "例如 LoginSucceeded": "For example, LoginSucceeded",
   "前往 GitHub Releases 获取最新版本": "Visit GitHub Releases for the latest version",
@@ -900,7 +900,7 @@ async function renderDevices(renderId = state.renderId) {
   if (renderId !== state.renderId) return;
   state.devices = data.items;
   viewContent.innerHTML = `
-    <section class="panel table-panel">${state.devices.length ? `<table class="data-table"><thead><tr><th>设备</th><th>用户</th><th>状态</th><th>配置</th><th class="hide-tablet">最后在线</th><th class="hide-tablet">租约到期</th><th><span class="visually-hidden">操作</span></th></tr></thead><tbody>${state.devices.map((device) => `<tr><td data-label="设备"><span class="cell-primary">${escapeHtml(device.name)}</span><span class="cell-secondary mono">${escapeHtml(device.id.slice(0, 8))} · 客户端 ${escapeHtml(device.client_version ?? "未知")} · Agent ${escapeHtml(device.agent_version ?? "未知")}</span></td><td data-label="用户">${escapeHtml(device.username)}</td><td data-label="状态">${statusBadge(device.status === "active" && device.online ? "active" : device.status === "active" ? "Offline" : device.status)}</td><td data-label="配置">${configState(device)}</td><td data-label="最后在线" class="hide-tablet">${formatDate(device.last_seen_at)}</td><td data-label="租约到期" class="hide-tablet">${formatDate(device.lease_expires_at)}</td><td class="actions-cell" data-label="操作"><div class="actions"><button class="button button-danger button-small" data-action="delete-device" data-id="${device.id}" data-name="${escapeHtml(device.name)}" aria-label="删除设备 ${escapeHtml(device.name)}">删除</button></div></td></tr>`).join("")}</tbody></table>` : emptyState("还没有注册设备", "用户可通过 Windows 图形客户端或 Linux 无界面服务完成设备注册。")}</section>`;
+    <section class="panel table-panel">${state.devices.length ? `<table class="data-table"><thead><tr><th>设备</th><th>用户</th><th>状态</th><th>配置</th><th class="hide-tablet">最后在线</th><th class="hide-tablet">租约到期</th><th><span class="visually-hidden">操作</span></th></tr></thead><tbody>${state.devices.map((device) => `<tr><td data-label="设备"><span class="cell-primary">${escapeHtml(device.name)}</span><span class="cell-secondary mono">${escapeHtml(device.id.slice(0, 8))} · 客户端 ${escapeHtml(device.client_version ?? "未知")} · Agent ${escapeHtml(device.agent_version ?? "未知")}</span></td><td data-label="用户">${escapeHtml(device.username)}</td><td data-label="状态">${statusBadge(device.status === "active" && device.online ? "active" : device.status === "active" ? "Offline" : device.status)}</td><td data-label="配置">${configState(device)}</td><td data-label="最后在线" class="hide-tablet">${formatDate(device.last_seen_at)}</td><td data-label="租约到期" class="hide-tablet">${formatDate(device.lease_expires_at)}</td><td class="actions-cell" data-label="操作"><div class="actions"><button class="button button-danger button-small" data-action="delete-device" data-id="${device.id}" data-name="${escapeHtml(device.name)}" aria-label="删除设备 ${escapeHtml(device.name)}">删除</button></div></td></tr>`).join("")}</tbody></table>` : emptyState("还没有注册设备", "用户可通过 Windows 图形客户端或 Linux/macOS 无界面服务完成设备注册。")}</section>`;
 }
 
 // 访问控制徽章：只依据 access_basic_auth_enabled / access_ip_allowlist 展示
@@ -1101,7 +1101,7 @@ async function openCreateConnection() {
   if (!state.users.length) state.users = (await api("/api/v1/admin/users")).items;
   state.devices = (await api("/api/v1/admin/devices")).items.filter((item) => item.status === "active");
   if (!state.devices.length) {
-    toast("请先让用户通过 Windows 或 Linux 客户端注册设备", "error");
+    toast("请先让用户通过 Windows、Linux 或 macOS 客户端注册设备", "error");
     return;
   }
   const userOptions = state.users.filter((item) => item.status === "active").map((user) => `<option value="${user.id}">${escapeHtml(user.display_name)} · ${escapeHtml(user.username)}</option>`).join("");

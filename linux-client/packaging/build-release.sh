@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-version=${VERSION:-2.3.0}
+version=${VERSION:-2.4.0}
 architecture=${ARCH:-$(go env GOARCH)}
 case "$architecture" in
   amd64|arm64) ;;

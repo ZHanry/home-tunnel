@@ -3,9 +3,9 @@
 This directory contains the headless client for Linux and macOS. It uses two processes:
 
 - `home-tunnel-client` owns control-center authentication, device registration, configuration sync, lease renewal, heartbeat reporting, state persistence, and process supervision.
-- `home-tunnel-agent` is built from the same restricted FRP 0.62.1 source and `windows-agent/main.go` validation surface as the Windows release. It still rejects generic FRP commands, TCP/UDP proxies, visitors, and arbitrary plugins.
+- `home-tunnel-agent` is built from the same restricted FRP 0.62.1 source and `windows-agent/main.go` validation surface as the Windows release. It rejects generic FRP commands, UDP proxies, unassigned TCP ports, visitors, and arbitrary plugins.
 
-The service supports Linux `amd64`/`arm64` and macOS (darwin) `amd64`/`arm64`. It publishes HTTP or HTTPS targets reachable from the host; it is not a general-purpose VPN or TCP/UDP tunnel.
+The service supports Linux `amd64`/`arm64` and macOS (darwin) `amd64`/`arm64`. It publishes HTTP or HTTPS targets reachable from the host and administrator-assigned TCP ports when that advanced feature is explicitly enabled; it is not a general-purpose VPN or unrestricted TCP/UDP tunnel.
 
 ## Build a package
 
@@ -28,8 +28,8 @@ Each script downloads the pinned FRP source archive, verifies its SHA-256, build
 On the target Linux machine:
 
 ```sh
-tar -xzf home-tunnel-linux-2.3.0-amd64.tar.gz
-cd home-tunnel-linux-2.3.0-amd64
+tar -xzf home-tunnel-linux-2.4.0-amd64.tar.gz
+cd home-tunnel-linux-2.4.0-amd64
 sudo ./install.sh
 sudo home-tunnel-enroll
 ```
@@ -43,8 +43,8 @@ The permanent device credential and cached configuration are stored in `/var/lib
 On the target Mac:
 
 ```sh
-tar -xzf home-tunnel-macos-2.3.0-arm64.tar.gz
-cd home-tunnel-macos-2.3.0-arm64
+tar -xzf home-tunnel-macos-2.4.0-arm64.tar.gz
+cd home-tunnel-macos-2.4.0-arm64
 sudo ./install.sh
 sudo home-tunnel-enroll
 ```

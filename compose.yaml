@@ -8,7 +8,7 @@ x-logging: &default-logging
 
 services:
   control-center:
-    image: ${HOME_TUNNEL_CONTROL_IMAGE:-ghcr.io/zhanry/home-tunnel-control-center}:${HOME_TUNNEL_VERSION:-2.3.0}
+    image: ${HOME_TUNNEL_CONTROL_IMAGE:-ghcr.io/zhanry/home-tunnel-control-center}:${HOME_TUNNEL_VERSION:-2.4.0}
     restart: unless-stopped
     init: true
     environment:
@@ -69,7 +69,7 @@ services:
     logging: *default-logging
 
   traffic-gateway:
-    image: ${HOME_TUNNEL_GATEWAY_IMAGE:-ghcr.io/zhanry/home-tunnel-traffic-gateway}:${HOME_TUNNEL_VERSION:-2.3.0}
+    image: ${HOME_TUNNEL_GATEWAY_IMAGE:-ghcr.io/zhanry/home-tunnel-traffic-gateway}:${HOME_TUNNEL_VERSION:-2.4.0}
     restart: unless-stopped
     init: true
     depends_on:
