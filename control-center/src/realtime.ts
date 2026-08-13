@@ -1,5 +1,5 @@
 import type { IncomingMessage, Server } from "node:http";
-import { WebSocket, WebSocketServer } from "ws";
+import { WebSocket, WebSocketServer, type ServerOptions } from "ws";
 import { databaseEvents, one, transaction } from "./db.js";
 import { parseCookieHeader } from "./http.js";
 import { tokenHash } from "./security.js";
@@ -13,6 +13,24 @@ type SocketIdentity = {
 type LiveSocket = WebSocket & { identity?: SocketIdentity; alive?: boolean };
 
 let websocketClientCount = 0;
+
+export const REALTIME_MAX_PAYLOAD_BYTES = 64 * 1024;
+export const REALTIME_MAX_FRAGMENTS = 256;
+export const REALTIME_MAX_BUFFERED_CHUNKS = 1024;
+
+// ws 8.21 added these runtime limits before @types/ws exposed them. Keep the
+// compatibility extension local so the compiler still validates every option
+// that is already part of the public type definition.
+type HardenedServerOptions = ServerOptions & {
+  maxFragments: number;
+  maxBufferedChunks: number;
+};
+
+type RealtimeLimits = {
+  maxPayload: number;
+  maxFragments: number;
+  maxBufferedChunks: number;
+};
 
 // Connected realtime clients across the process, for /internal/metrics.
 export function getWebsocketClientCount(): number {
@@ -34,8 +52,20 @@ async function authenticateUpgrade(request: IncomingMessage): Promise<SocketIden
   );
 }
 
-export function attachRealtime(server: Server): { close: () => Promise<void> } {
-  const websocketServer = new WebSocketServer({ noServer: true, maxPayload: 64 * 1024 });
+export function attachRealtime(
+  server: Server,
+  limitOverrides: Partial<RealtimeLimits> = {},
+): { close: () => Promise<void> } {
+  // maxPayload applies to the complete reassembled message. The other caps
+  // bound the metadata and buffer growth caused by tiny fragmented frames.
+  const websocketOptions: HardenedServerOptions = {
+    noServer: true,
+    perMessageDeflate: false,
+    maxPayload: limitOverrides.maxPayload ?? REALTIME_MAX_PAYLOAD_BYTES,
+    maxFragments: limitOverrides.maxFragments ?? REALTIME_MAX_FRAGMENTS,
+    maxBufferedChunks: limitOverrides.maxBufferedChunks ?? REALTIME_MAX_BUFFERED_CHUNKS,
+  };
+  const websocketServer = new WebSocketServer(websocketOptions);
   let closing = false;
 
   server.on("upgrade", (request, socket, head) => {
@@ -64,6 +94,10 @@ export function attachRealtime(server: Server): { close: () => Promise<void> } {
 
   websocketServer.on("connection", (socket: LiveSocket) => {
     websocketClientCount += 1;
+    // Protocol and resource-limit violations are reported through the socket
+    // error event before ws closes the connection. Treat them as a client
+    // failure, not as an uncaught process error.
+    socket.on("error", () => undefined);
     socket.once("close", () => {
       websocketClientCount -= 1;
     });
@@ -89,60 +123,61 @@ export function attachRealtime(server: Server): { close: () => Promise<void> } {
       do {
         drainAgain = false;
         count = await transaction(async (client) => {
-      const events = await client.query<{
-        id: string;
-        event_type: string;
-        resource_type: string;
-        resource_id: string;
-        resource_version: string;
-        recipient_user_id: string | null;
-        recipient_device_id: string | null;
-        payload: Record<string, unknown>;
-        created_at: Date;
-      }>(
-        `SELECT id,event_type,resource_type,resource_id,resource_version,
+          const events = await client.query<{
+            id: string;
+            event_type: string;
+            resource_type: string;
+            resource_id: string;
+            resource_version: string;
+            recipient_user_id: string | null;
+            recipient_device_id: string | null;
+            payload: Record<string, unknown>;
+            created_at: Date;
+          }>(
+            `SELECT id,event_type,resource_type,resource_id,resource_version,
                 recipient_user_id,recipient_device_id,payload,created_at
            FROM outbox_events WHERE delivered_at IS NULL ORDER BY id LIMIT 100`,
-      );
-      const delivered: string[] = [];
-      for (const event of events.rows) {
-        const serialized = JSON.stringify({
-          event: event.event_type,
-          resource_type: event.resource_type,
-          resource_id: event.resource_id,
-          resource_version: Number(event.resource_version),
-          payload: event.payload,
-          at: event.created_at,
-        });
-        for (const clientSocket of websocketServer.clients) {
-          const live = clientSocket as LiveSocket;
-          if (live.readyState !== WebSocket.OPEN || !live.identity) continue;
-          const isAdmin = live.identity.role === "admin";
-          const isRecipient =
-            (!event.recipient_user_id || event.recipient_user_id === live.identity.userId) &&
-            (!event.recipient_device_id || event.recipient_device_id === live.identity.deviceId);
-          if (isAdmin || isRecipient) {
-            if (live.bufferedAmount > 1024 * 1024) {
-              live.terminate();
-              continue;
+          );
+          const delivered: string[] = [];
+          for (const event of events.rows) {
+            const serialized = JSON.stringify({
+              event: event.event_type,
+              resource_type: event.resource_type,
+              resource_id: event.resource_id,
+              resource_version: Number(event.resource_version),
+              payload: event.payload,
+              at: event.created_at,
+            });
+            for (const clientSocket of websocketServer.clients) {
+              const live = clientSocket as LiveSocket;
+              if (live.readyState !== WebSocket.OPEN || !live.identity) continue;
+              const isAdmin = live.identity.role === "admin";
+              const isRecipient =
+                (!event.recipient_user_id || event.recipient_user_id === live.identity.userId) &&
+                (!event.recipient_device_id ||
+                  event.recipient_device_id === live.identity.deviceId);
+              if (isAdmin || isRecipient) {
+                if (live.bufferedAmount > 1024 * 1024) {
+                  live.terminate();
+                  continue;
+                }
+                try {
+                  live.send(serialized);
+                } catch {
+                  live.terminate();
+                }
+              }
             }
-            try {
-              live.send(serialized);
-            } catch {
-              live.terminate();
-            }
+            delivered.push(event.id);
           }
-        }
-        delivered.push(event.id);
-      }
-      if (delivered.length) {
-        const parameters = delivered.map(() => "?").join(",");
-        await client.query(
-          `UPDATE outbox_events SET delivered_at=home_tunnel_now() WHERE id IN (${parameters})`,
-          delivered,
-        );
-      }
-      return events.rowCount ?? events.rows.length;
+          if (delivered.length) {
+            const parameters = delivered.map(() => "?").join(",");
+            await client.query(
+              `UPDATE outbox_events SET delivered_at=home_tunnel_now() WHERE id IN (${parameters})`,
+              delivered,
+            );
+          }
+          return events.rowCount ?? events.rows.length;
         });
       } while (!closing && (count === 100 || drainAgain));
     } finally {
@@ -151,15 +186,15 @@ export function attachRealtime(server: Server): { close: () => Promise<void> } {
   };
 
   const reportOutboxError = (error: unknown) => {
-      console.error(
-        JSON.stringify({
-          timestamp: new Date().toISOString(),
-          level: "error",
-          component: "control-center",
-          event_code: "OUTBOX_PUBLISH_ERROR",
-          message: error instanceof Error ? error.message : "Unknown outbox error",
-        }),
-      );
+    console.error(
+      JSON.stringify({
+        timestamp: new Date().toISOString(),
+        level: "error",
+        component: "control-center",
+        event_code: "OUTBOX_PUBLISH_ERROR",
+        message: error instanceof Error ? error.message : "Unknown outbox error",
+      }),
+    );
   };
 
   const onOutbox = () => void drainOutbox().catch(reportOutboxError);

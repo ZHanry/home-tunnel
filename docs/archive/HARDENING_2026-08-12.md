@@ -1,5 +1,7 @@
 # 2026-08-12 全面加固变更说明（维护交接文档）
 
+> 历史证据：本文只记录 2026-08-12 当时的代码、工具链和验证结论，其中版本号、文件结构、测试命令与“全部修复”等表述均不代表当前状态。请以当前 CI、`SECURITY.md`、README 支持矩阵和最新 Release 为准。
+
 本文档记录 2026-08-12 一轮系统性代码审查与修复的全部内容，供后续维护者（人或 AI Agent）理解改动背景、设计契约与遗留事项。改动共涉及 46 个已有文件与 2 个新增测试文件（+1852/-359 行），覆盖四个组件与部署配置。
 
 ## 一、背景
@@ -106,6 +108,7 @@
 **向后兼容规则**：服务端未配置 `FRPS_TLS_CERT_FILE` 时 `/public/config` 不含新字段；客户端无 PEM 时不写 CA、不加配置行、不传参数；Agent 无 `--tls-ca-sha256` 时保持旧校验（禁止一切自定义 TLS 文件）。修改任何一端时必须保持这条兼容链。
 
 **涉及文件**：
+
 - `windows-agent/main.go`（flag 与 `validateTrustedCaFile`）、`windows-agent/main_test.go`
 - `control-center/src/config.ts`、`src/routes/public.ts`
 - `deploy/frps/frps.toml.template`、两份 compose、`deploy/scripts/new-selfhost-config.{sh,ps1}`、`deploy/scripts/install.sh`
@@ -119,7 +122,7 @@
 
 | 工具 | 位置 |
 | --- | --- |
-| Go 1.23.12 | `.downloads/go-toolchain/go/bin/go.exe` |
+| Go 1.23.12（当时基线） | `.downloads/go-toolchain/go/bin/go.exe` |
 | .NET 8 SDK | `.downloads/dotnet8/dotnet.exe` |
 | FRP 0.62.1 固定源码 | `.downloads/frp-api-b41d8f8e.../fatedier-frp-*/` |
 | Node 24 + pnpm 11 | 系统 PATH |
@@ -139,7 +142,7 @@ cd linux-client
 & "..\.downloads\go-toolchain\go\bin\go.exe" test ./...
 
 # windows-client（含真实 Agent 集成测试；AgentExpectedSha256 见下方遗留事项）
-& ".downloads\dotnet8\dotnet.exe" run --project windows-client-tests\HomeTunnel.Client.Tests.csproj -c Release `
+& ".downloads\dotnet8\dotnet.exe" test windows-client-tests\HomeTunnel.Client.Tests.csproj -c Release `
   -p:AgentExpectedSha256=<本地 agent 的 SHA-256>
 # CI 模式（跳过 Agent 集成）：设环境变量 HOME_TUNNEL_SKIP_AGENT_TESTS=1
 

@@ -40,7 +40,7 @@ $releaseJsonPath = Join-Path $ReleaseDirectory "release.json"
 if (-not (Test-Path -LiteralPath $releaseJsonPath -PathType Leaf)) { throw "release.json is missing" }
 $release = Get-Content -Raw -LiteralPath $releaseJsonPath | ConvertFrom-Json
 $version = [string]$release.version
-if ($version -notmatch '^\d+\.\d+\.\d+$') { throw "Invalid release version" }
+if ($version -notmatch '^\d+\.\d+\.\d+(?:-rc\.\d+)?$') { throw "Invalid release version" }
 $expectedImageTag = "home-tunnel/control-center:$version-arm64"
 $expectedGatewayImageTag = "home-tunnel/traffic-gateway:$version-arm64"
 if ($release.target -ne "linux/arm64" -or $release.image_tag -ne $expectedImageTag -or
@@ -148,7 +148,7 @@ if ($PreflightOnly) {
 
 $suffix = [Guid]::NewGuid().ToString("N").Substring(0, 10)
 $stage = "/tmp/home-tunnel-ui-$version-$suffix"
-if ($stage -notmatch '^/tmp/home-tunnel-ui-[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{10}$') { throw "Unsafe remote stage" }
+if ($stage -notmatch '^/tmp/home-tunnel-ui-[0-9]+\.[0-9]+\.[0-9]+(?:-rc\.[0-9]+)?-[0-9a-f]{10}$') { throw "Unsafe remote stage" }
 $stageCreated = $false
 $deploymentSucceeded = $false
 

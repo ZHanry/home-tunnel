@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="zh-CN" data-goatcounter-endpoint="__GOATCOUNTER_ENDPOINT__">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Home Tunnel — 面向个人与家庭服务的自托管内网穿透平台</title>
+  <meta name="description" content="用可审计、可限速、可随时撤销的控制面，安全发布 NAS、Home Assistant 和开发服务。">
+  <link rel="canonical" href="https://zhanry.github.io/home-tunnel/">
+  <link rel="alternate" hreflang="zh-CN" href="https://zhanry.github.io/home-tunnel/">
+  <link rel="alternate" hreflang="en" href="https://zhanry.github.io/home-tunnel/en/">
+  <link rel="alternate" hreflang="x-default" href="https://zhanry.github.io/home-tunnel/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Home Tunnel">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:title" content="Home Tunnel — 可审计的家庭内网穿透">
+  <meta property="og:description" content="安全发布 NAS、Home Assistant 和开发服务。自托管、可审计、可限速、可撤销。">
+  <meta property="og:url" content="https://zhanry.github.io/home-tunnel/">
+  <meta property="og:image" content="https://zhanry.github.io/home-tunnel/assets/social-preview.jpg">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta property="og:image:alt" content="Home Tunnel 自托管家庭内网穿透平台及真实管理后台">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="assets/HomeTunnel.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/site.css?v=2.5.0">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Home Tunnel",
+    "applicationCategory": "NetworkApplication",
+    "operatingSystem": "Linux, macOS, Windows",
+    "license": "https://www.apache.org/licenses/LICENSE-2.0",
+    "url": "https://zhanry.github.io/home-tunnel/",
+    "codeRepository": "https://github.com/ZHanry/home-tunnel",
+    "description": "面向个人与家庭服务的自托管内网穿透平台"
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+  <header class="site-header">
+    <nav class="nav" aria-label="主导航">
+      <a class="brand" href="./" aria-current="page" aria-label="Home Tunnel 首页"><img src="assets/HomeTunnel.svg" width="40" height="40" alt=""><span>Home Tunnel</span></a>
+      <div class="nav-links">
+        <a href="#quick-start">快速开始</a>
+        <a href="#support">支持矩阵</a>
+        <a href="#security">安全模型</a>
+        <a href="en/" lang="en">English</a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow">Self-hosted · Apache-2.0 · Home services</p>
+        <h1 id="hero-title">把家里的服务，安全地带到公网。</h1>
+        <p class="lead">Home Tunnel 是面向个人与家庭服务的自托管内网穿透平台，用可审计、可限速、可随时撤销的控制面，安全发布 NAS、Home Assistant 和开发服务。</p>
+        <div class="actions">
+          <a class="button primary" href="#quick-start" data-goatcounter-click="quick-start">三步开始部署</a>
+          <a class="button" href="https://github.com/ZHanry/home-tunnel?utm_source=pages&amp;utm_medium=hero&amp;utm_campaign=launch_2026_08" data-goatcounter-click="github">查看 GitHub</a>
+        </div>
+      </div>
+      <figure class="hero-visual">
+        <div class="screenshot-frame"><img src="assets/admin-dashboard.jpg" srcset="assets/admin-dashboard-small.jpg 720w, assets/admin-dashboard.jpg 1440w" sizes="(max-width: 900px) calc(100vw - 2rem), 52vw" width="1440" height="1000" fetchpriority="high" alt="Home Tunnel 真实管理后台，显示连接、流量、组件健康状态与审计入口"></div>
+        <figcaption class="caption">来自当前 UI Preview 与真实前端代码的截图；示例域名和数据均为本地夹具。</figcaption>
+      </figure>
+    </section>
+
+    <div class="proof-strip" aria-label="工程与安全证据">
+      <div class="proof"><strong>43 + 31</strong><span>控制中心与网关测试（2026-08-13）</span></div>
+      <div class="proof"><strong>0</strong><span>已知 High / Moderate 生产依赖公告（审计于 2026-08-13）</span></div>
+      <div class="proof"><strong>64 KiB</strong><span>WebSocket 完整消息上限</span></div>
+      <div class="proof"><strong>Apache-2.0</strong><span>开放源码许可证</span></div>
+    </div>
+
+    <section id="evidence" aria-labelledby="evidence-title">
+      <div class="section-head"><p class="eyebrow">真实构建证据</p><h2 id="evidence-title">同一套轻量前端，覆盖桌面与移动端。</h2><p>截图由仓库 UI Preview 加载当前生产 HTML、CSS 与原生 JavaScript 生成；未绘制虚构控制台，也没有连接真实部署。</p></div>
+      <div class="evidence-gallery">
+        <figure class="product-shot mobile"><img src="assets/admin-mobile.jpg" width="390" height="1373" loading="lazy" alt="Home Tunnel 管理后台在 390 像素宽移动端的真实响应式界面"><figcaption>390 px 移动视口；无横向溢出。</figcaption></figure>
+        <figure class="product-shot"><img src="assets/architecture.svg" width="1440" height="900" loading="lazy" alt="Home Tunnel 控制中心、SQLite、Caddy、流量网关与受管 FRP Agent 的架构路径"><figcaption>当前四组件部署：控制状态与用户业务流量分别传递。</figcaption></figure>
+      </div>
+    </section>
+
+    <section id="fit" aria-labelledby="fit-title">
+      <div class="section-head"><p class="eyebrow">适用边界</p><h2 id="fit-title">为家庭服务设计，不是通用代理。</h2><p>Home Tunnel 把公开入口、身份、策略、流量和审计集中到一个控制面，同时把客户端能力限制在管理员签发的配置范围内。</p></div>
+      <div class="grid-3">
+        <article class="card"><h3>适合</h3><ul><li>远程访问 NAS 与家庭相册</li><li>安全发布 Home Assistant</li><li>分享短期开发预览</li><li>需要用户、设备与带宽管理</li></ul></article>
+        <article class="card"><h3>不适合</h3><ul><li>完全匿名的公共代理服务</li><li>任意 FRP 命令与 UDP 转发</li><li>无需认证的敏感管理后台</li><li>把动态演示站暴露给陌生人</li></ul></article>
+        <article class="card"><h3>默认安全边界</h3><ul><li>短期租约和即时策略撤销</li><li>能力受限的固定 FRP Agent</li><li>独立控制与业务流量路径</li><li>连接、流量与操作审计</li></ul></article>
+      </div>
+    </section>
+
+    <section id="quick-start" aria-labelledby="quick-title">
+      <div class="section-head"><p class="eyebrow">Quick Start</p><h2 id="quick-title">三步启动自己的 Home Tunnel。</h2><p>部署需要一台公网 Linux 主机、一个域名，以及能够访问家庭服务的 Linux 客户端。请先阅读自托管指南并替换全部示例值。</p></div>
+      <div class="grid-3">
+        <article class="card"><span class="number">1</span><h3>准备 DNS 与防火墙</h3><p>将控制台与隧道域名指向服务器，开放 TCP 80、443、7000。</p></article>
+        <article class="card"><span class="number">2</span><h3>生成配置并启动</h3><p>使用仓库脚本生成本地密钥与 Compose 配置，再启动四个服务。</p></article>
+        <article class="card"><span class="number">3</span><h3>注册设备与连接</h3><p>修改初始管理员密码，创建用户，从 Linux 客户端注册家庭设备。</p></article>
+      </div>
+      <pre class="code-block" aria-label="Home Tunnel 快速开始命令"><code>git clone https://github.com/ZHanry/home-tunnel.git
+cd home-tunnel
+./deploy/scripts/new-selfhost-config.sh \
+  tunnel.example.com frps.example.com \
+  console.example.com admin@example.com
+docker compose config --quiet
+docker compose pull
+docker compose up -d
+docker compose ps</code></pre>
+      <div class="actions">
+        <a class="button primary" href="https://github.com/ZHanry/home-tunnel/blob/main/docs/SELF_HOSTING.md?utm_source=pages&amp;utm_medium=quick_start&amp;utm_campaign=launch_2026_08" data-goatcounter-click="quick-start-guide">阅读完整自托管指南</a>
+        <a class="button" href="https://github.com/ZHanry/home-tunnel/releases?utm_source=pages&amp;utm_medium=release&amp;utm_campaign=launch_2026_08" data-goatcounter-click="release">查看 Releases</a>
+      </div>
+    </section>
+
+    <section id="support" aria-labelledby="support-title">
+      <div class="section-head"><p class="eyebrow">公开支持矩阵</p><h2 id="support-title">稳定性声明以实际 Release 产物为准。</h2><p>当前源码树面向 <code>v2.5.0-rc.1</code>；只有 RC 全矩阵通过并由所有者发布后才可测试。“Stable”只用于正式验证且有完整发布产物的平台。Windows 官方分发恢复前不会生成 Windows 专用的 <code>latest.json</code>。</p></div>
+      <div class="support-wrap">
+        <table>
+          <thead><tr><th>组件</th><th>平台</th><th>状态</th><th>分发与限制</th></tr></thead>
+          <tbody>
+            <tr><td>服务端</td><td>Linux amd64 / arm64</td><td><span class="status stable">Stable</span></td><td>容器与源码构建；稳定版要求完整双架构矩阵。</td></tr>
+            <tr><td>Headless 客户端</td><td>Linux amd64 / arm64</td><td><span class="status stable">Stable</span></td><td>systemd 服务，支持实时配置和安全轮询。</td></tr>
+            <tr><td>Headless 客户端</td><td>macOS amd64 / arm64</td><td><span class="status beta">Beta</span></td><td>launchd 包；需完成包结构和升级验证。</td></tr>
+            <tr><td>图形客户端</td><td>Windows 10 / 11 x64</td><td><span class="status experimental">Source / Experimental</span></td><td>暂无官方二进制；历史自签名资产不受支持。</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="security" aria-labelledby="security-title">
+      <div class="section-head"><p class="eyebrow">Security by boundaries</p><h2 id="security-title">可审计、可限速、可撤销。</h2><p>控制面只签发允许的连接和短期租约；客户端 Agent 再次核对服务器地址、域名、端口与代理类型，拒绝任意 FRP 配置。</p></div>
+      <div class="architecture" aria-label="Home Tunnel 数据路径">
+        <div class="node">远程浏览器<br>HTTPS</div><div class="arrow" aria-hidden="true">→</div>
+        <div class="node">Caddy + 网关<br>策略与限速</div><div class="arrow" aria-hidden="true">→</div>
+        <div class="node">受管 Agent<br>家庭服务</div>
+      </div>
+      <div class="grid-3" style="margin-top:1rem">
+        <article class="card"><h3>依赖与代码</h3><p>生产依赖审计、CodeQL、多语言 CI、Secret Scanning 与 Push Protection 构成合并前证据链。</p></article>
+        <article class="card"><h3>运行时限制</h3><p>WebSocket 总负载、碎片与缓冲分块均有明确上限；异常断连后连接计数必须回收且可重新连接。</p></article>
+        <article class="card"><h3>漏洞报告</h3><p>疑似漏洞不要创建公开 Issue。请通过 GitHub 私密漏洞报告通道提交最小复现与影响范围。</p><p><a href="https://github.com/ZHanry/home-tunnel/security/advisories/new">私密报告漏洞</a></p></article>
+      </div>
+    </section>
+
+    <section id="faq" aria-labelledby="faq-title">
+      <div class="section-head"><p class="eyebrow">FAQ</p><h2 id="faq-title">部署前最常见的问题。</h2></div>
+      <div class="faq">
+        <details><summary>它与直接使用 FRP 有什么不同？</summary><p>Home Tunnel 在 FRP 之上增加用户、设备、连接、短期租约、访问控制、限速、采样与审计，并限制 Agent 只能执行控制中心签发的配置。</p></details>
+        <details><summary>可以公开访问我的真实控制台吗？</summary><p>不建议把管理控制台作为公开演示站。Pages 仅展示本地夹具生成的静态截图，不连接任何真实部署。</p></details>
+        <details><summary>为什么没有 Windows 安装包？</summary><p>正式分发需可信 Authenticode 证书、受保护签名环境和 Windows 10/11 安装/升级 VM 验证。条件具备前仅保留源码构建。</p></details>
+        <details><summary>会收集家庭服务地址或凭据吗？</summary><p>不会。Pages 只接收聚合访问与点击事件；部署反馈也明确禁止提交域名、IP、令牌或凭据。</p></details>
+      </div>
+    </section>
+
+    <section aria-labelledby="feedback-title">
+      <div class="cta-panel">
+        <p class="eyebrow">真实部署反馈</p><h2 id="feedback-title">部署成功了，或者被哪一步卡住？</h2>
+        <p>请提交真实平台、安装结果及阻碍；不要求公开域名、IP 或任何凭据。非维护者的有效部署结果会作为 30 天验证指标。</p>
+        <div class="actions">
+          <a class="button primary" href="https://github.com/ZHanry/home-tunnel/issues/new?template=deployment_feedback.yml&amp;utm_source=pages&amp;utm_medium=feedback&amp;utm_campaign=launch_2026_08" data-goatcounter-click="deployment-feedback">提交部署反馈</a>
+          <a class="button" href="privacy.html">查看隐私说明</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><p>© 2026 Home Tunnel · Apache-2.0</p><p><a href="privacy.html">隐私</a> · <a href="https://github.com/ZHanry/home-tunnel">源码</a> · 不提供公开动态演示</p></footer>
+  <script src="assets/analytics.js" defer></script>
+</body>
+</html>

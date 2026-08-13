@@ -23,7 +23,8 @@ is_sha256() {
   [ "${#1}" -eq 64 ] && ! printf '%s' "$1" | grep -Eq '[^0-9a-f]'
 }
 
-printf '%s' "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || { echo "Invalid version" >&2; exit 1; }
+printf '%s' "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$' || { echo "Invalid version" >&2; exit 1; }
+source_version="${version%%-rc.*}"
 is_sha256 "$expected_images_sha" || { echo "Invalid image archive SHA-256" >&2; exit 1; }
 is_sha256 "$expected_caddy_sha" || { echo "Invalid Caddy SHA-256" >&2; exit 1; }
 printf '%s' "$expected_caddy_inode" | grep -Eq '^[0-9]+$' || { echo "Invalid Caddy inode" >&2; exit 1; }
@@ -248,7 +249,7 @@ docker compose -f "$compose" up -d --no-deps --force-recreate control-center >/d
 wait_healthy home-tunnel-control-center
 [ "$(docker inspect -f '{{.Image}}' home-tunnel-control-center)" = "$new_image" ] || { echo "Control container did not adopt the new image" >&2; exit 1; }
 docker exec home-tunnel-control-center node -e \
-  "fetch('http://127.0.0.1:8080/healthz').then(async r=>{const b=await r.json();if(!r.ok||b.version!=='$version')process.exit(1)}).catch(()=>process.exit(1))"
+  "fetch('http://127.0.0.1:8080/healthz').then(async r=>{const b=await r.json();if(!r.ok||b.version!=='$source_version')process.exit(1)}).catch(()=>process.exit(1))"
 schema_version="$(docker exec home-tunnel-control-center node --input-type=module -e \
   "import { DatabaseSync } from 'node:sqlite';const db=new DatabaseSync(process.env.SQLITE_PATH,{readOnly:true});console.log(db.prepare('SELECT max(version) AS version FROM schema_migrations').get().version);db.close()")"
 [ "$schema_version" -ge 2 ] || { echo "SQLite migration version is invalid" >&2; exit 1; }

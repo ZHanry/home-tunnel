@@ -20,8 +20,7 @@ export type AlertEvent = {
 export type AlertChannelKind = "webhook" | "telegram";
 
 export type AlertChannel =
-  | { kind: "webhook"; url: string }
-  | { kind: "telegram"; botToken: string; chatId: string };
+  { kind: "webhook"; url: string } | { kind: "telegram"; botToken: string; chatId: string };
 
 export type AlertDeliveryResult = { channel: AlertChannelKind; ok: boolean; error?: string };
 
@@ -53,16 +52,18 @@ const deduplicationMapLimit = 2_000;
 
 function logDeliveryFailure(channel: AlertChannelKind, event: AlertEvent, message: string): void {
   // 只记通道与事件元信息；绝不输出 URL、token 或 chat_id。
-  console.error(JSON.stringify({
-    timestamp: new Date().toISOString(),
-    level: "error",
-    component: "control-center",
-    event_code: "ALERT_DELIVERY_FAILED",
-    channel,
-    alert_event_type: event.event_type,
-    severity: event.severity,
-    message: message.slice(0, 256),
-  }));
+  console.error(
+    JSON.stringify({
+      timestamp: new Date().toISOString(),
+      level: "error",
+      component: "control-center",
+      event_code: "ALERT_DELIVERY_FAILED",
+      channel,
+      alert_event_type: event.event_type,
+      severity: event.severity,
+      message: message.slice(0, 256),
+    }),
+  );
 }
 
 export class AlertDispatcher {
@@ -124,7 +125,11 @@ export class AlertDispatcher {
     return false;
   }
 
-  private async deliver(channel: AlertChannel, event: AlertEvent, at: string): Promise<AlertDeliveryResult> {
+  private async deliver(
+    channel: AlertChannel,
+    event: AlertEvent,
+    at: string,
+  ): Promise<AlertDeliveryResult> {
     const fetchImplementation: FetchLike =
       this.options.fetchImplementation ?? ((url, init) => fetch(url, init));
     const timeoutMs = this.options.timeoutMs ?? defaultTimeoutMs;

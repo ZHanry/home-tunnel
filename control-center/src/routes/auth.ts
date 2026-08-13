@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { config } from "../config.js";
 import { one, transaction } from "../db.js";
@@ -76,11 +75,18 @@ router.post(
       response.setHeader("retry-after", String(limit.retryAfterSeconds));
       throw new HttpError(429, "RATE_LIMITED", "登录尝试过多，请稍后重试");
     }
-    const user = await one<UserRow>("SELECT * FROM users WHERE lower(username)=lower(?)", [normalized]);
-    const passwordValid = await verifyPassword(user?.password_hash ?? (await dummyHashPromise), body.password);
+    const user = await one<UserRow>("SELECT * FROM users WHERE lower(username)=lower(?)", [
+      normalized,
+    ]);
+    const passwordValid = await verifyPassword(
+      user?.password_hash ?? (await dummyHashPromise),
+      body.password,
+    );
     if (!user || !passwordValid) {
       await transaction(async (client) => {
-        await audit(client, request, "LoginFailed", "User", user?.id ?? null, null, { username: normalized });
+        await audit(client, request, "LoginFailed", "User", user?.id ?? null, null, {
+          username: normalized,
+        });
       });
       throw new HttpError(401, "AUTH_INVALID", "用户名或密码错误");
     }
@@ -97,13 +103,23 @@ router.post(
     }
     const session = await transaction(async (client) => {
       const issued = await issueSession(client, user, null);
-      await audit(client, request, "LoginSucceeded", "User", user.id, null, {
-        client_type: body.client_type,
-        password_change_required: user.password_state === "must_change",
-      }, { type: "user", id: user.id });
+      await audit(
+        client,
+        request,
+        "LoginSucceeded",
+        "User",
+        user.id,
+        null,
+        {
+          client_type: body.client_type,
+          password_change_required: user.password_state === "must_change",
+        },
+        { type: "user", id: user.id },
+      );
       return issued;
     });
-    if (body.client_type === "web") setSessionCookies(response, session.accessToken, session.refreshToken);
+    if (body.client_type === "web")
+      setSessionCookies(response, session.accessToken, session.refreshToken);
     response.json({
       user: publicUser(user),
       password_change_required: user.password_state === "must_change",
@@ -135,7 +151,10 @@ router.post(
          FROM devices d JOIN users u ON u.id=d.user_id WHERE d.id=?`,
       [body.device_id],
     );
-    if (!device || !constantTimeStringEqual(device.credential_hash, tokenHash(body.device_credential))) {
+    if (
+      !device ||
+      !constantTimeStringEqual(device.credential_hash, tokenHash(body.device_credential))
+    ) {
       throw new HttpError(401, "AUTH_INVALID", "设备认证失败");
     }
     if (device.status !== "active") throw new HttpError(423, "USER_DISABLED", "账号已禁用");
@@ -167,7 +186,13 @@ router.post(
 router.post(
   "/refresh",
   asyncHandler(async (request, response) => {
-    const body = parseBody(z.object({ refresh_token: z.string().optional(), client_type: clientTypeSchema.default("windows") }), request.body ?? {});
+    const body = parseBody(
+      z.object({
+        refresh_token: z.string().optional(),
+        client_type: clientTypeSchema.default("windows"),
+      }),
+      request.body ?? {},
+    );
     const presented = body.refresh_token ?? parseCookies(request).ht_refresh;
     if (!presented) throw new HttpError(401, "SESSION_REVOKED", "刷新令牌缺失");
     const presentedHash = tokenHash(presented);
@@ -199,13 +224,23 @@ router.post(
       const session = selected.rows[0];
       if (!session) throw new HttpError(401, "SESSION_REVOKED", "刷新令牌无效");
       if (session.previous_refresh_token_hash === presentedHash) {
-        await client.query("UPDATE sessions SET revoked_at=COALESCE(revoked_at,home_tunnel_now()) WHERE token_family=?", [
-          session.token_family,
-        ]);
-        await audit(client, request, "RefreshTokenReplayDetected", "Session", session.id, null, null, {
-          type: "system",
-          id: null,
-        });
+        await client.query(
+          "UPDATE sessions SET revoked_at=COALESCE(revoked_at,home_tunnel_now()) WHERE token_family=?",
+          [session.token_family],
+        );
+        await audit(
+          client,
+          request,
+          "RefreshTokenReplayDetected",
+          "Session",
+          session.id,
+          null,
+          null,
+          {
+            type: "system",
+            id: null,
+          },
+        );
         return { replayed: true as const };
       }
       if (
@@ -224,7 +259,13 @@ router.post(
         `UPDATE sessions SET previous_refresh_token_hash=refresh_token_hash,
              refresh_token_hash=?, access_token_hash=?, csrf_token_hash=?,
              access_expires_at=?, updated_at=home_tunnel_now() WHERE id=?`,
-        [tokenHash(refreshToken), tokenHash(accessToken), tokenHash(csrfToken), accessExpiresAt, session.id],
+        [
+          tokenHash(refreshToken),
+          tokenHash(accessToken),
+          tokenHash(csrfToken),
+          accessExpiresAt,
+          session.id,
+        ],
       );
       await audit(client, request, "SessionRefreshed", "Session", session.id, null, null, {
         type: "user",
@@ -243,7 +284,8 @@ router.post(
       clearSessionCookies(response);
       throw new HttpError(401, "SESSION_REVOKED", "检测到旧刷新令牌重放，会话族已撤销");
     }
-    if (body.client_type === "web") setSessionCookies(response, rotation.accessToken, rotation.refreshToken);
+    if (body.client_type === "web")
+      setSessionCookies(response, rotation.accessToken, rotation.refreshToken);
     response.json({
       access_token: body.client_type !== "web" ? rotation.accessToken : undefined,
       refresh_token: body.client_type !== "web" ? rotation.refreshToken : undefined,
@@ -313,7 +355,10 @@ router.post(
       throw new HttpError(429, "RATE_LIMITED", "改密尝试过多，请稍后重试");
     }
     const body = parseBody(
-      z.object({ current_password: z.string().min(1).max(256), new_password: z.string().min(12).max(256) }),
+      z.object({
+        current_password: z.string().min(1).max(256),
+        new_password: z.string().min(12).max(256),
+      }),
       request.body,
     );
     const user = await one<UserRow>("SELECT * FROM users WHERE id=?", [actor.userId]);
@@ -337,11 +382,24 @@ router.post(
         "UPDATE sessions SET revoked_at=COALESCE(revoked_at,home_tunnel_now()),updated_at=home_tunnel_now() WHERE user_id=?",
         [actor.userId],
       );
-      await audit(client, request, "PasswordChanged", "User", actor.userId, { password_state: user.password_state }, { password_state: "normal" });
+      await audit(
+        client,
+        request,
+        "PasswordChanged",
+        "User",
+        actor.userId,
+        { password_state: user.password_state },
+        { password_state: "normal" },
+      );
       await client.query(
         `INSERT INTO outbox_events(event_type,resource_type,resource_id,resource_version,recipient_user_id,payload)
          VALUES('subject.revoked','User',?,?,?,?)`,
-        [actor.userId, Number(user.token_version) + 1, actor.userId, JSON.stringify({ subject_type: "user", subject_id: actor.userId })],
+        [
+          actor.userId,
+          Number(user.token_version) + 1,
+          actor.userId,
+          JSON.stringify({ subject_type: "user", subject_id: actor.userId }),
+        ],
       );
     });
     clearSessionCookies(response);

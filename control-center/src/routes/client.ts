@@ -32,6 +32,7 @@ import {
 } from "../http.js";
 import { opaqueToken, signLease, tokenHash } from "../security.js";
 import { parseBody } from "../validation.js";
+import { clientConnectionSelect, customDomainsByConnection } from "../connection-query.js";
 
 const router = Router();
 
@@ -71,14 +72,21 @@ router.post(
       let configVersion: number;
       let createdAt: Date;
       if (existing.rows[0]) {
-        if (existing.rows[0].status !== "active") throw new HttpError(423, "DEVICE_REVOKED", "设备已撤销");
+        if (existing.rows[0].status !== "active")
+          throw new HttpError(423, "DEVICE_REVOKED", "设备已撤销");
         deviceId = existing.rows[0].id;
         configVersion = Number(existing.rows[0].config_version);
         createdAt = existing.rows[0].created_at;
         await client.query(
           `UPDATE devices SET name=?,install_id=?,credential_hash=?,client_version=?,
              last_seen_at=home_tunnel_now(),updated_at=home_tunnel_now() WHERE id=?`,
-          [body.name, body.install_id, tokenHash(credential), body.client_version ?? null, deviceId],
+          [
+            body.name,
+            body.install_id,
+            tokenHash(credential),
+            body.client_version ?? null,
+            deviceId,
+          ],
         );
       } else {
         deviceId = randomUUID();
@@ -99,12 +107,23 @@ router.post(
           ],
         );
       }
-      await client.query("UPDATE sessions SET device_id=?,updated_at=home_tunnel_now() WHERE id=?", [deviceId, actor.sessionId]);
-      await audit(client, request, existing.rows[0] ? "DeviceCredentialRotated" : "DeviceRegistered", "Device", deviceId, null, {
-        name: body.name,
-        install_id_hash: tokenHash(body.install_id),
-        fingerprint_hash: body.fingerprint_hash,
-      });
+      await client.query(
+        "UPDATE sessions SET device_id=?,updated_at=home_tunnel_now() WHERE id=?",
+        [deviceId, actor.sessionId],
+      );
+      await audit(
+        client,
+        request,
+        existing.rows[0] ? "DeviceCredentialRotated" : "DeviceRegistered",
+        "Device",
+        deviceId,
+        null,
+        {
+          name: body.name,
+          install_id_hash: tokenHash(body.install_id),
+          fingerprint_hash: body.fingerprint_hash,
+        },
+      );
       return { id: deviceId, config_version: configVersion, created_at: createdAt };
     });
     response.status(201).json({
@@ -136,32 +155,12 @@ router.post(
   }),
 );
 
-const connectionSelect = `
-  SELECT c.*,rs.state,rs.applied_version,rs.last_error_code,
-         tp.bandwidth_limit_bps,tp.version AS policy_version
-    FROM connections c
-    LEFT JOIN runtime_states rs ON rs.connection_id=c.id
-    LEFT JOIN traffic_policies tp ON tp.scope_type='connection' AND tp.scope_id=c.id`;
-
-async function customDomainsByConnection(connectionIds: string[]): Promise<Map<string, string[]>> {
-  if (!connectionIds.length) return new Map();
-  const rows = await query<{ connection_id: string; domain: string }>(
-    `SELECT connection_id,domain FROM custom_domains
-      WHERE status='verified' AND connection_id IN (${connectionIds.map(() => "?").join(",")})
-      ORDER BY domain`,
-    connectionIds,
-  );
-  const result = new Map<string, string[]>();
-  for (const row of rows) result.set(row.connection_id, [...(result.get(row.connection_id) ?? []), row.domain]);
-  return result;
-}
-
 router.get(
   "/client/connections",
   asyncHandler(async (request, response) => {
     const actor = requirePasswordNormal(request);
     const rows = await query<ConnectionRow>(
-      `${connectionSelect} WHERE c.user_id=? AND c.deleted_at IS NULL ORDER BY c.updated_at DESC`,
+      `${clientConnectionSelect} WHERE c.user_id=? AND c.deleted_at IS NULL ORDER BY c.updated_at DESC`,
       [actor.userId],
     );
     const domains = await customDomainsByConnection(rows.map((row) => row.id));
@@ -197,7 +196,7 @@ router.get(
   asyncHandler(async (request, response) => {
     const actor = requirePasswordNormal(request);
     const row = await one<ConnectionRow>(
-      `${connectionSelect} WHERE c.id=? AND c.user_id=? AND c.deleted_at IS NULL`,
+      `${clientConnectionSelect} WHERE c.id=? AND c.user_id=? AND c.deleted_at IS NULL`,
       [request.params.connectionId, actor.userId],
     );
     if (!row) throw new HttpError(404, "OWNERSHIP_MISMATCH", "连接不存在");
@@ -212,16 +211,28 @@ router.patch(
     const actor = clientGuard(request);
     const connectionId = pathParam(request, "connectionId");
     const patch = parseBody(
-      connectionPatchSchema.omit({ bandwidth_limit_bps: true, proxy_type: true, tcp_remote_port: true }),
+      connectionPatchSchema.omit({
+        bandwidth_limit_bps: true,
+        proxy_type: true,
+        tcp_remote_port: true,
+      }),
       request.body,
     );
     const expected = parseExpectedVersion(request, patch.expected_version);
     const updated = await transaction(async (client) => {
       const changed = await updateConnection(client, connectionId, expected, patch, actor.userId);
-      await audit(client, request, "ConnectionUpdated", "Connection", connectionId, publicConnection(changed.before), {
-        ...publicConnection(changed.after),
-        access_basic_user: changed.after.access_basic_user ?? null,
-      });
+      await audit(
+        client,
+        request,
+        "ConnectionUpdated",
+        "Connection",
+        connectionId,
+        publicConnection(changed.before),
+        {
+          ...publicConnection(changed.after),
+          access_basic_user: changed.after.access_basic_user ?? null,
+        },
+      );
       return changed.after;
     });
     response.json(publicConnection(updated));
@@ -236,7 +247,15 @@ router.delete(
     const expected = parseExpectedVersion(request, request.body?.expected_version);
     await transaction(async (client) => {
       const deleted = await deleteConnection(client, connectionId, expected, actor.userId);
-      await audit(client, request, "ConnectionDeleted", "Connection", connectionId, publicConnection(deleted), { deleted: true });
+      await audit(
+        client,
+        request,
+        "ConnectionDeleted",
+        "Connection",
+        connectionId,
+        publicConnection(deleted),
+        { deleted: true },
+      );
     });
     response.status(204).end();
   }),
@@ -247,16 +266,19 @@ function canonicalHash(value: unknown): string {
 }
 
 type DeviceLeaseSubject = {
-    id: string;
-    user_id: string;
-    config_version: string;
-    status: string;
-    user_status: string;
-    token_version: string;
-    lease_expires_at: Date | null;
+  id: string;
+  user_id: string;
+  config_version: string;
+  status: string;
+  user_status: string;
+  token_version: string;
+  lease_expires_at: Date | null;
 };
 
-async function loadDeviceLeaseSubject(userId: string, deviceId: string): Promise<DeviceLeaseSubject> {
+async function loadDeviceLeaseSubject(
+  userId: string,
+  deviceId: string,
+): Promise<DeviceLeaseSubject> {
   const device = await one<DeviceLeaseSubject>(
     `SELECT d.id,d.user_id,d.config_version,d.status,u.status AS user_status,u.token_version
             ,d.lease_expires_at
@@ -286,7 +308,11 @@ async function issueDeviceLease(device: DeviceLeaseSubject, seconds: number) {
     "UPDATE devices SET lease_expires_at=home_tunnel_from_unix(?),last_seen_at=home_tunnel_now(),updated_at=home_tunnel_now() WHERE id=?",
     [exp, device.id],
   );
-  return { lease, expires_at: new Date(exp * 1000).toISOString(), config_version: Number(device.config_version) };
+  return {
+    lease,
+    expires_at: new Date(exp * 1000).toISOString(),
+    config_version: Number(device.config_version),
+  };
 }
 
 router.post(
@@ -311,15 +337,19 @@ router.post(
     let connections: ReturnType<typeof publicConnection>[] = [];
     if (fullSync) {
       const rows = await query<ConnectionRow>(
-        `${connectionSelect} WHERE c.device_id=? AND c.deleted_at IS NULL ORDER BY c.created_at`,
+        `${clientConnectionSelect} WHERE c.device_id=? AND c.deleted_at IS NULL ORDER BY c.created_at`,
         [body.device_id],
       );
       const domains = await customDomainsByConnection(rows.map((row) => row.id));
       connections = rows.map((row) => ({
-        ...publicConnection({
-          ...row,
-          enabled: row.enabled && ((row.proxy_type ?? "http") === "http" || config.tcpTunnels.enabled),
-        }, domains.get(row.id) ?? []),
+        ...publicConnection(
+          {
+            ...row,
+            enabled:
+              row.enabled && ((row.proxy_type ?? "http") === "http" || config.tcpTunnels.enabled),
+          },
+          domains.get(row.id) ?? [],
+        ),
         proxy_name: `ht_${row.id.replaceAll("-", "")}_v${Number(row.version)}`,
       }));
     }
@@ -327,8 +357,13 @@ router.post(
     const reportedExpiry = body.lease_expires_at ? Date.parse(body.lease_expires_at) : 0;
     const storedExpiry = device.lease_expires_at?.getTime() ?? 0;
     const shouldIssueLease =
-      !body.supports_optional_lease || fullSync || reportedExpiry <= renewalBoundary || storedExpiry <= renewalBoundary;
-    const lease = shouldIssueLease ? await issueDeviceLease(device, config.onlineLeaseSeconds) : null;
+      !body.supports_optional_lease ||
+      fullSync ||
+      reportedExpiry <= renewalBoundary ||
+      storedExpiry <= renewalBoundary;
+    const lease = shouldIssueLease
+      ? await issueDeviceLease(device, config.onlineLeaseSeconds)
+      : null;
     response.json({
       device_id: body.device_id,
       full_sync: fullSync,
@@ -358,7 +393,15 @@ router.post(
             z.object({
               connection_id: z.string().uuid(),
               applied_version: z.number().int().min(0),
-              state: z.enum(["Disabled", "Pending", "Applying", "Online", "Degraded", "Offline", "Error"]),
+              state: z.enum([
+                "Disabled",
+                "Pending",
+                "Applying",
+                "Online",
+                "Degraded",
+                "Offline",
+                "Error",
+              ]),
               error_code: z.string().max(64).nullable().optional(),
               error_summary: z.string().max(512).nullable().optional(),
             }),
@@ -376,7 +419,13 @@ router.post(
         `UPDATE devices SET applied_config_version=max(applied_config_version,?),
            client_version=?,agent_version=?,last_seen_at=home_tunnel_now(),updated_at=home_tunnel_now()
          WHERE id=? AND user_id=? AND status='active' RETURNING id`,
-        [body.applied_config_version, body.client_version ?? null, body.agent_version ?? null, body.device_id, actor.userId],
+        [
+          body.applied_config_version,
+          body.client_version ?? null,
+          body.agent_version ?? null,
+          body.device_id,
+          actor.userId,
+        ],
       );
       if (!updated.rows[0]) throw new HttpError(423, "DEVICE_REVOKED", "设备已撤销");
       for (const state of body.connections) {
@@ -402,7 +451,11 @@ router.post(
     });
     const serverTime = Date.now();
     const clientTime = body.clock_utc ? Date.parse(body.clock_utc) : serverTime;
-    response.json({ ok: true, server_time: new Date(serverTime).toISOString(), clock_skew_seconds: Math.round((clientTime - serverTime) / 1000) });
+    response.json({
+      ok: true,
+      server_time: new Date(serverTime).toISOString(),
+      clock_skew_seconds: Math.round((clientTime - serverTime) / 1000),
+    });
   }),
 );
 
@@ -478,11 +531,19 @@ router.delete(
     const domainId = pathParam(request, "domainId");
     await transaction(async (client) => {
       const domain = await deleteCustomDomain(client, domainId, actor.userId);
-      await audit(client, request, "CustomDomainDeleted", "CustomDomain", domain.id, {
-        connection_id: domain.connection_id,
-        domain: domain.domain,
-        status: domain.status,
-      }, { deleted: true });
+      await audit(
+        client,
+        request,
+        "CustomDomainDeleted",
+        "CustomDomain",
+        domain.id,
+        {
+          connection_id: domain.connection_id,
+          domain: domain.domain,
+          status: domain.status,
+        },
+        { deleted: true },
+      );
     });
     response.status(204).end();
   }),
@@ -500,7 +561,15 @@ router.post(
             z.object({
               connection_id: z.string().uuid(),
               applied_version: z.number().int().min(0),
-              state: z.enum(["Disabled", "Pending", "Applying", "Online", "Degraded", "Offline", "Error"]),
+              state: z.enum([
+                "Disabled",
+                "Pending",
+                "Applying",
+                "Online",
+                "Degraded",
+                "Offline",
+                "Error",
+              ]),
               error_code: z.string().max(64).nullable().optional(),
               error_summary: z.string().max(512).nullable().optional(),
               observed_at: z.string().datetime(),
@@ -511,7 +580,8 @@ router.post(
       }),
       request.body,
     );
-    if (!actor.deviceId || actor.deviceId !== body.device_id) throw new HttpError(404, "OWNERSHIP_MISMATCH", "设备不存在");
+    if (!actor.deviceId || actor.deviceId !== body.device_id)
+      throw new HttpError(404, "OWNERSHIP_MISMATCH", "设备不存在");
     await transaction(async (client) => {
       for (const report of body.reports) {
         // The stored observed_at is produced by home_tunnel_now() with millisecond
@@ -538,7 +608,9 @@ router.post(
           ],
         );
       }
-      await audit(client, request, "RuntimeReported", "Device", body.device_id, null, { report_count: body.reports.length });
+      await audit(client, request, "RuntimeReported", "Device", body.device_id, null, {
+        report_count: body.reports.length,
+      });
     });
     response.status(202).json({ accepted: body.reports.length });
   }),
@@ -548,12 +620,24 @@ router.post(
   "/client/frp-lease",
   asyncHandler(async (request, response) => {
     const actor = clientGuard(request);
-    const body = parseBody(z.object({ device_id: z.string().uuid(), mode: z.enum(["online", "offline"]).default("online") }), request.body);
-    if (!actor.deviceId || actor.deviceId !== body.device_id) throw new HttpError(404, "OWNERSHIP_MISMATCH", "设备不存在");
-    const seconds = body.mode === "offline" ? config.offlineLeaseMaxSeconds : config.onlineLeaseSeconds;
+    const body = parseBody(
+      z.object({
+        device_id: z.string().uuid(),
+        mode: z.enum(["online", "offline"]).default("online"),
+      }),
+      request.body,
+    );
+    if (!actor.deviceId || actor.deviceId !== body.device_id)
+      throw new HttpError(404, "OWNERSHIP_MISMATCH", "设备不存在");
+    const seconds =
+      body.mode === "offline" ? config.offlineLeaseMaxSeconds : config.onlineLeaseSeconds;
     const device = await loadDeviceLeaseSubject(actor.userId, body.device_id);
     const lease = await issueDeviceLease(device, seconds);
-    response.json({ ...lease, mode: body.mode, max_offline_seconds: config.offlineLeaseMaxSeconds });
+    response.json({
+      ...lease,
+      mode: body.mode,
+      max_offline_seconds: config.offlineLeaseMaxSeconds,
+    });
   }),
 );
 

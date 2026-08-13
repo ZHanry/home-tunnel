@@ -20,11 +20,7 @@ function placeholders(count: number): string {
 
 // Each batch commits in its own transaction and yields the event loop afterwards
 // so the global database mutex is never held for the whole maintenance run.
-async function deleteByIds(
-  table: string,
-  where: string,
-  values: unknown[],
-): Promise<number> {
+async function deleteByIds(table: string, where: string, values: unknown[]): Promise<number> {
   let total = 0;
   for (let batch = 0; batch < maximumBatchesPerRun; batch += 1) {
     const deleted = await transaction(async (client) => {
@@ -47,7 +43,9 @@ async function deleteByIds(
   return total;
 }
 
-async function archiveTrafficSamplesBatch(cutoff: Date): Promise<{ archived: number; selectedCount: number }> {
+async function archiveTrafficSamplesBatch(
+  cutoff: Date,
+): Promise<{ archived: number; selectedCount: number }> {
   return transaction(async (client) => {
     const selected = await client.query<{
       id: number;
@@ -59,23 +57,26 @@ async function archiveTrafficSamplesBatch(cutoff: Date): Promise<{ archived: num
       download_bytes: number;
       request_count: number;
       error_count: number;
-    }    >(
+    }>(
       `SELECT id,bucket_start,user_id,device_id,connection_id,
               upload_bytes,download_bytes,request_count,error_count
          FROM traffic_samples WHERE bucket_start < ? ORDER BY bucket_start,id LIMIT ${batchSize}`,
       [cutoff],
     );
     if (!selected.rows.length) return { archived: 0, selectedCount: 0 };
-    const aggregates = new Map<string, {
-      bucketStart: string;
-      userId: string;
-      deviceId: string;
-      connectionId: string;
-      uploadBytes: number;
-      downloadBytes: number;
-      requestCount: number;
-      errorCount: number;
-    }>();
+    const aggregates = new Map<
+      string,
+      {
+        bucketStart: string;
+        userId: string;
+        deviceId: string;
+        connectionId: string;
+        uploadBytes: number;
+        downloadBytes: number;
+        requestCount: number;
+        errorCount: number;
+      }
+    >();
     for (const sample of selected.rows) {
       const hour = new Date(sample.bucket_start);
       hour.setUTCMinutes(0, 0, 0);
@@ -197,21 +198,27 @@ export function startDataMaintenance(): { close: () => void } {
     void runDataMaintenance()
       .then((stats) => {
         if (!Object.values(stats).some((value) => value > 0)) return;
-        console.log(JSON.stringify({
-          timestamp: new Date().toISOString(),
-          level: "info",
-          component: "control-center",
-          event_code: "DATA_MAINTENANCE_COMPLETED",
-          ...stats,
-        }));
+        console.log(
+          JSON.stringify({
+            timestamp: new Date().toISOString(),
+            level: "info",
+            component: "control-center",
+            event_code: "DATA_MAINTENANCE_COMPLETED",
+            ...stats,
+          }),
+        );
       })
-      .catch((error) => console.error(JSON.stringify({
-        timestamp: new Date().toISOString(),
-        level: "error",
-        component: "control-center",
-        event_code: "DATA_MAINTENANCE_FAILED",
-        message: error instanceof Error ? error.message : "Unknown maintenance error",
-      })));
+      .catch((error) =>
+        console.error(
+          JSON.stringify({
+            timestamp: new Date().toISOString(),
+            level: "error",
+            component: "control-center",
+            event_code: "DATA_MAINTENANCE_FAILED",
+            message: error instanceof Error ? error.message : "Unknown maintenance error",
+          }),
+        ),
+      );
   };
   const initialTimer = setTimeout(execute, 60_000);
   const intervalTimer = setInterval(execute, 6 * 60 * 60 * 1000);

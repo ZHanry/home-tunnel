@@ -3,8 +3,13 @@ import { EventEmitter } from "node:events";
 import { chmodSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { randomUUID } from "node:crypto";
-import { DatabaseSync, type SQLInputValue, type SQLOutputValue, type StatementSync } from "node:sqlite";
+import { createHash, randomUUID } from "node:crypto";
+import {
+  DatabaseSync,
+  type SQLInputValue,
+  type SQLOutputValue,
+  type StatementSync,
+} from "node:sqlite";
 import { config } from "./config.js";
 import { hashPassword } from "./security.js";
 
@@ -16,7 +21,10 @@ export type QueryResult<T extends DatabaseRow = DatabaseRow> = {
 };
 
 export type DatabaseClient = {
-  query<T extends DatabaseRow = DatabaseRow>(text: string, values?: unknown[]): Promise<QueryResult<T>>;
+  query<T extends DatabaseRow = DatabaseRow>(
+    text: string,
+    values?: unknown[],
+  ): Promise<QueryResult<T>>;
 };
 
 class Mutex {
@@ -72,7 +80,8 @@ function bindValue(value: unknown): SQLInputValue {
   if (value == null) return null;
   if (value instanceof Date) return value.toISOString();
   if (typeof value === "boolean") return value ? 1 : 0;
-  if (typeof value === "string" || typeof value === "number" || typeof value === "bigint") return value;
+  if (typeof value === "string" || typeof value === "number" || typeof value === "bigint")
+    return value;
   if (value instanceof Uint8Array) return value;
   if (Array.isArray(value)) {
     throw new Error("SQLite array parameters must be expanded by the caller");
@@ -103,7 +112,9 @@ database.function("home_tunnel_add_seconds", (value, seconds) => {
   const milliseconds = Date.parse(String(value));
   return new Date(milliseconds + Number(seconds) * 1000).toISOString();
 });
-database.function("home_tunnel_from_unix", (seconds) => new Date(Number(seconds) * 1000).toISOString());
+database.function("home_tunnel_from_unix", (seconds) =>
+  new Date(Number(seconds) * 1000).toISOString(),
+);
 database.function("home_tunnel_hour", (value) => {
   const date = new Date(String(value));
   date.setUTCMinutes(0, 0, 0);
@@ -170,7 +181,10 @@ function prepareQuery(text: string): PreparedQuery {
 class SqliteClient implements DatabaseClient {
   outboxChanged = false;
 
-  async query<T extends DatabaseRow = DatabaseRow>(text: string, values: unknown[] = []): Promise<QueryResult<T>> {
+  async query<T extends DatabaseRow = DatabaseRow>(
+    text: string,
+    values: unknown[] = [],
+  ): Promise<QueryResult<T>> {
     try {
       const { statement, hasRows, touchesOutbox } = prepareQuery(text);
       const bindings = values.map(bindValue);
@@ -188,23 +202,31 @@ class SqliteClient implements DatabaseClient {
   }
 }
 
-function emitOutboxChanged(): void {
-  queueMicrotask(() => databaseEvents.emit("outbox"));
-}
-
 // Detects accidental use of the module-level query()/transaction() from inside
 // a transaction callback, which would deadlock on the mutex. Independent
 // concurrent callers are unaffected: they run in their own async context and
 // simply queue on the mutex.
 const transactionContext = new AsyncLocalStorage<true>();
 
+function emitOutboxChanged(): void {
+  // Outbox consumers start an independent transaction. Explicitly leave the
+  // writer's AsyncLocalStorage context before scheduling the notification so
+  // the consumer is not misidentified as a re-entrant database call.
+  transactionContext.exit(() => queueMicrotask(() => databaseEvents.emit("outbox")));
+}
+
 function assertNotInTransaction(entryPoint: string): void {
   if (transactionContext.getStore()) {
-    throw new Error(`${entryPoint} must not be called inside transaction(); use the transaction client instead`);
+    throw new Error(
+      `${entryPoint} must not be called inside transaction(); use the transaction client instead`,
+    );
   }
 }
 
-export async function query<T extends DatabaseRow = DatabaseRow>(text: string, values: unknown[] = []): Promise<T[]> {
+export async function query<T extends DatabaseRow = DatabaseRow>(
+  text: string,
+  values: unknown[] = [],
+): Promise<T[]> {
   assertNotInTransaction("query()");
   return mutex.run(async () => {
     const client = new SqliteClient();
@@ -214,12 +236,17 @@ export async function query<T extends DatabaseRow = DatabaseRow>(text: string, v
   });
 }
 
-export async function one<T extends DatabaseRow = DatabaseRow>(text: string, values: unknown[] = []): Promise<T | null> {
+export async function one<T extends DatabaseRow = DatabaseRow>(
+  text: string,
+  values: unknown[] = [],
+): Promise<T | null> {
   const rows = await query<T>(text, values);
   return rows[0] ?? null;
 }
 
-export async function transaction<T>(operation: (client: DatabaseClient) => Promise<T>): Promise<T> {
+export async function transaction<T>(
+  operation: (client: DatabaseClient) => Promise<T>,
+): Promise<T> {
   assertNotInTransaction("transaction()");
   return mutex.run(async () =>
     transactionContext.run(true, async () => {
@@ -239,7 +266,10 @@ export async function transaction<T>(operation: (client: DatabaseClient) => Prom
 }
 
 export const pool = {
-  query: async <T extends DatabaseRow = DatabaseRow>(text: string, values: unknown[] = []): Promise<QueryResult<T>> => {
+  query: async <T extends DatabaseRow = DatabaseRow>(
+    text: string,
+    values: unknown[] = [],
+  ): Promise<QueryResult<T>> => {
     const rows = await query<T>(text, values);
     return { rows, rowCount: rows.length };
   },
@@ -262,19 +292,38 @@ export async function migrate(): Promise<void> {
       .filter((entry): entry is { name: string; match: RegExpExecArray } => entry.match !== null)
       .map((entry) => ({ name: entry.name, version: Number(entry.match[1]) }))
       .sort((left, right) => left.version - right.version);
-    if (!migrations.length || migrations.some((entry) => !Number.isSafeInteger(entry.version) || entry.version < 1)) {
+    if (
+      !migrations.length ||
+      migrations.some((entry) => !Number.isSafeInteger(entry.version) || entry.version < 1)
+    ) {
       throw new Error("No valid database migrations were found");
     }
     const applied = new Set(
-      database.prepare("SELECT version FROM schema_migrations").all().map((row) => Number(row.version)),
+      database
+        .prepare("SELECT version FROM schema_migrations")
+        .all()
+        .map((row) => Number(row.version)),
     );
     for (const migration of migrations) {
       if (applied.has(migration.version)) continue;
       const sql = readFileSync(join(migrationsDirectory, migration.name), "utf8");
+      const checksum = createHash("sha256").update(sql).digest("hex");
       database.exec("BEGIN IMMEDIATE");
       try {
         database.exec(sql);
-        database.prepare("INSERT OR IGNORE INTO schema_migrations(version) VALUES(?)").run(migration.version);
+        const checksumColumn = database
+          .prepare("PRAGMA table_info(schema_migrations)")
+          .all()
+          .some((column) => String(column.name) === "checksum_sha256");
+        if (checksumColumn) {
+          database
+            .prepare("INSERT OR IGNORE INTO schema_migrations(version,checksum_sha256) VALUES(?,?)")
+            .run(migration.version, checksum);
+        } else {
+          database
+            .prepare("INSERT OR IGNORE INTO schema_migrations(version) VALUES(?)")
+            .run(migration.version);
+        }
         database.exec("COMMIT");
       } catch (error) {
         database.exec("ROLLBACK");
@@ -285,7 +334,9 @@ export async function migrate(): Promise<void> {
 }
 
 export async function bootstrapAdmin(): Promise<void> {
-  const existing = await one<{ count: number }>("SELECT count(*) AS count FROM users WHERE role='admin'");
+  const existing = await one<{ count: number }>(
+    "SELECT count(*) AS count FROM users WHERE role='admin'",
+  );
   if (Number(existing?.count ?? 0) > 0) return;
   if (!config.bootstrapAdminPassword) {
     throw new Error("No admin exists and BOOTSTRAP_ADMIN_PASSWORD(_FILE) is empty");
@@ -297,7 +348,13 @@ export async function bootstrapAdmin(): Promise<void> {
     await client.query(
       `INSERT INTO users(id,username,display_name,password_hash,password_state,temporary_password_expires_at,role)
        VALUES(?,?,?,?,'must_change',home_tunnel_add_seconds(home_tunnel_now(),?),'admin')`,
-      [userId, config.bootstrapAdminUsername, "系统管理员", passwordHash, config.temporaryPasswordSeconds],
+      [
+        userId,
+        config.bootstrapAdminUsername,
+        "系统管理员",
+        passwordHash,
+        config.temporaryPasswordSeconds,
+      ],
     );
     await client.query(
       `INSERT INTO traffic_policies(id,scope_type,scope_id,bandwidth_limit_bps)
@@ -307,7 +364,11 @@ export async function bootstrapAdmin(): Promise<void> {
     await client.query(
       `INSERT INTO audit_events(actor_type,action,target_type,target_id,after_value,request_id)
        VALUES('system','BootstrapAdminCreated','User',?,?,?)`,
-      [userId, JSON.stringify({ username: config.bootstrapAdminUsername, role: "admin" }), randomUUID()],
+      [
+        userId,
+        JSON.stringify({ username: config.bootstrapAdminUsername, role: "admin" }),
+        randomUUID(),
+      ],
     );
   });
 }

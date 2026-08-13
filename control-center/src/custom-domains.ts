@@ -43,8 +43,13 @@ export function normalizeCustomDomain(value: string): string {
 
 export function validateCustomDomain(value: string): string | null {
   const domain = normalizeCustomDomain(value);
-  if (domain.length < 4 || domain.length > 253 || !domain.includes(".")) return "请输入合法的完整域名";
-  if (domain.includes("..") || domain.startsWith("*.") || domain.split(".").some((label) => !labelPattern.test(label))) {
+  if (domain.length < 4 || domain.length > 253 || !domain.includes("."))
+    return "请输入合法的完整域名";
+  if (
+    domain.includes("..") ||
+    domain.startsWith("*.") ||
+    domain.split(".").some((label) => !labelPattern.test(label))
+  ) {
     return "域名格式无效，仅支持 ASCII 字母、数字、连字符和点";
   }
   const managed = config.tunnelDomain.toLowerCase();
@@ -87,7 +92,12 @@ export function publicCustomDomain(row: CustomDomainRow) {
 }
 
 function dnsErrorCode(error: unknown): string {
-  if (typeof error === "object" && error !== null && "code" in error && typeof error.code === "string") {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    typeof error.code === "string"
+  ) {
     return error.code;
   }
   return "DNS_ERROR";
@@ -99,7 +109,10 @@ async function withinTimeout<T>(operation: Promise<T>): Promise<T> {
     return await Promise.race([
       operation,
       new Promise<T>((_resolve, reject) => {
-        timer = setTimeout(() => reject(Object.assign(new Error("DNS lookup timed out"), { code: "ETIMEOUT" })), 5_000);
+        timer = setTimeout(
+          () => reject(Object.assign(new Error("DNS lookup timed out"), { code: "ETIMEOUT" })),
+          5_000,
+        );
         timer.unref();
       }),
     ]);
@@ -108,7 +121,9 @@ async function withinTimeout<T>(operation: Promise<T>): Promise<T> {
   }
 }
 
-export async function inspectCustomDomainDns(row: Pick<CustomDomainRow, "domain" | "verification_token" | "subdomain">) {
+export async function inspectCustomDomainDns(
+  row: Pick<CustomDomainRow, "domain" | "verification_token" | "subdomain">,
+) {
   const txtName = txtRecordName(row.domain);
   const expectedTxt = txtRecordValue(row.verification_token);
   const expectedCname = cnameTarget(row.subdomain ?? "");
@@ -116,10 +131,12 @@ export async function inspectCustomDomainDns(row: Pick<CustomDomainRow, "domain"
     withinTimeout(dnsResolver.resolveTxt(txtName)),
     withinTimeout(dnsResolver.resolveCname(row.domain)),
   ]);
-  const txtValues = txtResult.status === "fulfilled" ? txtResult.value.map((parts) => parts.join("")) : [];
-  const cnameValues = cnameResult.status === "fulfilled"
-    ? cnameResult.value.map((value) => normalizeCustomDomain(value))
-    : [];
+  const txtValues =
+    txtResult.status === "fulfilled" ? txtResult.value.map((parts) => parts.join("")) : [];
+  const cnameValues =
+    cnameResult.status === "fulfilled"
+      ? cnameResult.value.map((value) => normalizeCustomDomain(value))
+      : [];
   return {
     ok: txtValues.includes(expectedTxt) && cnameValues.includes(expectedCname),
     txt: {
@@ -146,10 +163,17 @@ export async function createCustomDomain(
   const domain = normalizeCustomDomain(rawDomain);
   const validationError = validateCustomDomain(domain);
   if (validationError) {
-    throw new HttpError(400, "VALIDATION_ERROR", validationError, { field_errors: { domain: validationError } });
+    throw new HttpError(400, "VALIDATION_ERROR", validationError, {
+      field_errors: { domain: validationError },
+    });
   }
   const connection = await client.query<{
-    id: string; subdomain: string; user_id: string; device_id: string; proxy_type: string; deleted_at: Date | null;
+    id: string;
+    subdomain: string;
+    user_id: string;
+    device_id: string;
+    proxy_type: string;
+    deleted_at: Date | null;
   }>(
     "SELECT id,subdomain,user_id,device_id,proxy_type,deleted_at FROM connections WHERE id=? AND deleted_at IS NULL",
     [connectionId],

@@ -1,0 +1,70 @@
+name: Deployment feedback
+description: Share a real installation result and any blocker without exposing your infrastructure.
+title: "[Deployment]: "
+labels: [deployment-feedback, triage]
+body:
+  - type: markdown
+    attributes:
+      value: Thank you for testing Home Tunnel. Do not include domains, IP addresses, credentials, tokens, private keys, or unredacted logs.
+  - type: input
+    id: version
+    attributes:
+      label: Home Tunnel version or commit
+      placeholder: 2.5.0-rc.1 or a commit SHA
+    validations:
+      required: true
+  - type: dropdown
+    id: server_platform
+    attributes:
+      label: Server platform
+      options:
+        - Linux amd64
+        - Linux arm64
+        - Other source build
+    validations:
+      required: true
+  - type: dropdown
+    id: client_platform
+    attributes:
+      label: Client platform
+      options:
+        - Linux amd64
+        - Linux arm64
+        - macOS amd64 (Beta)
+        - macOS arm64 (Beta)
+        - Windows x64 source build (Experimental)
+    validations:
+      required: true
+  - type: dropdown
+    id: result
+    attributes:
+      label: Installation result
+      options:
+        - Deployed successfully
+        - Partially deployed
+        - Blocked before first tunnel
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: What you tried
+      description: Summarize the documented path you followed and any intentional deviations.
+    validations:
+      required: true
+  - type: textarea
+    id: blocker
+    attributes:
+      label: Result and blockers
+      description: What worked, what did not, and which documentation or error message would have helped?
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy checklist
+      options:
+        - label: I removed domains, public IPs, credentials, tokens, private keys, and personal deployment details.
+          required: true
+        - label: This is a real deployment attempt and I am not a project maintainer.
+          required: true

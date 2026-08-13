@@ -1,0 +1,167 @@
+name: home-tunnel-release-smoke
+
+x-logging: &logging
+  driver: local
+  options: { max-size: 5m, max-file: "2" }
+
+services:
+  control-center:
+    image: ${CONTROL_IMAGE:?set CONTROL_IMAGE to an immutable image digest}
+    container_name: home-tunnel-release-control-center
+    restart: "no"
+    init: true
+    environment:
+      NODE_ENV: production
+      PORT: "8080"
+      PUBLIC_BASE_URL: https://console.smoke.test
+      DOWNLOADS_DIRECTORY: /app/downloads
+      SQLITE_PATH: /data/home-tunnel.db
+      TUNNEL_DOMAIN: tunnel.smoke.test
+      PUBLIC_FRPS_HOST: frps.smoke.test
+      PUBLIC_FRPS_PORT: "17000"
+      COOKIE_SECURE: "true"
+      PASSWORD_HASH_CONCURRENCY: "1"
+      PASSWORD_HASH_QUEUE_MAX: "32"
+      INTERNAL_SERVICE_KEY_FILE: /run/secrets/internal_service_key
+      FRPS_PLUGIN_KEY_FILE: /run/secrets/frps_plugin_key
+      LEASE_SIGNING_KEY_FILE: /run/secrets/lease_signing_key
+      BOOTSTRAP_ADMIN_PASSWORD_FILE: /run/secrets/bootstrap_admin_password
+      FRPS_TLS_CERT_FILE: /run/secrets/frps_tls_cert
+      BOOTSTRAP_ADMIN_USERNAME: admin
+      GATEWAY_HEALTH_URL: http://traffic-gateway:8080/healthz
+      FRPS_HOST: frps
+      FRPS_PORT: "7000"
+      CADDY_HOST: caddy
+      CADDY_PORT: "80"
+      BACKUP_STATUS_FILE: /run/home-tunnel-status/backup.json
+    secrets:
+      - internal_service_key
+      - frps_plugin_key
+      - lease_signing_key
+      - bootstrap_admin_password
+      - frps_tls_cert
+    volumes:
+      - sqlite-data:/data
+      - ./smoke/downloads:/app/downloads:ro
+      - ./smoke/backup-root/status:/run/home-tunnel-status:ro
+    tmpfs:
+      - /tmp:size=32m,noexec,nosuid,nodev,uid=10001,gid=10001,mode=0700
+    networks: [control, edge]
+    read_only: true
+    cap_drop: [ALL]
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:8080/healthz').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+      start_period: 5s
+    logging: *logging
+
+  traffic-gateway:
+    image: ${GATEWAY_IMAGE:?set GATEWAY_IMAGE to an immutable image digest}
+    container_name: home-tunnel-release-traffic-gateway
+    restart: "no"
+    init: true
+    depends_on:
+      control-center: { condition: service_healthy }
+      frps: { condition: service_healthy }
+    environment:
+      PORT: "8080"
+      CONTROL_CENTER_URL: http://control-center:8080
+      FRPS_VHOST_HOST: frps
+      FRPS_VHOST_PORT: "8080"
+      INTERNAL_SERVICE_KEY_FILE: /run/secrets/internal_service_key
+      POLICY_FULL_SYNC_MS: "3000"
+      POLICY_RECONNECT_MS: "500"
+      SAMPLE_BUCKET_SECONDS: "60"
+    secrets: [internal_service_key]
+    tmpfs:
+      - /tmp:size=16m,noexec,nosuid,nodev,uid=10001,gid=10001,mode=0700
+    networks: [control, edge]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:8080/healthz',{headers:{host:'127.0.0.1'}}).then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+      start_period: 5s
+    logging: *logging
+
+  frps:
+    image: ghcr.io/zhanry/home-tunnel-frps:0.62.1@sha256:557ef741bc5ef3d605f406d90d75d5d864abf647e064224b22a1d2f59fb8d167
+    container_name: home-tunnel-release-frps
+    restart: "no"
+    init: true
+    depends_on:
+      control-center: { condition: service_healthy }
+    ports:
+      - 127.0.0.1:17000:7000/tcp
+    secrets:
+      - frps_plugin_key
+      - frps_tls_cert
+      - frps_tls_key
+    tmpfs:
+      - /run/frp:size=8m,noexec,nosuid,nodev,uid=10001,gid=10001,mode=0700
+      - /tmp:size=8m,noexec,nosuid,nodev
+    networks: [control, edge]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: [CMD-SHELL, "nc -z 127.0.0.1 7000"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 3s
+    logging: *logging
+
+  caddy:
+    image: caddy:2.10.0-alpine@sha256:ae4458638da8e1a91aafffb231c5f8778e964bca650c8a8cb23a7e8ac557aa3c
+    container_name: home-tunnel-release-caddy
+    restart: "no"
+    depends_on:
+      control-center: { condition: service_healthy }
+      traffic-gateway: { condition: service_healthy }
+    ports:
+      - 127.0.0.1:18443:443/tcp
+    healthcheck:
+      test: [CMD, caddy, validate, --config, /etc/caddy/Caddyfile]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+      start_period: 2s
+    volumes:
+      - ./smoke/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./smoke/caddy.crt:/etc/caddy/caddy.crt:ro
+      - ./smoke/caddy.key:/etc/caddy/caddy.key:ro
+    tmpfs:
+      - /data:size=16m,noexec,nosuid,nodev
+      - /config:size=8m,noexec,nosuid,nodev
+      - /tmp:size=8m,noexec,nosuid,nodev
+    networks: [control, edge]
+    read_only: true
+    logging: *logging
+
+volumes:
+  sqlite-data:
+
+networks:
+  control:
+    internal: true
+  edge:
+
+secrets:
+  internal_service_key:
+    file: ./smoke/secrets/internal_service_key
+  frps_plugin_key:
+    file: ./smoke/secrets/frps_plugin_key
+  lease_signing_key:
+    file: ./smoke/secrets/lease_signing_key
+  bootstrap_admin_password:
+    file: ./smoke/secrets/bootstrap_admin_password
+  frps_tls_cert:
+    file: ./smoke/secrets/frps_tls_cert.pem
+  frps_tls_key:
+    file: ./smoke/secrets/frps_tls_key.pem

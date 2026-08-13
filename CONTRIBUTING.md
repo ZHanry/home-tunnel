@@ -6,10 +6,10 @@ Thanks for helping improve Home Tunnel. Small, focused changes with tests and a 
 
 Requirements:
 
-- Node.js 22 and pnpm 11
-- .NET 8 SDK on Windows for the desktop client
+- Node.js 24.19.0 LTS and pnpm 11
+- .NET 10 LTS SDK on Windows for the desktop client
 - Docker with Compose for integration and container checks
-- Go 1.23.12 for the Linux client; `windres` is additionally required when rebuilding the managed Windows Agent
+- Go 1.26.5 for the Linux client; `windres` is additionally required when rebuilding the managed Windows Agent
 
 Install and verify the TypeScript services:
 
@@ -17,28 +17,39 @@ Install and verify the TypeScript services:
 Set-Location control-center
 pnpm install --frozen-lockfile
 pnpm run check
+pnpm run lint
+pnpm run format:check
 pnpm run build
 pnpm test
+pnpm run test:coverage
 pnpm run test:public
 
 Set-Location ..\traffic-gateway
 pnpm install --frozen-lockfile
 pnpm run check
+pnpm run lint
+pnpm run format:check
 pnpm run build
 pnpm test
+pnpm run test:coverage
 ```
 
 Verify the Windows client logic on Windows:
 
 ```powershell
-dotnet run --project .\windows-client-tests\HomeTunnel.Client.Tests.csproj -c Release
+dotnet format .\windows-client-tests\HomeTunnel.Client.Tests.csproj --verify-no-changes --no-restore
+dotnet test .\windows-client-tests\HomeTunnel.Client.Tests.csproj -c Release
 ```
 
 Verify the headless Linux client:
 
 ```sh
 cd linux-client
-go test ./...
+gofmt -w .
+go vet ./...
+go test -race ./...
+staticcheck ./...
+govulncheck ./...
 go build ./cmd/home-tunnel-client
 ```
 

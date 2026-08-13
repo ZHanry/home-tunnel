@@ -26,7 +26,12 @@ export const connectionAccessSchema = z.object({
     .optional(),
   basic_auth: z
     .object({
-      username: z.string().refine((value) => basicAuthUsernamePattern.test(value), "用户名为 1-64 个字符，且不能包含控制字符或冒号"),
+      username: z
+        .string()
+        .refine(
+          (value) => basicAuthUsernamePattern.test(value),
+          "用户名为 1-64 个字符，且不能包含控制字符或冒号",
+        ),
       password: z.string().min(8).max(128),
     })
     .nullable()
@@ -91,7 +96,9 @@ export function parseStoredAllowlist(value: string | null | undefined): string[]
   if (!value) return null;
   try {
     const parsed = JSON.parse(value) as unknown;
-    return Array.isArray(parsed) && parsed.length > 0 && parsed.every((item) => typeof item === "string")
+    return Array.isArray(parsed) &&
+      parsed.length > 0 &&
+      parsed.every((item) => typeof item === "string")
       ? (parsed as string[])
       : null;
   } catch {
@@ -99,14 +106,20 @@ export function parseStoredAllowlist(value: string | null | undefined): string[]
   }
 }
 
-export function publicConnection(row: ConnectionRow, customDomains: string[] = row.custom_domains ?? []) {
+export function publicConnection(
+  row: ConnectionRow,
+  customDomains: string[] = row.custom_domains ?? [],
+) {
   return {
     id: row.id,
     user_id: row.user_id,
     device_id: row.device_id,
     name: row.name,
     subdomain: row.subdomain,
-    public_url: (row.proxy_type ?? "http") === "http" ? `https://${row.subdomain}.${config.tunnelDomain}` : null,
+    public_url:
+      (row.proxy_type ?? "http") === "http"
+        ? `https://${row.subdomain}.${config.tunnelDomain}`
+        : null,
     public_endpoint:
       (row.proxy_type ?? "http") === "tcp" && row.tcp_remote_port != null
         ? `${config.publicFrpsHost}:${Number(row.tcp_remote_port)}`
@@ -122,8 +135,7 @@ export function publicConnection(row: ConnectionRow, customDomains: string[] = r
     state: row.state ?? (row.enabled ? "Pending" : "Disabled"),
     applied_version: Number(row.applied_version ?? 0),
     last_error_code: row.last_error_code ?? null,
-    bandwidth_limit_bps:
-      row.bandwidth_limit_bps == null ? null : Number(row.bandwidth_limit_bps),
+    bandwidth_limit_bps: row.bandwidth_limit_bps == null ? null : Number(row.bandwidth_limit_bps),
     policy_version: Number(row.policy_version ?? 1),
     // 门禁配置仅暴露白名单与"是否启用 Basic Auth"，绝不返回哈希或口令。
     access_ip_allowlist: parseStoredAllowlist(row.access_ip_allowlist),
@@ -179,9 +191,14 @@ export async function createConnection(
   const subdomain = normalizeSubdomain(input.subdomain);
   const error = validateSubdomain(subdomain);
   if (error) {
-    throw new HttpError(409, error.includes("保留") ? "SUBDOMAIN_RESERVED" : "VALIDATION_ERROR", error, {
-      field_errors: { subdomain: error },
-    });
+    throw new HttpError(
+      409,
+      error.includes("保留") ? "SUBDOMAIN_RESERVED" : "VALIDATION_ERROR",
+      error,
+      {
+        field_errors: { subdomain: error },
+      },
+    );
   }
   const device = await client.query<{ user_id: string; status: string }>(
     "SELECT user_id,status FROM devices WHERE id=?",
@@ -201,7 +218,9 @@ export async function createConnection(
   }
   const connectionId = randomUUID();
   const access = input.access;
-  const accessAllowlistJson = access?.ip_allowlist?.length ? JSON.stringify(access.ip_allowlist) : null;
+  const accessAllowlistJson = access?.ip_allowlist?.length
+    ? JSON.stringify(access.ip_allowlist)
+    : null;
   const accessBasicUser = access?.basic_auth?.username ?? null;
   const accessBasicHash = access?.basic_auth ? hashBasicPassword(access.basic_auth.password) : null;
   const connection = await client.query<ConnectionRow>(
@@ -246,7 +265,11 @@ export async function createConnection(
     userId,
     { action: "created" },
   );
-  return { ...connection.rows[0]!, bandwidth_limit_bps: input.bandwidth_limit_bps ?? null, policy_version: 1 };
+  return {
+    ...connection.rows[0]!,
+    bandwidth_limit_bps: input.bandwidth_limit_bps ?? null,
+    policy_version: 1,
+  };
 }
 
 const connectionDetailSelect = `
@@ -309,10 +332,10 @@ export async function updateConnection(
     }
     const proxyType = patch.proxy_type ?? current.proxy_type ?? "http";
     const tcpRemotePort = Object.hasOwn(patch, "tcp_remote_port")
-      ? patch.tcp_remote_port ?? null
+      ? (patch.tcp_remote_port ?? null)
       : proxyType === "http"
         ? null
-        : current.tcp_remote_port ?? null;
+        : (current.tcp_remote_port ?? null);
     const enabled = patch.enabled ?? current.enabled;
     validateProxySettings(proxyType, tcpRemotePort == null ? null : Number(tcpRemotePort), enabled);
     if (proxyType === "tcp") {
@@ -321,7 +344,8 @@ export async function updateConnection(
           WHERE proxy_type='tcp' AND tcp_remote_port=? AND id<>? AND deleted_at IS NULL LIMIT 1`,
         [tcpRemotePort, connectionId],
       );
-      if (occupied.rows[0]) throw new HttpError(409, "TCP_PORT_CONFLICT", "该 TCP 公网端口已被占用");
+      if (occupied.rows[0])
+        throw new HttpError(409, "TCP_PORT_CONFLICT", "该 TCP 公网端口已被占用");
     }
     const updated = await client.query<ConnectionRow>(
       `UPDATE connections SET
@@ -352,7 +376,11 @@ export async function updateConnection(
     await client.query(
       `UPDATE runtime_states SET desired_version=?,state=?,last_error_code=NULL,updated_at=home_tunnel_now()
         WHERE connection_id=?`,
-      [Number(updated.rows[0].version), (patch.enabled ?? current.enabled) ? "Applying" : "Disabled", connectionId],
+      [
+        Number(updated.rows[0].version),
+        (patch.enabled ?? current.enabled) ? "Applying" : "Disabled",
+        connectionId,
+      ],
     );
     await bumpDeviceConfig(
       client,
@@ -369,7 +397,9 @@ export async function updateConnection(
   if (accessPatch) {
     let allowlistJson = current.access_ip_allowlist ?? null;
     if (Object.hasOwn(accessPatch, "ip_allowlist")) {
-      allowlistJson = accessPatch.ip_allowlist?.length ? JSON.stringify(accessPatch.ip_allowlist) : null;
+      allowlistJson = accessPatch.ip_allowlist?.length
+        ? JSON.stringify(accessPatch.ip_allowlist)
+        : null;
     }
     let basicUser = current.access_basic_user ?? null;
     let basicHash = current.access_basic_hash ?? null;
@@ -418,15 +448,24 @@ export async function updateConnection(
   return { before: current, after };
 }
 
-function validateProxySettings(proxyType: "http" | "tcp", remotePort: number | null, enabled = true): void {
+function validateProxySettings(
+  proxyType: "http" | "tcp",
+  remotePort: number | null,
+  enabled = true,
+): void {
   if (proxyType === "http") {
-    if (remotePort !== null) throw new HttpError(400, "VALIDATION_ERROR", "HTTP 连接不能设置 TCP 远程端口");
+    if (remotePort !== null)
+      throw new HttpError(400, "VALIDATION_ERROR", "HTTP 连接不能设置 TCP 远程端口");
     return;
   }
   if (!config.tcpTunnels.enabled && enabled) {
     throw new HttpError(403, "TCP_TUNNELS_DISABLED", "部署未启用 TCP 隧道高级特性");
   }
-  if (!Number.isInteger(remotePort) || remotePort! < config.tcpTunnels.portStart || remotePort! > config.tcpTunnels.portEnd) {
+  if (
+    !Number.isInteger(remotePort) ||
+    remotePort! < config.tcpTunnels.portStart ||
+    remotePort! > config.tcpTunnels.portEnd
+  ) {
     throw new HttpError(
       400,
       "TCP_PORT_NOT_ALLOWED",
@@ -478,5 +517,9 @@ export async function deleteConnection(
     current.user_id,
     { action: "delete", command: "stop", connection_id: connectionId, tombstone: true },
   );
-  return { ...deleted.rows[0], bandwidth_limit_bps: current.bandwidth_limit_bps, policy_version: current.policy_version };
+  return {
+    ...deleted.rows[0],
+    bandwidth_limit_bps: current.bandwidth_limit_bps,
+    policy_version: current.policy_version,
+  };
 }

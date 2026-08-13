@@ -16,4 +16,9 @@ export const uuid = z.string().uuid();
 export const positiveVersion = z.number().int().positive();
 export const nullableBandwidth = z.number().int().positive().max(10_000_000_000).nullable();
 // 月度流量配额（字节，NULL = 不限）；上限 1 PB，远超家用带宽一个月的物理上限。
-export const nullableMonthlyQuota = z.number().int().positive().max(1_000_000_000_000_000).nullable();
+export const nullableMonthlyQuota = z
+  .number()
+  .int()
+  .positive()
+  .max(1_000_000_000_000_000)
+  .nullable();

@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -15,6 +16,20 @@ import (
 )
 
 func TestRenderConfigMatchesManagedSurface(t *testing.T) {
+	var contract struct {
+		FRPCRender struct {
+			MustContain    []string `json:"must_contain"`
+			MustNotContain []string `json:"must_not_contain"`
+		} `json:"frpc_render"`
+	}
+	contractPath := filepath.Join("..", "..", "..", "contracts", "home-tunnel.v1.json")
+	fixture, err := os.ReadFile(contractPath)
+	if err != nil {
+		t.Fatalf("read shared contract fixture: %v", err)
+	}
+	if err := json.Unmarshal(fixture, &contract); err != nil {
+		t.Fatalf("parse shared contract fixture: %v", err)
+	}
 	expires := time.Now().Add(time.Hour)
 	configuration, err := RenderConfig(model.Profile{
 		FRPSHost: "frps.example.com", FRPSPort: 7000, TunnelDomain: "tunnel.example.com",
@@ -30,23 +45,15 @@ func TestRenderConfigMatchesManagedSurface(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, expected := range []string{
-		`serverAddr = "frps.example.com"`,
-		`metadatas.home_tunnel_lease = "signed-lease"`,
-		`customDomains = ["http-app.tunnel.example.com", "home.example.net"]`,
-		`localIP = "127.0.0.1"`,
-		`type = "http2https"`,
-		`localAddr = "nas.lan:8443"`,
-		`type = "tcp"`,
-		`remotePort = 10001`,
-		`localPort = 22`,
-	} {
+	for _, expected := range contract.FRPCRender.MustContain {
 		if !strings.Contains(configuration, expected) {
 			t.Fatalf("configuration missing %q:\n%s", expected, configuration)
 		}
 	}
-	if strings.Contains(configuration, "disabled.tunnel.example.com") {
-		t.Fatalf("disabled connection was rendered:\n%s", configuration)
+	for _, forbidden := range contract.FRPCRender.MustNotContain {
+		if strings.Contains(configuration, forbidden) {
+			t.Fatalf("configuration unexpectedly contains %q:\n%s", forbidden, configuration)
+		}
 	}
 	if strings.Contains(configuration, "trustedCaFile") || strings.Contains(configuration, "serverName") {
 		t.Fatalf("configuration without a CA must not pin TLS files:\n%s", configuration)

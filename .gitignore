@@ -1,5 +1,6 @@
 # Dependencies and compiled output
 **/node_modules/
+.pnpm-store/
 **/dist/
 **/bin/
 **/obj/
@@ -51,6 +52,13 @@ Thumbs.db
 coverage/
 .nyc_output/
 .docx-qa/
+.lighthouseci/
+lighthouse-results/
+_site/
+release-smoke-evidence/
+tests/smoke/
+_site/
+lighthouse-results/
 
 # Original deployment verification fixtures contain site-specific topology
 tests/caddy-baseline.Caddyfile

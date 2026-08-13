@@ -1,5 +1,7 @@
 # Home Tunnel 2.3.0 全功能测试报告
 
+> 历史证据：本报告只记录 2026-08-12 的 2.3.0 本地测试。下文包括当时 UI Preview 使用的模拟 Windows 下载元数据；当前版本已经停用该入口。本报告不能作为当前版本、支持矩阵或发布产物存在性的证明，请以当前 CI、`SECURITY.md` 和 README 支持矩阵为准。
+
 测试时间：2026-08-12（UTC+08:00）
 代码基线：`main` / `d3ce814` 加当前工作区的 Linux 客户端与 UI 优化改动
 测试主机：Windows x64；浏览器验证使用本地 UI Preview；Linux 验证使用 WSL Ubuntu
@@ -78,7 +80,7 @@
 
 ## 6. Linux 无界面客户端
 
-环境：WSL Linux/amd64，Go 1.26.0；GitHub CI 固定使用 Go 1.23.12。
+历史执行环境：WSL Linux/amd64，Go 1.26.0。当前 GitHub CI 基线已升级为 Go 1.26.5，本报告不作为当前工程证据。
 
 | 场景 | 状态 | 结果 |
 | --- | --- | --- |

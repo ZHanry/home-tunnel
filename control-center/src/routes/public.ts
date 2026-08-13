@@ -86,7 +86,12 @@ publicRouter.get(
     const etag = releaseEtag(release);
     response.setHeader("cache-control", "public, max-age=5, must-revalidate");
     response.setHeader("etag", etag);
-    if ((request.header("if-none-match") ?? "").split(",").map((value) => value.trim()).includes(etag)) {
+    if (
+      (request.header("if-none-match") ?? "")
+        .split(",")
+        .map((value) => value.trim())
+        .includes(etag)
+    ) {
       response.status(304).end();
       return;
     }
@@ -120,7 +125,9 @@ async function sendRelease(
 
 downloadRouter.get(
   "/HomeTunnel-Setup-x64.exe",
-  asyncHandler(async (_request, response) => sendRelease(response, await cachedLatestRelease(), true)),
+  asyncHandler(async (_request, response) =>
+    sendRelease(response, await cachedLatestRelease(), true),
+  ),
 );
 
 downloadRouter.get(

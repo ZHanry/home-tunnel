@@ -45,7 +45,8 @@ class PasswordWorkLimiter {
       const job = this.queued.shift();
       if (!job) return;
       this.active += 1;
-      void job.operation()
+      void job
+        .operation()
         .then(job.resolve, job.reject)
         .finally(() => {
           this.active -= 1;
@@ -109,15 +110,17 @@ export function validatePassword(password: string, username: string): string | n
 
 export async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16);
-  const hash = await passwordWork.run(() => argon2id({
-    password,
-    salt,
-    parallelism: ARGON_PARALLELISM,
-    iterations: ARGON_ITERATIONS,
-    memorySize: ARGON_MEMORY_KIB,
-    hashLength: 32,
-    outputType: "hex",
-  }));
+  const hash = await passwordWork.run(() =>
+    argon2id({
+      password,
+      salt,
+      parallelism: ARGON_PARALLELISM,
+      iterations: ARGON_ITERATIONS,
+      memorySize: ARGON_MEMORY_KIB,
+      hashLength: 32,
+      outputType: "hex",
+    }),
+  );
   return `$argon2id$v=19$m=${ARGON_MEMORY_KIB},t=${ARGON_ITERATIONS},p=${ARGON_PARALLELISM}$${salt.toString("base64url")}$${hash}`;
 }
 
@@ -136,18 +139,21 @@ export async function verifyPassword(encoded: string, password: string): Promise
       iterations > 10 ||
       parallelism < 1 ||
       parallelism > 8
-    ) return false;
+    )
+      return false;
     const salt = Buffer.from(parts[4] ?? "", "base64url");
     const expected = Buffer.from(parts[5] ?? "", "hex");
-    const actualHex = await passwordWork.run(() => argon2id({
-      password,
-      salt,
-      parallelism,
-      iterations,
-      memorySize,
-      hashLength: expected.length,
-      outputType: "hex",
-    }));
+    const actualHex = await passwordWork.run(() =>
+      argon2id({
+        password,
+        salt,
+        parallelism,
+        iterations,
+        memorySize,
+        hashLength: expected.length,
+        outputType: "hex",
+      }),
+    );
     const actual = Buffer.from(actualHex, "hex");
     return actual.length === expected.length && timingSafeEqual(actual, expected);
   } catch (error) {
@@ -183,7 +189,8 @@ export function verifyBasicPassword(password: string, stored: string): boolean {
     const cost = Number(parts[1]);
     const blockSize = Number(parts[2]);
     const parallelism = Number(parts[3]);
-    if (!Number.isInteger(cost) || cost < 1024 || cost > 65_536 || (cost & (cost - 1)) !== 0) return false;
+    if (!Number.isInteger(cost) || cost < 1024 || cost > 65_536 || (cost & (cost - 1)) !== 0)
+      return false;
     if (!Number.isInteger(blockSize) || blockSize < 1 || blockSize > 16) return false;
     if (!Number.isInteger(parallelism) || parallelism < 1 || parallelism > 4) return false;
     const salt = Buffer.from(parts[4] ?? "", "base64");
@@ -366,7 +373,11 @@ export function verifyLease(token: string): LeasePayload | null {
       typ?: string;
       kid?: string;
     };
-    if (protectedHeader.alg !== "HS256" || protectedHeader.typ !== "JWT" || protectedHeader.kid !== "v1") {
+    if (
+      protectedHeader.alg !== "HS256" ||
+      protectedHeader.typ !== "JWT" ||
+      protectedHeader.kid !== "v1"
+    ) {
       return null;
     }
     const payload = JSON.parse(Buffer.from(body, "base64url").toString("utf8")) as LeasePayload;
@@ -383,7 +394,8 @@ export function verifyLease(token: string): LeasePayload | null {
       payload.exp <= payload.iat ||
       payload.exp <= now ||
       payload.iat > now + 60
-    ) return null;
+    )
+      return null;
     if (payload.exp - payload.iat > config.offlineLeaseMaxSeconds) return null;
     return payload;
   } catch {

@@ -9,7 +9,7 @@ Home Tunnel is intended for personal and small trusted-user deployments. It redu
 - **Managed Agent → FRPS:** FRP TLS is required. The user selects a control-center HTTPS origin; the client discovers its public FRPS address and tunnel suffix, and the Agent requires the generated configuration to match that profile. When the deployment provides the generated self-signed FRPS certificate, the control center serves its public part over HTTPS, the client writes it to the runtime directory and pins `transport.tls.trustedCaFile`/`serverName`, and the Agent independently re-verifies the pinned file's SHA-256 against the client-supplied `--tls-ca-sha256` value, so the FRP connection authenticates the server instead of only encrypting the stream. Deployments without the certificate keep the previous encrypt-only behavior.
 - **FRPS/gateway → control center:** service calls use generated high-entropy keys and are not published as host ports.
 - **Control center → SQLite:** the single database file is stored in a private Docker volume with mode `0600`; WAL and foreign-key checks are enabled, and no database network listener exists.
-- **Client local state:** the Windows device credential uses Windows Credential Manager. The Linux device credential and cached configuration use a dedicated system account and a mode-`0600` state file under `/var/lib/home-tunnel`; enrollment passwords and access/refresh tokens are not persisted.
+- **Client local state:** the Windows device credential uses Windows Credential Manager. Linux uses a dedicated system account and a mode-`0600` state file under `/var/lib/home-tunnel`; macOS Beta uses the launchd service state directory documented by its package. Enrollment passwords and access/refresh tokens are not persisted.
 
 ## Agent restrictions
 
@@ -27,7 +27,7 @@ These checks are defense in depth. A user who can replace both the installed cli
 
 ## Update trust
 
-The Windows client keeps server discovery and software updates separate. It accepts server configuration only from the HTTPS origin explicitly entered by the user, while release metadata and installers come only from this project's GitHub Releases. It manually validates every GitHub redirect, allows only GitHub's official release-asset hosts, and rejects unexpected repositories, tags, file names, sizes and SHA-256 hashes. A SHA-256 value stored beside the installer is not an independent signature; public releases should also be Authenticode-signed by a trusted certificate.
+The source-only Windows client keeps server discovery and software updates separate. It accepts server configuration only from the HTTPS origin explicitly entered by the user. Windows release metadata is optional: a missing `latest.json` safely disables update discovery without affecting tunnels. If official distribution is restored, metadata and installers may come only from this project's GitHub Releases; the client validates every redirect and rejects unexpected repositories, tags, file names, sizes and SHA-256 hashes. A SHA-256 value stored beside an installer is not an independent signature; future public binaries also require trusted Authenticode signing and protected VM verification.
 
 ## What Home Tunnel does not protect against
 

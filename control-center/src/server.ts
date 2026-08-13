@@ -30,7 +30,9 @@ export async function createApplication(initializeDatabase = true) {
       await pool.query("SELECT 1");
       response.json({ status: "healthy", version: APP_VERSION, at: new Date().toISOString() });
     } catch {
-      response.status(503).json({ status: "unhealthy", version: APP_VERSION, at: new Date().toISOString() });
+      response
+        .status(503)
+        .json({ status: "unhealthy", version: APP_VERSION, at: new Date().toISOString() });
     }
   });
 
@@ -38,16 +40,18 @@ export async function createApplication(initializeDatabase = true) {
   app.use("/downloads", downloadRouter);
 
   const publicDirectory = fileURLToPath(new URL("../public", import.meta.url));
-  app.use(express.static(publicDirectory, {
-    etag: true,
-    index: false,
-    maxAge: 0,
-    setHeaders(response, assetPath) {
-      if (/\.(?:css|js|svg)$/i.test(assetPath)) {
-        response.setHeader("cache-control", "public, max-age=31536000, immutable");
-      }
-    },
-  }));
+  app.use(
+    express.static(publicDirectory, {
+      etag: true,
+      index: false,
+      maxAge: 0,
+      setHeaders(response, assetPath) {
+        if (/\.(?:css|js|svg)$/i.test(assetPath)) {
+          response.setHeader("cache-control", "public, max-age=31536000, immutable");
+        }
+      },
+    }),
+  );
   app.get(["/", "/admin", "/admin/{*path}"], (_request, response) => {
     response.setHeader("cache-control", "no-cache");
     response.sendFile("index.html", { root: publicDirectory });
@@ -119,7 +123,9 @@ async function main(): Promise<void> {
   process.on("SIGINT", () => void stop("SIGINT"));
 }
 
-const isDirectRun = process.argv[1] ? import.meta.url === pathToFileURL(process.argv[1]).href : false;
+const isDirectRun = process.argv[1]
+  ? import.meta.url === pathToFileURL(process.argv[1]).href
+  : false;
 if (isDirectRun) {
   void main().catch((error) => {
     console.error(

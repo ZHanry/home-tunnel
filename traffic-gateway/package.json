@@ -1,19 +1,27 @@
 {
   "name": "home-tunnel-traffic-gateway",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src",
+    "format:check": "prettier --check \"src/**/*.ts\" package.json tsconfig.json eslint.config.mjs",
     "start": "node dist/server.js",
-    "test": "node --test dist/server.test.js dist/server.e2e.test.js"
+    "test": "node --test dist/server.test.js dist/server.e2e.test.js dist/contracts.test.js",
+    "test:coverage": "c8 --all --include=dist/policy.js --include=dist/access-control.js --include=dist/rate-limit.js --include=dist/sampling.js --include=dist/proxy.js --include=dist/server-lifecycle.js --check-coverage --lines=82 --branches=80 --functions=78 --reporter=text --reporter=lcov node --test dist/server.test.js dist/server.e2e.test.js dist/contracts.test.js"
   },
   "devDependencies": {
-    "@types/node": "22.17.1",
-    "typescript": "5.9.2"
+    "@eslint/js": "^10.0.1",
+    "@types/node": "24.10.1",
+    "c8": "^12.0.0",
+    "eslint": "^10.8.1",
+    "prettier": "^3.9.6",
+    "typescript": "5.9.2",
+    "typescript-eslint": "^8.67.0"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=24.19.0 <25"
   }
 }

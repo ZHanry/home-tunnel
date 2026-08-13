@@ -11,8 +11,8 @@ $workspaceDir = Split-Path -Parent $clientDir
 $agentSourceDir = Join-Path $workspaceDir "windows-agent"
 $toolsDir = Join-Path $workspaceDir ".downloads\go-toolchain"
 $goExe = Join-Path $toolsDir "go\bin\go.exe"
-$goArchive = Join-Path $toolsDir "go1.23.12.windows-amd64.zip"
-$goArchiveSha256 = "07c35866cdd864b81bb6f1cfbf25ac7f87ddc3a976ede1bf5112acbb12dfe6dc"
+$goArchive = Join-Path $toolsDir "go1.26.5.windows-amd64.zip"
+$goArchiveSha256 = "97e6b2a833b6d89f9ff17d25419ac0a7e3b482a044e9ab18cdef834bd834fd38"
 $frpVersion = "0.62.1"
 $agentVersion = "2.4.0"
 $frpCommit = "b41d8f8e4074c4f633fb67d7d31b97db59472674"
@@ -25,7 +25,7 @@ New-Item -ItemType Directory -Force $toolsDir, (Split-Path -Parent $output) | Ou
 
 if (-not (Test-Path -LiteralPath $goExe -PathType Leaf)) {
     if (-not (Test-Path -LiteralPath $goArchive -PathType Leaf)) {
-        Invoke-WebRequest -UseBasicParsing "https://go.dev/dl/go1.23.12.windows-amd64.zip" -OutFile $goArchive
+        Invoke-WebRequest -UseBasicParsing "https://go.dev/dl/go1.26.5.windows-amd64.zip" -OutFile $goArchive
     }
     $actual = (Get-FileHash -LiteralPath $goArchive -Algorithm SHA256).Hash.ToLowerInvariant()
     if ($actual -ne $goArchiveSha256) { throw "Go toolchain checksum mismatch: $actual" }

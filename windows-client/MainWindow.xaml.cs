@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net.Http;
 using System.Windows;
@@ -14,14 +15,22 @@ using MediaBrush = System.Windows.Media.Brush;
 
 namespace HomeTunnel.Client;
 
+[SuppressMessage(
+    "Design",
+    "CA1001:Types that own disposable fields should be disposable",
+    Justification = "WPF owns the Window lifecycle; ExitCompletelyAsync disposes every owned native and managed resource.")]
 public partial class MainWindow : Window
 {
     private readonly LocalStateStore _stateStore = new();
     private readonly LocalState _state;
     private readonly SafeLogger _logger;
     private readonly FrpcSupervisor _supervisor;
+    private readonly AgentCoordinator _agentCoordinator;
+    private readonly RealtimeSyncCoordinator _realtimeCoordinator;
+    private readonly SessionCoordinator _sessionCoordinator;
     private readonly DiagnosticsService _diagnostics;
     private readonly UpdateService _updateService;
+    private readonly UpdateCoordinator _updateCoordinator;
     private readonly ObservableCollection<TunnelConnection> _connections = [];
     private readonly DispatcherTimer _syncTimer = new() { Interval = TimeSpan.FromMinutes(3) };
     private readonly DispatcherTimer _heartbeatTimer = new() { Interval = TimeSpan.FromSeconds(30) };
@@ -36,19 +45,10 @@ public partial class MainWindow : Window
     private bool _initializing = true;
     private string _agentState = "Offline";
     private bool _repairRequired;
-    private DateTimeOffset? _lastAppliedLeaseExpires;
     private bool _isCheckingUpdates;
     private bool _isUpdateDialogOpen;
     private UpdateCheckResult? _pendingUpdate;
-    private UpdateCheckResult? _availableUpdate;
-    private string? _availableUpdateVersion;
-    private string? _downloadedInstallerPath;
-    private CancellationTokenSource? _updateDownloadCancellation;
-    private Task? _updateDownloadTask;
-    private int _updateDownloadPercentage;
     private Forms.ToolStripMenuItem? _trayUpdateItem;
-    private CancellationTokenSource? _realtimeCancellation;
-    private Task? _realtimeTask;
 
     public MainWindow()
     {
@@ -59,9 +59,17 @@ public partial class MainWindow : Window
         ApplyWorkAreaBounds();
         MigrateLegacyServerProfile();
         _supervisor = new FrpcSupervisor(_stateStore, _logger);
+        _agentCoordinator = new AgentCoordinator(_supervisor);
+        _realtimeCoordinator = new RealtimeSyncCoordinator(_logger);
+        _sessionCoordinator = new SessionCoordinator(_stateStore, _state, _supervisor);
         _supervisor.StatusChanged += snapshot => Dispatcher.Invoke(() => ApplyAgentStatus(snapshot));
         _diagnostics = new DiagnosticsService(_stateStore);
         _updateService = CreateUpdateService();
+        _updateCoordinator = new UpdateCoordinator(_updateService, _state, _stateStore, _logger);
+        _updateCoordinator.StateChanged += () => Dispatcher.Invoke(UpdateButtonLabels);
+        _updateCoordinator.DownloadReady += result => _ = Dispatcher.BeginInvoke(
+            new Action(async () => await NotifyUpdateReadyAsync(result)),
+            DispatcherPriority.ApplicationIdle);
         _api = new ApiClient(_state.ApiBaseUrl);
         ConnectionsList.ItemsSource = _connections;
         ServerAddressBox.Text = _state.ServerBaseUrl;
@@ -308,7 +316,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private UpdateService CreateUpdateService()
+    private static UpdateService CreateUpdateService()
     {
 #if UPDATE_QA
         return new UpdateService(
@@ -434,16 +442,26 @@ public partial class MainWindow : Window
             {
                 try
                 {
-                    var result = await _updateService.CheckAsync(CancellationToken.None);
+                    var result = await _updateCoordinator.CheckAsync(CancellationToken.None);
+                    if (result is null)
+                    {
+                        UpdateButtonLabels();
+                        if (manual)
+                        {
+                            BrandDialog.Show(
+                                this,
+                                "Windows 更新暂不可用",
+                                "当前 Windows x64 版本仅支持源码构建，暂无官方安装包。现有隧道不受影响。",
+                                BrandDialogTone.Information);
+                        }
+                        break;
+                    }
                     if (result.IsUpdateAvailable)
                     {
                         await HandleAvailableUpdateAsync(result, manual);
                     }
                     else
                     {
-                        _availableUpdate = null;
-                        _availableUpdateVersion = null;
-                        _downloadedInstallerPath = null;
                         UpdateButtonLabels();
                         if (manual) UpdateDialog.UpToDate(this, result.CurrentVersion).ShowDialog();
                     }
@@ -467,15 +485,15 @@ public partial class MainWindow : Window
 
     private async Task<bool> ShowCurrentUpdateStateAsync()
     {
-        if (_availableUpdate is null) return false;
-        if (_downloadedInstallerPath is not null)
+        if (_updateCoordinator.AvailableUpdate is not { } available) return false;
+        if (_updateCoordinator.DownloadedInstallerPath is not null)
         {
-            await ShowReadyUpdateDialogAsync(_availableUpdate);
+            await ShowReadyUpdateDialogAsync(available);
             return true;
         }
-        if (_updateDownloadTask is { IsCompleted: false })
+        if (_updateCoordinator.IsDownloading)
         {
-            UpdateDialog.Downloading(this, _availableUpdate, _updateDownloadPercentage).ShowDialog();
+            UpdateDialog.Downloading(this, available, _updateCoordinator.DownloadPercentage).ShowDialog();
             return true;
         }
         return false;
@@ -483,12 +501,9 @@ public partial class MainWindow : Window
 
     private async Task HandleAvailableUpdateAsync(UpdateCheckResult result, bool manual)
     {
-        _availableUpdate = result;
-        _availableUpdateVersion = result.Release.Version;
-        _downloadedInstallerPath = await _updateService.FindDownloadedInstallerAsync(result, CancellationToken.None);
         UpdateButtonLabels();
 
-        if (_downloadedInstallerPath is not null)
+        if (_updateCoordinator.DownloadedInstallerPath is not null)
         {
             if (manual || !IsAutomaticPromptSuppressed(result.Release.Version))
                 await ShowReadyUpdateDialogAsync(result);
@@ -508,78 +523,18 @@ public partial class MainWindow : Window
 
     private void StartBackgroundUpdateDownload(UpdateCheckResult result, bool userRequested)
     {
-        if (_updateDownloadTask is { IsCompleted: false })
+        if (_updateCoordinator.IsDownloading)
         {
             if (userRequested)
-                UpdateDialog.Downloading(this, result, _updateDownloadPercentage).ShowDialog();
+                UpdateDialog.Downloading(this, result, _updateCoordinator.DownloadPercentage).ShowDialog();
             return;
         }
-
-        _availableUpdate = result;
-        _availableUpdateVersion = result.Release.Version;
-        _downloadedInstallerPath = null;
-        _updateDownloadPercentage = 0;
-        _state.DismissedUpdateVersion = null;
-        _state.DismissedUpdateAtUtc = null;
-        _stateStore.Save(_state);
-        UpdateButtonLabels();
-
-        var cancellation = new CancellationTokenSource();
-        _updateDownloadCancellation = cancellation;
-        _updateDownloadTask = DownloadUpdateInBackgroundAsync(result, userRequested, cancellation);
-    }
-
-    private async Task DownloadUpdateInBackgroundAsync(
-        UpdateCheckResult result,
-        bool userRequested,
-        CancellationTokenSource cancellation)
-    {
-        string? completedPath = null;
-        try
-        {
-            while (!cancellation.IsCancellationRequested)
-            {
-                try
-                {
-                    var progress = new Progress<UpdateDownloadProgress>(value =>
-                    {
-                        _updateDownloadPercentage = value.Percentage;
-                        UpdateButtonLabels();
-                    });
-                    completedPath = await _updateService.DownloadAsync(result, progress, cancellation.Token);
-                    _downloadedInstallerPath = completedPath;
-                    _updateDownloadPercentage = 100;
-                    UpdateButtonLabels();
-                    break;
-                }
-                catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
-                {
-                    break;
-                }
-                catch (Exception error)
-                {
-                    _logger.Warn("UPDATE_DOWNLOAD_FAILED", SafeMessage(error));
-                    if (!userRequested || !IsVisible) break;
-                    var retry = UpdateDialog.DownloadFailure(this, FriendlyUpdateDownloadError(error)).ShowDialog() == true;
-                    if (!retry) break;
-                }
-            }
-        }
-        finally
-        {
-            if (ReferenceEquals(_updateDownloadCancellation, cancellation))
-            {
-                _updateDownloadTask = null;
-                _updateDownloadCancellation = null;
-            }
-            cancellation.Dispose();
-            UpdateButtonLabels();
-        }
-
-        if (completedPath is null) return;
-        _ = Dispatcher.BeginInvoke(
-            new Action(async () => await NotifyUpdateReadyAsync(result)),
-            DispatcherPriority.ApplicationIdle);
+        _updateCoordinator.StartDownload(
+            result,
+            userRequested,
+            error => Task.FromResult(
+                IsVisible &&
+                UpdateDialog.DownloadFailure(this, FriendlyUpdateDownloadError(error)).ShowDialog() == true));
     }
 
     private async Task NotifyUpdateReadyAsync(UpdateCheckResult result)
@@ -618,9 +573,7 @@ public partial class MainWindow : Window
             }
             else
             {
-                _state.DismissedUpdateVersion = result.Release.Version;
-                _state.DismissedUpdateAtUtc = DateTimeOffset.UtcNow;
-                _stateStore.Save(_state);
+                _updateCoordinator.Dismiss(result.Release.Version, DateTimeOffset.UtcNow);
             }
         }
         finally
@@ -649,9 +602,7 @@ public partial class MainWindow : Window
             }
             else
             {
-                _state.DismissedUpdateVersion = result.Release.Version;
-                _state.DismissedUpdateAtUtc = DateTimeOffset.UtcNow;
-                _stateStore.Save(_state);
+                _updateCoordinator.Dismiss(result.Release.Version, DateTimeOffset.UtcNow);
             }
         }
         finally
@@ -664,10 +615,9 @@ public partial class MainWindow : Window
     {
         try
         {
-            var installer = await _updateService.FindDownloadedInstallerAsync(result, CancellationToken.None);
+            var installer = await _updateCoordinator.FindVerifiedInstallerAsync(result, CancellationToken.None);
             if (installer is null)
             {
-                _downloadedInstallerPath = null;
                 UpdateButtonLabels();
                 BrandDialog.Show(this, "安装包需要重新下载", "本地安装包未通过再次校验，客户端不会运行它。请重新检查更新。", BrandDialogTone.Warning);
                 return;
@@ -683,14 +633,12 @@ public partial class MainWindow : Window
     }
 
     private bool IsAutomaticPromptSuppressed(string version) =>
-        string.Equals(_state.DismissedUpdateVersion, version, StringComparison.Ordinal) &&
-        _state.DismissedUpdateAtUtc.HasValue &&
-        DateTimeOffset.UtcNow - _state.DismissedUpdateAtUtc.Value < TimeSpan.FromHours(24);
+        _updateCoordinator.IsAutomaticPromptSuppressed(version, DateTimeOffset.UtcNow);
 
     private async void ShowPendingUpdateIfAny()
     {
         if (_pendingUpdate is not { } pending || IsAutomaticPromptSuppressed(pending.Release.Version)) return;
-        if (_downloadedInstallerPath is not null)
+        if (_updateCoordinator.DownloadedInstallerPath is not null)
             await ShowReadyUpdateDialogAsync(pending);
     }
 
@@ -711,19 +659,20 @@ public partial class MainWindow : Window
 
     private void UpdateButtonLabels()
     {
-        var downloading = _updateDownloadTask is { IsCompleted: false };
-        var label = _downloadedInstallerPath is not null && _availableUpdateVersion is not null
-            ? $"安装 v{_availableUpdateVersion}"
+        var downloading = _updateCoordinator.IsDownloading;
+        var availableVersion = _updateCoordinator.AvailableVersion;
+        var label = _updateCoordinator.DownloadedInstallerPath is not null && availableVersion is not null
+            ? $"安装 v{availableVersion}"
             : downloading
-                ? $"后台下载 {_updateDownloadPercentage}%"
-                : _availableUpdateVersion is null ? "检查更新" : $"可更新至 v{_availableUpdateVersion}";
+                ? $"后台下载 {_updateCoordinator.DownloadPercentage}%"
+                : availableVersion is null ? "检查更新" : $"可更新至 v{availableVersion}";
         CheckUpdateLoginButton.Content = label;
-        CheckUpdateMenuText.Text = _downloadedInstallerPath is not null
+        CheckUpdateMenuText.Text = _updateCoordinator.DownloadedInstallerPath is not null
             ? "安装新版本"
-            : downloading ? $"正在后台下载 {_updateDownloadPercentage}%" : _availableUpdateVersion is null ? "检查更新" : "发现新版本";
-        MoreUpdateBadge.Visibility = _availableUpdateVersion is null ? Visibility.Collapsed : Visibility.Visible;
-        MenuUpdateVersionBadge.Visibility = _availableUpdateVersion is null ? Visibility.Collapsed : Visibility.Visible;
-        MenuUpdateVersionText.Text = _availableUpdateVersion is null ? "" : $"v{_availableUpdateVersion}";
+            : downloading ? $"正在后台下载 {_updateCoordinator.DownloadPercentage}%" : availableVersion is null ? "检查更新" : "发现新版本";
+        MoreUpdateBadge.Visibility = availableVersion is null ? Visibility.Collapsed : Visibility.Visible;
+        MenuUpdateVersionBadge.Visibility = availableVersion is null ? Visibility.Collapsed : Visibility.Visible;
+        MenuUpdateVersionText.Text = availableVersion is null ? "" : $"v{availableVersion}";
         if (_trayUpdateItem is not null) _trayUpdateItem.Text = label;
     }
 
@@ -872,20 +821,9 @@ public partial class MainWindow : Window
         var registration = await _api.RegisterDeviceAsync(
             Environment.MachineName,
             _state.InstallId,
-            _stateStore.Fingerprint(_state),
+            LocalStateStore.Fingerprint(_state),
             cancellationToken);
-        if (_state.DeviceId is not null && _state.DeviceId != registration.DeviceId)
-        {
-            CredentialStore.Delete(CredentialStore.Target(_state.ServerBaseUrl, _state.DeviceId));
-            CredentialStore.Delete(CredentialStore.LegacyTarget(_state.DeviceId));
-        }
-        _state.DeviceId = registration.DeviceId;
-        _state.LastConfigVersion = 0;
-        _state.AppliedConfigVersion = 0;
-        CredentialStore.Write(
-            CredentialStore.Target(_state.ServerBaseUrl, registration.DeviceId),
-            registration.DeviceCredential);
-        _stateStore.Save(_state);
+        _sessionCoordinator.PersistRegistration(registration);
         await EnterMainAsync(session, cancellationToken);
     }
 
@@ -937,11 +875,12 @@ public partial class MainWindow : Window
                 SyncButton.Content = "正在同步…";
                 StatusHeadlineText.Text = "正在同步配置";
             }
-            var needsLease = ShouldRequestLease(_agentState, _lastAppliedLeaseExpires, DateTimeOffset.UtcNow);
+            var now = DateTimeOffset.UtcNow;
+            var needsLease = _agentCoordinator.ShouldRequestLease(_agentState, now);
             var sync = await _api.SyncAsync(
                 _state.DeviceId,
                 _state.LastConfigVersion,
-                needsLease ? null : _lastAppliedLeaseExpires,
+                needsLease ? null : _agentCoordinator.LastAppliedLeaseExpires,
                 cancellationToken);
             if (sync.FullSync)
             {
@@ -949,14 +888,12 @@ public partial class MainWindow : Window
                 _state.LastConfigVersion = sync.TargetConfigVersion;
             }
             var complete = sync with { Connections = _state.CachedConnections };
-            var shouldApply = sync.FullSync || _agentState is "Offline" or "Error" or "RepairRequired" or "ExpiredStop" ||
-                !_lastAppliedLeaseExpires.HasValue || _lastAppliedLeaseExpires <= DateTimeOffset.UtcNow.AddMinutes(15);
-            if (shouldApply)
-            {
-                if (sync.Lease is null) throw new InvalidDataException("控制中心未返回应用配置所需的租约");
-                if (await _supervisor.ApplyAsync(_state, complete, cancellationToken))
-                    _lastAppliedLeaseExpires = sync.Lease.ExpiresAt;
-            }
+            await _agentCoordinator.ApplyIfRequiredAsync(
+                _state,
+                complete,
+                _agentState,
+                now,
+                cancellationToken);
             _stateStore.Save(_state);
             if (sync.FullSync) await RefreshConnectionsAsync(cancellationToken);
         }
@@ -972,7 +909,7 @@ public partial class MainWindow : Window
             ApplyAgentStatus(new AgentSnapshot(
                 "Degraded",
                 "控制中心暂不可达；现有租约到期前继续运行。",
-                _lastAppliedLeaseExpires,
+                _agentCoordinator.LastAppliedLeaseExpires,
                 _state.AppliedConfigVersion));
         }
         finally
@@ -994,7 +931,16 @@ public partial class MainWindow : Window
         SyncButton.Content = "正在准备修复…";
         try
         {
-            var release = await _updateService.CheckAsync(CancellationToken.None);
+            var release = await _updateService.CheckIfAvailableAsync(CancellationToken.None);
+            if (release is null)
+            {
+                BrandDialog.Show(
+                    this,
+                    "暂无官方修复安装包",
+                    "当前 Windows x64 版本仅支持源码构建。现有隧道可在租约有效期内继续运行；请从受信任的源码重新构建客户端，或联系管理员处理缺失组件。",
+                    BrandDialogTone.Information);
+                return;
+            }
             var progress = new Progress<UpdateDownloadProgress>(value =>
             {
                 SyncButton.Content = $"正在下载 {value.Percentage}%";
@@ -1045,85 +991,24 @@ public partial class MainWindow : Window
     }
 
     internal static bool ShouldRequestLease(string agentState, DateTimeOffset? leaseExpiresAt, DateTimeOffset now) =>
-        agentState is not "Online" || !leaseExpiresAt.HasValue || leaseExpiresAt.Value <= now.AddMinutes(15);
+        AgentCoordinator.ShouldRequestLease(agentState, leaseExpiresAt, now);
 
     private void StartRealtime()
     {
-        StopRealtime();
-        if (string.IsNullOrWhiteSpace(_state.DeviceId)) return;
-        var cancellation = new CancellationTokenSource();
-        var api = _api;
-        var deviceId = _state.DeviceId;
-        _realtimeCancellation = cancellation;
-        _realtimeTask = Task.Run(() => RealtimeLoopAsync(api, deviceId, cancellation.Token));
+        _realtimeCoordinator.Start(
+            _api,
+            _state.DeviceId,
+            async token => await Dispatcher.InvokeAsync(
+                async () => await SynchronizeAsync(showBusy: false, token),
+                DispatcherPriority.Background).Task.Unwrap(),
+            async _ => await Dispatcher.InvokeAsync(async () =>
+            {
+                await LocalLogoutAsync(requestServer: false);
+                LoginError.Text = "账号或设备已被撤销，请联系管理员。";
+            }, DispatcherPriority.Background).Task.Unwrap());
     }
 
-    private void StopRealtime()
-    {
-        var cancellation = _realtimeCancellation;
-        var task = _realtimeTask;
-        _realtimeCancellation = null;
-        _realtimeTask = null;
-        if (cancellation is null) return;
-        cancellation.Cancel();
-        if (task is null)
-            cancellation.Dispose();
-        else
-            _ = task.ContinueWith(
-                _ => cancellation.Dispose(),
-                CancellationToken.None,
-                TaskContinuationOptions.ExecuteSynchronously,
-                TaskScheduler.Default);
-    }
-
-    private async Task RealtimeLoopAsync(ApiClient api, string deviceId, CancellationToken cancellationToken)
-    {
-        var retryDelay = TimeSpan.FromSeconds(1);
-        while (!cancellationToken.IsCancellationRequested)
-        {
-            try
-            {
-                await api.ListenForConfigurationChangesAsync(
-                    deviceId,
-                    async () => await Dispatcher.InvokeAsync(
-                        async () => await SynchronizeAsync(showBusy: false, cancellationToken),
-                        DispatcherPriority.Background).Task.Unwrap(),
-                    cancellationToken);
-                retryDelay = TimeSpan.FromSeconds(1);
-            }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-            {
-                break;
-            }
-            catch (ApiException error) when (
-                error.StatusCode == 401 ||
-                error.ErrorCode is "DEVICE_REVOKED" or "USER_DISABLED" or "SESSION_REVOKED")
-            {
-                // 会话/设备已被撤销，重试没有意义：退出循环并走与 SynchronizeAsync
-                // 相同的本地登出流程。
-                _logger.Warn("REALTIME_REVOKED", SafeMessage(error));
-                await Dispatcher.InvokeAsync(async () =>
-                {
-                    await LocalLogoutAsync(requestServer: false);
-                    LoginError.Text = "账号或设备已被撤销，请联系管理员。";
-                }, DispatcherPriority.Background).Task.Unwrap();
-                return;
-            }
-            catch (Exception error)
-            {
-                _logger.Warn("REALTIME_RECONNECT", SafeMessage(error));
-            }
-            try
-            {
-                await Task.Delay(retryDelay, cancellationToken);
-            }
-            catch (OperationCanceledException)
-            {
-                break;
-            }
-            retryDelay = TimeSpan.FromSeconds(Math.Min(30, retryDelay.TotalSeconds * 2));
-        }
-    }
+    private void StopRealtime() => _realtimeCoordinator.Stop();
 
     private async void NewConnectionButton_Click(object sender, RoutedEventArgs e) =>
         await ShowConnectionDialogAsync(sender as System.Windows.Controls.Button ?? NewConnectionButton, null);
@@ -1274,17 +1159,7 @@ public partial class MainWindow : Window
         _heartbeatTimer.Stop();
         StopRealtime();
         try { if (requestServer) await _api.LogoutAsync(CancellationToken.None); } catch (Exception error) { _logger.Warn("LOGOUT_REMOTE_FAILED", SafeMessage(error)); }
-        await _supervisor.ClearSensitiveRuntimeAsync();
-        if (_state.DeviceId is not null)
-        {
-            CredentialStore.Delete(CredentialStore.Target(_state.ServerBaseUrl, _state.DeviceId));
-            CredentialStore.Delete(CredentialStore.LegacyTarget(_state.DeviceId));
-        }
-        _state.DeviceId = null;
-        _state.LastConfigVersion = 0;
-        _state.AppliedConfigVersion = 0;
-        _state.CachedConnections.Clear();
-        _stateStore.Save(_state);
+        await _sessionCoordinator.ClearLocalSessionAsync();
         _api.Dispose();
         _api = new ApiClient(_state.ApiBaseUrl);
         _connections.Clear();
@@ -1459,7 +1334,7 @@ public partial class MainWindow : Window
     private async Task ExitCompletelyAsync()
     {
         _reallyExit = true;
-        _updateDownloadCancellation?.Cancel();
+        _updateCoordinator.CancelDownload();
         _syncTimer.Stop();
         _heartbeatTimer.Stop();
         StopRealtime();
@@ -1468,7 +1343,8 @@ public partial class MainWindow : Window
         _tray.Dispose();
         _trayIcon?.Dispose();
         _api.Dispose();
-        _updateService.Dispose();
+        _updateCoordinator.Dispose();
+        _realtimeCoordinator.Dispose();
         _supervisor.Dispose();
         System.Windows.Application.Current.Shutdown();
     }

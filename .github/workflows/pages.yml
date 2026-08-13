@@ -1,0 +1,93 @@
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  merge_group:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and validate Pages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.19.0
+      - name: Build configured static site
+        env:
+          GOATCOUNTER_ENDPOINT: ${{ vars.GOATCOUNTER_ENDPOINT }}
+        run: |
+          set -euo pipefail
+          cp -R docs/site _site
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          endpoint = os.environ.get("GOATCOUNTER_ENDPOINT", "").strip()
+          if endpoint and not (endpoint.startswith("https://") and endpoint.endswith("/count")):
+              raise SystemExit("GOATCOUNTER_ENDPOINT must be an HTTPS /count endpoint")
+          for page in Path("_site").rglob("*.html"):
+              text = page.read_text(encoding="utf-8")
+              page.write_text(text.replace("__GOATCOUNTER_ENDPOINT__", endpoint), encoding="utf-8")
+          PY
+      - name: Require production metadata and no unresolved placeholders
+        run: |
+          set -euo pipefail
+          test -f _site/index.html
+          test -f _site/en/index.html
+          test -f _site/privacy.html
+          test -f _site/en/privacy.html
+          test -f _site/robots.txt
+          test -f _site/sitemap.xml
+          if grep -R "__GOATCOUNTER_ENDPOINT__" _site; then
+            echo "unresolved GoatCounter placeholder found" >&2
+            exit 1
+          fi
+          grep -q 'rel="canonical"' _site/index.html
+          grep -q 'hreflang="en"' _site/index.html
+          grep -q 'application/ld+json' _site/index.html
+          grep -q 'og:image' _site/index.html
+      - name: Enforce Lighthouse score gates
+        run: npx --yes --package=@lhci/cli@0.15.1 lhci autorun --config=lighthouserc.json
+      - name: Upload Lighthouse reports
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: pages-lighthouse
+          path: lighthouse-results
+          if-no-files-found: warn
+      - if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: _site
+
+  deploy:
+    name: Deploy Pages
+    needs: build
+    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0

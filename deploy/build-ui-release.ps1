@@ -22,13 +22,17 @@ if ($OutputRoot -ne $allowedOutputRoot -and -not $OutputRoot.StartsWith($allowed
 
 $controlPackage = Get-Content -Raw -LiteralPath (Join-Path $controlRoot "package.json") | ConvertFrom-Json
 $gatewayPackage = Get-Content -Raw -LiteralPath (Join-Path $gatewayRoot "package.json") | ConvertFrom-Json
-if (-not $Version) { $Version = [string]$controlPackage.version }
-if ($Version -notmatch '^\d+\.\d+\.\d+$') { throw "Version must use MAJOR.MINOR.PATCH format" }
-if ($controlPackage.version -ne $Version) { throw "Control-center package version does not match $Version" }
-if ($gatewayPackage.version -ne $Version) { throw "Traffic-gateway package version does not match $Version" }
+$deploymentVersion = (Get-Content -LiteralPath (Join-Path $workspace ".env.example") |
+    Where-Object { $_ -match '^HOME_TUNNEL_VERSION=' } |
+    Select-Object -First 1) -replace '^HOME_TUNNEL_VERSION=', ''
+if (-not $Version) { $Version = $deploymentVersion }
+if ($Version -notmatch '^\d+\.\d+\.\d+(?:-rc\.\d+)?$') { throw "Version must use MAJOR.MINOR.PATCH or MAJOR.MINOR.PATCH-rc.N format" }
+$sourceVersion = $Version -replace '-rc\.\d+$', ''
+if ($controlPackage.version -ne $sourceVersion) { throw "Control-center package version does not match source version $sourceVersion" }
+if ($gatewayPackage.version -ne $sourceVersion) { throw "Traffic-gateway package version does not match source version $sourceVersion" }
 $versionSource = Get-Content -Raw -LiteralPath (Join-Path $controlRoot "src\version.ts")
-if ($versionSource -notmatch 'APP_VERSION\s*=\s*"([^"\r\n]+)"' -or $Matches[1] -ne $Version) {
-    throw "Control-center health version does not match $Version"
+if ($versionSource -notmatch 'APP_VERSION\s*=\s*"([^"\r\n]+)"' -or $Matches[1] -ne $sourceVersion) {
+    throw "Control-center health version does not match source version $sourceVersion"
 }
 
 $imageTag = "home-tunnel/control-center:$Version-arm64"
@@ -68,7 +72,7 @@ if (-not $SkipTests) {
     if ($LASTEXITCODE -ne 0) { throw "Traffic-gateway tests failed" }
 }
 
-$nodeImage = if ($env:HOME_TUNNEL_NODE_IMAGE) { $env:HOME_TUNNEL_NODE_IMAGE } else { "node:22.17.1-alpine" }
+$nodeImage = if ($env:HOME_TUNNEL_NODE_IMAGE) { $env:HOME_TUNNEL_NODE_IMAGE } else { "node:24.19.0-alpine" }
 $toolsRoot = [IO.Path]::GetFullPath((Join-Path $workspace ".codex-tools"))
 New-Item -ItemType Directory -Force -Path $toolsRoot | Out-Null
 

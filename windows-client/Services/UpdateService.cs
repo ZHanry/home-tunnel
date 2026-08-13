@@ -97,6 +97,23 @@ public sealed class UpdateService : IDisposable
         return new UpdateCheckResult(AppVersion.Current, release, downloadUri, comparison > 0);
     }
 
+    /// <summary>
+    /// Checks for an optional Windows release. A missing manifest means that
+    /// official Windows distribution is suspended; it is not a client error.
+    /// Other HTTP, validation and transport failures are still reported.
+    /// </summary>
+    public async Task<UpdateCheckResult?> CheckIfAvailableAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await CheckAsync(cancellationToken);
+        }
+        catch (HttpRequestException error) when (error.StatusCode == HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+    }
+
     public async Task<string?> FindDownloadedInstallerAsync(
         UpdateCheckResult result,
         CancellationToken cancellationToken)
