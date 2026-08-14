@@ -19,6 +19,8 @@ first; none of the entries below are part of that patch release.
 - Raised the Linux client and release toolchain to Go 1.26.6 for the latest
   standard-library security fixes, and initialized CodeQL after installing the
   pinned Go toolchain so manual Go builds are traced correctly.
+- Added coarse IP rate limits around login and custom-domain DNS verification,
+  in addition to the existing subject-aware login limiter.
 - Split the control-center administration routes by users, devices, connections, health, and audit, and split the traffic gateway into policy, access-control, rate-limit, sampling, proxy, and lifecycle modules without changing the v1 protocol surface.
 - Moved Windows update, session, realtime, and Agent coordination out of the main window into focused services while retaining Windows as source-only/Experimental.
 - Raised the development baselines to Node.js 24 LTS, Go 1.26, and .NET 10 LTS; added ESLint, Prettier, Markdown/link, gofmt/vet/staticcheck, analyzer, audit, coverage, and Lighthouse gates.

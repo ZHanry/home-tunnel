@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { rateLimit } from "express-rate-limit";
 import { z } from "zod";
 import { one, query, transaction } from "../../db.js";
 import {
@@ -36,6 +37,19 @@ import {
 import { adminGuard } from "./shared.js";
 
 const router = Router();
+const customDomainVerificationLimiter = rateLimit({
+  windowMs: 10 * 60_000,
+  limit: 20,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  handler: (_request, response) => {
+    response.status(429).json({
+      error_code: "RATE_LIMITED",
+      message: "域名验证请求过多，请稍后重试",
+      request_id: String(response.getHeader("x-request-id") ?? ""),
+    });
+  },
+});
 
 router.get(
   "/connections",
@@ -189,6 +203,7 @@ router.post(
 
 router.post(
   "/custom-domains/:domainId/verify",
+  customDomainVerificationLimiter,
   asyncHandler(async (request, response) => {
     adminGuard(request);
     const domainId = pathParam(request, "domainId");

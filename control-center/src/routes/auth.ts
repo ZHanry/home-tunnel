@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { rateLimit } from "express-rate-limit";
 import { z } from "zod";
 import { config } from "../config.js";
 import { one, transaction } from "../db.js";
@@ -39,6 +40,19 @@ type UserRow = {
 };
 
 const router = Router();
+const loginIpLimiter = rateLimit({
+  windowMs: 60_000,
+  limit: 120,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  handler: (_request, response) => {
+    response.status(429).json({
+      error_code: "RATE_LIMITED",
+      message: "登录尝试过多，请稍后重试",
+      request_id: String(response.getHeader("x-request-id") ?? ""),
+    });
+  },
+});
 const loginLimiter = new FixedWindowLimiter(8, 60_000);
 const deviceLoginLimiter = new FixedWindowLimiter(20, 60_000);
 const refreshLimiter = new FixedWindowLimiter(30, 60_000);
@@ -60,6 +74,7 @@ function publicUser(user: UserRow) {
 
 router.post(
   "/login",
+  loginIpLimiter,
   asyncHandler(async (request, response) => {
     const body = parseBody(
       z.object({
