@@ -196,6 +196,12 @@ jobs:
             linux-client/packaging/macos/build-release.sh \
             linux-client/packaging/macos/install.sh \
             linux-client/packaging/macos/home-tunnel-enroll
+      - name: Check executable release entrypoints
+        run: |
+          test -x linux-client/packaging/build-release.sh
+          test -x linux-client/packaging/macos/build-release.sh
+          test -x deploy/scripts/backup.sh
+          test -x deploy/scripts/verify-backup.sh
       - name: Shellcheck shell scripts
         run: |
           shellcheck --severity=warning \
