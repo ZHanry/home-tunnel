@@ -87,7 +87,7 @@ Use a new App ID for your fork so it does not overwrite a different Home Tunnel 
 
 ### Linux
 
-Build a headless `amd64` or `arm64` package on a Linux build machine with Go 1.26.5:
+Build a headless `amd64` or `arm64` package on a Linux build machine with Go 1.26.6:
 
 ```sh
 ARCH=amd64 ./linux-client/packaging/build-release.sh

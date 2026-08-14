@@ -9,7 +9,7 @@ The service supports Linux `amd64`/`arm64` and macOS (darwin) `amd64`/`arm64`. I
 
 ## Build a package
 
-Install Go 1.26.5, `curl`, `tar`, `sha256sum` (the macOS script also accepts `shasum`), and either `unzip` or Python 3, then run:
+Install Go 1.26.6, `curl`, `tar`, `sha256sum` (the macOS script also accepts `shasum`), and either `unzip` or Python 3, then run:
 
 ```sh
 # Linux packages

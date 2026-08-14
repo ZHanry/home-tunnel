@@ -49,7 +49,7 @@ dotnet test .\windows-client-tests\HomeTunnel.Client.Tests.csproj -c Release
 docker compose config --quiet
 ```
 
-On Linux with Go 1.26.5, Staticcheck 2026.1, and govulncheck 1.6.0:
+On Linux with Go 1.26.6, Staticcheck 2026.1, and govulncheck 1.6.0:
 
 ```sh
 cd linux-client

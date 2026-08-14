@@ -9,7 +9,7 @@ Requirements:
 - Node.js 24.19.0 LTS and pnpm 11
 - .NET 10 LTS SDK on Windows for the desktop client
 - Docker with Compose for integration and container checks
-- Go 1.26.5 for the Linux client; `windres` is additionally required when rebuilding the managed Windows Agent
+- Go 1.26.6 for the Linux client; `windres` is additionally required when rebuilding the managed Windows Agent
 
 Install and verify the TypeScript services:
 
