@@ -11,7 +11,7 @@ permissions:
   artifact-metadata: write
 
 concurrency:
-  group: frps-dependency-0.70.1
+  group: frps-dependency-0.70.1-r1
   cancel-in-progress: false
 
 env:
@@ -20,10 +20,11 @@ env:
   FRP_COMMIT: fa3bcca2b0c4753cd4f0e2ab189dd6a5a6a15708
   FRP_ARCHIVE_SHA256: 9c6b0188a8f74e982069dc89218cc3d79bada8663cedf3b514b98847530cbf7d
   IMAGE: ghcr.io/zhanry/home-tunnel-frps
+  IMAGE_TAG: 0.70.1-r1
 
 jobs:
   publish:
-    name: Build, sign, and attest FRPS 0.70.1
+    name: Build, sign, and attest FRPS 0.70.1-r1
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -88,14 +89,14 @@ jobs:
           build-args: |
             FRP_VERSION=${{ env.FRP_TAG }}
             FRP_COMMIT=${{ env.FRP_COMMIT }}
-          tags: ${{ env.IMAGE }}:${{ env.FRP_VERSION }}-candidate-${{ github.run_id }}-${{ github.run_attempt }}
+          tags: ${{ env.IMAGE }}:${{ env.IMAGE_TAG }}-candidate-${{ github.run_id }}-${{ github.run_attempt }}
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
-            org.opencontainers.image.version=${{ env.FRP_VERSION }}
+            org.opencontainers.image.version=${{ env.IMAGE_TAG }}
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.vendor=Home Tunnel
-          cache-from: type=gha,scope=frps-0.70.1
-          cache-to: type=gha,mode=max,scope=frps-0.70.1
+          cache-from: type=gha,scope=frps-0.70.1-r1
+          cache-to: type=gha,mode=max,scope=frps-0.70.1-r1
 
       - name: Require the complete Linux architecture matrix
         shell: bash
@@ -141,12 +142,13 @@ jobs:
             --arg upstream_commit "$FRP_COMMIT" \
             --arg upstream_archive_sha256 "$FRP_ARCHIVE_SHA256" \
             --arg image "$IMAGE" \
+            --arg image_tag "$IMAGE_TAG" \
             --arg digest "$DIGEST" \
             --arg repository_revision "$GITHUB_SHA" \
             --arg workflow_run "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
             '{schema_version:1,version:$version,upstream_tag:$upstream_tag,
               upstream_commit:$upstream_commit,upstream_archive_sha256:$upstream_archive_sha256,
-              image:$image,digest:$digest,repository_revision:$repository_revision,
+              image:$image,image_tag:$image_tag,digest:$digest,repository_revision:$repository_revision,
               workflow_run:$workflow_run}' > frps-dependency.json
           cosign sign-blob --yes --bundle frps-dependency.json.sigstore.json frps-dependency.json
 
@@ -157,7 +159,7 @@ jobs:
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: frps-0.70.1-dependency-manifest
+          name: frps-0.70.1-r1-dependency-manifest
           path: |
             frps-dependency.json
             frps-dependency.json.sigstore.json
@@ -169,16 +171,16 @@ jobs:
           DIGEST: ${{ steps.build.outputs.digest }}
         run: |
           set -euo pipefail
-          if existing=$(docker buildx imagetools inspect "$IMAGE:$FRP_VERSION" \
+          if existing=$(docker buildx imagetools inspect "$IMAGE:$IMAGE_TAG" \
             --format '{{json .Manifest.Digest}}' 2>/dev/null); then
             existing=${existing//\"/}
             test "$existing" = "$DIGEST" || {
-              echo "$IMAGE:$FRP_VERSION already identifies a different digest" >&2
+              echo "$IMAGE:$IMAGE_TAG already identifies a different digest" >&2
               exit 1
             }
           else
-            docker buildx imagetools create --tag "$IMAGE:$FRP_VERSION" "$IMAGE@$DIGEST"
+            docker buildx imagetools create --tag "$IMAGE:$IMAGE_TAG" "$IMAGE@$DIGEST"
           fi
-          published=$(docker buildx imagetools inspect "$IMAGE:$FRP_VERSION" \
+          published=$(docker buildx imagetools inspect "$IMAGE:$IMAGE_TAG" \
             --format '{{json .Manifest.Digest}}' | tr -d '"')
           test "$published" = "$DIGEST"
