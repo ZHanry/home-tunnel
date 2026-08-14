@@ -12,7 +12,7 @@ backup_dir="${HOME_TUNNEL_BACKUP_DIR:-/var/backups/home-tunnel}"
 passphrase="$root/secrets/backup_passphrase"
 backup="${1:-}"
 if [ -z "$backup" ]; then
-  backup="$(find "$backup_dir" -maxdepth 1 -type f -name 'home_tunnel-*.sqlite3.gpg' -printf '%T@ %p\n' | sort -nr | awk 'NR==1{sub(/^[^ ]+ /,""); print; exit}')"
+  backup="$(find "$backup_dir" -maxdepth 1 -type f -name 'home_tunnel-*.sqlite3.gpg' -print | sort -r | head -n 1)"
 fi
 [ -n "$backup" ] && [ -f "$backup" ] || { echo "No encrypted backup is available" >&2; exit 1; }
 case "$(readlink -f "$backup")" in
@@ -21,7 +21,7 @@ case "$(readlink -f "$backup")" in
 esac
 [ -r "$passphrase" ] || { echo "Backup passphrase is missing" >&2; exit 1; }
 
-plain="$(mktemp "$backup_dir/.restore-verify.XXXXXX.sqlite3")"
+plain="$(mktemp "$backup_dir/.restore-verify.XXXXXX")"
 cleanup() {
   if [ -f "$plain" ]; then
     if command -v shred >/dev/null 2>&1; then shred -u "$plain"; else rm -f "$plain"; fi
@@ -61,7 +61,7 @@ schema_version="${verification%% *}"
 user_count="${verification#* }"
 
 verified="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-status_tmp="$(mktemp "$root/status/.restore.XXXXXX.json")"
+status_tmp="$(mktemp "$root/status/.restore.XXXXXX")"
 STATUS_PATH="$status_tmp" VERIFIED_AT="$verified" BACKUP_FILE="$(basename "$backup")" SCHEMA_VERSION="$schema_version" USER_COUNT="$user_count" python3 - <<'PY'
 import json
 import os

@@ -5,8 +5,15 @@ process.env.INTERNAL_SERVICE_KEY = "11".repeat(32);
 process.env.SAMPLE_BUCKET_SECONDS = "10";
 process.env.MAX_BODY_CHUNK_BYTES = String(64 * 1024);
 
-const { HierarchicalLimiter, PolicyStore, SampleCollector, ThrottleTransform, cidrContains, parseCidr, parseIpBytes } =
-  await import("./server.js");
+const {
+  HierarchicalLimiter,
+  PolicyStore,
+  SampleCollector,
+  ThrottleTransform,
+  cidrContains,
+  parseCidr,
+  parseIpBytes,
+} = await import("./server.js");
 
 function policy(id: string, subdomain: string, enabled = true) {
   return {
@@ -43,7 +50,7 @@ function snapshot(connections: ReturnType<typeof policy>[], expiresInMs = 60_000
 
 test("host authorization accepts one managed label and rejects unsafe hosts", () => {
   const store = new PolicyStore();
-  store.apply(snapshot([policy("connection-1", "service")]))
+  store.apply(snapshot([policy("connection-1", "service")]));
   assert.equal(store.host("service.tunnel.example.com").policy?.connection_id, "connection-1");
   assert.equal(store.host("SERVICE.tunnel.example.com:443").policy?.connection_id, "connection-1");
   assert.equal(store.host("service.other.example").error, "invalid");
@@ -55,7 +62,9 @@ test("host authorization accepts one managed label and rejects unsafe hosts", ()
 
 test("verified custom domains resolve to the same policy and keep unknown hosts closed", () => {
   const store = new PolicyStore();
-  store.apply(snapshot([{ ...policy("connection-1", "service"), custom_domains: ["home.example.net"] }]));
+  store.apply(
+    snapshot([{ ...policy("connection-1", "service"), custom_domains: ["home.example.net"] }]),
+  );
   assert.equal(store.host("home.example.net").policy?.connection_id, "connection-1");
   assert.equal(store.host("HOME.EXAMPLE.NET:443").policy?.connection_id, "connection-1");
   assert.equal(store.host("unknown.example.net").error, "invalid");
@@ -85,7 +94,10 @@ test("policy disable, version change, and snapshot expiry close active streams",
 
 test("lease expiry closes active streams and unchanged responses refresh only snapshot freshness", async () => {
   const store = new PolicyStore();
-  const original = { ...policy("connection-1", "service"), device_lease_expires_at: new Date(Date.now() + 30).toISOString() };
+  const original = {
+    ...policy("connection-1", "service"),
+    device_lease_expires_at: new Date(Date.now() + 30).toISOString(),
+  };
   store.apply(snapshot([original]));
   const fullSuccess = store.lastFullSuccessAt;
   store.touch(new Date(Date.now() + 120_000).toISOString());
@@ -167,7 +179,10 @@ test("sample buffer drops oldest buckets when the cap is exceeded", async () => 
   assert.equal(uploads.length, 1);
   const batch = uploads[0] ?? [];
   assert.equal(batch.length, 2);
-  assert.deepEqual(batch.map((item) => item.upload_bytes), [2, 3]);
+  assert.deepEqual(
+    batch.map((item) => item.upload_bytes),
+    [2, 3],
+  );
   assert.ok(!batch.some((item) => item.connection_id === "connection-2"));
 });
 
@@ -192,7 +207,11 @@ test("sample buffer never evicts the current bucket", async () => {
 
 test("unlimited connections take the synchronous fast path and skip the limiter", async () => {
   const store = new PolicyStore();
-  const unlimited = { ...policy("connection-1", "service"), user_limit_bps: null, connection_limit_bps: null };
+  const unlimited = {
+    ...policy("connection-1", "service"),
+    user_limit_bps: null,
+    connection_limit_bps: null,
+  };
   const limited = policy("connection-2", "second");
   store.apply(snapshot([unlimited, limited]));
   const limiter = new HierarchicalLimiter(store);
@@ -210,7 +229,14 @@ test("unlimited connections take the synchronous fast path and skip the limiter"
       uploads.push(items.map((item) => ({ ...item })));
     },
   );
-  const fast = new ThrottleTransform("connection-1", "download", new AbortController(), store, limiter, collector);
+  const fast = new ThrottleTransform(
+    "connection-1",
+    "download",
+    new AbortController(),
+    store,
+    limiter,
+    collector,
+  );
   const received = new Promise<Buffer>((resolve) => fast.once("data", resolve));
   fast.write(Buffer.from("hello"));
   assert.equal((await received).toString(), "hello");
@@ -219,7 +245,14 @@ test("unlimited connections take the synchronous fast path and skip the limiter"
   await collector.flush();
   assert.equal(uploads[0]?.[0]?.download_bytes, 5);
 
-  const slow = new ThrottleTransform("connection-2", "download", new AbortController(), store, limiter, collector);
+  const slow = new ThrottleTransform(
+    "connection-2",
+    "download",
+    new AbortController(),
+    store,
+    limiter,
+    collector,
+  );
   const slowReceived = new Promise<Buffer>((resolve) => slow.once("data", resolve));
   slow.write(Buffer.from("world"));
   await slowReceived;
@@ -228,9 +261,23 @@ test("unlimited connections take the synchronous fast path and skip the limiter"
 
 test("the fast path still enforces policy revocation", async () => {
   const store = new PolicyStore();
-  const unlimited = { ...policy("connection-1", "service"), user_limit_bps: null, connection_limit_bps: null };
+  const unlimited = {
+    ...policy("connection-1", "service"),
+    user_limit_bps: null,
+    connection_limit_bps: null,
+  };
   store.apply(snapshot([unlimited]));
-  const transform = new ThrottleTransform("connection-1", "download", new AbortController(), store, new HierarchicalLimiter(store), new SampleCollector(() => 1000, async () => undefined));
+  const transform = new ThrottleTransform(
+    "connection-1",
+    "download",
+    new AbortController(),
+    store,
+    new HierarchicalLimiter(store),
+    new SampleCollector(
+      () => 1000,
+      async () => undefined,
+    ),
+  );
   transform.resume();
   store.apply(snapshot([{ ...unlimited, enabled: false }]));
   const failure = new Promise<Error>((resolve) => transform.once("error", resolve));
@@ -312,7 +359,11 @@ test("ipAllowed is fail-closed for unparsable client IPs and empty rule sets", (
   assert.equal(store.ipAllowed(gated, "198.51.100.1"), false);
   assert.equal(store.ipAllowed(gated, "not-an-ip"), false, "unparsable client IP must be rejected");
   assert.equal(store.ipAllowed(gated, ""), false);
-  assert.equal(store.ipAllowed(broken, "203.0.113.77"), false, "invalid entries never admit traffic");
+  assert.equal(
+    store.ipAllowed(broken, "203.0.113.77"),
+    false,
+    "invalid entries never admit traffic",
+  );
 });
 
 test("sample identity changes replace a stale bucket instead of poisoning its batch", async () => {

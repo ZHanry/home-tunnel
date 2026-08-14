@@ -3,7 +3,12 @@ import type { NextFunction, Request, RequestHandler, Response } from "express";
 import type { DatabaseClient } from "./db.js";
 import { config } from "./config.js";
 import { one } from "./db.js";
-import { constantTimeStringEqual, opaqueToken, PasswordWorkQueueFullError, tokenHash } from "./security.js";
+import {
+  constantTimeStringEqual,
+  opaqueToken,
+  PasswordWorkQueueFullError,
+  tokenHash,
+} from "./security.js";
 import type { AuthenticatedActor, AuthenticatedRequest } from "./types.js";
 
 export class HttpError extends Error {
@@ -18,7 +23,11 @@ export class HttpError extends Error {
 }
 
 export function asyncHandler(
-  handler: (request: AuthenticatedRequest, response: Response, next: NextFunction) => Promise<unknown>,
+  handler: (
+    request: AuthenticatedRequest,
+    response: Response,
+    next: NextFunction,
+  ) => Promise<unknown>,
 ): RequestHandler {
   return (request, response, next) => {
     void handler(request as AuthenticatedRequest, response, next).catch(next);
@@ -38,7 +47,11 @@ export function httpRequestCounts(): Readonly<typeof httpResponseClassCounts> {
   return httpResponseClassCounts;
 }
 
-export function requestContext(request: AuthenticatedRequest, response: Response, next: NextFunction): void {
+export function requestContext(
+  request: AuthenticatedRequest,
+  response: Response,
+  next: NextFunction,
+): void {
   const candidate = request.header("x-request-id");
   request.requestId = candidate && /^[0-9a-f-]{36}$/i.test(candidate) ? candidate : randomUUID();
   response.once("finish", () => {
@@ -105,7 +118,10 @@ export function setSessionCookies(
 
 export function clearSessionCookies(response: Response): void {
   const secure = config.cookieSecure ? "; Secure" : "";
-  response.append("set-cookie", `ht_access=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0${secure}`);
+  response.append(
+    "set-cookie",
+    `ht_access=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0${secure}`,
+  );
   response.append(
     "set-cookie",
     `ht_refresh=; Path=/api/v1/auth; HttpOnly; SameSite=Strict; Max-Age=0${secure}`,
@@ -146,7 +162,9 @@ export const authenticate: RequestHandler = asyncHandler(async (request, _respon
     [tokenHash(token)],
   );
   if (!session) {
-    if (["/api/v1/auth/login", "/api/v1/auth/device", "/api/v1/auth/refresh"].includes(request.path)) {
+    if (
+      ["/api/v1/auth/login", "/api/v1/auth/device", "/api/v1/auth/refresh"].includes(request.path)
+    ) {
       next();
       return;
     }
@@ -254,9 +272,14 @@ export function parseExpectedVersion(request: Request, bodyVersion?: unknown): n
   const raw = ifMatch ?? bodyVersion;
   const version = typeof raw === "number" ? raw : Number.parseInt(String(raw ?? ""), 10);
   if (!Number.isSafeInteger(version) || version <= 0) {
-    throw new HttpError(400, "VALIDATION_ERROR", "写请求必须携带有效的 If-Match 或 expected_version", {
-      field_errors: { expected_version: "必须为正整数" },
-    });
+    throw new HttpError(
+      400,
+      "VALIDATION_ERROR",
+      "写请求必须携带有效的 If-Match 或 expected_version",
+      {
+        field_errors: { expected_version: "必须为正整数" },
+      },
+    );
   }
   return version;
 }

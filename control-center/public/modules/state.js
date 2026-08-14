@@ -1,0 +1,21 @@
+export const state = {
+  csrf: "",
+  me: null,
+  users: [],
+  devices: [],
+  connections: [],
+  tunnelDomain: "tunnel.example.com",
+  tcpTunnels: { enabled: false, port_start: 10000, port_end: 10099 },
+  currentView: "dashboard",
+  socket: null,
+  refreshTimer: null,
+  renderId: 0,
+  socketReconnectTimer: null,
+  audit: {
+    page: 1,
+    pageSize: 25,
+    query: "",
+    action: "",
+    targetType: "",
+  },
+};

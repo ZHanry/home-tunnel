@@ -8,6 +8,8 @@ namespace HomeTunnel.Client.Services;
 
 public sealed class DiagnosticsService(LocalStateStore store)
 {
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web) { WriteIndented = true };
+
     public string Export(LocalState state)
     {
         var agentIntegrity = FrpcSupervisor.InspectInstalledAgent();
@@ -47,7 +49,7 @@ public sealed class DiagnosticsService(LocalStateStore store)
         };
         var entry = zip.CreateEntry("summary.json", CompressionLevel.Optimal);
         using (var writer = new StreamWriter(entry.Open(), new UTF8Encoding(false)))
-            writer.Write(JsonSerializer.Serialize(summary, new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true }));
+            writer.Write(JsonSerializer.Serialize(summary, JsonOptions));
 
         if (Directory.Exists(store.LogDirectory))
         {

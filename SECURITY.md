@@ -4,16 +4,19 @@ Home Tunnel exposes services from a private network to the public Internet. Trea
 
 ## Supported versions
 
-Security fixes are provided for the latest published minor release only. Older builds should be upgraded before reporting a problem.
+Security fixes are provided for the latest published minor release only. The next security maintenance release is 2.4.1; this support entry becomes effective only when that independent patch is merged and published. The broader 2.5.0 source tree is a release candidate, not a supported stable release. Until 2.4.1 is published, deploy only a reviewed commit containing the security fix. Older builds should be upgraded before reporting a problem.
 
 | Version | Supported |
 | --- | --- |
-| 2.2.x | Yes |
+| 2.4.x (`2.4.1` when published) | Yes |
+| 2.5.0 RC builds | Prerelease testing only |
 | Earlier versions | No |
 
 ## Reporting a vulnerability
 
-Do not open a public issue for suspected vulnerabilities, leaked credentials or bypasses. Use GitHub's **Private vulnerability reporting** feature on the repository Security page. Include the affected version, deployment topology, reproduction steps and expected impact. Remove passwords, tokens, private keys, user data and public server addresses that are not necessary to reproduce the issue.
+Do not open a public issue for suspected vulnerabilities, leaked credentials or bypasses. Use GitHub's [private vulnerability reporting form](https://github.com/ZHanry/home-tunnel/security/advisories/new). Include the affected version, deployment topology, reproduction steps and expected impact. Remove passwords, tokens, private keys, user data and public server addresses that are not necessary to reproduce the issue.
+
+Repository owners must keep Private vulnerability reporting enabled. If the form is unavailable, do not publish the details; contact a maintainer privately through their verified GitHub profile and ask for a private reporting channel.
 
 The maintainers will acknowledge a complete report as soon as practical, validate the impact, prepare a fix and coordinate disclosure. There is currently no paid bug-bounty program.
 

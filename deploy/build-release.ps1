@@ -19,12 +19,17 @@ if ($OutputRoot -ne $allowedOutputRoot -and -not $OutputRoot.StartsWith($allowed
 
 $controlPackage = Get-Content -Raw -LiteralPath (Join-Path $workspaceRoot "control-center\package.json") | ConvertFrom-Json
 $gatewayPackage = Get-Content -Raw -LiteralPath (Join-Path $workspaceRoot "traffic-gateway\package.json") | ConvertFrom-Json
-if (-not $Version) { $Version = [string]$controlPackage.version }
-if ($Version -notmatch '^\d+\.\d+\.\d+$') { throw "Version must use MAJOR.MINOR.PATCH format" }
-if ($controlPackage.version -ne $Version) { throw "Control-center package version does not match $Version" }
+if (-not $Version) {
+    $Version = (Get-Content -LiteralPath (Join-Path $workspaceRoot ".env.example") |
+        Where-Object { $_ -match '^HOME_TUNNEL_VERSION=' } |
+        Select-Object -First 1) -replace '^HOME_TUNNEL_VERSION=', ''
+}
+if ($Version -notmatch '^\d+\.\d+\.\d+(?:-rc\.\d+)?$') { throw "Version must use MAJOR.MINOR.PATCH or MAJOR.MINOR.PATCH-rc.N format" }
+$sourceVersion = $Version -replace '-rc\.\d+$', ''
+if ($controlPackage.version -ne $sourceVersion) { throw "Control-center package version does not match source version $sourceVersion" }
 $version = $Version
-$gatewayVersion = [string]$gatewayPackage.version
-if ($gatewayVersion -ne $version) { throw "Traffic-gateway package version does not match $version" }
+$gatewaySourceVersion = [string]$gatewayPackage.version
+if ($gatewaySourceVersion -ne $sourceVersion) { throw "Traffic-gateway package version does not match source version $sourceVersion" }
 $stamp = (Get-Date).ToUniversalTime().ToString("yyyyMMddTHHmmssZ")
 $releaseName = "home-tunnel-release-$version-arm64-$stamp"
 $releaseDirectory = Join-Path $OutputRoot $releaseName
@@ -40,7 +45,7 @@ $sbomNames = @(
 )
 $images = @(
     "home-tunnel/control-center:$version-arm64",
-    "home-tunnel/traffic-gateway:$gatewayVersion-arm64",
+    "home-tunnel/traffic-gateway:$version-arm64",
     "home-tunnel/frps:0.62.1-arm64"
 )
 
@@ -48,7 +53,7 @@ foreach ($required in @($frpcSource, (Join-Path $deployRoot "compose.yaml"))) {
     if (-not (Test-Path -LiteralPath $required -PathType Leaf)) { throw "Required release input is missing: $required" }
 }
 $composeSource = Get-Content -Raw -LiteralPath (Join-Path $deployRoot "compose.yaml")
-foreach ($expectedImage in @("home-tunnel/control-center:$version-arm64", "home-tunnel/traffic-gateway:$gatewayVersion-arm64")) {
+foreach ($expectedImage in @("home-tunnel/control-center:$version-arm64", "home-tunnel/traffic-gateway:$version-arm64")) {
     if ($composeSource -notmatch "(?m)^    image: $([regex]::Escape($expectedImage))\s*$") {
         throw "Compose does not reference $expectedImage"
     }

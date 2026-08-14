@@ -15,17 +15,29 @@ export function backupLastSuccessAt(): number {
 }
 
 export function backupsEnabled(): boolean {
-  return config.database.path !== ":memory:" && config.backup.intervalHours > 0 && config.backup.directory !== "";
+  return (
+    config.database.path !== ":memory:" &&
+    config.backup.intervalHours > 0 &&
+    config.backup.directory !== ""
+  );
 }
 
 function backupFileName(now: Date): string {
-  const stamp = now.toISOString().replace(/\.\d{3}Z$/, "Z").replaceAll("-", "").replaceAll(":", "");
+  const stamp = now
+    .toISOString()
+    .replace(/\.\d{3}Z$/, "Z")
+    .replaceAll("-", "")
+    .replaceAll(":", "");
   return `control-center-${stamp}.sqlite3`;
 }
 
-export async function runDatabaseBackup(now = new Date()): Promise<{ path: string; deletedCount: number }> {
+export async function runDatabaseBackup(
+  now = new Date(),
+): Promise<{ path: string; deletedCount: number }> {
   if (!config.backup.directory) {
-    throw new Error("Database backups require a file-backed database or an explicit BACKUP_DIRECTORY");
+    throw new Error(
+      "Database backups require a file-backed database or an explicit BACKUP_DIRECTORY",
+    );
   }
   mkdirSync(config.backup.directory, { recursive: true, mode: 0o700 });
   const targetPath = join(config.backup.directory, backupFileName(now));
@@ -51,22 +63,28 @@ export function startDatabaseBackups(): { close: () => void } {
     if (closed) return;
     void runDatabaseBackup()
       .then(({ path, deletedCount }) => {
-        console.log(JSON.stringify({
-          timestamp: new Date().toISOString(),
-          level: "info",
-          component: "control-center",
-          event_code: "BACKUP_COMPLETED",
-          path,
-          deleted_count: deletedCount,
-        }));
+        console.log(
+          JSON.stringify({
+            timestamp: new Date().toISOString(),
+            level: "info",
+            component: "control-center",
+            event_code: "BACKUP_COMPLETED",
+            path,
+            deleted_count: deletedCount,
+          }),
+        );
       })
-      .catch((error) => console.error(JSON.stringify({
-        timestamp: new Date().toISOString(),
-        level: "error",
-        component: "control-center",
-        event_code: "BACKUP_FAILED",
-        message: error instanceof Error ? error.message : "Unknown backup error",
-      })));
+      .catch((error) =>
+        console.error(
+          JSON.stringify({
+            timestamp: new Date().toISOString(),
+            level: "error",
+            component: "control-center",
+            event_code: "BACKUP_FAILED",
+            message: error instanceof Error ? error.message : "Unknown backup error",
+          }),
+        ),
+      );
   };
   const initialTimer = setTimeout(execute, 60_000);
   const intervalTimer = setInterval(execute, config.backup.intervalHours * 60 * 60 * 1000);

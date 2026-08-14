@@ -18,6 +18,7 @@ public sealed record ServerProfile(
 {
     private const int MaximumConfigurationBytes = 32 * 1024;
     private const int MaximumCertificatePemChars = 16 * 1024;
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private static readonly Regex DomainPattern = new(
         "^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$",
         RegexOptions.CultureInvariant);
@@ -68,7 +69,7 @@ public sealed record ServerProfile(
         DiscoveryResponse value;
         try
         {
-            value = JsonSerializer.Deserialize<DiscoveryResponse>(payload, new JsonSerializerOptions(JsonSerializerDefaults.Web))
+            value = JsonSerializer.Deserialize<DiscoveryResponse>(payload, JsonOptions)
                 ?? throw new InvalidDataException("服务器配置为空。");
         }
         catch (JsonException error)

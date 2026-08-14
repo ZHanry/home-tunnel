@@ -1,25 +1,149 @@
-name: Release multi-architecture images
+name: Release
 
 on:
   push:
     tags: ["v*"]
-  workflow_dispatch:
-    inputs:
-      version:
-        description: Version tag without the leading v
-        required: true
-        type: string
 
 permissions:
-  contents: read
+  contents: write
+  checks: read
   packages: write
+  id-token: write
+  attestations: write
+  artifact-metadata: write
 
 concurrency:
-  group: release-images-${{ github.ref }}
+  group: release-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  application-images:
+  metadata:
+    name: Validate release metadata
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      base-version: ${{ steps.version.outputs.base-version }}
+      rc-version: ${{ steps.version.outputs.rc-version }}
+      rc-tag: ${{ steps.version.outputs.rc-tag }}
+      stable: ${{ steps.version.outputs.stable }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - id: version
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RAW_VERSION: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          version="${RAW_VERSION#v}"
+          if [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+$ ]]; then
+            stable=false
+            base_version="${version%%-rc.*}"
+            rc_version="$version"
+            rc_tag="v$version"
+          elif [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            stable=true
+            base_version="$version"
+            candidates=$(gh release list --limit 100 --json tagName,isPrerelease,isDraft,publishedAt \
+              --jq '.[] | select(.isPrerelease and (.isDraft|not)) | .tagName' |
+              grep -E "^v${version//./\.}-rc\.[0-9]+$" || true)
+            rc_tag=$(printf '%s\n' "$candidates" | sort -V | tail -n 1)
+            [ -n "$rc_tag" ] || { echo "Stable requires a published v$version-rc.N prerelease" >&2; exit 1; }
+            rc_version="${rc_tag#v}"
+          else
+            echo "Unsupported release version: $version" >&2
+            exit 1
+          fi
+
+          tag_commit=$(git rev-list -n 1 "$GITHUB_REF")
+          test "$tag_commit" = "$GITHUB_SHA"
+          git fetch --no-tags origin main
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main || {
+            echo 'Release tags must identify a commit already merged into main.' >&2
+            exit 1
+          }
+          if [ "$stable" = true ]; then
+            git fetch --no-tags origin "refs/tags/$rc_tag:refs/tags/$rc_tag"
+            rc_commit=$(git rev-list -n 1 "$rc_tag")
+            release_target=$(gh api "/repos/$GITHUB_REPOSITORY/releases/tags/$rc_tag" --jq .target_commitish)
+            if git rev-parse --verify "$release_target^{commit}" >/dev/null 2>&1; then
+              release_commit=$(git rev-parse "$release_target^{commit}")
+            else
+              release_commit=$(gh api "/repos/$GITHUB_REPOSITORY/commits/$release_target" --jq .sha)
+            fi
+            test "$rc_commit" = "$GITHUB_SHA" && test "$release_commit" = "$GITHUB_SHA" || {
+              echo "RC tag, Stable tag, and RC Release target must resolve to the same commit" >&2
+              exit 1
+            }
+          fi
+
+          control_version=$(node -p "require('./control-center/package.json').version")
+          gateway_version=$(node -p "require('./traffic-gateway/package.json').version")
+          linux_version=$(sed -n 's/^const Version = "\([^"]*\)"$/\1/p' linux-client/internal/model/model.go)
+          deployment_version=$(sed -n 's/^HOME_TUNNEL_VERSION=//p' .env.example)
+          for candidate in "$control_version" "$gateway_version" "$linux_version"; do
+            test "$candidate" = "$base_version" || {
+              echo "Tag $version does not match source version $candidate" >&2
+              exit 1
+            }
+          done
+          test "$deployment_version" = "$rc_version" || {
+            echo "Deployment default $deployment_version must identify the promoted RC $rc_version" >&2
+            exit 1
+          }
+          {
+            echo "version=$version"
+            echo "base-version=$base_version"
+            echo "rc-version=$rc_version"
+            echo "rc-tag=$rc_tag"
+            echo "stable=$stable"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Require the tagged commit's full source quality matrix
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          check_runs=$(mktemp)
+          page=1
+          printf '[]' > "$check_runs"
+          while :; do
+            [ "$page" -le 100 ] || { echo 'Unexpectedly large check-run result set' >&2; exit 1; }
+            response=$(mktemp)
+            gh api -H 'Accept: application/vnd.github+json' -H 'X-GitHub-Api-Version: 2022-11-28' \
+              "/repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs?per_page=100&page=$page" > "$response"
+            count=$(jq '.check_runs | length' "$response")
+            jq -s '.[0] + .[1].check_runs' "$check_runs" "$response" > "$check_runs.next"
+            mv "$check_runs.next" "$check_runs"
+            [ "$count" -eq 100 ] || break
+            page=$((page + 1))
+          done
+          required=(
+            'Quality Gate'
+            'Analyze (JavaScript and TypeScript)'
+            'Analyze (Go Linux client)'
+            'Analyze (Go Windows Agent)'
+            'Analyze (C# Windows client)'
+            'Secret Scan'
+            'Build and validate Pages'
+          )
+          for name in "${required[@]}"; do
+            conclusion=$(jq -r --arg name "$name" \
+              '[.[] | select(.name == $name and .app.slug == "github-actions")] |
+               sort_by(.started_at, .id) | last | .conclusion // "missing"' "$check_runs")
+            [ "$conclusion" = success ] || {
+              echo "Latest GitHub Actions check for '$name' is not successful: $conclusion" >&2
+              exit 1
+            }
+          done
+
+  images:
+    name: Image (${{ matrix.name }})
+    if: needs.metadata.outputs.stable != 'true'
+    needs: metadata
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -32,62 +156,487 @@ jobs:
             context: ./traffic-gateway
             image: ghcr.io/zhanry/home-tunnel-traffic-gateway
     steps:
-      - uses: actions/checkout@v4
-      - id: version
-        name: Resolve version
-        shell: bash
-        run: |
-          version="${{ inputs.version || github.ref_name }}"
-          version="${version#v}"
-          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
-          echo "value=$version" >> "$GITHUB_OUTPUT"
-      - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0
+      - uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/build-push-action@v6
+      - id: build
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: ${{ matrix.context }}
           platforms: linux/amd64,linux/arm64
           push: true
-          provenance: true
+          provenance: mode=max
           sbom: true
-          tags: |
-            ${{ matrix.image }}:${{ steps.version.outputs.value }}
-            ${{ matrix.image }}:latest
+          tags: ${{ matrix.image }}:${{ needs.metadata.outputs.rc-version }}
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
-            org.opencontainers.image.version=${{ steps.version.outputs.value }}
+            org.opencontainers.image.version=${{ needs.metadata.outputs.rc-version }}
             org.opencontainers.image.revision=${{ github.sha }}
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+      - name: Publish GitHub image attestation
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-name: ${{ matrix.image }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+      - name: Keyless-sign immutable image digest
+        env:
+          IMAGE: ${{ matrix.image }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: cosign sign --yes "$IMAGE@$DIGEST"
+      - name: Write machine-readable digest record
+        shell: bash
+        env:
+          NAME: ${{ matrix.name }}
+          IMAGE: ${{ matrix.image }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+          VERSION: ${{ needs.metadata.outputs.rc-version }}
+        run: |
+          jq -n --arg name "$NAME" --arg image "$IMAGE" --arg digest "$DIGEST" \
+            --arg version "$VERSION" --arg revision "$GITHUB_SHA" \
+            '{name:$name,image:$image,digest:$digest,version:$version,revision:$revision}' > "image-$NAME.json"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: image-${{ matrix.name }}
+          path: image-${{ matrix.name }}.json
+          if-no-files-found: error
 
-  frps-image:
+  client-packages:
+    name: Client package (${{ matrix.platform }}-${{ matrix.arch }})
+    if: needs.metadata.outputs.stable != 'true'
+    needs: metadata
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux
+            arch: amd64
+            runner: ubuntu-latest
+            script: ./linux-client/packaging/build-release.sh
+          - platform: linux
+            arch: arm64
+            runner: ubuntu-latest
+            script: ./linux-client/packaging/build-release.sh
+          - platform: macos
+            arch: amd64
+            runner: macos-latest
+            script: ./linux-client/packaging/macos/build-release.sh
+          - platform: macos
+            arch: arm64
+            runner: macos-latest
+            script: ./linux-client/packaging/macos/build-release.sh
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: 1.26.6
+          cache-dependency-path: linux-client/go.mod
+      - name: Build package once from the tagged commit
+        shell: bash
+        env:
+          VERSION: ${{ needs.metadata.outputs.rc-version }}
+          ARCH: ${{ matrix.arch }}
+        run: ${{ matrix.script }}
+      - id: artifact
+        name: Verify package layout and select outputs
+        shell: bash
+        env:
+          PLATFORM: ${{ matrix.platform }}
+          VERSION: ${{ needs.metadata.outputs.rc-version }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          set -euo pipefail
+          archive="outputs/$PLATFORM/home-tunnel-$PLATFORM-$VERSION-$ARCH.tar.gz"
+          checksum="outputs/$PLATFORM/home-tunnel-$PLATFORM-$VERSION-$ARCH.sha256"
+          test -s "$archive" && test -s "$checksum"
+          (cd "$(dirname "$archive")" && shasum -a 256 -c "$(basename "$checksum")")
+          listing=$(tar -tzf "$archive")
+          grep -q '/bin/home-tunnel-client$' <<< "$listing"
+          grep -q '/lib/home-tunnel-agent$' <<< "$listing"
+          if [ "$PLATFORM" = linux ]; then
+            grep -q '/lib/systemd/system/home-tunnel-client.service$' <<< "$listing"
+          else
+            grep -q '/Library/LaunchDaemons/com.hometunnel.client.plist$' <<< "$listing"
+          fi
+          mkdir -p package-scan
+          tar -xzf "$archive" -C package-scan
+          {
+            echo "archive=$archive"
+            echo "checksum=$checksum"
+            echo "sbom=$archive.spdx.json"
+          } >> "$GITHUB_OUTPUT"
+      - name: Generate SPDX SBOM
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with:
+          path: package-scan
+          format: spdx-json
+          output-file: ${{ steps.artifact.outputs.sbom }}
+          upload-artifact: false
+          upload-release-assets: false
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+      - name: Keyless-sign package, checksum, and SBOM
+        shell: bash
+        env:
+          ARCHIVE: ${{ steps.artifact.outputs.archive }}
+          CHECKSUM: ${{ steps.artifact.outputs.checksum }}
+          SBOM: ${{ steps.artifact.outputs.sbom }}
+        run: |
+          set -euo pipefail
+          for subject in "$ARCHIVE" "$CHECKSUM" "$SBOM"; do
+            cosign sign-blob --yes --bundle "$subject.sigstore.json" "$subject"
+          done
+      - name: Publish GitHub package provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: ${{ steps.artifact.outputs.archive }}
+      - name: Publish GitHub package SBOM attestation
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: ${{ steps.artifact.outputs.archive }}
+          sbom-path: ${{ steps.artifact.outputs.sbom }}
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: client-${{ matrix.platform }}-${{ matrix.arch }}
+          path: |
+            ${{ steps.artifact.outputs.archive }}
+            ${{ steps.artifact.outputs.checksum }}
+            ${{ steps.artifact.outputs.sbom }}
+            ${{ steps.artifact.outputs.archive }}.sigstore.json
+            ${{ steps.artifact.outputs.checksum }}.sigstore.json
+            ${{ steps.artifact.outputs.sbom }}.sigstore.json
+          if-no-files-found: error
+
+  rc-assets:
+    name: Assemble RC assets and digest manifest
+    if: needs.metadata.outputs.stable != 'true'
+    needs: [metadata, images, client-packages]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: client-*
+          path: release
+          merge-multiple: true
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: image-*
+          path: image-records
+          merge-multiple: true
+      - name: Verify complete matrices and write manifests
+        shell: bash
+        env:
+          VERSION: ${{ needs.metadata.outputs.rc-version }}
+        run: |
+          set -euo pipefail
+          for platform in linux macos; do
+            for arch in amd64 arm64; do
+              prefix="release/home-tunnel-$platform-$VERSION-$arch"
+              test -s "$prefix.tar.gz"
+              test -s "$prefix.sha256"
+              test -s "$prefix.tar.gz.spdx.json"
+              test -s "$prefix.tar.gz.sigstore.json"
+              test -s "$prefix.sha256.sigstore.json"
+              test -s "$prefix.tar.gz.spdx.json.sigstore.json"
+              (cd release && shasum -a 256 -c "home-tunnel-$platform-$VERSION-$arch.sha256")
+            done
+          done
+          jq -s --arg version "$VERSION" --arg revision "$GITHUB_SHA" \
+            '{schema_version:1,version:$version,revision:$revision,images:(map({key:.name,value:{image:.image,digest:.digest}})|from_entries)}' \
+            image-records/image-*.json > release/image-digests.json
+          test "$(jq '.images | length' release/image-digests.json)" -eq 2
+          jq -e '.images["control-center"].digest | test("^sha256:[0-9a-f]{64}$")' release/image-digests.json >/dev/null
+          jq -e '.images["traffic-gateway"].digest | test("^sha256:[0-9a-f]{64}$")' release/image-digests.json >/dev/null
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+      - name: Sign the immutable image digest manifest
+        run: cosign sign-blob --yes --bundle release/image-digests.json.sigstore.json release/image-digests.json
+      - name: Attest the immutable image digest manifest
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: release/image-digests.json
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: rc-release-assets
+          path: release
+          if-no-files-found: error
+
+  release-smoke:
+    name: Release smoke (immutable RC artifacts)
+    if: needs.metadata.outputs.stable != 'true'
+    needs: [metadata, rc-assets]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: rc-release-assets
+          path: release
+      - name: Pull the exact image manifests and run production-path smoke
+        shell: bash
+        env:
+          RC_VERSION: ${{ needs.metadata.outputs.rc-version }}
+        run: |
+          set -euo pipefail
+          CONTROL_IMAGE="$(jq -r '.images["control-center"] | .image + "@" + .digest' release/image-digests.json)"
+          GATEWAY_IMAGE="$(jq -r '.images["traffic-gateway"] | .image + "@" + .digest' release/image-digests.json)"
+          export CONTROL_IMAGE GATEWAY_IMAGE
+          docker pull "$CONTROL_IMAGE"
+          docker pull "$GATEWAY_IMAGE"
+          bash tests/run-release-smoke.sh
+      - name: Add release-smoke evidence to the RC asset set
+        run: cp release-smoke-evidence/* release/
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+      - name: Seal the complete RC asset and evidence set
+        shell: bash
+        run: |
+          set -euo pipefail
+          find release -maxdepth 1 -type f ! -name '*.sigstore.json' ! -name 'SHA256SUMS.txt' -print0 |
+            sort -z | xargs -0 shasum -a 256 > release/SHA256SUMS.txt
+          cosign sign-blob --yes --bundle release/SHA256SUMS.txt.sigstore.json release/SHA256SUMS.txt
+      - name: Attest the complete RC checksum manifest
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: release/SHA256SUMS.txt
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: verified-rc-release-assets
+          path: release
+          if-no-files-found: error
+
+  rc-release:
+    name: Publish verified RC prerelease
+    if: needs.metadata.outputs.stable != 'true'
+    needs: [metadata, release-smoke]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: verified-rc-release-assets
+          path: release
+      - id: draft
+        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
+        with:
+          name: Home Tunnel ${{ needs.metadata.outputs.rc-version }}
+          target_commitish: ${{ github.sha }}
+          draft: true
+          prerelease: true
+          make_latest: false
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: release/*
+      - name: Publish prerelease without moving latest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: gh release edit "$TAG" --draft=false --prerelease --latest=false
+      - name: Remove unpublished draft after failure
+        if: ${{ failure() && steps.draft.outcome == 'success' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: gh release delete "$TAG" --yes || true
+
+  stable-release:
+    name: Verify RC and promote exact artifacts to Stable
+    if: needs.metadata.outputs.stable == 'true'
+    needs: metadata
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/build-push-action@v6
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+      - name: Download and verify the published RC assets without rebuilding
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RC_TAG: ${{ needs.metadata.outputs.rc-tag }}
+          RC_VERSION: ${{ needs.metadata.outputs.rc-version }}
+        run: |
+          set -euo pipefail
+          mkdir release
+          gh release download "$RC_TAG" --dir release
+          (cd release && shasum -a 256 -c SHA256SUMS.txt)
+          cosign verify-blob --bundle release/SHA256SUMS.txt.sigstore.json \
+            --certificate-identity-regexp "^https://github.com/$GITHUB_REPOSITORY/\\.github/workflows/release-images\\.yml@refs/tags/$RC_TAG$" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com release/SHA256SUMS.txt
+          cosign verify-blob --bundle release/image-digests.json.sigstore.json \
+            --certificate-identity-regexp "^https://github.com/$GITHUB_REPOSITORY/\\.github/workflows/release-images\\.yml@refs/tags/$RC_TAG$" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com release/image-digests.json
+          test "$(jq -r .version release/image-digests.json)" = "$RC_VERSION"
+          test "$(jq -r .revision release/image-digests.json)" = "$GITHUB_SHA"
+          test "$(jq -r .status release/release-smoke.json)" = passed
+          for platform in linux macos; do
+            for arch in amd64 arm64; do
+              prefix="release/home-tunnel-$platform-$RC_VERSION-$arch"
+              test -s "$prefix.tar.gz" && test -s "$prefix.sha256" && test -s "$prefix.tar.gz.spdx.json"
+              test -s "$prefix.tar.gz.sigstore.json" && test -s "$prefix.sha256.sigstore.json"
+              test -s "$prefix.tar.gz.spdx.json.sigstore.json"
+              for subject in "$prefix.tar.gz" "$prefix.sha256" "$prefix.tar.gz.spdx.json"; do
+                cosign verify-blob --bundle "$subject.sigstore.json" \
+                  --certificate-identity-regexp "^https://github.com/$GITHUB_REPOSITORY/\\.github/workflows/release-images\\.yml@refs/tags/$RC_TAG$" \
+                  --certificate-oidc-issuer https://token.actions.githubusercontent.com "$subject"
+              done
+            done
+          done
+          for evidence in e2e-smoke.json backup.json restore.json release-smoke.json; do
+            test -s "release/$evidence"
+          done
+          jq -e '.status == "passed" and (.tests | index("authenticated_api")) and
+            (.tests | index("http_local")) and (.tests | index("https_local")) and
+            (.tests | index("websocket")) and (.tests | index("policy_revocation"))' \
+            release/e2e-smoke.json >/dev/null
+          jq -e '.status == "healthy"' release/backup.json >/dev/null
+          jq -e '.status == "healthy"' release/restore.json >/dev/null
+      - name: Verify registry digests and save recoverable latest pointers
+        shell: bash
+        env:
+          RC_TAG: ${{ needs.metadata.outputs.rc-tag }}
+          RC_VERSION: ${{ needs.metadata.outputs.rc-version }}
+        run: |
+          set -euo pipefail
+          images=(
+            ghcr.io/zhanry/home-tunnel-control-center
+            ghcr.io/zhanry/home-tunnel-traffic-gateway
+          )
+          names=(control-center traffic-gateway)
+          : > previous-latest-digests.txt
+          for index in "${!images[@]}"; do
+            image=${images[$index]}
+            expected=$(jq -r --arg name "${names[$index]}" '.images[$name].digest' release/image-digests.json)
+            rc_digest=$(docker buildx imagetools inspect "$image:$RC_VERSION" --format '{{json .Manifest.Digest}}' | tr -d '"')
+            test "$rc_digest" = "$expected" || {
+              echo "$image RC digest differs from the signed manifest" >&2
+              exit 1
+            }
+            cosign verify \
+              --certificate-identity-regexp "^https://github.com/$GITHUB_REPOSITORY/\\.github/workflows/release-images\\.yml@refs/tags/$RC_TAG$" \
+              --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+              "$image@$expected"
+            old_digest=$(docker buildx imagetools inspect "$image:latest" --format '{{json .Manifest.Digest}}' 2>/dev/null | tr -d '"' || true)
+            [[ "$old_digest" =~ ^sha256:[0-9a-f]{64}$ ]] || {
+              echo "Stable promotion requires an existing recoverable latest digest for $image" >&2
+              exit 1
+            }
+            printf '%s\n' "$old_digest" >> previous-latest-digests.txt
+          done
+      - id: draft
+        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
         with:
-          context: ./deploy/frps
-          platforms: linux/amd64,linux/arm64
-          push: true
-          provenance: true
-          sbom: true
-          build-args: FRP_VERSION=v0.62.1
-          tags: ghcr.io/zhanry/home-tunnel-frps:0.62.1
-          labels: |
-            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
-            org.opencontainers.image.version=0.62.1
-            org.opencontainers.image.revision=${{ github.sha }}
-          cache-from: type=gha,scope=frps
-          cache-to: type=gha,mode=max,scope=frps
+          name: Home Tunnel ${{ needs.metadata.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          draft: true
+          prerelease: false
+          make_latest: false
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: release/*
+      - id: promote
+        name: Promote signed RC digests to Stable and latest
+        shell: bash
+        env:
+          VERSION: ${{ needs.metadata.outputs.version }}
+        run: |
+          set -euo pipefail
+          images=(
+            ghcr.io/zhanry/home-tunnel-control-center
+            ghcr.io/zhanry/home-tunnel-traffic-gateway
+          )
+          names=(control-center traffic-gateway)
+          mapfile -t old_digests < previous-latest-digests.txt
+          promoted=0
+          rollback() {
+            status=$?
+            if [ "$status" -ne 0 ]; then
+              for ((index=0; index<promoted; index+=1)); do
+                docker buildx imagetools create --tag "${images[$index]}:latest" "${images[$index]}@${old_digests[$index]}" || true
+              done
+            fi
+            exit "$status"
+          }
+          trap rollback EXIT
+          for index in "${!images[@]}"; do
+            digest=$(jq -r --arg name "${names[$index]}" '.images[$name].digest' release/image-digests.json)
+            docker buildx imagetools create \
+              --tag "${images[$index]}:$VERSION" \
+              --tag "${images[$index]}:latest" \
+              "${images[$index]}@$digest"
+            promoted=$((promoted + 1))
+          done
+          trap - EXIT
+      - name: Publish the staged Stable Release
+        id: publish-stable
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          gh release edit "$TAG" --draft=false --prerelease=false --latest
+      - name: Restore latest pointers after any later Stable failure
+        if: ${{ failure() && steps.promote.outcome == 'success' && steps.publish-stable.outcome != 'success' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          images=(
+            ghcr.io/zhanry/home-tunnel-control-center
+            ghcr.io/zhanry/home-tunnel-traffic-gateway
+          )
+          mapfile -t old_digests < previous-latest-digests.txt
+          for index in "${!images[@]}"; do
+            docker buildx imagetools create --tag "${images[$index]}:latest" "${images[$index]}@${old_digests[$index]}" || true
+          done
+      - name: Remove unpublished draft after failure
+        if: ${{ failure() && steps.draft.outcome == 'success' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: gh release delete "$TAG" --yes || true
+  release-gate:
+    name: Release Gate
+    needs: [metadata, images, client-packages, rc-assets, release-smoke, rc-release, stable-release]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require exactly one complete release path
+        env:
+          METADATA_RESULT: ${{ needs.metadata.result }}
+          STABLE: ${{ needs.metadata.outputs.stable }}
+          IMAGES_RESULT: ${{ needs.images.result }}
+          PACKAGES_RESULT: ${{ needs.client-packages.result }}
+          ASSETS_RESULT: ${{ needs.rc-assets.result }}
+          SMOKE_RESULT: ${{ needs.release-smoke.result }}
+          RC_RELEASE_RESULT: ${{ needs.rc-release.result }}
+          STABLE_RELEASE_RESULT: ${{ needs.stable-release.result }}
+        run: |
+          set -euo pipefail
+          test "$METADATA_RESULT" = success
+          if [ "$STABLE" = true ]; then
+            test "$IMAGES_RESULT" = skipped
+            test "$PACKAGES_RESULT" = skipped
+            test "$ASSETS_RESULT" = skipped
+            test "$SMOKE_RESULT" = skipped
+            test "$RC_RELEASE_RESULT" = skipped
+            test "$STABLE_RELEASE_RESULT" = success
+          else
+            test "$IMAGES_RESULT" = success
+            test "$PACKAGES_RESULT" = success
+            test "$ASSETS_RESULT" = success
+            test "$SMOKE_RESULT" = success
+            test "$RC_RELEASE_RESULT" = success
+            test "$STABLE_RELEASE_RESULT" = skipped
+          fi

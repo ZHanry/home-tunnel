@@ -91,7 +91,10 @@ test("crossing 80% raises a single warning without suspending", async () => {
 });
 
 test("reaching the quota suspends the user, writes outbox, and never bumps device config", async () => {
-  const before = await db.one<{ config_version: string }>("SELECT config_version FROM devices WHERE id=?", [deviceId]);
+  const before = await db.one<{ config_version: string }>(
+    "SELECT config_version FROM devices WHERE id=?",
+    [deviceId],
+  );
   await addSampleBytes(200, 0); // total 1050 / 1000 = 105%
   const stats = await quota.runQuotaEnforcement(dispatch);
   assert.equal(stats.suspended, 1);
@@ -106,7 +109,10 @@ test("reaching the quota suspends the user, writes outbox, and never bumps devic
     [userId],
   );
   assert.ok(Number(outbox?.count) >= 1);
-  const after = await db.one<{ config_version: string }>("SELECT config_version FROM devices WHERE id=?", [deviceId]);
+  const after = await db.one<{ config_version: string }>(
+    "SELECT config_version FROM devices WHERE id=?",
+    [deviceId],
+  );
   assert.equal(Number(after?.config_version), Number(before?.config_version));
 });
 

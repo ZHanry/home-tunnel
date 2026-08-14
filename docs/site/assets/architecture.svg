@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-labelledby="title desc">
+  <title id="title">Home Tunnel architecture</title>
+  <desc id="desc">Control traffic flows from clients to the control center and SQLite. Application traffic flows through Caddy and the traffic gateway to FRP and a managed home agent.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#07111f"/><stop offset="1" stop-color="#0d1b2d"/></linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#12243a"/><stop offset="1" stop-color="#0d1b2d"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000" flood-opacity=".3"/></filter>
+    <marker id="arrow-cyan" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#65e7d4"/></marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#54a8ff"/></marker>
+    <pattern id="grid" width="36" height="36" patternUnits="userSpaceOnUse"><path d="M36 0H0V36" fill="none" stroke="#28405a" stroke-opacity=".22"/></pattern>
+  </defs>
+  <rect width="1440" height="900" rx="30" fill="url(#bg)"/><rect width="1440" height="900" rx="30" fill="url(#grid)"/>
+  <text x="76" y="85" fill="#65e7d4" font-family="Segoe UI, PingFang SC, sans-serif" font-size="20" font-weight="700" letter-spacing="3">HOME TUNNEL · CURRENT ARCHITECTURE</text>
+  <text x="76" y="140" fill="#f8fafc" font-family="Segoe UI, PingFang SC, sans-serif" font-size="44" font-weight="800">控制路径与业务流量路径分离</text>
+  <text x="76" y="180" fill="#b6c4d5" font-family="Segoe UI, PingFang SC, sans-serif" font-size="20">The control plane issues constrained state; the data plane enforces access, rate, sampling, and revocation.</text>
+  <g filter="url(#shadow)">
+    <rect x="76" y="260" width="238" height="144" rx="22" fill="url(#card)" stroke="#28405a"/>
+    <text x="106" y="308" fill="#65e7d4" font-family="Segoe UI, sans-serif" font-size="16" font-weight="700">CLIENTS</text><text x="106" y="346" fill="#f8fafc" font-family="Segoe UI, PingFang SC, sans-serif" font-size="27" font-weight="750">Linux / macOS</text><text x="106" y="379" fill="#b6c4d5" font-family="Segoe UI, PingFang SC, sans-serif" font-size="17">Windows Source / Experimental</text>
+    <rect x="454" y="230" width="300" height="204" rx="22" fill="url(#card)" stroke="#28405a"/>
+    <text x="486" y="278" fill="#65e7d4" font-family="Segoe UI, sans-serif" font-size="16" font-weight="700">CONTROL PLANE</text><text x="486" y="320" fill="#f8fafc" font-family="Segoe UI, PingFang SC, sans-serif" font-size="29" font-weight="750">Control Center</text><text x="486" y="355" fill="#b6c4d5" font-family="Segoe UI, PingFang SC, sans-serif" font-size="18">REST · WebSocket · users · devices</text><text x="486" y="386" fill="#b6c4d5" font-family="Segoe UI, PingFang SC, sans-serif" font-size="18">connections · health · audit</text>
+    <rect x="886" y="260" width="238" height="144" rx="22" fill="url(#card)" stroke="#28405a"/>
+    <text x="918" y="308" fill="#65e7d4" font-family="Segoe UI, sans-serif" font-size="16" font-weight="700">STATE</text><text x="918" y="346" fill="#f8fafc" font-family="Segoe UI, sans-serif" font-size="29" font-weight="750">SQLite</text><text x="918" y="379" fill="#b6c4d5" font-family="Segoe UI, PingFang SC, sans-serif" font-size="17">追加式迁移 · backup / restore</text>
+    <rect x="222" y="604" width="238" height="144" rx="22" fill="url(#card)" stroke="#28405a"/>
+    <text x="254" y="652" fill="#54a8ff" font-family="Segoe UI, sans-serif" font-size="16" font-weight="700">PUBLIC EDGE</text><text x="254" y="691" fill="#f8fafc" font-family="Segoe UI, sans-serif" font-size="29" font-weight="750">Caddy</text><text x="254" y="722" fill="#b6c4d5" font-family="Segoe UI, PingFang SC, sans-serif" font-size="17">TLS · host routing</text>
+    <rect x="558" y="574" width="300" height="204" rx="22" fill="url(#card)" stroke="#28405a"/>
+    <text x="590" y="622" fill="#54a8ff" font-family="Segoe UI, sans-serif" font-size="16" font-weight="700">DATA PLANE</text><text x="590" y="664" fill="#f8fafc" font-family="Segoe UI, PingFang SC, sans-serif" font-size="29" font-weight="750">Traffic Gateway</text><text x="590" y="699" fill="#b6c4d5" font-family="Segoe UI, PingFang SC, sans-serif" font-size="18">policy · access · rate limit</text><text x="590" y="730" fill="#b6c4d5" font-family="Segoe UI, PingFang SC, sans-serif" font-size="18">sampling · proxy · lifecycle</text>
+    <rect x="956" y="604" width="238" height="144" rx="22" fill="url(#card)" stroke="#28405a"/>
+    <text x="988" y="652" fill="#54a8ff" font-family="Segoe UI, sans-serif" font-size="16" font-weight="700">TUNNEL</text><text x="988" y="691" fill="#f8fafc" font-family="Segoe UI, sans-serif" font-size="29" font-weight="750">FRP + Agent</text><text x="988" y="722" fill="#b6c4d5" font-family="Segoe UI, PingFang SC, sans-serif" font-size="17">白名单配置 · 家庭服务</text>
+  </g>
+  <path d="M314 332H454" fill="none" stroke="#65e7d4" stroke-width="4" marker-end="url(#arrow-cyan)"/><path d="M754 332H886" fill="none" stroke="#65e7d4" stroke-width="4" marker-end="url(#arrow-cyan)"/><path d="M604 434V525H708V574" fill="none" stroke="#65e7d4" stroke-width="4" stroke-dasharray="10 10" marker-end="url(#arrow-cyan)"/><path d="M460 676H558" fill="none" stroke="#54a8ff" stroke-width="4" marker-end="url(#arrow-blue)"/><path d="M858 676H956" fill="none" stroke="#54a8ff" stroke-width="4" marker-end="url(#arrow-blue)"/>
+  <text x="330" y="315" fill="#65e7d4" font-family="Segoe UI, sans-serif" font-size="15">HTTPS / WS</text><text x="773" y="315" fill="#65e7d4" font-family="Segoe UI, sans-serif" font-size="15">state</text><text x="620" y="508" fill="#65e7d4" font-family="Segoe UI, sans-serif" font-size="15">policy + revocation</text><text x="472" y="659" fill="#54a8ff" font-family="Segoe UI, sans-serif" font-size="15">HTTP(S)</text><text x="870" y="659" fill="#54a8ff" font-family="Segoe UI, sans-serif" font-size="15">proxy</text>
+  <g transform="translate(76 818)"><line x1="0" y1="0" x2="54" y2="0" stroke="#65e7d4" stroke-width="4"/><text x="68" y="6" fill="#b6c4d5" font-family="Segoe UI, PingFang SC, sans-serif" font-size="17">控制与状态</text><line x1="220" y1="0" x2="274" y2="0" stroke="#54a8ff" stroke-width="4"/><text x="288" y="6" fill="#b6c4d5" font-family="Segoe UI, PingFang SC, sans-serif" font-size="17">用户业务流量</text></g>
+</svg>

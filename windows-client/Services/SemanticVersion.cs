@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 
 namespace HomeTunnel.Client.Services;
 
-public sealed class SemanticVersion : IComparable<SemanticVersion>
+public sealed class SemanticVersion : IComparable<SemanticVersion>, IEquatable<SemanticVersion>
 {
     private static readonly Regex Pattern = new(
         @"^(?<major>0|[1-9]\d*)\.(?<minor>0|[1-9]\d*)\.(?<patch>0|[1-9]\d*)(?:-(?<pre>(?:0|[1-9]\d*|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+(?<build>[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$",
@@ -71,6 +71,33 @@ public sealed class SemanticVersion : IComparable<SemanticVersion>
         }
         return _preRelease.Length.CompareTo(other._preRelease.Length);
     }
+
+    public bool Equals(SemanticVersion? other) => other is not null && CompareTo(other) == 0;
+
+    public override bool Equals(object? obj) => obj is SemanticVersion other && Equals(other);
+
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+        hash.Add(Major);
+        hash.Add(Minor);
+        hash.Add(Patch);
+        foreach (var identifier in _preRelease)
+            hash.Add(identifier, StringComparer.Ordinal);
+        return hash.ToHashCode();
+    }
+
+    public static bool operator ==(SemanticVersion? left, SemanticVersion? right) => Equals(left, right);
+
+    public static bool operator !=(SemanticVersion? left, SemanticVersion? right) => !Equals(left, right);
+
+    public static bool operator <(SemanticVersion left, SemanticVersion right) => left.CompareTo(right) < 0;
+
+    public static bool operator <=(SemanticVersion left, SemanticVersion right) => left.CompareTo(right) <= 0;
+
+    public static bool operator >(SemanticVersion left, SemanticVersion right) => left.CompareTo(right) > 0;
+
+    public static bool operator >=(SemanticVersion left, SemanticVersion right) => left.CompareTo(right) >= 0;
 
     private static int CompareIdentifier(string left, string right)
     {

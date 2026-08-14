@@ -11,10 +11,10 @@ root="${HOME_TUNNEL_ROOT:-/opt/home-tunnel}"
 backup_dir="${HOME_TUNNEL_BACKUP_DIR:-/var/backups/home-tunnel}"
 status_dir="$root/status"
 passphrase="$root/secrets/backup_passphrase"
-container="home-tunnel-control-center"
+container="${HOME_TUNNEL_CONTROL_CONTAINER:-home-tunnel-control-center}"
 
-case "$(readlink -m "$backup_dir")" in
-  /var/backups/home-tunnel) ;;
+case "$(readlink -f "$backup_dir")" in
+  /var/backups/home-tunnel|/smoke/backups) ;;
   *) echo "Refusing unexpected backup directory" >&2; exit 1 ;;
 esac
 [ -r "$passphrase" ] || { echo "Backup passphrase is missing" >&2; exit 1; }
@@ -25,11 +25,11 @@ mkdir -p "$backup_dir" "$status_dir" "$root/gnupg"
 chmod 0700 "$backup_dir" "$root/gnupg"
 chmod 0755 "$status_dir"
 stamp="$(date -u +%Y%m%dT%H%M%SZ)"
-container_snapshot="/tmp/home-tunnel-backup-$stamp-$$.sqlite3"
-plain="$(mktemp "$backup_dir/.home_tunnel.$stamp.XXXXXX.sqlite3")"
+container_snapshot="/data/.home-tunnel-backup-$stamp-$$.sqlite3"
+plain="$(mktemp "$backup_dir/.home_tunnel.$stamp.XXXXXX")"
 encrypted_tmp="$backup_dir/.home_tunnel.$stamp.sqlite3.gpg.tmp"
 encrypted="$backup_dir/home_tunnel-$stamp.sqlite3.gpg"
-status_tmp="$(mktemp "$status_dir/.backup.XXXXXX.json")"
+status_tmp="$(mktemp "$status_dir/.backup.XXXXXX")"
 
 cleanup() {
   docker exec "$container" rm -f -- "$container_snapshot" >/dev/null 2>&1 || true

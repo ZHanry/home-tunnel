@@ -60,7 +60,8 @@ function isDocumentationPlaceholder(host: string): boolean {
 function publicFrpsHost(): string {
   const value = process.env.PUBLIC_FRPS_HOST?.trim();
   if (!value) {
-    if (nodeEnvironment === "production") throw new Error("PUBLIC_FRPS_HOST is required in production");
+    if (nodeEnvironment === "production")
+      throw new Error("PUBLIC_FRPS_HOST is required in production");
     return "203.0.113.10";
   }
   if (value.length > 253 || /[\s/\\]/.test(value)) throw new Error("PUBLIC_FRPS_HOST is invalid");
@@ -73,7 +74,8 @@ function publicFrpsHost(): string {
 function publicBaseUrl(): string {
   const value = process.env.PUBLIC_BASE_URL?.trim();
   if (!value) {
-    if (nodeEnvironment === "production") throw new Error("PUBLIC_BASE_URL is required in production");
+    if (nodeEnvironment === "production")
+      throw new Error("PUBLIC_BASE_URL is required in production");
     return "https://console.tunnel.example.com";
   }
   let hostname: string;
@@ -107,7 +109,8 @@ function frpsTlsCertificatePem(): string | null {
 function tunnelDomain(): string {
   const value = process.env.TUNNEL_DOMAIN?.trim().toLowerCase();
   if (!value) {
-    if (nodeEnvironment === "production") throw new Error("TUNNEL_DOMAIN is required in production");
+    if (nodeEnvironment === "production")
+      throw new Error("TUNNEL_DOMAIN is required in production");
     return "tunnel.example.com";
   }
   if (nodeEnvironment === "production" && isDocumentationPlaceholder(value)) {
@@ -140,7 +143,9 @@ function alertTelegram(): { botToken: string; chatId: string } | null {
   const chatId = process.env.ALERT_TELEGRAM_CHAT_ID?.trim() ?? "";
   if (!botToken && !chatId) return null;
   if (!botToken || !chatId) {
-    throw new Error("ALERT_TELEGRAM_BOT_TOKEN(_FILE) and ALERT_TELEGRAM_CHAT_ID must be configured together");
+    throw new Error(
+      "ALERT_TELEGRAM_BOT_TOKEN(_FILE) and ALERT_TELEGRAM_CHAT_ID must be configured together",
+    );
   }
   return { botToken, chatId };
 }
@@ -190,9 +195,13 @@ export const config = {
   passwordHashConcurrency: Math.min(integer("PASSWORD_HASH_CONCURRENCY", 1), 4),
   passwordHashQueueMax: Math.min(integer("PASSWORD_HASH_QUEUE_MAX", 32), 256),
   onlineLeaseSeconds: Math.min(integer("ONLINE_LEASE_SECONDS", 24 * 60 * 60), 24 * 60 * 60),
-  offlineLeaseMaxSeconds: Math.min(integer("OFFLINE_LEASE_MAX_SECONDS", 24 * 60 * 60), 24 * 60 * 60),
+  offlineLeaseMaxSeconds: Math.min(
+    integer("OFFLINE_LEASE_MAX_SECONDS", 24 * 60 * 60),
+    24 * 60 * 60,
+  ),
   policySnapshotSeconds: Math.min(integer("POLICY_SNAPSHOT_SECONDS", 24 * 60 * 60), 24 * 60 * 60),
-  gatewayHealthUrl: process.env.GATEWAY_HEALTH_URL ?? "http://home-tunnel-traffic-gateway:8080/healthz",
+  gatewayHealthUrl:
+    process.env.GATEWAY_HEALTH_URL ?? "http://home-tunnel-traffic-gateway:8080/healthz",
   frpsHost: process.env.FRPS_HOST ?? "home-tunnel-frps",
   frpsPort: integer("FRPS_PORT", 7000),
   tcpTunnels: {

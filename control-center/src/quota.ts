@@ -213,12 +213,15 @@ async function warnUser(usage: MonthToDateUsage, dispatch: AlertDispatch): Promi
 
 export type QuotaEnforcementStats = { suspended: number; restored: number; warned: number };
 
-export async function runQuotaEnforcement(dispatch: AlertDispatch = sendAlert): Promise<QuotaEnforcementStats> {
+export async function runQuotaEnforcement(
+  dispatch: AlertDispatch = sendAlert,
+): Promise<QuotaEnforcementStats> {
   const stats: QuotaEnforcementStats = { suspended: 0, restored: 0, warned: 0 };
   for (const usage of await monthToDateUsage()) {
     if (usage.suspendedAt) {
       // 进入新的自然月（当月用量归零）、上调配额或降低用量后自动恢复。
-      if (usage.usedBytes < usage.quotaBytes && (await restoreUser(usage, dispatch))) stats.restored += 1;
+      if (usage.usedBytes < usage.quotaBytes && (await restoreUser(usage, dispatch)))
+        stats.restored += 1;
       continue;
     }
     if (usage.usedBytes >= usage.quotaBytes) {
@@ -233,7 +236,11 @@ export async function runQuotaEnforcement(dispatch: AlertDispatch = sendAlert): 
   }
   // 配额被取消（monthly_quota_bytes 置 NULL 或策略行不存在）但仍处于挂起
   // 状态的用户：同样恢复，保持"无配额 = 不受限"的语义。
-  const orphaned = await query<{ user_id: string; username: string; user_version: string | number }>(
+  const orphaned = await query<{
+    user_id: string;
+    username: string;
+    user_version: string | number;
+  }>(
     `SELECT u.id AS user_id,u.username,u.version AS user_version
        FROM users u LEFT JOIN traffic_policies tp ON tp.scope_type='user' AND tp.scope_id=u.id
       WHERE u.quota_suspended_at IS NOT NULL AND tp.monthly_quota_bytes IS NULL`,
@@ -258,9 +265,16 @@ export type OfflineCheckStats = { offline: number; recovered: number };
 
 // 设备离线/恢复告警：只针对曾经在线（last_seen_at 非空）的 active 设备；
 // offline_alerted_at 为持久去重列，重启后不会重复告警。
-export async function runDeviceOfflineCheck(dispatch: AlertDispatch = sendAlert): Promise<OfflineCheckStats> {
+export async function runDeviceOfflineCheck(
+  dispatch: AlertDispatch = sendAlert,
+): Promise<OfflineCheckStats> {
   const stats: OfflineCheckStats = { offline: 0, recovered: 0 };
-  const wentOffline = await query<{ id: string; name: string; username: string; last_seen_at: Date }>(
+  const wentOffline = await query<{
+    id: string;
+    name: string;
+    username: string;
+    last_seen_at: Date;
+  }>(
     `SELECT d.id,d.name,u.username,d.last_seen_at
        FROM devices d JOIN users u ON u.id=d.user_id
       WHERE d.status='active' AND d.offline_alerted_at IS NULL AND d.last_seen_at IS NOT NULL
@@ -283,7 +297,11 @@ export async function runDeviceOfflineCheck(dispatch: AlertDispatch = sendAlert)
       title: `设备 ${device.name} 已离线`,
       message: `用户 ${device.username} 的设备超过 ${offlineThresholdSeconds} 秒未上报，最后在线 ${device.last_seen_at.toISOString()}。`,
       subject_id: device.id,
-      details: { device_id: device.id, username: device.username, last_seen_at: device.last_seen_at.toISOString() },
+      details: {
+        device_id: device.id,
+        username: device.username,
+        last_seen_at: device.last_seen_at.toISOString(),
+      },
     });
   }
   const cameBack = await query<{ id: string; name: string; username: string; last_seen_at: Date }>(
@@ -309,20 +327,26 @@ export async function runDeviceOfflineCheck(dispatch: AlertDispatch = sendAlert)
       title: `设备 ${device.name} 已恢复在线`,
       message: `用户 ${device.username} 的设备重新上报，最后在线 ${device.last_seen_at.toISOString()}。`,
       subject_id: device.id,
-      details: { device_id: device.id, username: device.username, last_seen_at: device.last_seen_at.toISOString() },
+      details: {
+        device_id: device.id,
+        username: device.username,
+        last_seen_at: device.last_seen_at.toISOString(),
+      },
     });
   }
   return stats;
 }
 
 function logCheckFailure(error: unknown): void {
-  console.error(JSON.stringify({
-    timestamp: new Date().toISOString(),
-    level: "error",
-    component: "control-center",
-    event_code: "QUOTA_ALERT_CHECK_FAILED",
-    message: error instanceof Error ? error.message : "Unknown quota check error",
-  }));
+  console.error(
+    JSON.stringify({
+      timestamp: new Date().toISOString(),
+      level: "error",
+      component: "control-center",
+      event_code: "QUOTA_ALERT_CHECK_FAILED",
+      message: error instanceof Error ? error.message : "Unknown quota check error",
+    }),
+  );
 }
 
 // 管理端改配额后立即触发一次检查（不阻塞响应；失败只记日志，下一个
@@ -339,19 +363,25 @@ export function startQuotaAndAlertChecks(): { close: () => void } {
       const quotaStats = await runQuotaEnforcement();
       const offlineStats = await runDeviceOfflineCheck();
       const activity =
-        quotaStats.suspended + quotaStats.restored + quotaStats.warned + offlineStats.offline + offlineStats.recovered;
+        quotaStats.suspended +
+        quotaStats.restored +
+        quotaStats.warned +
+        offlineStats.offline +
+        offlineStats.recovered;
       if (!activity) return;
-      console.log(JSON.stringify({
-        timestamp: new Date().toISOString(),
-        level: "info",
-        component: "control-center",
-        event_code: "QUOTA_ALERT_CHECK_COMPLETED",
-        quota_suspended: quotaStats.suspended,
-        quota_restored: quotaStats.restored,
-        quota_warned: quotaStats.warned,
-        devices_offline: offlineStats.offline,
-        devices_recovered: offlineStats.recovered,
-      }));
+      console.log(
+        JSON.stringify({
+          timestamp: new Date().toISOString(),
+          level: "info",
+          component: "control-center",
+          event_code: "QUOTA_ALERT_CHECK_COMPLETED",
+          quota_suspended: quotaStats.suspended,
+          quota_restored: quotaStats.restored,
+          quota_warned: quotaStats.warned,
+          devices_offline: offlineStats.offline,
+          devices_recovered: offlineStats.recovered,
+        }),
+      );
     })().catch(logCheckFailure);
   };
   const initialTimer = setTimeout(execute, initialDelayMs);

@@ -13,7 +13,7 @@ try {
   console.log("SQLITE_INTEGRATION=passed");
   process.exitCode = 0;
 } catch (error) {
-  console.error(error instanceof Error ? error.stack ?? error.message : String(error));
+  console.error(error instanceof Error ? (error.stack ?? error.message) : String(error));
   process.exitCode = 1;
 } finally {
   await rm(directory, { recursive: true, force: true });

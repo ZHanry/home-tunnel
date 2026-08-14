@@ -16,7 +16,9 @@ const consoleDomain = new URL(config.publicBaseUrl).hostname.toLowerCase();
 router.get(
   "/tls/allow",
   asyncHandler(async (request, response) => {
-    const domain = String(request.query.domain ?? "").trim().toLowerCase();
+    const domain = String(request.query.domain ?? "")
+      .trim()
+      .toLowerCase();
     if (domain === consoleDomain) {
       response.status(204).end();
       return;
@@ -64,7 +66,8 @@ router.get(
     response.write("retry: 3000\nevent: ready\ndata: {}\n\n");
 
     const notify = () => {
-      if (!response.destroyed) response.write(`event: policy\ndata: {"at":"${new Date().toISOString()}"}\n\n`);
+      if (!response.destroyed)
+        response.write(`event: policy\ndata: {"at":"${new Date().toISOString()}"}\n\n`);
     };
     const keepalive = setInterval(() => {
       if (!response.destroyed) response.write(`: keepalive ${Date.now()}\n\n`);
@@ -82,14 +85,18 @@ router.get(
   "/policies/sync",
   asyncHandler(async (request, response) => {
     requireInternalKey(request.header("x-home-tunnel-key"));
-    const revision = await one<{ revision: string }>("SELECT COALESCE(max(id),0) AS revision FROM outbox_events");
+    const revision = await one<{ revision: string }>(
+      "SELECT COALESCE(max(id),0) AS revision FROM outbox_events",
+    );
     const revisionNumber = Number(revision?.revision ?? 0);
     const etag = `"${revisionNumber}"`;
     const expiresAt = new Date(Date.now() + config.policySnapshotSeconds * 1000);
     response.setHeader("cache-control", "no-store");
     response.setHeader("etag", etag);
     response.setHeader("x-policy-snapshot-expires-at", expiresAt.toISOString());
-    const knownRevisions = (request.header("if-none-match") ?? "").split(",").map((value) => value.trim());
+    const knownRevisions = (request.header("if-none-match") ?? "")
+      .split(",")
+      .map((value) => value.trim());
     if (knownRevisions.includes(etag)) {
       response.status(304).end();
       return;
@@ -148,7 +155,9 @@ router.get(
         custom_domains: (() => {
           try {
             const value = JSON.parse(row.custom_domains) as unknown;
-            return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+            return Array.isArray(value)
+              ? value.filter((item): item is string => typeof item === "string")
+              : [];
           } catch {
             return [];
           }
@@ -229,17 +238,23 @@ router.post(
           subject.device_id !== sample.device_id ||
           timestamp < earliest ||
           timestamp > latest
-        ) continue;
+        )
+          continue;
         acceptedCount += 1;
         const key = `${sample.connection_id}:${sample.bucket_start}:${sample.bucket_seconds}`;
         const previous = deduplicated.get(key);
-        deduplicated.set(key, previous ? {
-          ...sample,
-          upload_bytes: Math.max(previous.upload_bytes, sample.upload_bytes),
-          download_bytes: Math.max(previous.download_bytes, sample.download_bytes),
-          request_count: Math.max(previous.request_count, sample.request_count),
-          error_count: Math.max(previous.error_count, sample.error_count),
-        } : sample);
+        deduplicated.set(
+          key,
+          previous
+            ? {
+                ...sample,
+                upload_bytes: Math.max(previous.upload_bytes, sample.upload_bytes),
+                download_bytes: Math.max(previous.download_bytes, sample.download_bytes),
+                request_count: Math.max(previous.request_count, sample.request_count),
+                error_count: Math.max(previous.error_count, sample.error_count),
+              }
+            : sample,
+        );
       }
       for (const sample of deduplicated.values()) {
         await client.query(
@@ -444,25 +459,31 @@ router.post(
       );
       const requestedSubdomain = text(content.subdomain).toLowerCase();
       const customDomains = Array.isArray(content.custom_domains ?? content.customDomains)
-        ? (content.custom_domains ?? content.customDomains) as unknown[]
+        ? ((content.custom_domains ?? content.customDomains) as unknown[])
         : [];
       let allowedDomains: string[] = [];
       try {
         const parsedDomains = JSON.parse(connection?.custom_domains ?? "[]") as unknown;
         allowedDomains = Array.isArray(parsedDomains)
-          ? parsedDomains.filter((item): item is string => typeof item === "string").map((item) => item.toLowerCase())
+          ? parsedDomains
+              .filter((item): item is string => typeof item === "string")
+              .map((item) => item.toLowerCase())
           : [];
       } catch {
         allowedDomains = [];
       }
       const requestedDomains = customDomains.map((item) => text(item).toLowerCase());
       const managedDomain = `${connection?.subdomain}.${config.tunnelDomain}`.toLowerCase();
-      const customDomainAllowed = requestedDomains.length === allowedDomains.length + 1 &&
+      const customDomainAllowed =
+        requestedDomains.length === allowedDomains.length + 1 &&
         requestedDomains.includes(managedDomain) &&
-        requestedDomains.every((domain) => domain === managedDomain || allowedDomains.includes(domain)) &&
+        requestedDomains.every(
+          (domain) => domain === managedDomain || allowedDomains.includes(domain),
+        ) &&
         new Set(requestedDomains).size === requestedDomains.length;
       const remotePort = Number(content.remote_port ?? content.remotePort ?? 0);
-      const tcpAllowed = proxyType === "tcp" &&
+      const tcpAllowed =
+        proxyType === "tcp" &&
         config.tcpTunnels.enabled &&
         connection?.proxy_type === "tcp" &&
         Number.isInteger(remotePort) &&
@@ -471,7 +492,8 @@ router.post(
         remotePort === Number(connection.tcp_remote_port) &&
         customDomains.length === 0 &&
         requestedSubdomain === "";
-      const httpAllowed = proxyType === "http" && connection?.proxy_type === "http" && customDomainAllowed;
+      const httpAllowed =
+        proxyType === "http" && connection?.proxy_type === "http" && customDomainAllowed;
       if (
         !connection ||
         connection.user_id !== activeSubject.lease.user_id ||
@@ -483,7 +505,12 @@ router.post(
         (requestedSubdomain && requestedSubdomain !== connection.subdomain) ||
         !(httpAllowed || tcpAllowed)
       ) {
-        pluginReject(response, connection && Number(connection.version) !== parsed.version ? "VERSION_STALE" : "PROXY_NOT_ALLOWED");
+        pluginReject(
+          response,
+          connection && Number(connection.version) !== parsed.version
+            ? "VERSION_STALE"
+            : "PROXY_NOT_ALLOWED",
+        );
         return;
       }
       await query(
@@ -502,14 +529,20 @@ router.post(
         pluginReject(response, "LEASE_EXPIRED");
         return;
       }
-      await query("UPDATE devices SET last_seen_at=home_tunnel_now(),updated_at=home_tunnel_now() WHERE id=?", [user.deviceId]);
+      await query(
+        "UPDATE devices SET last_seen_at=home_tunnel_now(),updated_at=home_tunnel_now() WHERE id=?",
+        [user.deviceId],
+      );
       pluginAccept(response);
       return;
     }
 
     if (op === "CloseProxy") {
       const user = pluginUser(content);
-      const parsed = parseManagedProxyName(text(content.proxy_name ?? content.proxyName), user.deviceId);
+      const parsed = parseManagedProxyName(
+        text(content.proxy_name ?? content.proxyName),
+        user.deviceId,
+      );
       if (!parsed || !user.deviceId) {
         pluginReject(response, "SUBJECT_MISMATCH");
         return;

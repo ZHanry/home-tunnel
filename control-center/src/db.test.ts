@@ -81,9 +81,33 @@ test("sequential and concurrent independent calls are not treated as re-entrant"
   const afterTransaction = await db.one<{ one: number }>("SELECT 1 AS one");
   assert.equal(afterTransaction?.one, 1);
   const [transactional, direct] = await Promise.all([
-    db.transaction(async (client) => (await client.query<{ one: number }>("SELECT 1 AS one")).rows[0]?.one),
+    db.transaction(
+      async (client) => (await client.query<{ one: number }>("SELECT 1 AS one")).rows[0]?.one,
+    ),
     db.query<{ one: number }>("SELECT 1 AS one"),
   ]);
   assert.equal(transactional, 1);
   assert.equal(direct[0]?.one, 1);
+});
+
+test("outbox notifications leave the writer transaction context", async () => {
+  const notification = new Promise<void>((resolve, reject) => {
+    db.databaseEvents.once("outbox", () => {
+      void db
+        .one<{ one: number }>("SELECT 1 AS one")
+        .then(
+          (row) =>
+            row?.one === 1 ? resolve() : reject(new Error("unexpected outbox query result")),
+          reject,
+        );
+    });
+  });
+  await db.transaction(async (client) => {
+    await client.query(
+      `INSERT INTO outbox_events(event_type,resource_type,resource_id,resource_version,payload)
+       VALUES(?,?,?,?,?)`,
+      ["test.context", "test", "context", 1, {}],
+    );
+  });
+  await notification;
 });

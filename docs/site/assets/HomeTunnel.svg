@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img">
+  <title>Home Tunnel portal link mark</title>
+  <rect x="8" y="8" width="240" height="240" rx="56" fill="#0F52BA"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M100 64H82C67 64 58 76 58 98v60c0 22 9 34 24 34h18
+             M156 64h18c15 0 24 12 24 34v60c0 22-9 34-24 34h-18"
+          stroke="#FFFFFF" stroke-width="15"/>
+    <path d="M86 108h83m-13-12 13 12-13 12
+             M170 148H87m13-12-13 12 13 12"
+          stroke="#72E3CF" stroke-width="11"/>
+  </g>
+</svg>

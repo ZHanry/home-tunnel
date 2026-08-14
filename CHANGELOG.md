@@ -4,6 +4,40 @@ All notable changes to Home Tunnel are documented in this file. The project foll
 
 ## [Unreleased]
 
+The source tree is versioned `2.5.0` for the `v2.5.0-rc.1` validation cycle. The
+independent `v2.4.1` security maintenance patch must be reviewed and published
+first; none of the entries below are part of that patch release.
+
+### Added
+
+- Added bilingual README and static GitHub Pages, real desktop/mobile build screenshots, an architecture graphic, social preview metadata, privacy notice, and optional cookie-free GoatCounter event measurement.
+- Added native browser ES modules, standard xUnit discovery, cross-component REST/WebSocket/configuration contract fixtures, and additive database upgrade/backup/rollback coverage.
+- Added release-candidate and stable artifact workflows for Linux/macOS packages and multi-architecture images with checksums, SPDX SBOMs, GitHub attestations, and keyless Sigstore bundles.
+
+### Changed
+
+- Raised the Linux client and release toolchain to Go 1.26.6 for the latest
+  standard-library security fixes, and initialized CodeQL after installing the
+  pinned Go toolchain so manual Go builds are traced correctly.
+- Added coarse IP rate limits around login and custom-domain DNS verification,
+  in addition to the existing subject-aware login limiter.
+- Split the control-center administration routes by users, devices, connections, health, and audit, and split the traffic gateway into policy, access-control, rate-limit, sampling, proxy, and lifecycle modules without changing the v1 protocol surface.
+- Moved Windows update, session, realtime, and Agent coordination out of the main window into focused services while retaining Windows as source-only/Experimental.
+- Raised the development baselines to Node.js 24 LTS, Go 1.26, and .NET 10 LTS; added ESLint, Prettier, Markdown/link, gofmt/vet/staticcheck, analyzer, audit, coverage, and Lighthouse gates.
+
+## [2.4.1] - 2026-08-13
+
+### Security
+
+- Updated `ws` from 8.18.3 to 8.21.3 to address GHSA-96hv-2xvq-fx4p and GHSA-58qx-3vcg-4xpx.
+- Bounded complete WebSocket messages, fragments and buffered chunks, with authenticated fragmentation, overload disconnect and recovery regression tests.
+
+### Changed
+
+- Corrected the supported-version policy and removed unsupported Windows binary download calls to action. Windows x64 remains source-only/Experimental until trusted signing and VM verification are available.
+- Pinned GitHub Actions to immutable commits, added a stable CI quality gate, CodeQL, production dependency auditing and Go Dependabot coverage.
+- Added a privacy-safe deployment feedback Issue Form; repository labels must be configured by an owner before adding automatic labels.
+
 ## [2.4.0] - 2026-08-13
 
 ### Security

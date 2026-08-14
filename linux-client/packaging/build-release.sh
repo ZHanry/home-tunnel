@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-version=${VERSION:-2.4.0}
+version=${VERSION:-2.5.0}
+[[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]] || { echo "VERSION must be X.Y.Z or X.Y.Z-rc.N" >&2; exit 2; }
 architecture=${ARCH:-$(go env GOARCH)}
 case "$architecture" in
   amd64|arm64) ;;
@@ -19,10 +20,12 @@ script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 client_dir=$(cd -- "$script_dir/.." && pwd)
 workspace_dir=$(cd -- "$client_dir/.." && pwd)
 source_version=$(sed -n 's/^const Version = "\([^"]*\)"$/\1/p' "$client_dir/internal/model/model.go")
-[[ "$source_version" == "$version" ]] || { echo "Linux client source version $source_version does not match release version $version" >&2; exit 1; }
+[[ "${version%%-rc.*}" == "$source_version" ]] || { echo "Linux client source version $source_version does not match release version $version" >&2; exit 1; }
 downloads_dir="$workspace_dir/.downloads"
 output_dir="$workspace_dir/outputs/linux"
 frp_version=0.62.1
+agent_version=$(sed -n 's/^\$agentVersion = "\([^"]*\)"$/\1/p' "$workspace_dir/windows-client/build-agent.ps1")
+[[ "$agent_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "unable to read the independent Agent version" >&2; exit 1; }
 frp_commit=b41d8f8e4074c4f633fb67d7d31b97db59472674
 frp_archive="$downloads_dir/frp-$frp_commit.zip"
 frp_archive_sha256=57f101128055899614535e608dd8aae46c3b779a9095c6050556da91fede0bda
@@ -70,7 +73,7 @@ agent_output="$package_dir/lib/home-tunnel-agent"
   cd "$frp_source"
   CGO_ENABLED=0 GOOS=linux GOARCH="$architecture" GOFLAGS=-buildvcs=false \
     go build -trimpath \
-    -ldflags "-s -w -buildid= -X main.agentVersion=$version -X main.frpVersion=$frp_version -X main.frpCommit=$frp_commit" \
+    -ldflags "-s -w -buildid= -X main.agentVersion=$agent_version -X main.frpVersion=$frp_version -X main.frpCommit=$frp_commit" \
     -o "$agent_output" "./cmd/$(basename "$temporary_command")"
 )
 agent_hash=$(sha256sum "$agent_output" | awk '{print $1}')
@@ -78,7 +81,7 @@ agent_hash=$(sha256sum "$agent_output" | awk '{print $1}')
   cd "$client_dir"
   CGO_ENABLED=0 GOOS=linux GOARCH="$architecture" GOFLAGS=-buildvcs=false \
     go build -trimpath \
-    -ldflags "-s -w -buildid= -X main.version=$version -X main.agentVersion=$version -X main.expectedAgentSHA256=$agent_hash" \
+    -ldflags "-s -w -buildid= -X main.version=$version -X main.agentVersion=$agent_version -X main.expectedAgentSHA256=$agent_hash" \
     -o "$package_dir/bin/home-tunnel-client" ./cmd/home-tunnel-client
 )
 cp "$script_dir/home-tunnel-client.service" "$package_dir/lib/systemd/system/"
@@ -90,8 +93,8 @@ chmod 0755 "$package_dir/bin/home-tunnel-client" "$package_dir/lib/home-tunnel-a
 if [[ "$architecture" == "$(go env GOARCH)" ]]; then
   client_version_output=$("$package_dir/bin/home-tunnel-client" version)
   agent_version_output=$("$package_dir/lib/home-tunnel-agent" version)
-  [[ "$client_version_output" == "Home Tunnel Linux Client $version (Agent $version)" ]] || { echo "client version self-check failed: $client_version_output" >&2; exit 1; }
-  [[ "$agent_version_output" == "Home Tunnel Agent $version (FRP $frp_version, $frp_commit)" ]] || { echo "Agent version self-check failed: $agent_version_output" >&2; exit 1; }
+  [[ "$client_version_output" == "Home Tunnel Linux Client $version (Agent $agent_version)" ]] || { echo "client version self-check failed: $client_version_output" >&2; exit 1; }
+  [[ "$agent_version_output" == "Home Tunnel Agent $agent_version (FRP $frp_version, $frp_commit)" ]] || { echo "Agent version self-check failed: $agent_version_output" >&2; exit 1; }
 fi
 tar -C "$stage" -czf "$archive" "$(basename "$package_dir")"
 archive_hash=$(sha256sum "$archive" | awk '{print $1}')

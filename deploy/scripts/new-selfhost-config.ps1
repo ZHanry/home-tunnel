@@ -110,7 +110,7 @@ if ($PSCmdlet.ShouldProcess($workspaceRoot, "create local self-host configuratio
     }
 
     $environment = @"
-HOME_TUNNEL_VERSION=2.4.0
+HOME_TUNNEL_VERSION=2.5.0-rc.1
 HOME_TUNNEL_CONSOLE_HOST=$ConsoleHost
 HOME_TUNNEL_TUNNEL_DOMAIN=$TunnelDomain
 HOME_TUNNEL_PUBLIC_BASE_URL=https://$ConsoleHost

@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "reserved_subdomains": [
+    "console",
+    "admin",
+    "api",
+    "auth",
+    "caddy",
+    "frp",
+    "frps",
+    "gateway",
+    "status",
+    "tunnel",
+    "www"
+  ],
+  "rest": {
+    "client_sync": {
+      "path": "/api/v1/client/sync",
+      "request_fields": [
+        "device_id",
+        "last_config_version",
+        "supports_optional_lease",
+        "lease_expires_at"
+      ],
+      "response_fields": [
+        "device_id",
+        "full_sync",
+        "from_config_version",
+        "target_config_version",
+        "connections",
+        "content_hash",
+        "lease",
+        "server_time"
+      ],
+      "connection_fields": [
+        "id",
+        "user_id",
+        "device_id",
+        "name",
+        "subdomain",
+        "public_url",
+        "public_endpoint",
+        "custom_domains",
+        "local_scheme",
+        "local_host",
+        "local_port",
+        "proxy_type",
+        "tcp_remote_port",
+        "enabled",
+        "version",
+        "state",
+        "applied_version",
+        "last_error_code",
+        "bandwidth_limit_bps",
+        "policy_version",
+        "access_ip_allowlist",
+        "access_basic_auth_enabled",
+        "access_policy_version",
+        "username",
+        "device_name",
+        "created_at",
+        "updated_at",
+        "proxy_name"
+      ]
+    }
+  },
+  "websocket": {
+    "path": "/api/v1/ws",
+    "events": [
+      "realtime.connected",
+      "config.version.changed",
+      "connection.command",
+      "subject.revoked"
+    ],
+    "envelope_fields": [
+      "event",
+      "resource_type",
+      "resource_id",
+      "resource_version",
+      "payload",
+      "at"
+    ]
+  },
+  "frpc_render": {
+    "must_contain": [
+      "serverAddr = \"frps.example.com\"",
+      "metadatas.home_tunnel_lease = \"signed-lease\"",
+      "customDomains = [\"http-app.tunnel.example.com\", \"home.example.net\"]",
+      "localIP = \"127.0.0.1\"",
+      "type = \"http2https\"",
+      "localAddr = \"nas.lan:8443\"",
+      "type = \"tcp\"",
+      "remotePort = 10001",
+      "localPort = 22"
+    ],
+    "must_not_contain": [
+      "disabled.tunnel.example.com"
+    ]
+  }
+}

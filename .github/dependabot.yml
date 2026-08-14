@@ -7,6 +7,9 @@ updates:
     groups:
       control-center-dependencies:
         patterns: ["*"]
+      control-center-security:
+        applies-to: security-updates
+        patterns: ["*"]
   - package-ecosystem: npm
     directory: /traffic-gateway
     schedule:
@@ -14,23 +17,64 @@ updates:
     groups:
       gateway-dependencies:
         patterns: ["*"]
+      gateway-security:
+        applies-to: security-updates
+        patterns: ["*"]
   - package-ecosystem: nuget
     directory: /windows-client
     schedule:
       interval: weekly
+    groups:
+      windows-client-security:
+        applies-to: security-updates
+        patterns: ["*"]
+  - package-ecosystem: nuget
+    directory: /windows-client-tests
+    schedule:
+      interval: weekly
+    groups:
+      windows-tests-security:
+        applies-to: security-updates
+        patterns: ["*"]
+  - package-ecosystem: gomod
+    directory: /linux-client
+    schedule:
+      interval: weekly
+    groups:
+      linux-client-dependencies:
+        patterns: ["*"]
+      linux-client-security:
+        applies-to: security-updates
+        patterns: ["*"]
   - package-ecosystem: docker
     directory: /control-center
     schedule:
       interval: weekly
+    groups:
+      control-center-image-security:
+        applies-to: security-updates
+        patterns: ["*"]
   - package-ecosystem: docker
     directory: /traffic-gateway
     schedule:
       interval: weekly
+    groups:
+      gateway-image-security:
+        applies-to: security-updates
+        patterns: ["*"]
   - package-ecosystem: docker
     directory: /deploy/frps
     schedule:
       interval: weekly
+    groups:
+      frps-image-security:
+        applies-to: security-updates
+        patterns: ["*"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    groups:
+      actions-security:
+        applies-to: security-updates
+        patterns: ["*"]

@@ -20,6 +20,7 @@
 *.toml text eol=lf
 *.sql text eol=lf
 *.md text eol=lf
+*.patch text eol=lf -whitespace
 
 *.png binary
 *.jpg binary

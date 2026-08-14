@@ -22,7 +22,10 @@ test("Argon2id password hashes are salted and verifiable", async () => {
   assert.notEqual(first, second);
   assert.equal(await security.verifyPassword(first, password), true);
   assert.equal(await security.verifyPassword(first, "incorrect password"), false);
-  assert.equal(await security.verifyPassword(first.replace("m=65536", "m=999999999"), password), false);
+  assert.equal(
+    await security.verifyPassword(first.replace("m=65536", "m=999999999"), password),
+    false,
+  );
 });
 
 test("Argon2 work is serialized and rejects queue overflow", async () => {
@@ -64,12 +67,17 @@ test("signed leases enforce integrity, subject, time, and hard lifetime", () => 
   assert.deepEqual(security.verifyLease(lease)?.device_id, base.device_id);
   assert.equal(security.verifyLease(`${lease.slice(0, -1)}x`), null);
   assert.equal(security.verifyLease(security.signLease({ ...base, sub: base.user_id })), null);
-  assert.equal(security.verifyLease(security.signLease({ ...base, iat: now - 20, exp: now - 1 })), null);
+  assert.equal(
+    security.verifyLease(security.signLease({ ...base, iat: now - 20, exp: now - 1 })),
+    null,
+  );
   assert.equal(security.verifyLease(security.signLease({ ...base, exp: now + 86401 })), null);
 
   const [, body] = lease.split(".");
   assert.ok(body);
-  const forgedHeader = Buffer.from(JSON.stringify({ alg: "none", typ: "JWT", kid: "v1" })).toString("base64url");
+  const forgedHeader = Buffer.from(JSON.stringify({ alg: "none", typ: "JWT", kid: "v1" })).toString(
+    "base64url",
+  );
   const forgedSignature = createHmac("sha256", process.env.LEASE_SIGNING_KEY!)
     .update(`${forgedHeader}.${body}`)
     .digest("base64url");
@@ -104,7 +112,10 @@ test("verifyBasicPassword rejects malformed or hostile stored hashes", () => {
   assert.equal(security.verifyBasicPassword("x", "plaintext"), false);
   assert.equal(security.verifyBasicPassword("x", "argon2$16384$8$1$a$b"), false);
   // 篡改后的哈希体
-  assert.equal(security.verifyBasicPassword("another gate pass 7", `${valid.slice(0, -2)}xx`), false);
+  assert.equal(
+    security.verifyBasicPassword("another gate pass 7", `${valid.slice(0, -2)}xx`),
+    false,
+  );
   // 非 2 的幂 / 超界的成本参数（防 CPU/内存放大）
   assert.equal(security.verifyBasicPassword("x", `scrypt$12345$8$1$${saltB64}$${hashB64}`), false);
   assert.equal(security.verifyBasicPassword("x", `scrypt$131072$8$1$${saltB64}$${hashB64}`), false);

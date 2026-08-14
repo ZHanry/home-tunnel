@@ -1,31 +1,41 @@
 {
   "name": "home-tunnel-control-center",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src scripts",
+    "format:check": "prettier --check \"src/**/*.ts\" \"scripts/**/*.mjs\" package.json tsconfig.json eslint.config.mjs",
     "preview": "node scripts/preview.mjs",
     "preview:ui": "node scripts/ui-preview.mjs",
     "start": "node dist/server.js",
-    "test": "node --test dist/security.test.js dist/db.test.js dist/backup.test.js dist/notifications.test.js dist/quota.test.js dist/public.test.js && node scripts/run-integration.mjs",
+    "test": "node --test dist/security.test.js dist/db.test.js dist/backup.test.js dist/notifications.test.js dist/quota.test.js dist/public.test.js dist/realtime.test.js dist/contracts.test.js dist/migrations.test.js && node scripts/run-integration.mjs",
     "test:public": "node --test dist/public.test.js",
-    "test:integration": "node scripts/run-integration.mjs"
+    "test:integration": "node scripts/run-integration.mjs",
+    "test:coverage": "c8 --all --include=dist/security.js --include=dist/db.js --include=dist/notifications.js --include=dist/realtime.js --check-coverage --lines=75 --branches=68 --functions=85 --reporter=text --reporter=lcov node --test dist/security.test.js dist/db.test.js dist/notifications.test.js dist/realtime.test.js dist/contracts.test.js dist/migrations.test.js",
+    "test:coverage:realtime": "c8 --all --include=dist/realtime.js --check-coverage --lines=80 --reporter=text node --test dist/realtime.test.js"
   },
   "dependencies": {
     "express": "5.1.0",
+    "express-rate-limit": "8.6.2",
     "hash-wasm": "4.12.0",
-    "ws": "8.18.3",
+    "ws": "8.21.3",
     "zod": "4.0.17"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/express": "5.0.3",
-    "@types/node": "22.17.1",
+    "@types/node": "24.10.1",
     "@types/ws": "8.18.1",
-    "typescript": "5.9.2"
+    "c8": "^12.0.0",
+    "eslint": "^10.8.1",
+    "prettier": "^3.9.6",
+    "typescript": "5.9.2",
+    "typescript-eslint": "^8.67.0"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=24.19.0 <25"
   }
 }

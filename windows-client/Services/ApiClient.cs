@@ -284,12 +284,12 @@ public sealed class ApiClient : IDisposable
         if (allowRefresh && _refreshToken is not null && _accessExpiresAt <= DateTimeOffset.UtcNow.AddMinutes(1))
             await RefreshAsync(cancellationToken);
 
-        var response = await SendOnceAsync(method, path, value, cancellationToken, expectedVersion);
+        var response = await SendOnceAsync(method, path, value, expectedVersion, cancellationToken);
         if (allowRefresh && response.StatusCode == HttpStatusCode.Unauthorized && _refreshToken is not null)
         {
             response.Dispose();
             await RefreshAsync(cancellationToken);
-            response = await SendOnceAsync(method, path, value, cancellationToken, expectedVersion);
+            response = await SendOnceAsync(method, path, value, expectedVersion, cancellationToken);
         }
         return response;
     }
@@ -298,8 +298,8 @@ public sealed class ApiClient : IDisposable
         HttpMethod method,
         string path,
         object? value,
-        CancellationToken cancellationToken,
-        long? expectedVersion)
+        long? expectedVersion,
+        CancellationToken cancellationToken)
     {
         using var request = new HttpRequestMessage(method, path);
         if (value is not null) request.Content = JsonContent.Create(value, options: _json);

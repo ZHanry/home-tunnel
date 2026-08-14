@@ -9,7 +9,7 @@ The service supports Linux `amd64`/`arm64` and macOS (darwin) `amd64`/`arm64`. I
 
 ## Build a package
 
-Install Go 1.23.12, `curl`, `tar`, `sha256sum` (the macOS script also accepts `shasum`), and either `unzip` or Python 3, then run:
+Install Go 1.26.6, `curl`, `tar`, `sha256sum` (the macOS script also accepts `shasum`), and either `unzip` or Python 3, then run:
 
 ```sh
 # Linux packages
@@ -28,8 +28,8 @@ Each script downloads the pinned FRP source archive, verifies its SHA-256, build
 On the target Linux machine:
 
 ```sh
-tar -xzf home-tunnel-linux-2.4.0-amd64.tar.gz
-cd home-tunnel-linux-2.4.0-amd64
+tar -xzf home-tunnel-linux-2.5.0-amd64.tar.gz
+cd home-tunnel-linux-2.5.0-amd64
 sudo ./install.sh
 sudo home-tunnel-enroll
 ```
@@ -43,8 +43,8 @@ The permanent device credential and cached configuration are stored in `/var/lib
 On the target Mac:
 
 ```sh
-tar -xzf home-tunnel-macos-2.4.0-arm64.tar.gz
-cd home-tunnel-macos-2.4.0-arm64
+tar -xzf home-tunnel-macos-2.5.0-arm64.tar.gz
+cd home-tunnel-macos-2.5.0-arm64
 sudo ./install.sh
 sudo home-tunnel-enroll
 ```

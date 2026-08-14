@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
 import { once } from "node:events";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { get } from "node:http";
@@ -7,7 +6,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
-function request(url: string, headers: Record<string, string> = {}): Promise<{
+function request(
+  url: string,
+  headers: Record<string, string> = {},
+): Promise<{
   status: number;
   headers: import("node:http").IncomingHttpHeaders;
   body: Buffer;
@@ -16,32 +18,20 @@ function request(url: string, headers: Record<string, string> = {}): Promise<{
     const outgoing = get(url, { headers: { connection: "close", ...headers } }, (response) => {
       const chunks: Buffer[] = [];
       response.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
-      response.on("end", () => resolvePromise({
-        status: response.statusCode ?? 0,
-        headers: response.headers,
-        body: Buffer.concat(chunks),
-      }));
+      response.on("end", () =>
+        resolvePromise({
+          status: response.statusCode ?? 0,
+          headers: response.headers,
+          body: Buffer.concat(chunks),
+        }),
+      );
     });
     outgoing.on("error", rejectPromise);
   });
 }
 
-test("public landing page and GitHub-hosted EXE redirects stay available without a session", async () => {
+test("public landing page stays available while Windows release metadata is absent", async () => {
   const downloads = await mkdtemp(join(tmpdir(), "home-tunnel-public-test-"));
-  const fileName = "HomeTunnel-Setup-2.4.0-x64.exe";
-  const executableHeader = Buffer.from("MZ", "ascii");
-  await writeFile(
-    join(downloads, "latest.json"),
-    JSON.stringify({
-      version: "2.4.0",
-      platform: "windows",
-      architecture: "x64",
-      file_name: fileName,
-      size_bytes: executableHeader.length,
-      sha256: createHash("sha256").update(executableHeader).digest("hex"),
-      released_at: "2026-08-09T00:00:00Z",
-    }),
-  );
 
   const frpsCertificatePem =
     "-----BEGIN CERTIFICATE-----\ntest-only-frps-certificate\n-----END CERTIFICATE-----\n";
@@ -58,7 +48,10 @@ test("public landing page and GitHub-hosted EXE redirects stay available without
   // config.ts 在模块加载时求值，必须在 import server.js 之前设置。
   process.env.FRPS_TLS_CERT_FILE = frpsCertificatePath;
 
-  const [{ createApplication }, { closeDatabase }] = await Promise.all([import("./server.js"), import("./db.js")]);
+  const [{ createApplication }, { closeDatabase }] = await Promise.all([
+    import("./server.js"),
+    import("./db.js"),
+  ]);
   const app = await createApplication(false);
   const server = app.listen(0, "127.0.0.1");
   await once(server, "listening");
@@ -72,10 +65,16 @@ test("public landing page and GitHub-hosted EXE redirects stay available without
     assert.equal(landing.headers["cache-control"], "no-cache");
     assert.match(landing.body.toString("utf8"), /Windows 图形客户端/);
     assert.match(landing.body.toString("utf8"), /Linux \/ macOS 无界面服务/);
+    assert.match(landing.body.toString("utf8"), /Windows 当前仅提供源码，暂无官方安装包/);
+    assert.doesNotMatch(
+      landing.body.toString("utf8"),
+      /id="hero-download"|class="[^"]*download-button/,
+    );
     assert.match(landing.body.toString("utf8"), /home-tunnel-client status/);
-    assert.match(landing.body.toString("utf8"), /app\.js\?v=2\.4\.0-ui5/);
-    assert.match(landing.body.toString("utf8"), /v2\.css\?v=2\.4\.0-ui5/);
-    assert.match(landing.body.toString("utf8"), /theme\.js\?v=2\.4\.0-locale/);
+    assert.match(landing.body.toString("utf8"), /app\.js\?v=2\.5\.0-modules1/);
+    assert.match(landing.body.toString("utf8"), /type="module"/);
+    assert.match(landing.body.toString("utf8"), /v2\.css\?v=2\.5\.0-ui5/);
+    assert.match(landing.body.toString("utf8"), /theme\.js\?v=2\.5\.0-locale/);
     assert.match(landing.body.toString("utf8"), /data-locale-toggle/);
     assert.doesNotMatch(landing.body.toString("utf8"), /实时同步正常|系统健康|受管请求路径/);
     assert.match(landing.body.toString("utf8"), /id="page-actions"/);
@@ -86,60 +85,82 @@ test("public landing page and GitHub-hosted EXE redirects stay available without
 
     const publicConfig = await request(origin + "/api/v1/public/config");
     assert.equal(publicConfig.status, 200);
-    const publicConfigValue = JSON.parse(publicConfig.body.toString("utf8")) as Record<string, unknown>;
+    const publicConfigValue = JSON.parse(publicConfig.body.toString("utf8")) as Record<
+      string,
+      unknown
+    >;
     assert.equal(publicConfigValue.tunnel_domain, "tunnel.example.com");
     assert.equal(publicConfigValue.public_base_url, "https://console.tunnel.example.com");
     assert.equal(publicConfigValue.frps_host, "203.0.113.10");
     assert.equal(publicConfigValue.frps_port, 7000);
     assert.equal(publicConfigValue.frps_tls_certificate_pem, frpsCertificatePem);
 
-    const stylesheet = await request(origin + "/v2.css?v=2.4.0-ui5");
+    const stylesheet = await request(origin + "/v2.css?v=2.5.0-ui5");
     assert.equal(stylesheet.status, 200);
     assert.equal(stylesheet.headers["cache-control"], "public, max-age=31536000, immutable");
 
-    const themeScript = await request(origin + "/theme.js?v=2.4.0-locale");
+    const themeScript = await request(origin + "/theme.js?v=2.5.0-locale");
     assert.equal(themeScript.status, 200);
     assert.match(themeScript.body.toString("utf8"), /ht_locale/);
 
-    const applicationScript = await request(origin + "/app.js?v=2.4.0-ui5");
+    const applicationScript = await request(origin + "/app.js?v=2.5.0-modules1");
     assert.equal(applicationScript.status, 200);
-    assert.match(applicationScript.body.toString("utf8"), /const zhToEn =/);
-    assert.match(applicationScript.body.toString("utf8"), /Switch to English/);
-    assert.match(applicationScript.body.toString("utf8"), /function updateDocumentMetadata\(\)/);
-    assert.match(applicationScript.body.toString("utf8"), /Home Tunnel — Secure access to services at home/);
-    assert.match(applicationScript.body.toString("utf8"), /record\.type === "characterData"/);
+    assert.match(
+      applicationScript.body.toString("utf8"),
+      /\.\/modules\/api\.js\?v=2\.5\.0-modules1/,
+    );
+    assert.match(
+      applicationScript.body.toString("utf8"),
+      /\.\/modules\/locale\.js\?v=2\.5\.0-modules1/,
+    );
+    assert.match(
+      applicationScript.body.toString("utf8"),
+      /\.\/modules\/realtime\.js\?v=2\.5\.0-modules1/,
+    );
     assert.match(applicationScript.body.toString("utf8"), /toLocaleString\(localeTag\(\)/);
     assert.equal(applicationScript.headers["cache-control"], "public, max-age=31536000, immutable");
     assert.match(applicationScript.body.toString("utf8"), /data-action="delete-device"/);
-    assert.match(applicationScript.body.toString("utf8"), /凭据、会话、租约、连接和流量明细将被删除/);
+    assert.match(
+      applicationScript.body.toString("utf8"),
+      /凭据、会话、租约、连接和流量明细将被删除/,
+    );
     assert.match(applicationScript.body.toString("utf8"), /api\/v1\/admin\/system\/health/);
-    assert.match(applicationScript.body.toString("utf8"), /Windows 图形客户端或 Linux\/macOS 无界面服务/);
+    assert.match(
+      applicationScript.body.toString("utf8"),
+      /Windows 图形客户端或 Linux\/macOS 无界面服务/,
+    );
     assert.doesNotMatch(applicationScript.body.toString("utf8"), /data-action="revoke-device"/);
+
+    const localeModule = await request(origin + "/modules/locale.js?v=2.5.0-modules1");
+    assert.equal(localeModule.status, 200);
+    assert.match(localeModule.body.toString("utf8"), /const zhToEn =/);
+    assert.match(localeModule.body.toString("utf8"), /Switch to English/);
+    assert.match(localeModule.body.toString("utf8"), /function updateDocumentMetadata\(\)/);
+    assert.match(
+      localeModule.body.toString("utf8"),
+      /Home Tunnel — Secure access to services at home/,
+    );
+    assert.match(localeModule.body.toString("utf8"), /record\.type === "characterData"/);
+    assert.equal(localeModule.headers["cache-control"], "public, max-age=31536000, immutable");
+
+    const realtimeModule = await request(origin + "/modules/realtime.js?v=2.5.0-modules1");
+    assert.equal(realtimeModule.status, 200);
+    assert.match(realtimeModule.body.toString("utf8"), /config\.version\.changed/);
+    assert.match(realtimeModule.body.toString("utf8"), /export function disconnectRealtime/);
 
     const admin = await request(origin + "/admin");
     assert.equal(admin.status, 200);
     assert.match(admin.body.toString("utf8"), /id="auth-screen"/);
 
-    const latest = await request(origin + "/api/v1/public/releases/latest", { cookie: "ht_access=revoked-session" });
-    assert.equal(latest.status, 200);
-    assert.equal(latest.headers["cache-control"], "public, max-age=5, must-revalidate");
-    assert.ok(latest.headers.etag);
-    const metadata = JSON.parse(latest.body.toString("utf8")) as Record<string, unknown>;
-    assert.equal(metadata.file_name, fileName);
-    assert.equal(metadata.download_url, `https://github.com/ZHanry/home-tunnel/releases/download/v2.4.0/${fileName}`);
-    assert.equal(metadata.stable_download_url, "https://github.com/ZHanry/home-tunnel/releases/latest");
-    const unchangedLatest = await request(origin + "/api/v1/public/releases/latest", { "if-none-match": latest.headers.etag! });
-    assert.equal(unchangedLatest.status, 304);
-
-    for (const path of [`/downloads/${fileName}`, "/downloads/HomeTunnel-Setup-x64.exe"]) {
-      const download = await request(origin + path);
-      assert.equal(download.status, 302);
-      assert.equal(download.headers.location, `https://github.com/ZHanry/home-tunnel/releases/download/v2.4.0/${fileName}`);
-      assert.equal(download.body.includes(executableHeader), false);
+    for (const path of [
+      "/api/v1/public/releases/latest",
+      "/downloads/HomeTunnel-Setup-x64.exe",
+      "/downloads/HomeTunnel-Setup-9.9.9-x64.exe",
+    ]) {
+      const unavailable = await request(origin + path, { cookie: "ht_access=revoked-session" });
+      assert.equal(unavailable.status, 404);
+      assert.match(unavailable.body.toString("utf8"), /RELEASE_UNAVAILABLE/);
     }
-
-    const missing = await request(origin + "/downloads/HomeTunnel-Setup-9.9.9-x64.exe");
-    assert.equal(missing.status, 404);
   } finally {
     server.close();
     await once(server, "close");

@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Globalization;
 using System.Net.Http;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
@@ -65,7 +66,7 @@ public partial class ConnectionDialog : Window
             SchemeBox.SelectedIndex = _snapshot.LocalScheme == "https" ? 1 : 0;
             EnabledBox.IsChecked = _snapshot.Enabled;
             LocalHostBox.Text = _snapshot.LocalHost;
-            LocalPortBox.Text = _snapshot.LocalPort.ToString();
+            LocalPortBox.Text = _snapshot.LocalPort.ToString(CultureInfo.InvariantCulture);
             DeleteButton.Visibility = _deleteAction is null ? Visibility.Collapsed : Visibility.Visible;
             EnabledBox.Content = "启用公网访问";
             UpdatePublicAddressHint();
@@ -278,7 +279,7 @@ public partial class ConnectionDialog : Window
     {
         ConnectionNameBox.Text,
         SubdomainBox.Text,
-        SchemeBox.SelectedIndex.ToString(),
+        SchemeBox.SelectedIndex.ToString(CultureInfo.InvariantCulture),
         EnabledBox.IsChecked == true ? "1" : "0",
         LocalHostBox.Text,
         LocalPortBox.Text,

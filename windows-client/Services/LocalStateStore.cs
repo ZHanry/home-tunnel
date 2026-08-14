@@ -53,7 +53,7 @@ public sealed class LocalStateStore
         File.Move(temporary, StatePath, true);
     }
 
-    public string Fingerprint(LocalState state)
+    public static string Fingerprint(LocalState state)
     {
         var sid = WindowsIdentity.GetCurrent().User?.Value ?? Environment.UserName;
         var material = $"{Environment.MachineName}\n{sid}\n{state.InstallId}";

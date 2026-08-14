@@ -1,4 +1,4 @@
-ARG NODE_IMAGE=node:22.17.1-alpine
+ARG NODE_IMAGE=node:24.19.0-alpine
 FROM ${NODE_IMAGE} AS build
 WORKDIR /app
 ARG NPM_REGISTRY=https://registry.npmjs.org

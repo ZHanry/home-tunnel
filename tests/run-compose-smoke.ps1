@@ -1,6 +1,14 @@
+param(
+    [ValidatePattern('^[0-9]+\.[0-9]+\.[0-9]+(?:-rc\.[0-9]+)?$')]
+    [string]$Version = "2.5.0-rc.1",
+    [ValidateSet("amd64", "arm64")]
+    [string]$Architecture = "arm64"
+)
+
 $ErrorActionPreference = "Stop"
 
 $workspace = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+$null = New-Item -ItemType Directory -Force -Path (Join-Path $workspace ".codex-tools")
 $toolsRoot = (Resolve-Path (Join-Path $workspace ".codex-tools")).Path
 $testRoot = Join-Path $toolsRoot ("compose-smoke-" + [Guid]::NewGuid().ToString("N").Substring(0, 10))
 if (-not $testRoot.StartsWith($toolsRoot + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
@@ -14,9 +22,49 @@ try {
     if ($existing.Count -gt 0) { throw "Existing Home Tunnel containers: $($existing -join ',')" }
 
     New-Item -ItemType Directory -Path $testRoot, (Join-Path $testRoot "secrets"), (Join-Path $testRoot "status"), (Join-Path $testRoot "downloads") | Out-Null
-    Copy-Item -LiteralPath (Join-Path $workspace "deploy\compose.yaml") -Destination (Join-Path $testRoot "compose.yaml")
+    $composeSource = Get-Content -Raw -LiteralPath (Join-Path $workspace "deploy\compose.yaml")
+    $composeSource = $composeSource.Replace(
+        "home-tunnel/control-center:2.5.0-rc.1-arm64",
+        "home-tunnel/control-center:$Version-$Architecture"
+    ).Replace(
+        "home-tunnel/traffic-gateway:2.5.0-rc.1-arm64",
+        "home-tunnel/traffic-gateway:$Version-$Architecture"
+    )
+    [IO.File]::WriteAllText(
+        (Join-Path $testRoot "compose.yaml"),
+        $composeSource,
+        [Text.UTF8Encoding]::new($false)
+    )
     Copy-Item -LiteralPath (Join-Path $workspace "deploy\compose.tcp.yaml") -Destination (Join-Path $testRoot "compose.tcp.yaml")
-    $composeArgs = @("-f", (Join-Path $testRoot "compose.yaml"), "-f", (Join-Path $testRoot "compose.tcp.yaml"))
+    # Docker Desktop validates the ARM64 release images through emulation on
+    # x64 hosts. Node startup and health commands are much slower under QEMU,
+    # so keep the production checks but give only this local smoke stack a
+    # longer command timeout.
+    $smokeOverride = @"
+services:
+  control-center:
+    platform: linux/$Architecture
+    healthcheck:
+      timeout: 30s
+  traffic-gateway:
+    platform: linux/$Architecture
+    healthcheck:
+      timeout: 30s
+  frps:
+    platform: linux/$Architecture
+    healthcheck:
+      timeout: 15s
+"@
+    [IO.File]::WriteAllText(
+        (Join-Path $testRoot "compose.smoke.yaml"),
+        $smokeOverride,
+        [Text.UTF8Encoding]::new($false)
+    )
+    $composeArgs = @(
+        "-f", (Join-Path $testRoot "compose.yaml"),
+        "-f", (Join-Path $testRoot "compose.tcp.yaml"),
+        "-f", (Join-Path $testRoot "compose.smoke.yaml")
+    )
     $composePrepared = $true
     $secrets = @{
         internal_service_key = "11" * 32
@@ -102,20 +150,38 @@ try {
         }
     }
 
-    & docker exec home-tunnel-control-center node -e "fetch('http://127.0.0.1:8080/healthz').then(async r=>{if(r.ok===false)process.exit(1);const j=await r.json();console.log(j.status,j.version)}).catch(()=>process.exit(1))"
-    if ($LASTEXITCODE -ne 0) { throw "Control health request failed" }
-    & docker exec home-tunnel-traffic-gateway node -e "fetch('http://127.0.0.1:8080/healthz',{headers:{host:'127.0.0.1'}}).then(async r=>{if(r.ok===false)process.exit(1);const j=await r.json();console.log(j.status,j.revision)}).catch(()=>process.exit(1))"
-    if ($LASTEXITCODE -ne 0) { throw "Gateway health request failed" }
+    function Invoke-ContainerCheck([string]$Name, [string]$Script, [string]$Failure) {
+        # An emulated process can very occasionally lose its binfmt handler
+        # between execs on Docker Desktop. Retry only the read-only assertion;
+        # native ARM64 hosts complete on the first attempt.
+        for ($attempt = 0; $attempt -lt 5; $attempt++) {
+            & docker exec $Name node -e $Script
+            if ($LASTEXITCODE -eq 0) { return }
+            Start-Sleep -Seconds 2
+        }
+        throw $Failure
+    }
+    function Invoke-ContainerCommand([string]$Name, [string[]]$Arguments, [string]$Failure) {
+        for ($attempt = 0; $attempt -lt 5; $attempt++) {
+            $output = @(& docker exec $Name @Arguments)
+            if ($LASTEXITCODE -eq 0) { return ($output -join "`n").Trim() }
+            Start-Sleep -Seconds 2
+        }
+        throw $Failure
+    }
+    Invoke-ContainerCheck "home-tunnel-control-center" "fetch('http://127.0.0.1:8080/healthz').then(async r=>{if(r.ok===false)process.exit(1);const j=await r.json();console.log(j.status,j.version)}).catch(()=>process.exit(1))" "Control health request failed"
+    Invoke-ContainerCheck "home-tunnel-traffic-gateway" "fetch('http://127.0.0.1:8080/healthz',{headers:{host:'127.0.0.1'}}).then(async r=>{if(r.ok===false)process.exit(1);const j=await r.json();console.log(j.status,j.revision)}).catch(()=>process.exit(1))" "Gateway health request failed"
 
     foreach ($name in @("home-tunnel-control-center", "home-tunnel-traffic-gateway", "home-tunnel-frps")) {
-        $uid = (& docker exec $name id -u).Trim()
+        $uid = Invoke-ContainerCommand $name @("id", "-u") "Could not read uid from $name"
         if ($uid -ne "10001") { throw "$name runs as uid $uid" }
         Write-Output "$name uid=$uid"
     }
-    & docker exec home-tunnel-control-center node --input-type=module -e "import { DatabaseSync } from 'node:sqlite'; const db=new DatabaseSync(process.env.SQLITE_PATH,{readOnly:true}); console.log(db.prepare('SELECT max(version) AS version FROM schema_migrations').get().version); db.close()"
-    if ($LASTEXITCODE -ne 0) { throw "Migration query failed" }
-    & docker exec home-tunnel-frps grep -F "allowPorts = [{ start = 11000, end = 11009 }]" /run/frp/frps.toml
-    if ($LASTEXITCODE -ne 0) { throw "FRPS TCP allowPorts configuration was not applied" }
+    $migrationVersion = Invoke-ContainerCommand "home-tunnel-control-center" @("node", "--input-type=module", "-e", "import { DatabaseSync } from 'node:sqlite'; const db=new DatabaseSync(process.env.SQLITE_PATH,{readOnly:true}); console.log(db.prepare('SELECT max(version) AS version FROM schema_migrations').get().version); db.close()") "Migration query failed"
+    if ($migrationVersion -ne "7") { throw "Expected migration 7, received $migrationVersion" }
+    Write-Output "schema migration=$migrationVersion"
+    $allowPorts = Invoke-ContainerCommand "home-tunnel-frps" @("grep", "-F", "allowPorts = [{ start = 11000, end = 11009 }]", "/run/frp/frps.toml") "FRPS TCP allowPorts configuration was not applied"
+    Write-Output $allowPorts
     & docker compose @composeArgs ps
 }
 finally {

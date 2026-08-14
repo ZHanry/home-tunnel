@@ -1,8 +1,13 @@
 using System.Threading;
+using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 
 namespace HomeTunnel.Client;
 
+[SuppressMessage(
+    "Design",
+    "CA1001:Types that own disposable fields should be disposable",
+    Justification = "WPF owns the Application lifecycle; OnExit releases and disposes the single-instance mutex.")]
 public partial class App : System.Windows.Application
 {
     private Mutex? _singleInstance;

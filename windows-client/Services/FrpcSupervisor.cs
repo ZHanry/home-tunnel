@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Security.AccessControl;
 using System.Security.Cryptography;
@@ -33,7 +34,7 @@ public sealed partial class FrpcSupervisor : IDisposable
     public const string FrpVersion = "0.62.1";
     public const string BinaryFileName = "HomeTunnel.Agent.exe";
     internal const string FrpsCaFileName = "frps-ca.pem";
-    private const string DevelopmentSha256 = "5368028fe0672dc11675e94db9d9deb501536a23df38bd5a362c2ee5e2775ad1";
+    private const string DevelopmentSha256 = "6173a5e589fb555beaa4921490571e19bee2df2d9c4d75375e5a36e9cf2f2f34";
     public static string ExpectedSha256 { get; } = ReadAssemblyMetadata("HomeTunnelAgentSha256") ?? DevelopmentSha256;
     public static string? ExpectedSignerThumbprint { get; } = NormalizeOptional(ReadAssemblyMetadata("HomeTunnelAgentSignerThumbprint"));
 
@@ -405,20 +406,20 @@ public sealed partial class FrpcSupervisor : IDisposable
     {
         var lease = sync.Lease ?? throw new InvalidOperationException("同步响应未包含 Agent 租约");
         var builder = new StringBuilder();
-        builder.AppendLine($"serverAddr = {Toml(state.FrpsHost)}");
-        builder.AppendLine($"serverPort = {state.FrpsPort}");
-        builder.AppendLine($"user = {Toml(sync.DeviceId)}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"serverAddr = {Toml(state.FrpsHost)}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"serverPort = {state.FrpsPort}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"user = {Toml(sync.DeviceId)}");
         builder.AppendLine("loginFailExit = true");
         builder.AppendLine("transport.tls.enable = true");
         builder.AppendLine("transport.tls.disableCustomTLSFirstByte = true");
         if (trustedCaPath is not null)
         {
-            builder.AppendLine($"transport.tls.trustedCaFile = {Toml(trustedCaPath)}");
-            builder.AppendLine($"transport.tls.serverName = {Toml(state.FrpsHost)}");
+            builder.AppendLine(CultureInfo.InvariantCulture, $"transport.tls.trustedCaFile = {Toml(trustedCaPath)}");
+            builder.AppendLine(CultureInfo.InvariantCulture, $"transport.tls.serverName = {Toml(state.FrpsHost)}");
         }
         builder.AppendLine("transport.heartbeatInterval = 30");
         builder.AppendLine("transport.heartbeatTimeout = 90");
-        builder.AppendLine($"metadatas.home_tunnel_lease = {Toml(lease.Lease)}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"metadatas.home_tunnel_lease = {Toml(lease.Lease)}");
         builder.AppendLine("log.to = \"console\"");
         builder.AppendLine("log.level = \"info\"");
 
@@ -426,11 +427,11 @@ public sealed partial class FrpcSupervisor : IDisposable
         {
             builder.AppendLine();
             builder.AppendLine("[[proxies]]");
-            builder.AppendLine($"name = {Toml(ProxyNameFor(connection))}");
+            builder.AppendLine(CultureInfo.InvariantCulture, $"name = {Toml(ProxyNameFor(connection))}");
             if (connection.ProxyType == "tcp")
             {
                 builder.AppendLine("type = \"tcp\"");
-                builder.AppendLine($"remotePort = {connection.TcpRemotePort ?? throw new InvalidOperationException("TCP 连接缺少远程端口")}");
+                builder.AppendLine(CultureInfo.InvariantCulture, $"remotePort = {connection.TcpRemotePort ?? throw new InvalidOperationException("TCP 连接缺少远程端口")}");
             }
             else
             {
@@ -438,7 +439,7 @@ public sealed partial class FrpcSupervisor : IDisposable
                 var domains = new[] { connection.Subdomain + "." + state.TunnelDomain }
                     .Concat(connection.CustomDomains)
                     .Select(Toml);
-                builder.AppendLine($"customDomains = [{string.Join(", ", domains)}]");
+                builder.AppendLine(CultureInfo.InvariantCulture, $"customDomains = [{string.Join(", ", domains)}]");
             }
             builder.AppendLine("transport.useEncryption = true");
             builder.AppendLine("transport.useCompression = true");
@@ -449,13 +450,13 @@ public sealed partial class FrpcSupervisor : IDisposable
             {
                 builder.AppendLine("[proxies.plugin]");
                 builder.AppendLine("type = \"http2https\"");
-                builder.AppendLine($"localAddr = {Toml($"{connection.LocalHost}:{connection.LocalPort}")}");
-                builder.AppendLine($"hostHeaderRewrite = {Toml(connection.LocalHost)}");
+                builder.AppendLine(CultureInfo.InvariantCulture, $"localAddr = {Toml($"{connection.LocalHost}:{connection.LocalPort}")}");
+                builder.AppendLine(CultureInfo.InvariantCulture, $"hostHeaderRewrite = {Toml(connection.LocalHost)}");
             }
             else
             {
-                builder.AppendLine($"localIP = {Toml(connection.LocalHost)}");
-                builder.AppendLine($"localPort = {connection.LocalPort}");
+                builder.AppendLine(CultureInfo.InvariantCulture, $"localIP = {Toml(connection.LocalHost)}");
+                builder.AppendLine(CultureInfo.InvariantCulture, $"localPort = {connection.LocalPort}");
             }
         }
         return builder.ToString();
@@ -576,7 +577,11 @@ public sealed partial class FrpcSupervisor : IDisposable
     {
         try
         {
+            // There is no X509CertificateLoader API that extracts the Authenticode signer
+            // from a signed PE file; CreateFromSignedFile remains the Windows BCL entry point.
+#pragma warning disable SYSLIB0057
             using var certificate = new X509Certificate2(X509Certificate.CreateFromSignedFile(path));
+#pragma warning restore SYSLIB0057
             return string.Equals(certificate.GetCertHashString(HashAlgorithmName.SHA1), ExpectedSignerThumbprint, StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(certificate.GetCertHashString(HashAlgorithmName.SHA256), ExpectedSignerThumbprint, StringComparison.OrdinalIgnoreCase);
         }

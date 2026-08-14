@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import { randomBytes, scryptSync } from "node:crypto";
 import { once } from "node:events";
-import http, { type IncomingHttpHeaders, type IncomingMessage, type OutgoingHttpHeaders, type ServerResponse } from "node:http";
+import http, {
+  type IncomingHttpHeaders,
+  type IncomingMessage,
+  type OutgoingHttpHeaders,
+  type ServerResponse,
+} from "node:http";
 import net, { type AddressInfo } from "node:net";
 import type { Duplex } from "node:stream";
 import { after, test } from "node:test";
@@ -49,7 +54,11 @@ type TestPolicy = {
   user_policy_version: number;
 };
 
-function gatewayPolicy(id: string, subdomain: string, overrides: Partial<TestPolicy> = {}): TestPolicy {
+function gatewayPolicy(
+  id: string,
+  subdomain: string,
+  overrides: Partial<TestPolicy> = {},
+): TestPolicy {
   return {
     connection_id: id,
     user_id: "user-e2e",
@@ -138,13 +147,19 @@ const upstream = http.createServer((request, response) => {
   const chunks: Buffer[] = [];
   request.on("data", (chunk: Buffer) => chunks.push(chunk));
   request.on("end", () => {
-    response.writeHead(200, { "content-type": "application/json", server: "fake-upstream", "x-upstream-marker": "1" });
-    response.end(JSON.stringify({
-      method: request.method,
-      url,
-      headers: request.headers,
-      body: Buffer.concat(chunks).toString("base64"),
-    }));
+    response.writeHead(200, {
+      "content-type": "application/json",
+      server: "fake-upstream",
+      "x-upstream-marker": "1",
+    });
+    response.end(
+      JSON.stringify({
+        method: request.method,
+        url,
+        headers: request.headers,
+        body: Buffer.concat(chunks).toString("base64"),
+      }),
+    );
   });
 });
 upstream.on("upgrade", (request, socket, head) => {
@@ -155,7 +170,9 @@ upstream.on("upgrade", (request, socket, head) => {
   // 后必须主动销毁，否则半开连接会阻止 server.close() 完成、拖住进程退出
   socket.on("end", () => socket.destroy());
   socket.on("close", () => upgradeSockets.delete(socket));
-  socket.write("HTTP/1.1 101 Switching Protocols\r\nupgrade: websocket\r\nconnection: Upgrade\r\n\r\n");
+  socket.write(
+    "HTTP/1.1 101 Switching Protocols\r\nupgrade: websocket\r\nconnection: Upgrade\r\n\r\n",
+  );
   if (head.length) socket.write(head);
   socket.on("data", (chunk: Buffer) => socket.write(chunk));
 });
@@ -174,7 +191,9 @@ const controlCenter = http.createServer((request, response) => {
   if (url === "/internal/policies/sync") {
     policySyncRequests.push({ ...request.headers });
     if (policySyncMode === "unchanged") {
-      response.writeHead(304, { "x-policy-snapshot-expires-at": new Date(Date.now() + 7_200_000).toISOString() });
+      response.writeHead(304, {
+        "x-policy-snapshot-expires-at": new Date(Date.now() + 7_200_000).toISOString(),
+      });
       response.end();
     } else {
       response.writeHead(200, { "content-type": "application/json" });
@@ -186,7 +205,10 @@ const controlCenter = http.createServer((request, response) => {
     const chunks: Buffer[] = [];
     request.on("data", (chunk: Buffer) => chunks.push(chunk));
     request.on("end", () => {
-      sampleUploads.push({ headers: { ...request.headers }, body: JSON.parse(Buffer.concat(chunks).toString("utf8")) as UploadedBatch });
+      sampleUploads.push({
+        headers: { ...request.headers },
+        body: JSON.parse(Buffer.concat(chunks).toString("utf8")) as UploadedBatch,
+      });
       response.writeHead(200, { "content-type": "application/json" });
       response.end("{}");
     });
@@ -212,7 +234,8 @@ process.env.FRPS_VHOST_HOST = "127.0.0.1";
 process.env.FRPS_VHOST_PORT = String(upstreamPort);
 process.env.CONTROL_CENTER_URL = `http://127.0.0.1:${controlCenterPort}`;
 
-const { accessStats, createGatewayServer, policies, samples, syncPolicies } = await import("./server.js");
+const { accessStats, createGatewayServer, policies, samples, syncPolicies } =
+  await import("./server.js");
 
 const gateway = createGatewayServer();
 const gatewayPort = await listen(gateway);
@@ -239,7 +262,11 @@ function delay(milliseconds: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
-async function withTimeout<T>(promise: Promise<T>, milliseconds: number, label: string): Promise<T> {
+async function withTimeout<T>(
+  promise: Promise<T>,
+  milliseconds: number,
+  label: string,
+): Promise<T> {
   let timer: NodeJS.Timeout | undefined;
   try {
     return await Promise.race([
@@ -275,7 +302,13 @@ function gatewayRequest(options: {
         const chunks: Buffer[] = [];
         response.on("data", (chunk: Buffer) => chunks.push(chunk));
         response.once("error", reject);
-        response.once("end", () => resolve({ status: response.statusCode ?? 0, headers: response.headers, body: Buffer.concat(chunks) }));
+        response.once("end", () =>
+          resolve({
+            status: response.statusCode ?? 0,
+            headers: response.headers,
+            body: Buffer.concat(chunks),
+          }),
+        );
       },
     );
     request.once("error", reject);
@@ -294,7 +327,10 @@ function errorCode(response: GatewayResponse): string {
 }
 
 async function scrapeMetrics(): Promise<string> {
-  const response = await gatewayRequest({ path: "/metrics", headers: { "x-home-tunnel-key": internalKey } });
+  const response = await gatewayRequest({
+    path: "/metrics",
+    headers: { "x-home-tunnel-key": internalKey },
+  });
   assert.equal(response.status, 200);
   assert.match(String(response.headers["content-type"]), /^text\/plain/);
   return response.body.toString("utf8");
@@ -399,17 +435,26 @@ test("proxy round-trip sanitizes forwarding headers in both directions", async (
   assert.equal(Buffer.from(echoed.body, "base64").toString("utf8"), requestBody.toString("utf8"));
 
   // 生产部署中最右 XFF 元素由可信的直连 Caddy 追加：是合法 IP 时按原样采信
-  const trusted = await gatewayRequest({ path: "/echo", headers: { host: managedHost, "x-forwarded-for": "198.51.100.7" } });
+  const trusted = await gatewayRequest({
+    path: "/echo",
+    headers: { host: managedHost, "x-forwarded-for": "198.51.100.7" },
+  });
   assert.equal(parseEcho(trusted).headers["x-forwarded-for"], "198.51.100.7");
 });
 
 test("unknown subdomain, reserved subdomain, unmanaged host, and stale snapshot are mapped", async () => {
   applyDefaultPolicies();
-  const missing = await gatewayRequest({ path: "/echo", headers: { host: `missing.${tunnelDomain}` } });
+  const missing = await gatewayRequest({
+    path: "/echo",
+    headers: { host: `missing.${tunnelDomain}` },
+  });
   assert.equal(missing.status, 404);
   assert.equal(errorCode(missing), "CONNECTION_NOT_FOUND");
 
-  const reserved = await gatewayRequest({ path: "/echo", headers: { host: `console.${tunnelDomain}` } });
+  const reserved = await gatewayRequest({
+    path: "/echo",
+    headers: { host: `console.${tunnelDomain}` },
+  });
   assert.equal(reserved.status, 404);
   assert.equal(errorCode(reserved), "SUBDOMAIN_RESERVED");
 
@@ -445,14 +490,21 @@ test("upstream connection refusal maps to 502 and records an error sample", asyn
   assert.ok(upload, "expected a sample batch upload");
   assert.equal(upload.headers["x-home-tunnel-key"], internalKey);
   const errored = upload.body.samples.find(
-    (sample) => String(sample.connection_id) === "connection-service" && Number(sample.error_count) >= 1,
+    (sample) =>
+      String(sample.connection_id) === "connection-service" && Number(sample.error_count) >= 1,
   );
   assert.ok(errored, "expected an error sample for connection-service");
 });
 
 test("mid-transfer policy revocation severs the streaming client connection", async () => {
   applyDefaultPolicies();
-  const request = http.request({ host: "127.0.0.1", port: gatewayPort, path: "/slow", headers: { host: managedHost }, agent: false });
+  const request = http.request({
+    host: "127.0.0.1",
+    port: gatewayPort,
+    path: "/slow",
+    headers: { host: managedHost },
+    agent: false,
+  });
   const responsePromise = new Promise<IncomingMessage>((resolve, reject) => {
     request.once("response", resolve);
     request.once("error", reject);
@@ -464,7 +516,10 @@ test("mid-transfer policy revocation severs the streaming client connection", as
   await withTimeout(once(response, "data"), 5000, "first body chunk");
 
   const during = await scrapeMetrics();
-  assert.ok(metricValue(during, "home_tunnel_gateway_active_streams") >= 1, "streaming request must be registered");
+  assert.ok(
+    metricValue(during, "home_tunnel_gateway_active_streams") >= 1,
+    "streaming request must be registered",
+  );
 
   const severed = new Promise<"clean-end" | "severed">((resolve) => {
     response.once("error", () => resolve("severed"));
@@ -496,7 +551,10 @@ test("websocket upgrade proxies bytes verbatim in both directions", async () => 
   assert.match(handshake.toString("latin1"), /^HTTP\/1\.1 101 /);
   const headerEnd = handshake.indexOf(headerEndMarker) + headerEndMarker.length;
 
-  const frame = Buffer.concat([Buffer.from([0x81, 0x85, 0x01, 0x02, 0x03, 0x04]), Buffer.from("hello")]);
+  const frame = Buffer.concat([
+    Buffer.from([0x81, 0x85, 0x01, 0x02, 0x03, 0x04]),
+    Buffer.from("hello"),
+  ]);
   socket.write(frame);
   const stream = await reader.waitFor((data) => data.length >= headerEnd + frame.length);
   assert.deepEqual(stream.subarray(headerEnd, headerEnd + frame.length), frame);
@@ -541,10 +599,16 @@ test("metrics endpoint stays hidden without the exact internal key", async () =>
   assert.equal(missingKey.status, 404);
   assert.equal(errorCode(missingKey), "CONNECTION_NOT_FOUND");
 
-  const wrongKey = await gatewayRequest({ path: "/metrics", headers: { "x-home-tunnel-key": "22".repeat(32) } });
+  const wrongKey = await gatewayRequest({
+    path: "/metrics",
+    headers: { "x-home-tunnel-key": "22".repeat(32) },
+  });
   assert.equal(wrongKey.status, 404);
 
-  const shortKey = await gatewayRequest({ path: "/metrics", headers: { "x-home-tunnel-key": "nope" } });
+  const shortKey = await gatewayRequest({
+    path: "/metrics",
+    headers: { "x-home-tunnel-key": "nope" },
+  });
   assert.equal(shortKey.status, 404);
 });
 
@@ -577,11 +641,14 @@ test("metrics counters advance with proxied traffic and limiter waits", async ()
   assert.ok(metricValue(afterBody, "home_tunnel_gateway_policy_age_seconds") >= 0);
   assert.ok(metricValue(afterBody, "home_tunnel_gateway_active_streams") >= 0);
   assert.ok(
-    metricValue(afterBody, "home_tunnel_gateway_requests_total") >= metricValue(before, "home_tunnel_gateway_requests_total") + 2,
+    metricValue(afterBody, "home_tunnel_gateway_requests_total") >=
+      metricValue(before, "home_tunnel_gateway_requests_total") + 2,
   );
   assert.ok(
     metricValue(afterBody, 'home_tunnel_gateway_bytes_total{direction="upload"}') >=
-      metricValue(before, 'home_tunnel_gateway_bytes_total{direction="upload"}') + uploadBody.length + throttledBody.length,
+      metricValue(before, 'home_tunnel_gateway_bytes_total{direction="upload"}') +
+        uploadBody.length +
+        throttledBody.length,
   );
   assert.ok(
     metricValue(afterBody, 'home_tunnel_gateway_bytes_total{direction="download"}') >
@@ -600,17 +667,29 @@ test("metrics counters advance with proxied traffic and limiter waits", async ()
 
 test("IP allowlist admits matching clients and rejects others with 403", async () => {
   applyDefaultPolicies();
-  const deniedBefore = metricValue(await scrapeMetrics(), 'home_tunnel_gateway_access_denied_total{reason="ip"}');
+  const deniedBefore = metricValue(
+    await scrapeMetrics(),
+    'home_tunnel_gateway_access_denied_total{reason="ip"}',
+  );
 
   // 生产部署中最右 XFF 由可信 Caddy 追加，即门禁使用的可信客户端 IP
-  const allowedIpv4 = await gatewayRequest({ path: "/echo", headers: { host: ipGatedHost, "x-forwarded-for": "198.51.100.7" } });
+  const allowedIpv4 = await gatewayRequest({
+    path: "/echo",
+    headers: { host: ipGatedHost, "x-forwarded-for": "198.51.100.7" },
+  });
   assert.equal(allowedIpv4.status, 200);
   assert.equal(parseEcho(allowedIpv4).headers["x-forwarded-for"], "198.51.100.7");
 
-  const allowedIpv6 = await gatewayRequest({ path: "/echo", headers: { host: ipGatedHost, "x-forwarded-for": "2001:db8::42" } });
+  const allowedIpv6 = await gatewayRequest({
+    path: "/echo",
+    headers: { host: ipGatedHost, "x-forwarded-for": "2001:db8::42" },
+  });
   assert.equal(allowedIpv6.status, 200);
 
-  const deniedForeign = await gatewayRequest({ path: "/echo", headers: { host: ipGatedHost, "x-forwarded-for": "203.0.113.9" } });
+  const deniedForeign = await gatewayRequest({
+    path: "/echo",
+    headers: { host: ipGatedHost, "x-forwarded-for": "203.0.113.9" },
+  });
   assert.equal(deniedForeign.status, 403);
   assert.equal(errorCode(deniedForeign), "ACCESS_IP_FORBIDDEN");
 
@@ -619,20 +698,29 @@ test("IP allowlist admits matching clients and rejects others with 403", async (
   assert.equal(deniedLoopback.status, 403);
   assert.equal(errorCode(deniedLoopback), "ACCESS_IP_FORBIDDEN");
 
-  const deniedAfter = metricValue(await scrapeMetrics(), 'home_tunnel_gateway_access_denied_total{reason="ip"}');
+  const deniedAfter = metricValue(
+    await scrapeMetrics(),
+    'home_tunnel_gateway_access_denied_total{reason="ip"}',
+  );
   assert.ok(deniedAfter >= deniedBefore + 2, "denied requests must advance the ip counter");
 });
 
 test("Basic Auth gate challenges, rejects bad credentials, and hides the header from upstream", async () => {
   applyDefaultPolicies();
-  const deniedBefore = metricValue(await scrapeMetrics(), 'home_tunnel_gateway_access_denied_total{reason="basic"}');
+  const deniedBefore = metricValue(
+    await scrapeMetrics(),
+    'home_tunnel_gateway_access_denied_total{reason="basic"}',
+  );
 
   const missing = await gatewayRequest({ path: "/echo", headers: { host: basicGatedHost } });
   assert.equal(missing.status, 401);
   assert.equal(missing.headers["www-authenticate"], 'Basic realm="Home Tunnel"');
   assert.equal(errorCode(missing), "ACCESS_BASIC_UNAUTHORIZED");
 
-  const malformed = await gatewayRequest({ path: "/echo", headers: { host: basicGatedHost, authorization: "Bearer not-basic" } });
+  const malformed = await gatewayRequest({
+    path: "/echo",
+    headers: { host: basicGatedHost, authorization: "Bearer not-basic" },
+  });
   assert.equal(malformed.status, 401);
   assert.equal(malformed.headers["www-authenticate"], 'Basic realm="Home Tunnel"');
 
@@ -656,7 +744,10 @@ test("Basic Auth gate challenges, rejects bad credentials, and hides the header 
   // 门禁凭据不得泄漏给后端
   assert.equal(parseEcho(accepted).headers.authorization, undefined);
 
-  const deniedAfter = metricValue(await scrapeMetrics(), 'home_tunnel_gateway_access_denied_total{reason="basic"}');
+  const deniedAfter = metricValue(
+    await scrapeMetrics(),
+    'home_tunnel_gateway_access_denied_total{reason="basic"}',
+  );
   assert.ok(deniedAfter >= deniedBefore + 4, "denied requests must advance the basic counter");
 });
 
@@ -673,24 +764,46 @@ test("authorization passes through untouched when no Basic gate is configured", 
 test("Basic Auth verification is memoized until the access policy version changes", async () => {
   applyDefaultPolicies();
   const header = basicHeader("svc", basicGatePassword);
-  const first = await gatewayRequest({ path: "/echo", headers: { host: basicGatedHost, authorization: header } });
+  const first = await gatewayRequest({
+    path: "/echo",
+    headers: { host: basicGatedHost, authorization: header },
+  });
   assert.equal(first.status, 200);
   const verificationsAfterFirst = accessStats.scryptVerifications;
   const hitsAfterFirst = accessStats.basicCacheHits;
 
-  const second = await gatewayRequest({ path: "/echo", headers: { host: basicGatedHost, authorization: header } });
+  const second = await gatewayRequest({
+    path: "/echo",
+    headers: { host: basicGatedHost, authorization: header },
+  });
   assert.equal(second.status, 200);
-  assert.equal(accessStats.scryptVerifications, verificationsAfterFirst, "repeat credentials must not re-run scrypt");
-  assert.ok(accessStats.basicCacheHits > hitsAfterFirst, "repeat credentials must hit the memo cache");
+  assert.equal(
+    accessStats.scryptVerifications,
+    verificationsAfterFirst,
+    "repeat credentials must not re-run scrypt",
+  );
+  assert.ok(
+    accessStats.basicCacheHits > hitsAfterFirst,
+    "repeat credentials must hit the memo cache",
+  );
 
   // access_policy_version 变化（如改口令/重设门禁）后旧缓存键失效，需重新验证
   const rotated = defaultConnections().map((connection) =>
-    connection.connection_id === "connection-basicgate" ? { ...connection, access_policy_version: 2 } : connection,
+    connection.connection_id === "connection-basicgate"
+      ? { ...connection, access_policy_version: 2 }
+      : connection,
   );
   policies.apply(makeSnapshot(rotated, 11));
-  const third = await gatewayRequest({ path: "/echo", headers: { host: basicGatedHost, authorization: header } });
+  const third = await gatewayRequest({
+    path: "/echo",
+    headers: { host: basicGatedHost, authorization: header },
+  });
   assert.equal(third.status, 200);
-  assert.equal(accessStats.scryptVerifications, verificationsAfterFirst + 1, "policy version change must invalidate the cache");
+  assert.equal(
+    accessStats.scryptVerifications,
+    verificationsAfterFirst + 1,
+    "policy version change must invalidate the cache",
+  );
   applyDefaultPolicies();
 });
 
@@ -727,10 +840,16 @@ test("upgrade path enforces IP and Basic gates before proxying", async () => {
   assert.match(basicMissing.toString("latin1"), /^HTTP\/1\.1 401 /);
   assert.match(basicMissing.toString("latin1"), /www-authenticate: Basic realm="Home Tunnel"/i);
 
-  const basicWrong = await upgradeAttempt(basicGatedHost, `authorization: ${basicHeader("svc", "bad password")}\r\n`);
+  const basicWrong = await upgradeAttempt(
+    basicGatedHost,
+    `authorization: ${basicHeader("svc", "bad password")}\r\n`,
+  );
   assert.match(basicWrong.toString("latin1"), /^HTTP\/1\.1 401 /);
 
-  const basicAccepted = await upgradeAttempt(basicGatedHost, `authorization: ${basicHeader("svc", basicGatePassword)}\r\n`);
+  const basicAccepted = await upgradeAttempt(
+    basicGatedHost,
+    `authorization: ${basicHeader("svc", basicGatePassword)}\r\n`,
+  );
   assert.match(basicAccepted.toString("latin1"), /^HTTP\/1\.1 101 /);
   const upgradeHeaders = upgradeCaptures.at(-1);
   assert.ok(upgradeHeaders, "fake upstream should observe the authorized upgrade");
