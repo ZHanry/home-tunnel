@@ -7,7 +7,7 @@ RUN git clone --depth 1 --branch "${FRP_VERSION}" https://github.com/fatedier/fr
     && cd /src/frp \
     && go build -tags noweb -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /go/bin/frps ./cmd/frps
 
-FROM alpine:3.22
+FROM alpine:3.24
 ARG FRP_VERSION=v0.70.1
 LABEL org.opencontainers.image.title="Home Tunnel FRPS" \
       org.opencontainers.image.version="${FRP_VERSION}" \
