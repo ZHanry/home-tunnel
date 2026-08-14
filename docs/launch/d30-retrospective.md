@@ -62,7 +62,7 @@ Do not quote a deployment report unless its author has explicitly approved the e
 
 ## Current limits
 
-The public support matrix remains the source of truth. Do not imply that macOS Beta is Stable or that Windows has an official binary. Home Tunnel has no public dynamic demo. Production FRP remains 0.62.1 unless the documented atomic 0.70.1 promotion gates have subsequently passed.
+The public support matrix remains the source of truth. Do not imply that macOS Beta is Stable or that Windows has an official binary. Home Tunnel has no public dynamic demo. Production FRP is pinned to 0.70.1 through the reviewed `0.70.1-r1` dependency image and restricted Agent.
 
 Project: <https://zhanry.github.io/home-tunnel/?utm_source=d30_retrospective&utm_medium=post&utm_campaign=launch_2026_08>
 

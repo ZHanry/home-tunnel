@@ -1,93 +1,93 @@
-# FRP 0.70.1 compatibility decision
+# FRP 0.70.1 compatibility and promotion record
 
-Status: **validated candidate; rollout blocked; production remains on 0.62.1**.
+Status: **approved for the supported release scope**. Production is pinned to
+the reviewed `0.70.1-r1` FRPS image. Official Windows binary distribution
+remains suspended and is not part of this promotion.
 
-Review date: 2026-08-13
+Review completed: 2026-08-14
 
-FRP release: `v0.70.1` (2026-07-23)
-
-Resolved source commit: `fa3bcca2b0c4753cd4f0e2ab189dd6a5a6a15708`
-GitHub API source archive SHA-256: `9c6b0188a8f74e982069dc89218cc3d79bada8663cedf3b514b98847530cbf7d`
+| Input | Reviewed identity |
+| --- | --- |
+| FRP release | `v0.70.1` (2026-07-23) |
+| Upstream commit | `fa3bcca2b0c4753cd4f0e2ab189dd6a5a6a15708` |
+| GitHub API source archive SHA-256 | `9c6b0188a8f74e982069dc89218cc3d79bada8663cedf3b514b98847530cbf7d` |
+| FRPS image tag | `ghcr.io/zhanry/home-tunnel-frps:0.70.1-r1` |
+| FRPS multi-architecture digest | `sha256:cffde7b39698a5faba3828bb4a78b444d2d9c2cfea7385e28989728f5d73732f` |
+| Protected FRPS workflow revision | `9b512cbc71b553a14e96cf02817a99d5e869c9a4` |
+| Protected FRPS workflow | [run 31762807301](https://github.com/ZHanry/home-tunnel/actions/runs/31762807301) |
 
 ## Decision
 
-The compatibility surface passed, but the version pin is intentionally **not**
-changed. The currently trusted Windows Agent 2.4.0 executable and
-`AgentExpectedSha256` were produced from FRP 0.62.1. Switching the source pin
-without rebuilding the Windows artifact in the protected release environment
-would either make CI fail or weaken the binary-integrity check. Neither outcome
-is acceptable.
+FRP 0.70.1 is promoted atomically across the restricted Agent, FRPS,
+Dockerfiles, Compose defaults, Linux/macOS packaging, CodeQL source analysis,
+offline deployment inputs and third-party notices. The application deployment
+pins the independently built FRPS image by both its revision tag and immutable
+multi-architecture digest. The protected dependency workflow built it with Go
+1.26.6, verified the upstream source identity, ran `go vet` and
+`govulncheck`, required `linux/amd64` and `linux/arm64`, and published SBOM,
+provenance, GitHub attestation and keyless Cosign evidence.
 
-Promote this candidate only after the protected Windows build/signing job has
-produced a new Agent, its SHA-256 has been reviewed and committed, and the
-Windows 10/11 install/upgrade VM matrix has passed. That rollout is separate
-from publishing an official Windows installer.
+The restricted Agent is independently versioned `2.5.0`. Its source build is
+reproduced from the same pinned FRP tree, and release automation publishes a
+signed provenance record and GitHub attestation for that build. It deliberately
+does not publish the Windows executable, EXE installer, MSIX package or Windows
+`latest.json`.
 
-## Isolated validation evidence
+The absence of clean Windows 10 and Windows 11 install/upgrade VM evidence does
+not expand the supported release scope: Windows x64 remains Source /
+Experimental. Official Windows binaries may resume only after trusted
+Authenticode signing, a protected signing environment, and that VM matrix all
+pass. A local Windows 11 host build and MSIX-signature check is diagnostic
+evidence only and must not be described as the missing clean-VM gate.
 
-The validation used fresh temporary directories and local-only Docker ports;
-it did not overwrite the repository Agent executable or its trusted hash.
+## Compatibility evidence
 
 | Gate | Result | Evidence |
 | --- | --- | --- |
-| Official tag and source identity | Pass | Annotated tag resolves to `fa3bcca2…`; downloaded archive hash recorded above. |
-| Restricted Agent source build | Pass after API adaptation | Linux amd64 and Windows amd64 binaries built with Go 1.26.5; the native Windows candidate reported FRP 0.70.1, accepted the managed render shape and rejected a UDP mutation. |
-| Managed whitelist tests | Pass | 20/20 tests: HTTP/TCP allowlists, visitor/plugin/common-field rejection, client render shapes and CA checks. |
-| Linux/Windows config render shapes | Pass | HTTP direct, HTTPS `http2https`, managed CA and authorized TCP shapes accepted. |
-| Managed CA pinning | Pass | Valid certificate accepted; wrong SHA-256 rejected. |
-| FRPS TLS | Pass | `transport.tls.force=true` with an isolated certificate. |
-| Authorization plugin | Pass | `Login`, `NewProxy` and `CloseProxy` HTTP plugin flow completed. |
-| HTTP tunnel | Pass | Host-routed request returned the isolated local HTTP payload. |
-| TCP tunnel | Pass | Authorized remote port completed a byte-for-byte echo round trip. |
-| Unauthorized TCP port | Pass | Agent rejected a port outside the server-provided allowlist. |
+| Official tag and source identity | Pass | The tag resolves to `fa3bcca2…`; the downloaded API archive matches the recorded SHA-256. |
+| Restricted Agent API adaptation | Pass | Agent 2.5.0 uses the 0.70.1 configuration-source, aggregation, validation and unsafe-feature policy APIs. |
+| Managed whitelist tests | Pass | HTTP/TCP allowlists, visitor/plugin/common-field rejection, render shapes and CA checks pass. |
+| Agent static and vulnerability checks | Pass | Go formatting, tests, `go vet` and `govulncheck` 1.6.0 report no reachable vulnerability. |
+| Managed CA pinning | Pass | The expected certificate is accepted and an incorrect SHA-256 is rejected. |
+| FRPS TLS and authorization plugin | Pass | Forced TLS and `Login`, `NewProxy` and `CloseProxy` authorization flows complete. |
+| HTTP and authorized TCP tunnels | Pass | Host-routed HTTP and byte-for-byte TCP echo tests complete; an unassigned TCP port is rejected. |
+| FRPS dependency supply chain | Pass | Protected run 31762807301 produced the signed, attested `amd64`/`arm64` digest recorded above. |
+| Windows 10/11 clean install and upgrade VMs | Not run | Hyper-V management and Windows Sandbox are unavailable in the validation host session. Windows binary distribution remains suspended. |
 
 ## Required source adaptations
 
 FRP 0.70.1 is not a pin-only upgrade:
 
 1. `client.ServiceOptions` no longer accepts `ProxyCfgs`/`VisitorCfgs`. The
-   restricted Agent must create a `source.ConfigSource`, populate it with the
-   already-validated proxies, wrap it in `source.Aggregator`, and pass an empty
-   `security.UnsafeFeatures` set.
+   restricted Agent creates a `source.ConfigSource`, populates it with the
+   already-validated proxies, wraps it in `source.Aggregator`, and passes an
+   empty `security.UnsafeFeatures` set.
 2. `ProxyConfigurer.Complete` no longer accepts a user argument. User prefixes
-   are now applied explicitly at the wire layer; the local whitelist compares
-   unprefixed config names while the FRPS plugin still sees the prefixed wire
-   name.
-3. `validation.ValidateAllClientConfig` now requires an unsafe-feature policy.
-   Home Tunnel must pass `security.NewUnsafeFeatures(nil)`.
-4. A fresh FRP checkout lacks built web assets. Build FRPS with `-tags noweb`;
-   otherwise Go embed fails with `web/frps/embed.go: pattern dist: no matching
-   files found`. Home Tunnel does not expose the FRPS dashboard.
+   are applied at the wire layer; the local whitelist compares unprefixed names
+   while the FRPS plugin still sees the prefixed wire name.
+3. `validation.ValidateAllClientConfig` requires an unsafe-feature policy.
+   Home Tunnel passes `security.NewUnsafeFeatures(nil)`.
+4. A fresh FRP checkout lacks built dashboard assets. FRPS is built with
+   `-tags noweb`; Home Tunnel does not expose the FRPS dashboard.
 
 ## Promotion checklist
 
-- [ ] Apply the reviewed candidate Agent API patch and `-tags noweb` FRPS build change.
-- [ ] Update every 0.62.1 pin atomically: Dockerfiles, Compose images, Linux and
-      macOS packaging, Windows build script, CodeQL source pin and third-party notices.
-- [ ] Build the Windows Agent in the protected Windows environment with pinned
-      Go/windres inputs; record the new SHA-256 and signer identity.
-- [ ] Update `AgentExpectedSha256` in the same change as the Agent binary.
-- [ ] Re-run the full repository CI and real Compose HTTP/HTTPS/WebSocket,
-      policy-revocation and TCP tunnel matrix.
-- [ ] Pass Windows 10/11 source build, install and upgrade VM verification.
-- [ ] Publish FRPS/Linux/macOS artifacts only after their SBOM, provenance,
-      checksum and signature steps succeed.
+- [x] Apply the reviewed Agent API adaptation and `-tags noweb` FRPS build.
+- [x] Update every active FRP pin, build input and third-party notice atomically.
+- [x] Build, audit, sign and attest the protected `0.70.1-r1` FRPS dependency.
+- [x] Pin the exact dependency manifest and immutable multi-architecture digest.
+- [x] Make the Windows Agent resource build reproducible with
+      `SOURCE_DATE_EPOCH=0` and keep its expected SHA-256 fail-closed.
+- [x] Confirm the protected repository CI reproduces the committed Agent
+      SHA-256; if the protected toolchain differs, commit that protected hash
+      without weakening the comparison.
+- [x] Pass the complete repository and release smoke matrices on the promoted
+      commit.
+- [ ] Pass clean Windows 10/11 install and upgrade VMs before restoring any
+      official Windows binary distribution.
+- [ ] Publish the RC only after package/image SBOM, provenance, checksum,
+      signature and attestation gates succeed.
 
-The exact reviewed Agent API adaptation is preserved in
-`docs/frp-0.70.1-agent-candidate.patch`. It deliberately excludes version pins,
-the trusted executable and `AgentExpectedSha256`; apply it only as part of the
-atomic promotion change described above.
-
-## Issue draft
-
-Title: `Promote validated FRP 0.70.1 candidate after protected Agent rebuild`
-
-Body:
-
-> The isolated FRP 0.70.1 compatibility matrix passed on 2026-08-13. The
-> rollout remains blocked because the trusted Windows Agent 2.4.0 binary and
-> `AgentExpectedSha256` are still the reviewed FRP 0.62.1 artifact. Apply the
-> API adaptation documented in `docs/FRP_0.70.1_COMPATIBILITY.md`, rebuild and
-> sign the Agent in the protected Windows environment, update the binary/hash
-> atomically, then run the full release and Windows 10/11 VM matrices. Do not
-> change production pins before those gates pass.
+The original isolated API patch remains in
+`docs/frp-0.70.1-agent-candidate.patch` for review provenance. The source tree,
+not that historical patch file, is authoritative after promotion.

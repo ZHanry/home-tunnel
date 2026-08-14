@@ -29,7 +29,7 @@ Home Tunnel separates its control plane from application traffic and uses a capa
 - License: Apache-2.0
 - Security model: <https://github.com/ZHanry/home-tunnel/blob/main/docs/SECURITY_MODEL.md?utm_source=awesome_tunneling&utm_medium=listing&utm_campaign=launch_2026_08>
 
-Production remains pinned to FRP 0.62.1. FRP 0.70.1 is a validated but blocked compatibility candidate and is not represented as the production version.
+Production is pinned to FRP 0.70.1 through the reviewed Home Tunnel `0.70.1-r1` image and restricted managed Agent.
 
 ### Checklist
 

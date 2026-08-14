@@ -1,8 +1,8 @@
-Home Tunnel Agent 2.4.0
+Home Tunnel Agent 2.5.0
 
 This product includes software developed by the frp project
-(https://github.com/fatedier/frp), version 0.62.1, commit
-b41d8f8e4074c4f633fb67d7d31b97db59472674.
+(https://github.com/fatedier/frp), version 0.70.1, commit
+fa3bcca2b0c4753cd4f0e2ab189dd6a5a6a15708.
 
 frp is licensed under the Apache License, Version 2.0. The complete license
 text is included in FRP-LICENSE.txt next to this notice in the installed

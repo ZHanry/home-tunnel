@@ -10,20 +10,24 @@ $workspace = Split-Path -Parent $clientRoot
 $projectPath = Join-Path $clientRoot "HomeTunnel.Client.csproj"
 $version = (Select-Xml -LiteralPath $projectPath -XPath "/Project/PropertyGroup/Version" | Select-Object -First 1).Node.InnerText
 if ($version -notmatch '^\d+\.\d+\.\d+$') { throw "Invalid project version" }
-$manifest = Get-Content -Raw -LiteralPath (Join-Path $PSScriptRoot "AppxManifest.xml")
-if ($manifest -notmatch 'Version="([^"\r\n]+)"' -or $Matches[1] -ne "$version.0") { throw "MSIX manifest version does not match $version" }
+$manifestPath = Join-Path $PSScriptRoot "AppxManifest.xml"
+$manifestVersion = (Select-Xml -LiteralPath $manifestPath -XPath "/*[local-name()='Package']/*[local-name()='Identity']/@Version" | Select-Object -First 1).Node.Value
+if ($manifestVersion -ne "$version.0") { throw "MSIX manifest version does not match $version" }
 if (-not $OutputDirectory) { $OutputDirectory = Join-Path $workspace "outputs\windows" }
 $toolsRoot = Join-Path $workspace ".codex-tools"
 
 $localPrograms = Join-Path ([Environment]::GetFolderPath([Environment+SpecialFolder]::LocalApplicationData)) "Programs"
-$dotnetCandidates = @((Get-Command dotnet -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source -First 1))
+$dotnetCandidates = @(
+    (Join-Path $workspace ".downloads\dotnet-sdk-10.0.400\dotnet.exe"),
+    (Get-Command dotnet -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source -First 1)
+)
 if (Test-Path -LiteralPath $localPrograms -PathType Container) {
     $dotnetCandidates += Get-ChildItem -LiteralPath $localPrograms -Recurse -Filter dotnet.exe -File -ErrorAction SilentlyContinue |
         Where-Object FullName -Match '[\\/]dotnet-sdk[\\/]' |
         Select-Object -ExpandProperty FullName
 }
 $dotnet = $dotnetCandidates | Where-Object {
-    $_ -and (Test-Path -LiteralPath $_ -PathType Leaf) -and ((& $_ --list-sdks 2>$null) -match '^8\.')
+    $_ -and (Test-Path -LiteralPath $_ -PathType Leaf) -and ((& $_ --list-sdks 2>$null) -match '^10\.0\.400\b')
 } | Select-Object -First 1
 if (-not $Python) { $Python = Get-Command python -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source -First 1 }
 $windowsKitsRoot = Join-Path ${env:ProgramFiles(x86)} "Windows Kits\10\bin"

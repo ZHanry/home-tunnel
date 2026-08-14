@@ -4,9 +4,19 @@ All notable changes to Home Tunnel are documented in this file. The project foll
 
 ## [Unreleased]
 
-The source tree is versioned `2.5.0` for the `v2.5.0-rc.1` validation cycle. The
-independent `v2.4.1` security maintenance patch must be reviewed and published
-first; none of the entries below are part of that patch release.
+The source tree is versioned `2.5.0` for the `v2.5.0-rc.1` validation cycle.
+Security maintenance originally scoped for an independent `v2.4.1` patch is
+included in this RC source; no `v2.4.1` tag or Release was published.
+
+### Security
+
+- Promoted the restricted Agent and FRPS dependency from FRP 0.62.1 to 0.70.1,
+  eliminating the reachable vulnerabilities found in the previous pin. The
+  FRPS `0.70.1-r1` image is built with Go 1.26.6 for `amd64`/`arm64`, audited,
+  SBOM/provenance-attested and keyless-signed before its exact digest is pinned.
+- Adapted the Agent to FRP's managed configuration-source and unsafe-feature
+  policy APIs while preserving the HTTP/TCP allowlists and wire-level user
+  prefix behaviour.
 
 ### Added
 

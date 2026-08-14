@@ -45,7 +45,7 @@ SQLite 迁移保持追加式，已有 `001` 到 `006` 不重写。新增测试�
 
 ### 发布声明必须小于或等于证据
 
-Linux 双架构服务端与 Linux 客户端是 Stable；macOS headless 是 Beta；Windows x64 只有 Source/Experimental，暂无官方二进制。项目没有公开动态演示站。生产 FRP 固定为 0.62.1；0.70.1 虽完成隔离兼容验证，但在受保护 Agent 重建、可信哈希更新与 Windows VM 验证前不会推广。
+Linux 双架构服务端与 Linux 客户端是 Stable；macOS headless 是 Beta；Windows x64 只有 Source/Experimental，暂无官方二进制。项目没有公开动态演示站。生产 FRP 固定为 0.70.1；受保护工作流重建 Agent 与双架构 FRPS `0.70.1-r1` 镜像，并固定经漏洞扫描、SBOM、来源证明与签名验证的摘要。
 
 ## Who it is for
 

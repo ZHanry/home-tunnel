@@ -90,7 +90,7 @@ services:
     logging: *logging
 
   frps:
-    image: ghcr.io/zhanry/home-tunnel-frps:0.62.1@sha256:557ef741bc5ef3d605f406d90d75d5d864abf647e064224b22a1d2f59fb8d167
+    image: ${FRPS_IMAGE:?set FRPS_IMAGE to the reviewed immutable FRPS digest}
     container_name: home-tunnel-release-frps
     restart: "no"
     init: true

@@ -24,14 +24,16 @@ import (
 
 	"github.com/fatedier/frp/client"
 	"github.com/fatedier/frp/pkg/config"
+	"github.com/fatedier/frp/pkg/config/source"
 	v1 "github.com/fatedier/frp/pkg/config/v1"
 	"github.com/fatedier/frp/pkg/config/v1/validation"
+	"github.com/fatedier/frp/pkg/policy/security"
 	"github.com/fatedier/frp/pkg/util/log"
 )
 
 var (
 	agentVersion = "0.0.0-dev"
-	frpVersion   = "0.62.1"
+	frpVersion   = "0.70.1"
 	frpCommit    = "unknown"
 )
 
@@ -121,11 +123,15 @@ func execute(args []string) error {
 	}
 
 	log.InitLogger(common.Log.To, common.Log.Level, int(common.Log.MaxDays), true)
+	configSource := source.NewConfigSource()
+	if err := configSource.ReplaceAll(proxies, nil); err != nil {
+		return fmt.Errorf("初始化受管配置源失败: %w", err)
+	}
 	service, err := client.NewService(client.ServiceOptions{
-		Common:         common,
-		ProxyCfgs:      proxies,
-		VisitorCfgs:    nil,
-		ConfigFilePath: "",
+		Common:                 common,
+		ConfigSourceAggregator: source.NewAggregator(configSource),
+		UnsafeFeatures:         security.NewUnsafeFeatures(nil),
+		ConfigFilePath:         "",
 	})
 	if err != nil {
 		return fmt.Errorf("初始化受管服务失败: %w", err)
@@ -176,11 +182,11 @@ func loadManagedConfig(path string, trust trustProfile) (*v1.ClientCommonConfig,
 	common.Complete()
 	proxies := make([]v1.ProxyConfigurer, 0, len(all.Proxies))
 	for _, typed := range all.Proxies {
-		typed.ProxyConfigurer.Complete(common.User)
+		typed.ProxyConfigurer.Complete()
 		proxies = append(proxies, typed.ProxyConfigurer)
 	}
 
-	if warning, err := validation.ValidateAllClientConfig(common, proxies, nil); err != nil {
+	if warning, err := validation.ValidateAllClientConfig(common, proxies, nil, security.NewUnsafeFeatures(nil)); err != nil {
 		return nil, nil, fmt.Errorf("配置校验失败: %w", err)
 	} else if warning != nil {
 		return nil, nil, fmt.Errorf("配置包含不受支持的兼容项: %v", warning)
@@ -494,9 +500,9 @@ func validateManagedHTTPProxy(httpProxy *v1.HTTPProxyConfig, user string, trust 
 			},
 		}
 	}
-	// Complete 填充默认值（含插件场景下 LocalIP 的 127.0.0.1 回填）并拼接
-	// user 前缀；name 是客户端生成的可变项，实际值已含前缀，直接采用。
-	expected.Complete(user)
+	// Complete 填充默认值（含插件场景下 LocalIP 的 127.0.0.1 回填）。
+	// FRP 0.70.1 在发送到服务端时应用 user 前缀；本地白名单比较未加前缀的名称。
+	expected.Complete()
 	expected.Name = base.Name
 	if !reflect.DeepEqual(httpProxy, &expected) {
 		return templateMismatchError(fmt.Sprintf("连接 %q ", base.Name), *httpProxy, expected)
@@ -531,7 +537,7 @@ func validateManagedTCPProxy(tcpProxy *v1.TCPProxyConfig, user string, trust tru
 		},
 		RemotePort: tcpProxy.RemotePort,
 	}
-	expected.Complete(user)
+	expected.Complete()
 	expected.Name = base.Name
 	if !reflect.DeepEqual(tcpProxy, &expected) {
 		return templateMismatchError(fmt.Sprintf("TCP 连接 %q ", base.Name), *tcpProxy, expected)

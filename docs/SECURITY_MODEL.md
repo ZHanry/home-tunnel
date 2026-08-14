@@ -13,7 +13,7 @@ Home Tunnel is intended for personal and small trusted-user deployments. It redu
 
 ## Agent restrictions
 
-The managed Agent is built from pinned FRP 0.62.1 source and rejects generic FRP command-line operation. It validates, among other things:
+The managed Agent is built from pinned FRP 0.70.1 source and rejects generic FRP command-line operation. It validates, among other things:
 
 - the FRPS host and port returned by the user-selected HTTPS control center;
 - a signed Home Tunnel lease and a single metadata field;

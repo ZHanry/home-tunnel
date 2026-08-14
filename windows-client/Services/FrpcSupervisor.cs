@@ -30,11 +30,11 @@ internal sealed record AgentTrustProfile(
 
 public sealed partial class FrpcSupervisor : IDisposable
 {
-    public const string Version = "2.4.0";
-    public const string FrpVersion = "0.62.1";
+    public const string Version = "2.5.0";
+    public const string FrpVersion = "0.70.1";
     public const string BinaryFileName = "HomeTunnel.Agent.exe";
     internal const string FrpsCaFileName = "frps-ca.pem";
-    private const string DevelopmentSha256 = "6173a5e589fb555beaa4921490571e19bee2df2d9c4d75375e5a36e9cf2f2f34";
+    private const string DevelopmentSha256 = "b37aa69b86b492247d4ba5ce052e176676221122803237711d8c3fc72220b434";
     public static string ExpectedSha256 { get; } = ReadAssemblyMetadata("HomeTunnelAgentSha256") ?? DevelopmentSha256;
     public static string? ExpectedSignerThumbprint { get; } = NormalizeOptional(ReadAssemblyMetadata("HomeTunnelAgentSignerThumbprint"));
 
@@ -249,7 +249,7 @@ public sealed partial class FrpcSupervisor : IDisposable
         lock (_proxyStateLock) _proxiesByName = index;
     }
 
-    // FRP 0.62.1 客户端日志：`[<user>.<proxyName>] start proxy success` 或
+    // FRP 0.70.1 客户端日志：`[<user>.<proxyName>] start proxy success` 或
     // `[<user>.<proxyName>] start error: ...`（client/control.go）。
     [GeneratedRegex(@"\[(?<name>[^\[\]\s]+)\] (?<result>start proxy success|start error)", RegexOptions.CultureInvariant)]
     private static partial Regex ProxyStartEventPattern();
