@@ -218,11 +218,11 @@ jobs:
           windows_inno_version=$(sed -n 's/.*MyAppVersion "\([^"]*\)".*/\1/p' windows-client/packaging/HomeTunnel.iss | head -n 1)
           windows_agent_version=$(tr -d '\r' < windows-client/build-agent.ps1 | sed -n 's/^\$agentVersion = "\([^"]*\)"$/\1/p')
           windows_agent_resource_version=$(sed -n 's/.*VALUE "ProductVersion", "\([^"]*\)\\0".*/\1/p' windows-agent/HomeTunnel.Agent.rc)
-          windows_agent_reported_version=$(sed -n 's/^[[:space:]]*public const string Version = "\([^"]*\)";$/\1/p' windows-client/Services/FrpcSupervisor.cs)
+          windows_agent_reported_version=$(tr -d '\r' < windows-client/Services/FrpcSupervisor.cs | sed -n 's/^[[:space:]]*public const string Version = "\([^"]*\)";$/\1/p')
           root_compose_versions=$(sed -n 's/.*{HOME_TUNNEL_VERSION:-\([^}]*\)}.*/\1/p' compose.yaml | sort -u)
           deploy_compose_versions=$(grep -oE 'home-tunnel/(control-center|traffic-gateway):[0-9][0-9A-Za-z.-]*' deploy/compose.yaml | sed 's/.*://; s/-arm64$//' | sort -u)
           test "$(grep -Ec 'home-tunnel/(control-center|traffic-gateway):[0-9][0-9A-Za-z.-]*-arm64$' deploy/compose.yaml)" = 2
-          generated_config_versions=$(grep -h '^HOME_TUNNEL_VERSION=' deploy/scripts/new-selfhost-config.sh deploy/scripts/new-selfhost-config.ps1 | sed 's/.*=//' | sort -u)
+          generated_config_versions=$(grep -h '^HOME_TUNNEL_VERSION=' deploy/scripts/new-selfhost-config.sh deploy/scripts/new-selfhost-config.ps1 | tr -d '\r' | sed 's/.*=//' | sort -u)
           public_versions=$(grep -hoE 'v=?[0-9]+\.[0-9]+\.[0-9]+' control-center/public/index.html control-center/public/modules/*.js | sed -E 's/^v=?//' | sort -u)
           echo "model=$model_version env=$env_version release=$release_version control_center=$control_center_version gateway=$gateway_version app=$app_version windows_project=$windows_project_version windows_manifest=$windows_manifest_version windows_appx=$windows_appx_version windows_inno=$windows_inno_version windows_agent=$windows_agent_version windows_agent_resource=$windows_agent_resource_version windows_agent_reported=$windows_agent_reported_version root_compose=$root_compose_versions deploy_compose=$deploy_compose_versions generated_config=$generated_config_versions public=$public_versions"
           test -n "$model_version" && test -n "$env_version" && test -n "$release_version" && test -n "$control_center_version" && test -n "$gateway_version" && test -n "$app_version" && test -n "$windows_project_version" && test -n "$windows_manifest_version" && test -n "$windows_appx_version" && test -n "$windows_inno_version" && test -n "$windows_agent_version" && test -n "$windows_agent_resource_version" && test -n "$windows_agent_reported_version"
