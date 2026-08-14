@@ -1,4 +1,4 @@
-FROM golang:1.26.6-bookworm AS build
+FROM golang:1.27rc2-bookworm AS build
 ARG FRP_VERSION=v0.70.1
 ARG FRP_COMMIT=fa3bcca2b0c4753cd4f0e2ab189dd6a5a6a15708
 ENV CGO_ENABLED=0
