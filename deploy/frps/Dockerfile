@@ -1,6 +1,6 @@
 FROM golang:1.26.6-bookworm AS build
-ARG FRP_VERSION=v0.62.1
-ARG FRP_COMMIT=b41d8f8e4074c4f633fb67d7d31b97db59472674
+ARG FRP_VERSION=v0.70.1
+ARG FRP_COMMIT=fa3bcca2b0c4753cd4f0e2ab189dd6a5a6a15708
 ENV CGO_ENABLED=0
 RUN git clone --depth 1 --branch "${FRP_VERSION}" https://github.com/fatedier/frp.git /src/frp \
     && test "$(git -C /src/frp rev-parse HEAD)" = "${FRP_COMMIT}" \
@@ -8,7 +8,7 @@ RUN git clone --depth 1 --branch "${FRP_VERSION}" https://github.com/fatedier/fr
     && go build -tags noweb -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /go/bin/frps ./cmd/frps
 
 FROM alpine:3.22
-ARG FRP_VERSION=v0.62.1
+ARG FRP_VERSION=v0.70.1
 LABEL org.opencontainers.image.title="Home Tunnel FRPS" \
       org.opencontainers.image.version="${FRP_VERSION}" \
       org.opencontainers.image.source="https://github.com/fatedier/frp"

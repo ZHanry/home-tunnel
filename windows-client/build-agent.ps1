@@ -11,21 +11,34 @@ $workspaceDir = Split-Path -Parent $clientDir
 $agentSourceDir = Join-Path $workspaceDir "windows-agent"
 $toolsDir = Join-Path $workspaceDir ".downloads\go-toolchain"
 $goExe = Join-Path $toolsDir "go\bin\go.exe"
-$goArchive = Join-Path $toolsDir "go1.26.5.windows-amd64.zip"
-$goArchiveSha256 = "97e6b2a833b6d89f9ff17d25419ac0a7e3b482a044e9ab18cdef834bd834fd38"
-$frpVersion = "0.62.1"
-$agentVersion = "2.4.0"
-$frpCommit = "b41d8f8e4074c4f633fb67d7d31b97db59472674"
+$goVersion = "1.26.6"
+$goArchive = Join-Path $toolsDir "go$goVersion.windows-amd64.zip"
+$goArchiveSha256 = "5b6c5b556525810463b5c897b50dc7a82d6a3dc0bfaf55d990a7e9f31d6b2318"
+$frpVersion = "0.70.1"
+$agentVersion = "2.5.0"
+$frpCommit = "fa3bcca2b0c4753cd4f0e2ab189dd6a5a6a15708"
 $frpArchive = Join-Path $workspaceDir ".downloads\frp-$frpCommit.zip"
-$frpArchiveSha256 = "57f101128055899614535e608dd8aae46c3b779a9095c6050556da91fede0bda"
+$frpArchiveSha256 = "9c6b0188a8f74e982069dc89218cc3d79bada8663cedf3b514b98847530cbf7d"
 $frpExtractRoot = Join-Path $workspaceDir ".downloads\frp-api-$frpCommit"
 $output = Join-Path $clientDir "assets\HomeTunnel.Agent.exe"
 
 New-Item -ItemType Directory -Force $toolsDir, (Split-Path -Parent $output) | Out-Null
 
+if (Test-Path -LiteralPath $goExe -PathType Leaf) {
+    $installedGoVersion = (& $goExe version | Out-String).Trim()
+    if ($LASTEXITCODE -ne 0 -or $installedGoVersion -ne "go version go$goVersion windows/amd64") {
+        $goRoot = Join-Path $toolsDir "go"
+        $resolvedGoRoot = (Resolve-Path -LiteralPath $goRoot).Path
+        $safeToolsRoot = [IO.Path]::GetFullPath($toolsDir) + [IO.Path]::DirectorySeparatorChar
+        if (-not $resolvedGoRoot.StartsWith($safeToolsRoot, [StringComparison]::OrdinalIgnoreCase)) {
+            throw "Refusing unsafe Go toolchain cache cleanup"
+        }
+        Remove-Item -LiteralPath $resolvedGoRoot -Recurse -Force
+    }
+}
 if (-not (Test-Path -LiteralPath $goExe -PathType Leaf)) {
     if (-not (Test-Path -LiteralPath $goArchive -PathType Leaf)) {
-        Invoke-WebRequest -UseBasicParsing "https://go.dev/dl/go1.26.5.windows-amd64.zip" -OutFile $goArchive
+        Invoke-WebRequest -UseBasicParsing "https://go.dev/dl/go$goVersion.windows-amd64.zip" -OutFile $goArchive
     }
     $actual = (Get-FileHash -LiteralPath $goArchive -Algorithm SHA256).Hash.ToLowerInvariant()
     if ($actual -ne $goArchiveSha256) { throw "Go toolchain checksum mismatch: $actual" }
@@ -76,10 +89,25 @@ try {
     Copy-Item -LiteralPath (Join-Path $agentSourceDir "HomeTunnel.Agent.rc") -Destination (Join-Path $temporaryCommand "HomeTunnel.Agent.rc")
     Copy-Item -LiteralPath (Join-Path $clientDir "assets\HomeTunnel.ico") -Destination (Join-Path $temporaryCommand "HomeTunnel.ico")
 
-    & $WindRes -i (Join-Path $temporaryCommand "HomeTunnel.Agent.rc") `
-        -o (Join-Path $temporaryCommand "resource_windows_amd64.syso") `
-        -O coff --target=pe-x86-64
-    if ($LASTEXITCODE -ne 0) { throw "Agent Windows resource compilation failed" }
+    # GNU windres otherwise writes the current time into the COFF header, which
+    # makes the reviewed Agent SHA-256 change on every protected rebuild.
+    $previousSourceDateEpoch = [Environment]::GetEnvironmentVariable("SOURCE_DATE_EPOCH", "Process")
+    try {
+        $env:SOURCE_DATE_EPOCH = "0"
+        & $WindRes -i (Join-Path $temporaryCommand "HomeTunnel.Agent.rc") `
+            -o (Join-Path $temporaryCommand "resource_windows_amd64.syso") `
+            -O coff --target=pe-x86-64
+        $windResExitCode = $LASTEXITCODE
+    }
+    finally {
+        if ($null -eq $previousSourceDateEpoch) {
+            Remove-Item Env:SOURCE_DATE_EPOCH -ErrorAction SilentlyContinue
+        }
+        else {
+            $env:SOURCE_DATE_EPOCH = $previousSourceDateEpoch
+        }
+    }
+    if ($windResExitCode -ne 0) { throw "Agent Windows resource compilation failed" }
 
     $env:CGO_ENABLED = "0"
     $env:GOOS = "windows"

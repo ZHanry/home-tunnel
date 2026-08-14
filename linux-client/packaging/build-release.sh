@@ -23,12 +23,12 @@ source_version=$(sed -n 's/^const Version = "\([^"]*\)"$/\1/p' "$client_dir/inte
 [[ "${version%%-rc.*}" == "$source_version" ]] || { echo "Linux client source version $source_version does not match release version $version" >&2; exit 1; }
 downloads_dir="$workspace_dir/.downloads"
 output_dir="$workspace_dir/outputs/linux"
-frp_version=0.62.1
+frp_version=0.70.1
 agent_version=$(sed -n 's/^\$agentVersion = "\([^"]*\)"$/\1/p' "$workspace_dir/windows-client/build-agent.ps1")
 [[ "$agent_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "unable to read the independent Agent version" >&2; exit 1; }
-frp_commit=b41d8f8e4074c4f633fb67d7d31b97db59472674
+frp_commit=fa3bcca2b0c4753cd4f0e2ab189dd6a5a6a15708
 frp_archive="$downloads_dir/frp-$frp_commit.zip"
-frp_archive_sha256=57f101128055899614535e608dd8aae46c3b779a9095c6050556da91fede0bda
+frp_archive_sha256=9c6b0188a8f74e982069dc89218cc3d79bada8663cedf3b514b98847530cbf7d
 frp_extract_root="$downloads_dir/frp-api-$frp_commit"
 archive="$output_dir/home-tunnel-linux-$version-$architecture.tar.gz"
 checksum_file="$output_dir/home-tunnel-linux-$version-$architecture.sha256"
@@ -90,7 +90,7 @@ cp "$script_dir/install.sh" "$package_dir/install.sh"
 cp "$client_dir/README.md" "$package_dir/README.md"
 chmod 0755 "$package_dir/bin/home-tunnel-client" "$package_dir/lib/home-tunnel-agent" "$package_dir/libexec/home-tunnel-enroll" "$package_dir/install.sh"
 
-if [[ "$architecture" == "$(go env GOARCH)" ]]; then
+if [[ "$(go env GOOS)" == "linux" && "$architecture" == "$(go env GOARCH)" ]]; then
   client_version_output=$("$package_dir/bin/home-tunnel-client" version)
   agent_version_output=$("$package_dir/lib/home-tunnel-agent" version)
   [[ "$client_version_output" == "Home Tunnel Linux Client $version (Agent $agent_version)" ]] || { echo "client version self-check failed: $client_version_output" >&2; exit 1; }

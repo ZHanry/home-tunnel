@@ -31,7 +31,10 @@ if ($OutputDirectory -ne $allowedOutputRoot -and -not $OutputDirectory.StartsWit
     throw "Windows artifacts must be written below $allowedOutputRoot"
 }
 
-$dotnetCandidates = @((Get-Command dotnet -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source -First 1))
+$dotnetCandidates = @(
+    (Join-Path $workspace ".downloads\dotnet-sdk-10.0.400\dotnet.exe"),
+    (Get-Command dotnet -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source -First 1)
+)
 $localPrograms = Join-Path ([Environment]::GetFolderPath([Environment+SpecialFolder]::LocalApplicationData)) "Programs"
 if (Test-Path -LiteralPath $localPrograms -PathType Container) {
     $dotnetCandidates += Get-ChildItem -LiteralPath $localPrograms -Recurse -Filter dotnet.exe -File -ErrorAction SilentlyContinue |
@@ -40,7 +43,7 @@ if (Test-Path -LiteralPath $localPrograms -PathType Container) {
 }
 $dotnet = $dotnetCandidates | Where-Object {
     if (-not $_ -or -not (Test-Path -LiteralPath $_ -PathType Leaf)) { return $false }
-    try { (& $_ --list-sdks 2>$null) -match '^8\.' } catch { $false }
+    try { (& $_ --list-sdks 2>$null) -match '^10\.0\.400\b' } catch { $false }
 } | Select-Object -First 1
 $windowsKitsRoot = Join-Path ${env:ProgramFiles(x86)} "Windows Kits\10\bin"
 $signTool = Get-ChildItem -LiteralPath $windowsKitsRoot -Recurse -Filter signtool.exe -File -ErrorAction SilentlyContinue |
@@ -196,7 +199,7 @@ Not After: $($certificate.NotAfter.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:
 Purpose: Home Tunnel $Version internal Authenticode signing
 Trust: Internal self-signed certificate; a publicly trusted code-signing certificate is required for production publisher trust.
 Agent SHA-256: $signedAgentHash
-Agent: Purpose-built Home Tunnel Agent $Version based on pinned FRP 0.62.1 source.
+Agent: Purpose-built Home Tunnel Agent $Version based on pinned FRP 0.70.1 source.
 "@, [Text.UTF8Encoding]::new($false))
     [IO.File]::WriteAllText((Join-Path $OutputDirectory "README-EXE.txt"), @"
 Home Tunnel $Version Windows x64 安装包

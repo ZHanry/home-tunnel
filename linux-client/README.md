@@ -3,7 +3,7 @@
 This directory contains the headless client for Linux and macOS. It uses two processes:
 
 - `home-tunnel-client` owns control-center authentication, device registration, configuration sync, lease renewal, heartbeat reporting, state persistence, and process supervision.
-- `home-tunnel-agent` is built from the same restricted FRP 0.62.1 source and `windows-agent/main.go` validation surface as the Windows release. It rejects generic FRP commands, UDP proxies, unassigned TCP ports, visitors, and arbitrary plugins.
+- `home-tunnel-agent` is built from the same restricted FRP 0.70.1 source and `windows-agent/main.go` validation surface as the Windows release. It rejects generic FRP commands, UDP proxies, unassigned TCP ports, visitors, and arbitrary plugins.
 
 The service supports Linux `amd64`/`arm64` and macOS (darwin) `amd64`/`arm64`. It publishes HTTP or HTTPS targets reachable from the host and administrator-assigned TCP ports when that advanced feature is explicitly enabled; it is not a general-purpose VPN or unrestricted TCP/UDP tunnel.
 

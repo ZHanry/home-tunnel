@@ -10,8 +10,9 @@ services:
       context: ./traffic-gateway
 
   frps:
-    image: home-tunnel/frps:0.62.1-dev
+    image: home-tunnel/frps:0.70.1-dev
     build:
       context: ./deploy/frps
       args:
-        FRP_VERSION: v0.62.1
+        FRP_VERSION: v0.70.1
+        FRP_COMMIT: fa3bcca2b0c4753cd4f0e2ab189dd6a5a6a15708

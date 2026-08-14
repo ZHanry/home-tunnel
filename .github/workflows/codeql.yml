@@ -64,7 +64,7 @@ jobs:
         name: Download pinned FRP source for Agent analysis
         shell: pwsh
         run: |
-          $frpCommit = 'b41d8f8e4074c4f633fb67d7d31b97db59472674'
+          $frpCommit = 'fa3bcca2b0c4753cd4f0e2ab189dd6a5a6a15708'
           $archive = Join-Path $env:RUNNER_TEMP 'frp-source.zip'
           Invoke-WebRequest -UseBasicParsing -Headers @{
             'Accept' = 'application/vnd.github+json'
@@ -72,7 +72,7 @@ jobs:
             'X-GitHub-Api-Version' = '2022-11-28'
           } "https://api.github.com/repos/fatedier/frp/zipball/$frpCommit" -OutFile $archive
           $actual = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
-          if ($actual -ne '57f101128055899614535e608dd8aae46c3b779a9095c6050556da91fede0bda') {
+          if ($actual -ne '9c6b0188a8f74e982069dc89218cc3d79bada8663cedf3b514b98847530cbf7d') {
             throw "Pinned FRP source checksum mismatch: $actual"
           }
           $extract = Join-Path $env:RUNNER_TEMP 'frp-source'

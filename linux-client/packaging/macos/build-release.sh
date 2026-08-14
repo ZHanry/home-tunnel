@@ -47,12 +47,12 @@ hash_file() {
 
 downloads_dir="$workspace_dir/.downloads"
 output_dir="$workspace_dir/outputs/macos"
-frp_version=0.62.1
+frp_version=0.70.1
 agent_version=$(sed -n 's/^\$agentVersion = "\([^"]*\)"$/\1/p' "$workspace_dir/windows-client/build-agent.ps1")
 [[ "$agent_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "unable to read the independent Agent version" >&2; exit 1; }
-frp_commit=b41d8f8e4074c4f633fb67d7d31b97db59472674
+frp_commit=fa3bcca2b0c4753cd4f0e2ab189dd6a5a6a15708
 frp_archive="$downloads_dir/frp-$frp_commit.zip"
-frp_archive_sha256=57f101128055899614535e608dd8aae46c3b779a9095c6050556da91fede0bda
+frp_archive_sha256=9c6b0188a8f74e982069dc89218cc3d79bada8663cedf3b514b98847530cbf7d
 frp_extract_root="$downloads_dir/frp-api-$frp_commit"
 archive="$output_dir/home-tunnel-macos-$version-$architecture.tar.gz"
 checksum_file="$output_dir/home-tunnel-macos-$version-$architecture.sha256"

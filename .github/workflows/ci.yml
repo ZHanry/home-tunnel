@@ -114,7 +114,7 @@ jobs:
           '该哈希已与 windows-client/HomeTunnel.Client.csproj 的 AgentExpectedSha256 核验一致。' >> $env:GITHUB_STEP_SUMMARY
       # 复用脚本刚下载的同一工具链与 FRP 树，按受管布局跑 Agent 校验逻辑
       # 的 gofmt/vet/test，保证 CI 每次验证白名单校验逻辑本身。
-      - name: Run agent Go checks inside the pinned FRP tree
+      - name: Run Agent Go and vulnerability checks inside the pinned FRP tree
         shell: pwsh
         run: |
           $env:GOFLAGS = '-buildvcs=false'
@@ -136,6 +136,8 @@ jobs:
               if ($LASTEXITCODE -ne 0) { throw 'agent go vet failed' }
               & (Join-Path $goBin 'go.exe') test -count=1 ./cmd/home-tunnel-agent/
               if ($LASTEXITCODE -ne 0) { throw 'agent go test failed' }
+              & (Join-Path $goBin 'go.exe') run golang.org/x/vuln/cmd/govulncheck@v1.6.0 ./cmd/home-tunnel-agent/
+              if ($LASTEXITCODE -ne 0) { throw 'agent govulncheck failed' }
             }
             finally {
               Pop-Location
@@ -242,6 +244,44 @@ jobs:
           test "$windows_agent_reported_version" = "$windows_agent_version"
           grep -q -- '-X main.agentVersion=$agent_version' linux-client/packaging/build-release.sh
           grep -q -- '-X main.agentVersion=$agent_version' linux-client/packaging/macos/build-release.sh
+      - name: Check FRP dependency consistency
+        run: |
+          set -euo pipefail
+          frp_version=$(jq -r .version deploy/frps/dependency.json)
+          frp_tag=$(jq -r .upstream_tag deploy/frps/dependency.json)
+          frp_commit=$(jq -r .upstream_commit deploy/frps/dependency.json)
+          frp_archive_sha256=$(jq -r .upstream_archive_sha256 deploy/frps/dependency.json)
+          frps_image=$(jq -r .image deploy/frps/dependency.json)
+          frps_image_tag=$(jq -r .image_tag deploy/frps/dependency.json)
+          frps_digest=$(jq -r .digest deploy/frps/dependency.json)
+          test "$frp_tag" = "v$frp_version"
+          test "$frps_image_tag" = "0.70.1-r1"
+          [[ "$frp_commit" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$frp_archive_sha256" =~ ^[0-9a-f]{64}$ ]]
+          [[ "$frps_digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+          grep -Fq "frpVersion   = \"$frp_version\"" windows-agent/main.go
+          grep -Fq "\$frpVersion = \"$frp_version\"" windows-client/build-agent.ps1
+          grep -Fq "\$frpCommit = \"$frp_commit\"" windows-client/build-agent.ps1
+          grep -Fq "\$frpArchiveSha256 = \"$frp_archive_sha256\"" windows-client/build-agent.ps1
+          grep -Fq "frp_version=$frp_version" linux-client/packaging/build-release.sh
+          grep -Fq "frp_version=$frp_version" linux-client/packaging/macos/build-release.sh
+          grep -Fq "frp_commit=$frp_commit" linux-client/packaging/build-release.sh
+          grep -Fq "frp_commit=$frp_commit" linux-client/packaging/macos/build-release.sh
+          grep -Fq "frp_archive_sha256=$frp_archive_sha256" linux-client/packaging/build-release.sh
+          grep -Fq "frp_archive_sha256=$frp_archive_sha256" linux-client/packaging/macos/build-release.sh
+          grep -Fq "ARG FRP_VERSION=$frp_tag" deploy/frps/Dockerfile
+          grep -Fq "ARG FRP_COMMIT=$frp_commit" deploy/frps/Dockerfile
+          grep -Fq "FRP_VERSION: $frp_tag" compose.build.yaml
+          grep -Fq "FRP_COMMIT: $frp_commit" compose.build.yaml
+          grep -Fq "$frps_image:$frps_image_tag@$frps_digest" compose.yaml
+          grep -Fq "home-tunnel/frps:$frp_version-arm64" deploy/compose.yaml
+          grep -Fq "$frp_commit" .github/workflows/codeql.yml
+          grep -Fq "$frp_archive_sha256" .github/workflows/codeql.yml
+          grep -Fq "version $frp_version, commit" windows-agent/THIRD-PARTY-NOTICES.txt
+          expected_agent_sha=$(sed -n 's/.*<AgentExpectedSha256[^>]*>\([0-9a-f]*\)<\/AgentExpectedSha256>.*/\1/p' windows-client/HomeTunnel.Client.csproj)
+          development_agent_sha=$(sed -n 's/.*DevelopmentSha256 = "\([0-9a-f]*\)";.*/\1/p' windows-client/Services/FrpcSupervisor.cs)
+          [[ "$expected_agent_sha" =~ ^[0-9a-f]{64}$ ]]
+          test "$development_agent_sha" = "$expected_agent_sha"
       - name: Prepare non-production Compose inputs
         run: |
           cp .env.example .env

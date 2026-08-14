@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "version": "0.70.1",
+  "upstream_tag": "v0.70.1",
+  "upstream_commit": "fa3bcca2b0c4753cd4f0e2ab189dd6a5a6a15708",
+  "upstream_archive_sha256": "9c6b0188a8f74e982069dc89218cc3d79bada8663cedf3b514b98847530cbf7d",
+  "image": "ghcr.io/zhanry/home-tunnel-frps",
+  "image_tag": "0.70.1-r1",
+  "digest": "sha256:cffde7b39698a5faba3828bb4a78b444d2d9c2cfea7385e28989728f5d73732f",
+  "repository_revision": "9b512cbc71b553a14e96cf02817a99d5e869c9a4",
+  "workflow_run": "https://github.com/ZHanry/home-tunnel/actions/runs/31762807301"
+}

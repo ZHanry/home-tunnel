@@ -35,8 +35,8 @@ $releaseName = "home-tunnel-release-$version-arm64-$stamp"
 $releaseDirectory = Join-Path $OutputRoot $releaseName
 $archivePath = Join-Path $OutputRoot ($releaseName + ".tar.gz")
 $archiveChecksumPath = $archivePath + ".sha256"
-$frpcSource = Join-Path $workspaceRoot ".downloads\frp-linux-arm64\frp_0.62.1_linux_arm64\frpc"
-$expectedFrpcHash = "3f900ac9b035aac50b117ce5f7c450ca073d3e453448783979e978dc57bc39a9"
+$frpcSource = Join-Path $workspaceRoot ".downloads\frp-linux-arm64\frp_0.70.1_linux_arm64\frpc"
+$expectedFrpcHash = "312be2787dc17c79b68ebf6cc9b536039b2fba595431782c68e3c056c1d491f8"
 $sbomSource = Join-Path $allowedOutputRoot "sbom"
 $sbomNames = @(
     "control-center.spdx.json",
@@ -46,7 +46,7 @@ $sbomNames = @(
 $images = @(
     "home-tunnel/control-center:$version-arm64",
     "home-tunnel/traffic-gateway:$version-arm64",
-    "home-tunnel/frps:0.62.1-arm64"
+    "home-tunnel/frps:0.70.1-arm64"
 )
 
 foreach ($required in @($frpcSource, (Join-Path $deployRoot "compose.yaml"))) {
