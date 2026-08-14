@@ -78,10 +78,10 @@ FRP 0.70.1 is not a pin-only upgrade:
 - [x] Pin the exact dependency manifest and immutable multi-architecture digest.
 - [x] Make the Windows Agent resource build reproducible with
       `SOURCE_DATE_EPOCH=0` and keep its expected SHA-256 fail-closed.
-- [ ] Confirm the protected repository CI reproduces the committed Agent
+- [x] Confirm the protected repository CI reproduces the committed Agent
       SHA-256; if the protected toolchain differs, commit that protected hash
       without weakening the comparison.
-- [ ] Pass the complete repository and release smoke matrices on the promoted
+- [x] Pass the complete repository and release smoke matrices on the promoted
       commit.
 - [ ] Pass clean Windows 10/11 install and upgrade VMs before restoring any
       official Windows binary distribution.
