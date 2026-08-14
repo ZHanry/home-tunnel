@@ -84,6 +84,28 @@ MSYS_NO_PATHCONV=1 openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
   -addext 'subjectAltName=DNS:console.smoke.test,DNS:*.tunnel.smoke.test' \
   -keyout "$openssl_output_root/caddy.key" -out "$openssl_output_root/caddy.crt" >/dev/null 2>&1
 
+# Docker Compose implements local file-backed secrets and bind mounts with the
+# host filesystem's ownership and mode. The runner creates these fixtures with
+# umask 077, but the production containers intentionally run as uid 10001.
+# These are deterministic, disposable smoke credentials, so make only the
+# mounted inputs readable while keeping every other generated file private.
+chmod 0755 \
+  "$smoke_root" \
+  "$smoke_root/secrets" \
+  "$smoke_root/downloads" \
+  "$smoke_root/backup-root" \
+  "$smoke_root/backup-root/status"
+chmod 0444 "$smoke_root/secrets/"*
+MSYS_NO_PATHCONV=1 docker run --rm --user 10001:10001 --platform linux/amd64 \
+  -v "$docker_smoke_root/secrets:/secrets:ro" \
+  -v "$docker_smoke_root/downloads:/downloads:ro" \
+  -v "$docker_smoke_root/backup-root/status:/status:ro" \
+  "$alpine_image" sh -eu -c '
+    for secret in /secrets/*; do test -r "$secret"; done
+    test -x /downloads
+    test -x /status
+  '
+
 cat > "$smoke_root/Caddyfile" <<'CADDY'
 {
   auto_https off
@@ -104,7 +126,11 @@ CADDY
 
 "${compose[@]}" config --quiet
 if [[ "$external_stack" != 1 ]]; then
-  "${compose[@]}" up -d
+  if ! "${compose[@]}" up -d; then
+    "${compose[@]}" ps --all || true
+    "${compose[@]}" logs --no-color || true
+    exit 1
+  fi
 fi
 for service in control-center frps traffic-gateway caddy; do
   container="home-tunnel-release-$service"
