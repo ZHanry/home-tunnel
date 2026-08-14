@@ -4,7 +4,7 @@ All notable changes to Home Tunnel are documented in this file. The project foll
 
 ## [Unreleased]
 
-The source tree is versioned `2.5.0` for the `v2.5.0-rc.1` validation cycle.
+The source tree is versioned `2.5.0` for the `v2.5.0-rc.2` validation cycle.
 Security maintenance originally scoped for an independent `v2.4.1` patch is
 included in this RC source; no `v2.4.1` tag or Release was published.
 
@@ -34,6 +34,12 @@ included in this RC source; no `v2.4.1` tag or Release was published.
 - Split the control-center administration routes by users, devices, connections, health, and audit, and split the traffic gateway into policy, access-control, rate-limit, sampling, proxy, and lifecycle modules without changing the v1 protocol surface.
 - Moved Windows update, session, realtime, and Agent coordination out of the main window into focused services while retaining Windows as source-only/Experimental.
 - Raised the development baselines to Node.js 24 LTS, Go 1.26, and .NET 10 LTS; added ESLint, Prettier, Markdown/link, gofmt/vet/staticcheck, analyzer, audit, coverage, and Lighthouse gates.
+
+### Fixed
+
+- Generate the aggregate RC checksum manifest with download-relative paths and
+  verify it before signing or publishing, so direct downloads and later Stable
+  promotion can both run `shasum -c SHA256SUMS.txt` successfully.
 
 ## [2.4.1] - 2026-08-13
 
