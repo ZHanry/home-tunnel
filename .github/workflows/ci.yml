@@ -187,13 +187,22 @@ jobs:
       - name: Build Linux client controller
         working-directory: linux-client
         run: CGO_ENABLED=0 go build ./cmd/home-tunnel-client
-      - name: Check Linux packaging scripts
-        run: bash -n linux-client/packaging/build-release.sh linux-client/packaging/install.sh linux-client/packaging/home-tunnel-enroll
+      - name: Check release packaging scripts
+        run: |
+          bash -n \
+            linux-client/packaging/build-release.sh \
+            linux-client/packaging/install.sh \
+            linux-client/packaging/home-tunnel-enroll \
+            linux-client/packaging/macos/build-release.sh \
+            linux-client/packaging/macos/install.sh \
+            linux-client/packaging/macos/home-tunnel-enroll
       - name: Shellcheck shell scripts
         run: |
           shellcheck --severity=warning \
             linux-client/packaging/*.sh \
             linux-client/packaging/home-tunnel-enroll \
+            linux-client/packaging/macos/*.sh \
+            linux-client/packaging/macos/home-tunnel-enroll \
             deploy/scripts/*.sh \
             deploy/frps/entrypoint.sh
       - name: Lint Markdown
@@ -244,6 +253,24 @@ jobs:
           test "$windows_agent_reported_version" = "$windows_agent_version"
           grep -q -- '-X main.agentVersion=$agent_version' linux-client/packaging/build-release.sh
           grep -q -- '-X main.agentVersion=$agent_version' linux-client/packaging/macos/build-release.sh
+      - name: Build release package smoke matrix
+        run: |
+          set -euo pipefail
+          release_version=$(sed -n 's/^HOME_TUNNEL_VERSION=//p' .env.example)
+          for architecture in amd64 arm64; do
+            VERSION="$release_version" ARCH="$architecture" ./linux-client/packaging/build-release.sh
+            VERSION="$release_version" ARCH="$architecture" ./linux-client/packaging/macos/build-release.sh
+          done
+          for platform in linux macos; do
+            for architecture in amd64 arm64; do
+              prefix="home-tunnel-$platform-$release_version-$architecture"
+              archive="outputs/$platform/$prefix.tar.gz"
+              checksum="outputs/$platform/$prefix.sha256"
+              (cd "outputs/$platform" && sha256sum -c "$(basename "$checksum")")
+              tar -tzf "$archive" | grep -Fx "$prefix/bin/home-tunnel-client"
+              tar -tzf "$archive" | grep -Fx "$prefix/lib/home-tunnel-agent"
+            done
+          done
       - name: Check FRP dependency consistency
         run: |
           set -euo pipefail

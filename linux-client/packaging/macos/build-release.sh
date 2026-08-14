@@ -48,7 +48,7 @@ hash_file() {
 downloads_dir="$workspace_dir/.downloads"
 output_dir="$workspace_dir/outputs/macos"
 frp_version=0.70.1
-agent_version=$(sed -n 's/^\$agentVersion = "\([^"]*\)"$/\1/p' "$workspace_dir/windows-client/build-agent.ps1")
+agent_version=$(tr -d '\r' < "$workspace_dir/windows-client/build-agent.ps1" | sed -n 's/^\$agentVersion = "\([^"]*\)"$/\1/p')
 [[ "$agent_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "unable to read the independent Agent version" >&2; exit 1; }
 frp_commit=fa3bcca2b0c4753cd4f0e2ab189dd6a5a6a15708
 frp_archive="$downloads_dir/frp-$frp_commit.zip"
