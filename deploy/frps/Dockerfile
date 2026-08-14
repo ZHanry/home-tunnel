@@ -5,7 +5,7 @@ ENV CGO_ENABLED=0
 RUN git clone --depth 1 --branch "${FRP_VERSION}" https://github.com/fatedier/frp.git /src/frp \
     && test "$(git -C /src/frp rev-parse HEAD)" = "${FRP_COMMIT}" \
     && cd /src/frp \
-    && go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /go/bin/frps ./cmd/frps
+    && go build -tags noweb -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /go/bin/frps ./cmd/frps
 
 FROM alpine:3.22
 ARG FRP_VERSION=v0.62.1
