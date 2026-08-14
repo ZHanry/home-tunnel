@@ -2,7 +2,7 @@
 
 Release artifacts are built once from a protected RC tag and uploaded by `.github/workflows/release-images.yml`; they are never committed to the source tree. The workflow accepts stable `vX.Y.Z` and release-candidate `vX.Y.Z-rc.N` tags only, requires the tagged commit to already be on `main`, and rejects version drift. RC tags are the only build path: they create signed/attested multi-architecture images, four Linux/macOS packages, one Windows x64 Experimental EXE, a machine-readable image-digest manifest, and release-smoke evidence without moving image `latest`. A stable tag must resolve to the same commit as an already published matching RC. It downloads and verifies that prerelease, then promotes the exact signed image digests and identical assets without rebuilding. Manual dispatch cannot publish or promote a release.
 
-> **v3.0 rule:** `v3.0.0-rc.1` is the only build path. `v3.0.0`
+> **v3.0 rule:** `v3.0.0-rc.2` is the only build path. `v3.0.0`
 > must reuse its exact commit, image digests, and complete asset set.
 
 ## Version update

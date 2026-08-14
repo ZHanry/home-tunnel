@@ -59,7 +59,7 @@ chmod 0644 "$secret_root"/*
 chmod 0700 "$secret_root"
 
 cat > "$environment_path" <<EOF
-HOME_TUNNEL_VERSION=3.0.0-rc.1
+HOME_TUNNEL_VERSION=3.0.0-rc.2
 HOME_TUNNEL_CONSOLE_HOST=$console_host
 HOME_TUNNEL_TUNNEL_DOMAIN=$tunnel_domain
 HOME_TUNNEL_PUBLIC_BASE_URL=https://$console_host
