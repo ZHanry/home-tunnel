@@ -9,7 +9,7 @@ Home Tunnel is a self-hosted tunneling platform for personal and family services
 
 ![The real Home Tunnel management dashboard showing connections, traffic, and component health](docs/site/assets/admin-dashboard.jpg)
 
-> `v3.0.0` is promoted from the same commit and immutable artifact set as `v3.0.0-rc.1`. Linux server `amd64`/`arm64` and the Linux client are Stable. macOS headless is Beta. The Windows x64 EXE is self-signed Experimental software and displays an unknown-publisher warning.
+> `v3.0.0` is promoted from the same commit and immutable artifact set as `v3.0.0-rc.2`. Linux server `amd64`/`arm64` and the Linux client are Stable. macOS headless is Beta. The Windows x64 EXE is self-signed Experimental software and displays an unknown-publisher warning.
 
 ## Quick Start
 

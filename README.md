@@ -15,7 +15,7 @@ Home Tunnel 是面向个人与家庭服务的自托管内网穿透平台，用�
 
 ![Home Tunnel 真实管理后台，显示连接、流量和组件健康状态](docs/site/assets/admin-dashboard.jpg)
 
-> `v3.0.0` 由 `v3.0.0-rc.1` 的同一提交和同一套不可变资产提升。服务端 Linux `amd64`/`arm64` 与 Linux 客户端为 Stable；macOS headless 为 Beta；Windows x64 EXE 为自签名 Experimental，会显示未知发布者提示。
+> `v3.0.0` 由 `v3.0.0-rc.2` 的同一提交和同一套不可变资产提升。服务端 Linux `amd64`/`arm64` 与 Linux 客户端为 Stable；macOS headless 为 Beta；Windows x64 EXE 为自签名 Experimental，会显示未知发布者提示。
 
 ## 三步启动
 

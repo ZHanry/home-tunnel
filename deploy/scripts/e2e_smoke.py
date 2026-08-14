@@ -415,10 +415,14 @@ try {
             landing_page = landing_body.decode()
             if 'href="https://github.com/ZHanry/home-tunnel/blob/main/linux-client/README.md"' not in landing_page:
                 raise RuntimeError("Landing page does not point to the Linux quick start")
-            if "Windows 当前仅提供源码，暂无官方安装包" not in landing_page:
+            windows_download = (
+                'href="https://github.com/ZHanry/home-tunnel/releases/latest/download/'
+                'HomeTunnel-Setup-3.0.0-x64.exe"'
+            )
+            if windows_download not in landing_page or 'id="hero-download"' not in landing_page:
+                raise RuntimeError("Landing page does not expose the Windows x64 EXE")
+            if "Windows EXE 为自签名 Experimental" not in landing_page or "未知发布者" not in landing_page:
                 raise RuntimeError("Landing page does not disclose the Windows distribution status")
-            if 'id="hero-download"' in landing_page or "download-button" in landing_page:
-                raise RuntimeError("Landing page still exposes an unsupported Windows download action")
 
             original_admin_hash = str(sqlite_value("SELECT password_hash FROM users WHERE lower(username)='admin' AND role='admin' LIMIT 1") or "")
             bootstrap_login = api("POST", "/api/v1/auth/login", {"username": "admin", "password": bootstrap_password, "client_type": "windows"})
