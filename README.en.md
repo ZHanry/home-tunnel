@@ -7,9 +7,9 @@
 
 Home Tunnel is a self-hosted tunneling platform for personal and family services. Publish NAS, Home Assistant, and development services through an auditable, rate-limited control plane that you can revoke at any time.
 
-![The real Home Tunnel management dashboard showing connections, traffic, and component health](docs/assets/screenshots/admin-dashboard.jpg)
+![The real Home Tunnel management dashboard showing connections, traffic, and component health](docs/site/assets/admin-dashboard.jpg)
 
-> `v2.4.1` is the security maintenance release that must ship first. This complete source tree targets `v2.5.0-rc.2` and is available for testing only after its full RC matrix passes and the owner publishes it. Linux server `amd64`/`arm64` and the Linux client are Stable. macOS headless is Beta. Windows x64 is Source/Experimental with no official binary.
+> `v3.0.0` is promoted from the same commit and immutable artifact set as `v3.0.0-rc.1`. Linux server `amd64`/`arm64` and the Linux client are Stable. macOS headless is Beta. The Windows x64 EXE is self-signed Experimental software and displays an unknown-publisher warning.
 
 ## Quick Start
 
@@ -38,9 +38,11 @@ Read the one-time password from `deploy/secrets/bootstrap_admin_password`, open 
 | Server | Linux `amd64` / `arm64` | Stable | Containers and source builds; stable releases require both architectures |
 | Headless client | Linux `amd64` / `arm64` | Stable | systemd, realtime configuration, and safety polling |
 | Headless client | macOS `amd64` / `arm64` | Beta | launchd package; broader real-hardware coverage is pending |
-| Desktop client | Windows 10/11 x64 | Source / Experimental | No official binary or update manifest |
+| Desktop client | Windows 10/11 x64 | Experimental | Release provides a self-signed EXE and update manifest; Windows warns about the unknown publisher |
 
-Historical self-signed Windows assets remain for traceability only. They are old, unsupported, and may display an unknown-publisher warning. Official distribution will return only after trusted Authenticode signing, a protected signing environment, and clean Windows 10/11 install and upgrade VM coverage are available.
+The Windows EXE is built with the same RC artifact set later promoted unchanged to Stable and includes SHA-256, an SPDX SBOM, Sigstore bundles, and GitHub provenance. Self-signing proves only artifact-set consistency, not a trusted publisher identity. Trusted distribution still requires a public Authenticode certificate and protected signing environment.
+
+[Download the latest Windows x64 EXE](https://github.com/ZHanry/home-tunnel/releases/latest/download/HomeTunnel-Setup-3.0.0-x64.exe), verify its published SHA-256, and expect an unknown-publisher or SmartScreen prompt.
 
 ## Why not raw FRP?
 
@@ -66,7 +68,7 @@ Control traffic and application traffic are separated. See [Architecture](docs/A
 - Complete WebSocket messages are capped at 64 KiB, with explicit fragment and buffered-chunk limits. Tests cover overload, authentication failure, abrupt disconnect, resource reclamation, and reconnect.
 - CI audits production dependencies at Moderate severity and runs TypeScript, Go, .NET, Compose, contract, and documentation checks.
 - CodeQL explicitly analyzes JavaScript/TypeScript, Go, and C#. Secret Scanning and Push Protection should remain enabled.
-- Stable releases must use one commit and one verified artifact set with checksums, SBOMs, provenance, and signature evidence.
+- Stable releases must use one commit and one verified artifact set with checksums, SBOMs, provenance, and signature evidence. The Windows EXE must also pass install, version, self-signature consistency, and uninstall checks.
 
 Never put vulnerability details, domains, IP addresses, tokens, passwords, or private log content in a public Issue. Use [GitHub private vulnerability reporting](https://github.com/ZHanry/home-tunnel/security/advisories/new) and read [SECURITY.md](SECURITY.md).
 

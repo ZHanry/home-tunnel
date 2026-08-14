@@ -57,8 +57,7 @@ lighthouse-results/
 _site/
 release-smoke-evidence/
 tests/smoke/
-_site/
-lighthouse-results/
+release-smoke-evidence-*/
 
 # Original deployment verification fixtures contain site-specific topology
 tests/caddy-baseline.Caddyfile

@@ -451,7 +451,7 @@ public partial class MainWindow : Window
                             BrandDialog.Show(
                                 this,
                                 "Windows 更新暂不可用",
-                                "当前 Windows x64 版本仅支持源码构建，暂无官方安装包。现有隧道不受影响。",
+                                "Windows 更新清单暂不可用，请稍后重试或从 GitHub Releases 手动下载并核对 SHA-256。现有隧道不受影响。",
                                 BrandDialogTone.Information);
                         }
                         break;
@@ -936,8 +936,8 @@ public partial class MainWindow : Window
             {
                 BrandDialog.Show(
                     this,
-                    "暂无官方修复安装包",
-                    "当前 Windows x64 版本仅支持源码构建。现有隧道可在租约有效期内继续运行；请从受信任的源码重新构建客户端，或联系管理员处理缺失组件。",
+                    "暂无可用修复安装包",
+                    "Windows 更新清单暂不可用。现有隧道可在租约有效期内继续运行；请稍后重试，或从 GitHub Releases 手动下载并核对 SHA-256。",
                     BrandDialogTone.Information);
                 return;
             }

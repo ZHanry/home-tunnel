@@ -217,7 +217,6 @@ jobs:
           globs: |
             **/*.md
             #**/node_modules
-            #docs/archive/**
       - name: Check version consistency
         run: |
           set -euo pipefail

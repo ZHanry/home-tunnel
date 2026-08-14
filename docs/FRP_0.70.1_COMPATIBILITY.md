@@ -1,8 +1,8 @@
 # FRP 0.70.1 compatibility and promotion record
 
 Status: **approved for the supported release scope**. Production is pinned to
-the reviewed `0.70.1-r1` FRPS image. Official Windows binary distribution
-remains suspended and is not part of this promotion.
+the reviewed `0.70.1-r1` FRPS image. The Windows EXE is distributed only as a
+self-signed Experimental asset; it is not a trusted-publisher build.
 
 Review completed: 2026-08-14
 
@@ -27,32 +27,30 @@ multi-architecture digest. The protected dependency workflow built it with Go
 `govulncheck`, required `linux/amd64` and `linux/arm64`, and published SBOM,
 provenance, GitHub attestation and keyless Cosign evidence.
 
-The restricted Agent is independently versioned `2.5.0`. Its source build is
-reproduced from the same pinned FRP tree, and release automation publishes a
-signed provenance record and GitHub attestation for that build. It deliberately
-does not publish the Windows executable, EXE installer, MSIX package or Windows
-`latest.json`.
+The restricted Agent is independently versioned `3.0.0`. Its source build is
+reproduced from the same pinned FRP tree. Release automation bundles it into
+the Experimental Windows EXE and publishes checksums, an SPDX SBOM, signed
+provenance, and GitHub attestations. No MSIX package is published.
 
-The absence of clean Windows 10 and Windows 11 install/upgrade VM evidence does
-not expand the supported release scope: Windows x64 remains Source /
-Experimental. Official Windows binaries may resume only after trusted
-Authenticode signing, a protected signing environment, and that VM matrix all
-pass. A local Windows 11 host build and MSIX-signature check is diagnostic
-evidence only and must not be described as the missing clean-VM gate.
+The absence of a trusted Authenticode certificate and clean Windows 10 and
+Windows 11 upgrade VM evidence means Windows x64 remains Experimental. The
+GitHub-hosted runner verifies build, Defender scan, silent install, embedded
+Agent identity, signature consistency, and uninstall. Those checks do not
+create trusted publisher identity or promote Windows to Stable.
 
 ## Compatibility evidence
 
 | Gate | Result | Evidence |
 | --- | --- | --- |
 | Official tag and source identity | Pass | The tag resolves to `fa3bcca2…`; the downloaded API archive matches the recorded SHA-256. |
-| Restricted Agent API adaptation | Pass | Agent 2.5.0 uses the 0.70.1 configuration-source, aggregation, validation and unsafe-feature policy APIs. |
+| Restricted Agent API adaptation | Pass | Agent 3.0.0 uses the 0.70.1 configuration-source, aggregation, validation and unsafe-feature policy APIs. |
 | Managed whitelist tests | Pass | HTTP/TCP allowlists, visitor/plugin/common-field rejection, render shapes and CA checks pass. |
 | Agent static and vulnerability checks | Pass | Go formatting, tests, `go vet` and `govulncheck` 1.6.0 report no reachable vulnerability. |
 | Managed CA pinning | Pass | The expected certificate is accepted and an incorrect SHA-256 is rejected. |
 | FRPS TLS and authorization plugin | Pass | Forced TLS and `Login`, `NewProxy` and `CloseProxy` authorization flows complete. |
 | HTTP and authorized TCP tunnels | Pass | Host-routed HTTP and byte-for-byte TCP echo tests complete; an unassigned TCP port is rejected. |
 | FRPS dependency supply chain | Pass | Protected run 31762807301 produced the signed, attested `amd64`/`arm64` digest recorded above. |
-| Windows 10/11 clean install and upgrade VMs | Not run | Hyper-V management and Windows Sandbox are unavailable in the validation host session. Windows binary distribution remains suspended. |
+| Windows EXE build/install/uninstall | Pass in release workflow | GitHub-hosted Windows runner verifies the self-signed package; trusted certificate and clean OS upgrade coverage remain future gates. |
 
 ## Required source adaptations
 
@@ -83,11 +81,10 @@ FRP 0.70.1 is not a pin-only upgrade:
       without weakening the comparison.
 - [x] Pass the complete repository and release smoke matrices on the promoted
       commit.
-- [ ] Pass clean Windows 10/11 install and upgrade VMs before restoring any
-      official Windows binary distribution.
+- [ ] Add a trusted Authenticode certificate and clean Windows 10/11 upgrade VM
+      matrix before promoting Windows from Experimental to Stable.
 - [ ] Publish the RC only after package/image SBOM, provenance, checksum,
       signature and attestation gates succeed.
 
-The original isolated API patch remains in
-`docs/frp-0.70.1-agent-candidate.patch` for review provenance. The source tree,
-not that historical patch file, is authoritative after promotion.
+The reviewed source tree and the immutable dependency record above are
+authoritative after promotion.

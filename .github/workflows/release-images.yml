@@ -219,12 +219,15 @@ jobs:
           if-no-files-found: error
 
   agent-evidence:
-    name: Attest source-only Windows Agent baseline
+    name: Windows x64 Experimental EXE and Agent evidence
     if: needs.metadata.outputs.stable != 'true'
     needs: metadata
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.0.400
       - name: Install windres (mingw binutils)
         shell: pwsh
         run: |
@@ -237,6 +240,13 @@ jobs:
           }
           if (-not $windres) { throw 'windres.exe not found after mingw install' }
           "HOME_TUNNEL_WINDRES=$windres" >> $env:GITHUB_ENV
+          $inno = @(
+            (Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'),
+            (Join-Path $env:ProgramFiles 'Inno Setup 6\ISCC.exe')
+          ) | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } |
+            Select-Object -First 1
+          if (-not $inno) { throw 'Inno Setup 6 is missing from the runner image' }
+          "HOME_TUNNEL_INNO=$inno" >> $env:GITHUB_ENV
       - id: agent
         name: Reproduce the reviewed Agent baseline
         shell: pwsh
@@ -271,17 +281,91 @@ jobs:
             sha256 = $env:AGENT_SHA256
             repository_revision = $env:GITHUB_SHA
             build_identity = "https://github.com/$env:GITHUB_REPOSITORY/.github/workflows/release-images.yml@refs/tags/$env:GITHUB_REF_NAME"
-            distribution = "source-only; executable is attested but not published"
-            authenticode = "not available; official Windows distribution remains suspended"
+            distribution = "bundled in the Windows x64 Experimental EXE"
+            authenticode = "ephemeral self-signed; Windows may show unknown publisher"
           }
           [IO.File]::WriteAllText(
             (Join-Path (Get-Location) 'windows-agent-provenance.json'),
             ($evidence | ConvertTo-Json -Depth 3) + "`n",
             [Text.UTF8Encoding]::new($false)
           )
+      - id: windows
+        name: Build, scan, install, and uninstall the Experimental EXE
+        shell: pwsh
+        env:
+          VERSION: ${{ needs.metadata.outputs.base-version }}
+        run: |
+          $lines = & .\windows-client\packaging\build-exe.ps1 -Version $env:VERSION -WindRes $env:HOME_TUNNEL_WINDRES -InnoCompiler $env:HOME_TUNNEL_INNO
+          $lines | Write-Output
+          $installer = ($lines | Where-Object { $_ -like 'EXE=*' } |
+            Select-Object -First 1) -replace '^EXE=', ''
+          $sha = ($lines | Where-Object { $_ -like 'EXE_SHA256=*' } |
+            Select-Object -First 1) -replace '^EXE_SHA256=', ''
+          if (-not (Test-Path -LiteralPath $installer -PathType Leaf) -or
+              $sha -notmatch '^[0-9a-f]{64}$') {
+            throw 'Windows EXE output or SHA-256 is missing'
+          }
+          $fileName = Split-Path -Leaf $installer
+          [IO.File]::WriteAllText(
+            "$installer.sha256",
+            "$sha  $fileName" + [char]10,
+            [Text.UTF8Encoding]::new($false)
+          )
+          $metadata = Get-Content -Raw -LiteralPath outputs\windows\latest.json |
+            ConvertFrom-Json
+          if ($metadata.version -ne $env:VERSION -or
+              $metadata.sha256 -ne $sha -or
+              $metadata.signature_trust -ne 'untrusted-self-signed') {
+            throw 'Windows update manifest does not match the built EXE'
+          }
+          $test = & .\windows-client\packaging\test-exe.ps1 -Installer $installer
+          if ($test.Install -ne 'passed' -or -not $test.Uninstalled) {
+            throw 'Windows installer smoke did not complete'
+          }
+          $smoke = [ordered]@{
+            schema_version = 1
+            status = 'passed'
+            version = $env:VERSION
+            platform = 'windows'
+            architecture = 'x64'
+            installer_sha256 = $sha
+            install = $test.Install
+            product_version = $test.ProductVersion
+            agent_version = $test.AgentVersion
+            file_count = $test.FileCount
+            uninstalled = $test.Uninstalled
+            signature_trust = 'untrusted-self-signed'
+            repository_revision = $env:GITHUB_SHA
+          }
+          [IO.File]::WriteAllText(
+            (Join-Path (Get-Location) 'windows-exe-smoke.json'),
+            ($smoke | ConvertTo-Json -Depth 3) + [Environment]::NewLine,
+            [Text.UTF8Encoding]::new($false)
+          )
+          "installer=$installer" >> $env:GITHUB_OUTPUT
+          "checksum=$installer.sha256" >> $env:GITHUB_OUTPUT
+          "sbom=$installer.spdx.json" >> $env:GITHUB_OUTPUT
+      - name: Generate Windows SPDX SBOM
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with:
+          path: outputs/windows
+          format: spdx-json
+          output-file: ${{ steps.windows.outputs.sbom }}
+          upload-artifact: false
+          upload-release-assets: false
       - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
-      - name: Keyless-sign the public Agent evidence
-        run: cosign sign-blob --yes --bundle windows-agent-provenance.json.sigstore.json windows-agent-provenance.json
+      - name: Keyless-sign Windows package evidence
+        shell: pwsh
+        env:
+          INSTALLER: ${{ steps.windows.outputs.installer }}
+          CHECKSUM: ${{ steps.windows.outputs.checksum }}
+          SBOM: ${{ steps.windows.outputs.sbom }}
+        run: |
+          cosign sign-blob --yes --bundle windows-agent-provenance.json.sigstore.json windows-agent-provenance.json
+          foreach ($subject in @($env:INSTALLER, $env:CHECKSUM, $env:SBOM)) {
+            cosign sign-blob --yes --bundle "$subject.sigstore.json" "$subject"
+            if ($LASTEXITCODE -ne 0) { throw "Sigstore signing failed for $subject" }
+          }
       - name: Attest the reproduced Agent executable
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
@@ -290,12 +374,27 @@ jobs:
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-path: windows-agent-provenance.json
+      - name: Publish GitHub Windows EXE provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: ${{ steps.windows.outputs.installer }}
+      - name: Publish GitHub Windows EXE SBOM attestation
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: ${{ steps.windows.outputs.installer }}
+          sbom-path: ${{ steps.windows.outputs.sbom }}
+      - name: Stage the public Windows asset set
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force release-windows | Out-Null
+          Get-ChildItem -LiteralPath outputs\windows -File |
+            Where-Object Name -ne 'SHA256SUMS.txt' |
+            Copy-Item -Destination release-windows
+          Copy-Item windows-exe-smoke.json, windows-agent-provenance.json, windows-agent-provenance.json.sigstore.json release-windows
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: windows-agent-evidence
-          path: |
-            windows-agent-provenance.json
-            windows-agent-provenance.json.sigstore.json
+          name: windows-release
+          path: release-windows/*
           if-no-files-found: error
 
   client-packages:
@@ -423,12 +522,13 @@ jobs:
           merge-multiple: true
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: windows-agent-evidence
+          name: windows-release
           path: release
       - name: Verify complete matrices and write manifests
         shell: bash
         env:
           VERSION: ${{ needs.metadata.outputs.rc-version }}
+          BASE_VERSION: ${{ needs.metadata.outputs.base-version }}
         run: |
           set -euo pipefail
           for platform in linux macos; do
@@ -450,11 +550,32 @@ jobs:
               dependencies:{frps:$frps[0]}}' \
             image-records/image-*.json > release/image-digests.json
           cp deploy/frps/dependency.json release/frps-dependency.json
+          windows_exe="release/HomeTunnel-Setup-$BASE_VERSION-x64.exe"
+          test -s "$windows_exe"
+          test -s "$windows_exe.sha256"
+          test -s "$windows_exe.spdx.json"
+          test -s "$windows_exe.sigstore.json"
+          test -s "$windows_exe.sha256.sigstore.json"
+          test -s "$windows_exe.spdx.json.sigstore.json"
+          (cd release && sha256sum -c "HomeTunnel-Setup-$BASE_VERSION-x64.exe.sha256")
+          for support in HomeTunnel-Internal-Code-Signing.cer latest.json README-EXE.txt SIGNATURE.txt windows-exe-smoke.json; do
+            test -s "release/$support"
+          done
           test -s release/windows-agent-provenance.json
           test -s release/windows-agent-provenance.json.sigstore.json
-          jq -e '.agent_version == "2.5.0" and .frp_version == "0.70.1" and
+          jq -e --arg version "$BASE_VERSION" '.agent_version == $version and .frp_version == "0.70.1" and
             .frp_commit == "fa3bcca2b0c4753cd4f0e2ab189dd6a5a6a15708" and
             (.sha256 | test("^[0-9a-f]{64}$"))' release/windows-agent-provenance.json >/dev/null
+          exe_sha=$(sha256sum "$windows_exe" | awk '{print $1}')
+          jq -e --arg version "$BASE_VERSION" --arg sha "$exe_sha" '
+            .version == $version and .platform == "windows" and .architecture == "x64" and
+            .sha256 == $sha and .release_channel == "experimental" and
+            .signature_trust == "untrusted-self-signed"' release/latest.json >/dev/null
+          jq -e --arg version "$BASE_VERSION" --arg sha "$exe_sha" '
+            .status == "passed" and .version == $version and .installer_sha256 == $sha and
+            .install == "passed" and .uninstalled == true and
+            (.agent_version | startswith("Home Tunnel Agent " + $version)) and
+            .signature_trust == "untrusted-self-signed"' release/windows-exe-smoke.json >/dev/null
           test "$(jq '.images | length' release/image-digests.json)" -eq 2
           jq -e '.images["control-center"].digest | test("^sha256:[0-9a-f]{64}$")' release/image-digests.json >/dev/null
           jq -e '.images["traffic-gateway"].digest | test("^sha256:[0-9a-f]{64}$")' release/image-digests.json >/dev/null
@@ -544,6 +665,10 @@ jobs:
           prerelease: true
           make_latest: false
           generate_release_notes: true
+          body: |
+            Windows x64 EXE is Experimental and uses an ephemeral self-signed
+            certificate. Windows can show an unknown-publisher or SmartScreen
+            warning. Verify SHA256SUMS.txt and the attached Sigstore evidence.
           fail_on_unmatched_files: true
           files: release/*
       - name: Publish prerelease without moving latest
@@ -580,6 +705,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RC_TAG: ${{ needs.metadata.outputs.rc-tag }}
           RC_VERSION: ${{ needs.metadata.outputs.rc-version }}
+          BASE_VERSION: ${{ needs.metadata.outputs.base-version }}
         run: |
           set -euo pipefail
           mkdir release
@@ -612,7 +738,32 @@ jobs:
               done
             done
           done
-          for evidence in e2e-smoke.json backup.json restore.json release-smoke.json; do
+          windows_exe="release/HomeTunnel-Setup-$BASE_VERSION-x64.exe"
+          test -s "$windows_exe" && test -s "$windows_exe.sha256" && test -s "$windows_exe.spdx.json"
+          test -s "$windows_exe.sigstore.json" && test -s "$windows_exe.sha256.sigstore.json"
+          test -s "$windows_exe.spdx.json.sigstore.json"
+          (cd release && sha256sum -c "HomeTunnel-Setup-$BASE_VERSION-x64.exe.sha256")
+          for subject in "$windows_exe" "$windows_exe.sha256" "$windows_exe.spdx.json"; do
+            cosign verify-blob --bundle "$subject.sigstore.json" \
+              --certificate-identity-regexp "^https://github.com/$GITHUB_REPOSITORY/\\.github/workflows/release-images\\.yml@refs/tags/$RC_TAG$" \
+              --certificate-oidc-issuer https://token.actions.githubusercontent.com "$subject"
+          done
+          windows_sha=$(sha256sum "$windows_exe" | awk '{print $1}')
+          for support in HomeTunnel-Internal-Code-Signing.cer latest.json README-EXE.txt SIGNATURE.txt windows-agent-provenance.json; do
+            test -s "release/$support"
+          done
+          jq -e --arg version "$BASE_VERSION" '
+            .agent_version == $version and .frp_version == "0.70.1" and
+            .authenticode == "ephemeral self-signed; Windows may show unknown publisher"' \
+            release/windows-agent-provenance.json >/dev/null
+          jq -e --arg version "$BASE_VERSION" --arg sha "$windows_sha" '
+            .version == $version and .sha256 == $sha and
+            .release_channel == "experimental" and
+            .signature_trust == "untrusted-self-signed"' release/latest.json >/dev/null
+          jq -e --arg version "$BASE_VERSION" --arg sha "$windows_sha" '
+            .status == "passed" and .version == $version and .installer_sha256 == $sha and
+            .install == "passed" and .uninstalled == true' release/windows-exe-smoke.json >/dev/null
+          for evidence in e2e-smoke.json backup.json restore.json release-smoke.json windows-exe-smoke.json; do
             test -s "release/$evidence"
           done
           jq -e '.status == "passed" and (.tests | index("authenticated_api")) and
@@ -672,6 +823,10 @@ jobs:
           prerelease: false
           make_latest: false
           generate_release_notes: true
+          body: |
+            Windows x64 EXE is Experimental and uses an ephemeral self-signed
+            certificate. Windows can show an unknown-publisher or SmartScreen
+            warning. Verify SHA256SUMS.txt and the attached Sigstore evidence.
           fail_on_unmatched_files: true
           files: release/*
       - id: promote

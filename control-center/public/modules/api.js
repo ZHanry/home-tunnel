@@ -1,5 +1,5 @@
-import { localizedApiError } from "./locale.js?v=2.5.0-modules1";
-import { state } from "./state.js?v=2.5.0-modules1";
+import { localizedApiError } from "./locale.js?v=3.0.0-modules1";
+import { state } from "./state.js?v=3.0.0-modules1";
 
 async function parseResponse(response) {
   if (response.status === 204) return null;

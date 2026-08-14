@@ -21,7 +21,9 @@ flowchart LR
 
 - `control-center/`: authentication, administration, device registration, leases, policy state, optional release display metadata and the web UI.
 - `traffic-gateway/`: validates managed and DNS-verified custom HTTP hosts, enforces policy and rate limits, proxies streams and reports traffic samples.
-- `windows-client/`: source-only/Experimental WPF client for server selection, account login, device state, connection configuration, optional GitHub-hosted updates and diagnostics.
+- `windows-client/`: Experimental WPF client distributed as a self-signed x64
+  EXE for server selection, account login, device state, connection
+  configuration, GitHub-hosted updates, and diagnostics.
 - `linux-client/`: headless Go control process for enrollment, device authentication, WebSocket sync with polling fallback, lease renewal, heartbeat, Agent supervision, Linux systemd packaging and Beta macOS launchd packaging.
 - `windows-agent/`: shared capability-restricted FRP Agent source. Windows, Linux and macOS builds require generated configuration to match the server profile selected during client enrollment.
 - `deploy/frps/`: FRPS image and authorization-plugin configuration.

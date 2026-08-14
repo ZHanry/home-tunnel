@@ -8,7 +8,10 @@ Repository settings are part of the security boundary. Code changes alone do not
 
 - Enable Private vulnerability reporting. It returned `enabled: false` when audited on 2026-08-13.
 - Enable Dependency graph before opening the quality-gate PR; Dependency Review otherwise returns 403.
-- Enable Dependabot alerts, Dependabot security updates, and grouped security updates.
+- Enable Dependency graph and Dependabot alerts. Automated Dependabot pull
+  requests are disabled so the repository returns to one permanent branch;
+  review and batch dependency updates in short-lived, manually deleted PR
+  branches.
 - Retain Secret Scanning and Push Protection.
 - After every workflow uses a full immutable commit SHA, require SHA pinning in the Actions policy.
 
@@ -16,6 +19,8 @@ Repository settings are part of the security boundary. Code changes alone do not
 
 Configure only after the checks have succeeded on `main` at least once so their exact contexts exist:
 
+- Keep `main` as the only permanent branch. Delete every short-lived PR branch
+  immediately after merge or closure.
 - Require pull requests.
 - Require one approval, dismiss stale approvals, and require Code Owner review where applicable.
 - Require every conversation to be resolved.
@@ -52,7 +57,9 @@ Verify or create at least:
 - `feature`, `fix`, `ignore-for-release`
 - `deployment-feedback`
 
-Create the real `v2.5.0` milestone and focused Issues for release trust, quality gates, backend split, frontend modules, Windows xUnit/services, contracts/migrations, Pages/presentation, and the 30-day validation campaign. Issue Forms may reference a label only after it exists.
+Create release milestones only for active work. Close or remove obsolete
+planning Issues after the release, and reference labels in Issue Forms only
+after the labels exist.
 
 ## Emergency security bypass
 

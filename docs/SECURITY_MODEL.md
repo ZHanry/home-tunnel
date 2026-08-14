@@ -27,7 +27,16 @@ These checks are defense in depth. A user who can replace both the installed cli
 
 ## Update trust
 
-The source-only Windows client keeps server discovery and software updates separate. It accepts server configuration only from the HTTPS origin explicitly entered by the user. Windows release metadata is optional: a missing `latest.json` safely disables update discovery without affecting tunnels. If official distribution is restored, metadata and installers may come only from this project's GitHub Releases; the client validates every redirect and rejects unexpected repositories, tags, file names, sizes and SHA-256 hashes. A SHA-256 value stored beside an installer is not an independent signature; future public binaries also require trusted Authenticode signing and protected VM verification.
+The Experimental Windows client keeps server discovery and software updates
+separate. It accepts server configuration only from the HTTPS origin explicitly
+entered by the user. Windows release metadata is optional: a missing
+`latest.json` safely disables update discovery without affecting tunnels.
+Metadata and installers may come only from this project's GitHub Releases; the
+client validates every redirect and rejects unexpected repositories, tags, file
+names, sizes, and SHA-256 hashes. The release also provides aggregate and
+Sigstore evidence, but the current ephemeral self-signed Authenticode
+certificate does not establish publisher trust. Trusted Windows distribution
+still requires a public certificate and protected signing environment.
 
 ## What Home Tunnel does not protect against
 

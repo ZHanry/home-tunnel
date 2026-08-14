@@ -2,11 +2,11 @@
 
 All notable changes to Home Tunnel are documented in this file. The project follows [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [3.0.0] - 2026-08-14
 
-The source tree is versioned `2.5.0` for the `v2.5.0-rc.2` validation cycle.
-Security maintenance originally scoped for an independent `v2.4.1` patch is
-included in this RC source; no `v2.4.1` tag or Release was published.
+Home Tunnel 3.0.0 is the first release promoted from one fully verified RC
+commit and one immutable cross-platform artifact set. Security maintenance
+previously planned for an unpublished 2.4.1 patch is included here.
 
 ### Security
 
@@ -17,12 +17,19 @@ included in this RC source; no `v2.4.1` tag or Release was published.
 - Adapted the Agent to FRP's managed configuration-source and unsafe-feature
   policy APIs while preserving the HTTP/TCP allowlists and wire-level user
   prefix behaviour.
+- Updated `ws` from 8.18.3 to 8.21.3 and bounded complete WebSocket messages,
+  fragments, and buffered chunks with authenticated fragmentation, overload
+  disconnect, and recovery regression coverage.
 
 ### Added
 
 - Added bilingual README and static GitHub Pages, real desktop/mobile build screenshots, an architecture graphic, social preview metadata, privacy notice, and optional cookie-free GoatCounter event measurement.
 - Added native browser ES modules, standard xUnit discovery, cross-component REST/WebSocket/configuration contract fixtures, and additive database upgrade/backup/rollback coverage.
 - Added release-candidate and stable artifact workflows for Linux/macOS packages and multi-architecture images with checksums, SPDX SBOMs, GitHub attestations, and keyless Sigstore bundles.
+- Added a Windows 10/11 x64 Experimental EXE to the immutable RC/Stable asset
+  set. It is self-signed, visibly marked as an unknown-publisher build, tested
+  for silent install/uninstall, and shipped with checksums, an SPDX SBOM,
+  Sigstore bundles, and GitHub provenance.
 
 ### Changed
 
@@ -34,25 +41,17 @@ included in this RC source; no `v2.4.1` tag or Release was published.
 - Split the control-center administration routes by users, devices, connections, health, and audit, and split the traffic gateway into policy, access-control, rate-limit, sampling, proxy, and lifecycle modules without changing the v1 protocol surface.
 - Moved Windows update, session, realtime, and Agent coordination out of the main window into focused services while retaining Windows as source-only/Experimental.
 - Raised the development baselines to Node.js 24 LTS, Go 1.26, and .NET 10 LTS; added ESLint, Prettier, Markdown/link, gofmt/vet/staticcheck, analyzer, audit, coverage, and Lighthouse gates.
+- Corrected the supported-version policy and removed obsolete release-planning
+  material from the source tree.
 
 ### Fixed
 
 - Generate the aggregate RC checksum manifest with download-relative paths and
   verify it before signing or publishing, so direct downloads and later Stable
   promotion can both run `shasum -c SHA256SUMS.txt` successfully.
-
-## [2.4.1] - 2026-08-13
-
-### Security
-
-- Updated `ws` from 8.18.3 to 8.21.3 to address GHSA-96hv-2xvq-fx4p and GHSA-58qx-3vcg-4xpx.
-- Bounded complete WebSocket messages, fragments and buffered chunks, with authenticated fragmentation, overload disconnect and recovery regression tests.
-
-### Changed
-
-- Corrected the supported-version policy and removed unsupported Windows binary download calls to action. Windows x64 remains source-only/Experimental until trusted signing and VM verification are available.
-- Pinned GitHub Actions to immutable commits, added a stable CI quality gate, CodeQL, production dependency auditing and Go Dependabot coverage.
-- Added a privacy-safe deployment feedback Issue Form; repository labels must be configured by an owner before adding automatic labels.
+- Pinned GitHub Actions to immutable commits, added a stable CI quality gate,
+  CodeQL, production dependency auditing, and a privacy-safe deployment
+  feedback Issue Form.
 
 ## [2.4.0] - 2026-08-13
 

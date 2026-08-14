@@ -1,4 +1,4 @@
-import { state } from "./state.js?v=2.5.0-modules1";
+import { state } from "./state.js?v=3.0.0-modules1";
 
 const appShell = document.querySelector("#app-shell");
 
@@ -16,10 +16,10 @@ const zhToEn = {
   "无需公网 IP 或路由器端口映射，为 NAS、Home Assistant 和开发服务提供独立 HTTPS 地址、集中策略与可审计访问。": "Give your NAS, Home Assistant, and development services dedicated HTTPS addresses, centralized policies, and auditable access—without a public IP or router port forwarding.",
   "选择客户端平台": "Choose a client platform",
   "Windows 图形客户端": "Windows desktop client",
-  "Home Tunnel 2.5.0 Windows 图形客户端预览": "Home Tunnel 2.5.0 Windows desktop client preview",
+  "Home Tunnel 3.0.0 Windows 图形客户端预览": "Home Tunnel 3.0.0 Windows desktop client preview",
   "Linux 客户端快速开始": "Linux client quick start",
-  "Windows x64 源码": "Windows x64 source",
-  "Windows 当前仅提供源码，暂无官方安装包。": "Windows is currently source-only; no official installer is available.",
+  "Windows x64 EXE": "Windows x64 EXE",
+  "Windows EXE 为自签名 Experimental；安装时会提示未知发布者，请先核对 Release SHA-256。": "The Windows EXE is self-signed Experimental software. Expect an unknown-publisher warning and verify the Release SHA-256 first.",
   "隧道状态": "Tunnel status",
   "连接运行正常": "Connections are healthy",
   "隧道在线": "Tunnel online",
@@ -43,16 +43,16 @@ const zhToEn = {
   "同一套安全边界": "One consistent security boundary",
   "按设备选择运行方式": "Choose how each device runs",
   "两种客户端都只接受控制中心签发的 HTTP/HTTPS、自定义域名与管理员授权 TCP 配置和短期租约，不提供通用 FRP 命令行。": "Both clients accept only control-center-issued HTTP/HTTPS, verified custom-domain, administrator-authorized TCP configurations, and short-lived leases; neither exposes a general-purpose FRP CLI.",
-  "源码 / 实验性": "Source / Experimental",
+  "自签名 / Experimental": "Self-signed / Experimental",
   "登录、连接管理与实时配置通知": "Sign-in, connection management, and real-time configuration updates",
   "系统托盘、开机启动与诊断": "System tray, startup, and diagnostics",
   "设备凭据写入 Windows Credential Manager": "Device credentials stored in Windows Credential Manager",
-  "查看源码构建说明": "View source build instructions",
+  "下载并核对发布证据": "Download and verify release evidence",
   "Linux / macOS 无界面服务": "Linux / macOS headless service",
   "Linux / macOS 客户端安装摘要": "Linux / macOS client installation summary",
   "适合 NAS、家庭服务器和常开的 Linux/macOS 主机；支持实时配置通知，不含 GUI 与自动更新。": "Designed for NAS devices, home servers, and always-on Linux/macOS hosts, with realtime configuration notifications but no GUI or automatic updates.",
   "查看安装与运维说明": "View installation and operations guide",
-  "Linux Stable · macOS headless Beta · Windows x64 Source / Experimental": "Linux Stable · macOS headless Beta · Windows x64 Source / Experimental",
+  "Linux Stable · macOS headless Beta · Windows x64 self-signed Experimental": "Linux Stable · macOS headless Beta · Windows x64 self-signed Experimental",
   "返回 Home Tunnel 产品首页": "Back to the Home Tunnel home page",
   "登录控制中心": "Sign in to Control Center",
   "使用管理员账号继续。": "Continue with an administrator account.",
@@ -70,7 +70,7 @@ const zhToEn = {
   "保存新密码": "Save new password",
   "返回产品首页": "Back to product home",
   "主导航": "Main navigation",
-  "控制中心 v2.5.0": "Control Center v2.5.0",
+  "控制中心 v3.0.0": "Control Center v3.0.0",
   "工作区": "Workspace",
   "系统总览": "Overview",
   "用户管理": "Users",
