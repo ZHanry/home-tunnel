@@ -4,7 +4,8 @@ param(
     [string]$InnoCompiler = "",
     [string]$Version = "",
     [string]$AppId = "",
-    [string]$CloseApplications = ""
+    [string]$CloseApplications = "",
+    [string]$WindRes = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -84,7 +85,7 @@ try {
         -NotAfter (Get-Date).AddYears(2)
     Export-PfxCertificate -Cert $certificate -FilePath $pfx -Password $pfxPassword | Out-Null
 
-    & (Join-Path $clientRoot "build-agent.ps1")
+    & (Join-Path $clientRoot "build-agent.ps1") -WindRes $WindRes
     if ($LASTEXITCODE -ne 0) { throw "Home Tunnel Agent build failed" }
     $unsignedAgent = Join-Path $clientRoot "assets\HomeTunnel.Agent.exe"
     $agentHashNode = Select-Xml -LiteralPath $projectPath -XPath "/Project/PropertyGroup/AgentExpectedSha256" | Select-Object -First 1
@@ -184,7 +185,9 @@ try {
         released_at = $releasedAt
         download_url = "$projectUrl/releases/download/v$Version/$($installerInfo.Name)"
         stable_download_url = "$projectUrl/releases/latest"
+        release_channel = "experimental"
         signature = "internal-self-signed"
+        signature_trust = "untrusted-self-signed"
         certificate_thumbprint = $certificate.Thumbprint.ToLowerInvariant()
     }
     [IO.File]::WriteAllText(

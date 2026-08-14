@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-version=${VERSION:-2.5.0}
+version=${VERSION:-3.0.0}
 [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]] || { echo "VERSION must be X.Y.Z or X.Y.Z-rc.N" >&2; exit 2; }
 architecture=${ARCH:-$(go env GOARCH)}
 case "$architecture" in

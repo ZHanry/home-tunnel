@@ -21,7 +21,7 @@
   <meta property="og:image:alt" content="Home Tunnel 自托管家庭内网穿透平台及真实管理后台">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="assets/HomeTunnel.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="assets/site.css?v=2.5.0">
+  <link rel="stylesheet" href="assets/site.css?v=3.0.0">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -58,7 +58,7 @@
         <p class="lead">Home Tunnel 是面向个人与家庭服务的自托管内网穿透平台，用可审计、可限速、可随时撤销的控制面，安全发布 NAS、Home Assistant 和开发服务。</p>
         <div class="actions">
           <a class="button primary" href="#quick-start" data-goatcounter-click="quick-start">三步开始部署</a>
-          <a class="button" href="https://github.com/ZHanry/home-tunnel?utm_source=pages&amp;utm_medium=hero&amp;utm_campaign=launch_2026_08" data-goatcounter-click="github">查看 GitHub</a>
+          <a class="button" href="https://github.com/ZHanry/home-tunnel?utm_source=pages&amp;utm_medium=hero&amp;utm_campaign=release_3_0" data-goatcounter-click="github">查看 GitHub</a>
         </div>
       </div>
       <figure class="hero-visual">
@@ -108,13 +108,13 @@ docker compose pull
 docker compose up -d
 docker compose ps</code></pre>
       <div class="actions">
-        <a class="button primary" href="https://github.com/ZHanry/home-tunnel/blob/main/docs/SELF_HOSTING.md?utm_source=pages&amp;utm_medium=quick_start&amp;utm_campaign=launch_2026_08" data-goatcounter-click="quick-start-guide">阅读完整自托管指南</a>
-        <a class="button" href="https://github.com/ZHanry/home-tunnel/releases?utm_source=pages&amp;utm_medium=release&amp;utm_campaign=launch_2026_08" data-goatcounter-click="release">查看 Releases</a>
+        <a class="button primary" href="https://github.com/ZHanry/home-tunnel/blob/main/docs/SELF_HOSTING.md?utm_source=pages&amp;utm_medium=quick_start&amp;utm_campaign=release_3_0" data-goatcounter-click="quick-start-guide">阅读完整自托管指南</a>
+        <a class="button" href="https://github.com/ZHanry/home-tunnel/releases?utm_source=pages&amp;utm_medium=release&amp;utm_campaign=release_3_0" data-goatcounter-click="release">查看 Releases</a>
       </div>
     </section>
 
     <section id="support" aria-labelledby="support-title">
-      <div class="section-head"><p class="eyebrow">公开支持矩阵</p><h2 id="support-title">稳定性声明以实际 Release 产物为准。</h2><p>当前源码树面向 <code>v2.5.0-rc.2</code>；只有 RC 全矩阵通过并由所有者发布后才可测试。“Stable”只用于正式验证且有完整发布产物的平台。Windows 官方分发恢复前不会生成 Windows 专用的 <code>latest.json</code>。</p></div>
+      <div class="section-head"><p class="eyebrow">公开支持矩阵</p><h2 id="support-title">稳定性声明以实际 Release 产物为准。</h2><p><code>v3.0.0</code> 从 <code>v3.0.0-rc.1</code> 的同一提交与同一套不可变资产提升。“Stable”只用于完整验证的平台；Windows x64 EXE 明确标为自签名 Experimental。</p></div>
       <div class="support-wrap">
         <table>
           <thead><tr><th>组件</th><th>平台</th><th>状态</th><th>分发与限制</th></tr></thead>
@@ -122,7 +122,7 @@ docker compose ps</code></pre>
             <tr><td>服务端</td><td>Linux amd64 / arm64</td><td><span class="status stable">Stable</span></td><td>容器与源码构建；稳定版要求完整双架构矩阵。</td></tr>
             <tr><td>Headless 客户端</td><td>Linux amd64 / arm64</td><td><span class="status stable">Stable</span></td><td>systemd 服务，支持实时配置和安全轮询。</td></tr>
             <tr><td>Headless 客户端</td><td>macOS amd64 / arm64</td><td><span class="status beta">Beta</span></td><td>launchd 包；需完成包结构和升级验证。</td></tr>
-            <tr><td>图形客户端</td><td>Windows 10 / 11 x64</td><td><span class="status experimental">Source / Experimental</span></td><td>暂无官方二进制；历史自签名资产不受支持。</td></tr>
+            <tr><td>图形客户端</td><td>Windows 10 / 11 x64</td><td><span class="status experimental">Experimental</span></td><td>Release 提供自签名 EXE、校验和、SBOM 与来源证明；Windows 会提示未知发布者。</td></tr>
           </tbody>
         </table>
       </div>
@@ -147,7 +147,7 @@ docker compose ps</code></pre>
       <div class="faq">
         <details><summary>它与直接使用 FRP 有什么不同？</summary><p>Home Tunnel 在 FRP 之上增加用户、设备、连接、短期租约、访问控制、限速、采样与审计，并限制 Agent 只能执行控制中心签发的配置。</p></details>
         <details><summary>可以公开访问我的真实控制台吗？</summary><p>不建议把管理控制台作为公开演示站。Pages 仅展示本地夹具生成的静态截图，不连接任何真实部署。</p></details>
-        <details><summary>为什么没有 Windows 安装包？</summary><p>正式分发需可信 Authenticode 证书、受保护签名环境和 Windows 10/11 安装/升级 VM 验证。条件具备前仅保留源码构建。</p></details>
+        <details><summary>Windows EXE 为什么提示未知发布者？</summary><p>当前 EXE 使用临时自签名证书并作为 Experimental 资产发布。请核对 Release 的 SHA-256 与 Sigstore 证据；可信发布者提示仍需要公开 Authenticode 证书和受保护签名环境。</p></details>
         <details><summary>会收集家庭服务地址或凭据吗？</summary><p>不会。Pages 只接收聚合访问与点击事件；部署反馈也明确禁止提交域名、IP、令牌或凭据。</p></details>
       </div>
     </section>
@@ -157,7 +157,7 @@ docker compose ps</code></pre>
         <p class="eyebrow">真实部署反馈</p><h2 id="feedback-title">部署成功了，或者被哪一步卡住？</h2>
         <p>请提交真实平台、安装结果及阻碍；不要求公开域名、IP 或任何凭据。非维护者的有效部署结果会作为 30 天验证指标。</p>
         <div class="actions">
-          <a class="button primary" href="https://github.com/ZHanry/home-tunnel/issues/new?template=deployment_feedback.yml&amp;utm_source=pages&amp;utm_medium=feedback&amp;utm_campaign=launch_2026_08" data-goatcounter-click="deployment-feedback">提交部署反馈</a>
+          <a class="button primary" href="https://github.com/ZHanry/home-tunnel/issues/new?template=deployment_feedback.yml&amp;utm_source=pages&amp;utm_medium=feedback&amp;utm_campaign=release_3_0" data-goatcounter-click="deployment-feedback">提交部署反馈</a>
           <a class="button" href="privacy.html">查看隐私说明</a>
         </div>
       </div>

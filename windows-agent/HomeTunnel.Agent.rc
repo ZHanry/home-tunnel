@@ -3,8 +3,8 @@
 1 ICON "HomeTunnel.ico"
 
 1 VERSIONINFO
- FILEVERSION 2,5,0,0
- PRODUCTVERSION 2,5,0,0
+ FILEVERSION 3,0,0,0
+ PRODUCTVERSION 3,0,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -21,12 +21,12 @@ BEGIN
     BEGIN
       VALUE "CompanyName", "Home Tunnel\0"
       VALUE "FileDescription", "Home Tunnel Managed Network Agent\0"
-      VALUE "FileVersion", "2.5.0\0"
+      VALUE "FileVersion", "3.0.0\0"
       VALUE "InternalName", "HomeTunnel.Agent.exe\0"
       VALUE "LegalCopyright", "Copyright (c) 2026 Home Tunnel; FRP licensed under Apache-2.0\0"
       VALUE "OriginalFilename", "HomeTunnel.Agent.exe\0"
       VALUE "ProductName", "Home Tunnel\0"
-      VALUE "ProductVersion", "2.5.0\0"
+      VALUE "ProductVersion", "3.0.0\0"
     END
   END
   BLOCK "VarFileInfo"

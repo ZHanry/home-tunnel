@@ -4,12 +4,14 @@ Home Tunnel exposes services from a private network to the public Internet. Trea
 
 ## Supported versions
 
-Security fixes are provided for the latest published minor release only. The next security maintenance release is 2.4.1; this support entry becomes effective only when that independent patch is merged and published. The broader 2.5.0 source tree is a release candidate, not a supported stable release. Until 2.4.1 is published, deploy only a reviewed commit containing the security fix. Older builds should be upgraded before reporting a problem.
+Security fixes are provided for the latest published minor release only.
+Release candidates are intended for validation and are not supported production
+versions. Older builds should be upgraded before reporting a problem.
 
 | Version | Supported |
 | --- | --- |
-| 2.4.x (`2.4.1` when published) | Yes |
-| 2.5.0 RC builds | Prerelease testing only |
+| 3.0.x | Yes |
+| 3.0.0 RC builds | Prerelease testing only |
 | Earlier versions | No |
 
 ## Reporting a vulnerability
@@ -26,7 +28,9 @@ The maintainers will acknowledge a complete report as soon as practical, validat
 - Never commit `.env`, `secrets/`, signing keys, deployment handoff files or administrator credentials.
 - Use a unique administrator password and rotate any credential that may have entered Git history or a shared artifact.
 - Restrict TCP port 7000 to the clients that need it where practical, and keep ports 80/443 behind a maintained Caddy instance.
-- Use a publicly trusted Authenticode certificate for distributed Windows installers. The development signing workflow is not a substitute for publisher trust.
+- Treat the v3.0 Windows EXE as self-signed Experimental software. Verify its
+  Release SHA-256 and Sigstore evidence; the ephemeral Authenticode certificate
+  is not a substitute for publisher trust.
 - Review logs before sharing them; Home Tunnel attempts to redact secrets, but diagnostics can still reveal hostnames and network topology.
 
 See [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md) for trust boundaries and operational assumptions.

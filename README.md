@@ -13,9 +13,9 @@
 
 Home Tunnel 是面向个人与家庭服务的自托管内网穿透平台，用可审计、可限速、可随时撤销的控制面，安全发布 NAS、Home Assistant 和开发服务。
 
-![Home Tunnel 真实管理后台，显示连接、流量和组件健康状态](docs/assets/screenshots/admin-dashboard.jpg)
+![Home Tunnel 真实管理后台，显示连接、流量和组件健康状态](docs/site/assets/admin-dashboard.jpg)
 
-> `v2.4.1` 是应先独立发布的安全维护版；当前完整源码树面向 `v2.5.0-rc.2`，只有 RC 全矩阵通过并由所有者发布后才可试用。服务端 Linux `amd64`/`arm64` 与 Linux 客户端为 Stable；macOS headless 为 Beta；Windows x64 为 Source/Experimental，暂不提供官方二进制。
+> `v3.0.0` 由 `v3.0.0-rc.1` 的同一提交和同一套不可变资产提升。服务端 Linux `amd64`/`arm64` 与 Linux 客户端为 Stable；macOS headless 为 Beta；Windows x64 EXE 为自签名 Experimental，会显示未知发布者提示。
 
 ## 三步启动
 
@@ -57,9 +57,9 @@ Home Tunnel 是面向个人与家庭服务的自托管内网穿透平台，用�
 | 服务端 | Linux `amd64` / `arm64` | Stable | 容器与源码构建；稳定版要求完整双架构矩阵 |
 | Headless 客户端 | Linux `amd64` / `arm64` | Stable | systemd 服务，实时配置与安全轮询 |
 | Headless 客户端 | macOS `amd64` / `arm64` | Beta | launchd 包；仍需扩大真实硬件验证 |
-| 图形客户端 | Windows 10/11 x64 | Source / Experimental | 暂无官方二进制或自动更新清单 |
+| 图形客户端 | Windows 10/11 x64 | Experimental | Release 提供自签名 EXE 与更新清单；Windows 会提示未知发布者 |
 
-历史 Release 中的自签名 Windows 资产仅用于追溯，属于旧版、不受支持、未知发布者构建。Windows 正式分发只会在可信 Authenticode 证书、受保护签名环境和 Windows 10/11 安装/升级 VM 验证齐备后恢复。
+Windows EXE 与其他平台资产来自同一个 RC 构建并随 Stable 原样提升，包含 SHA-256、SPDX SBOM、Sigstore 和 GitHub provenance。自签名只能证明同一资产集内的完整性，不能建立可信发布者身份；正式可信签名仍需 Authenticode 证书和受保护签名环境。
 
 ## 为什么不是“裸 FRP”
 
@@ -86,23 +86,25 @@ Windows/Linux/macOS 客户端 ─REST + WebSocket→ 控制中心
 
 Linux Stable 客户端以 systemd 服务运行；macOS Beta 客户端以 launchd 服务运行。两者通过 WebSocket 接收实时配置通知并保留三分钟安全轮询。构建、安装与注册说明见 [linux-client/README.md](linux-client/README.md)。
 
-### Windows x64（Source / Experimental）
+### Windows x64（Experimental EXE）
 
-当前不提供官方 Windows 二进制。自行构建的客户端支持图形化登录、连接管理、系统托盘、自动启动和诊断导出；缺失 Windows 专用 `latest.json` 会安全降级为“更新不可用”，不影响隧道。
+从 [最新 Release 下载 Windows x64 EXE](https://github.com/ZHanry/home-tunnel/releases/latest/download/HomeTunnel-Setup-3.0.0-x64.exe)。客户端支持图形化登录、连接管理、系统托盘、自动启动和诊断导出。安装前请核对 Release 中的 SHA-256；自签名版本会触发未知发布者或 SmartScreen 提示。
+
+也可以在 Windows 上自行构建：
 
 ```powershell
 .\windows-client\packaging\build-exe.ps1 `
   -AppId "{{11111111-2222-3333-4444-555555555555}}"
 ```
 
-开发打包脚本生成的自签名证书不能替代可信发布者签名，也不应公开分发。
+开发打包脚本生成的自签名证书不能替代可信发布者签名；分叉仓库不得把它描述为受信任签名。
 
 ## 安全证据
 
 - 控制中心 WebSocket 完整消息上限为 64 KiB，并限制碎片数和缓冲分块；回归覆盖超限、鉴权失败、异常断连、资源回收与重连。
 - CI 对生产依赖执行 Moderate 以上审计，并运行 TypeScript、Go、.NET、Compose、契约与文档检查。
 - CodeQL 显式分析 JavaScript/TypeScript、Go 与 C#；Secret Scanning 与 Push Protection 应始终保持启用。
-- Stable 发布要求同一提交和同一套已验证产物，包含哈希、SBOM、provenance 与签名证据。
+- Stable 发布要求同一提交和同一套已验证产物，包含哈希、SBOM、provenance 与签名证据；Windows EXE 还必须通过安装、版本、自签名一致性和卸载验证。
 
 不要在公开 Issue 中提交漏洞细节、域名、IP、令牌、密码或日志中的私密信息。请使用 [GitHub 私密漏洞报告](https://github.com/ZHanry/home-tunnel/security/advisories/new)；详细政策见 [SECURITY.md](SECURITY.md)。
 

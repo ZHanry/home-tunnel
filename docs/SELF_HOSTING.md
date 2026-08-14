@@ -8,7 +8,7 @@ This guide describes the portable root-level `compose.yaml`. The scripts under `
 - An `amd64` or `arm64` CPU, at least 1 GiB RAM (with swap on small hosts) and 2 GiB free disk space
 - A public IPv4 or IPv6 address reachable on TCP 80, 443 and 7000; UDP 443 is optional for HTTP/3
 - A domain you control
-- An `amd64`/`arm64` Linux machine for the Stable headless systemd client; Windows x64 is source-only/Experimental and macOS headless is Beta
+- An `amd64`/`arm64` Linux machine for the Stable headless systemd client; Windows x64 EXE is Experimental and macOS headless is Beta
 
 Create DNS records before starting:
 
@@ -72,7 +72,13 @@ Open `https://console.tunnel.example.com/admin`, sign in as `admin`, and change 
 
 ### Windows
 
-Home Tunnel does not currently distribute an official Windows installer. Build the Windows x64 client from source, then on first launch enter the control-center root address, for example `https://console.tunnel.example.com`, and sign in with a user created by the administrator. The client retrieves the public FRPS host, port and tunnel suffix from that same HTTPS origin.
+Download `HomeTunnel-Setup-3.0.0-x64.exe` from the latest GitHub Release and
+verify its published SHA-256 before installation. The Windows x64 package is
+Experimental and self-signed, so Windows can show an unknown-publisher or
+SmartScreen warning. On first launch, enter the control-center root address,
+for example `https://console.tunnel.example.com`, and sign in with a user
+created by the administrator. The client retrieves the public FRPS host, port,
+and tunnel suffix from that same HTTPS origin.
 
 To build the generic installer yourself, use Windows with .NET 10 LTS, Inno Setup 6, Windows SDK signing tools and `windres`:
 
@@ -81,9 +87,11 @@ To build the generic installer yourself, use Windows with .NET 10 LTS, Inno Setu
   -AppId "{{11111111-2222-3333-4444-555555555555}}"
 ```
 
-Use a new App ID for your fork so it does not overwrite a different Home Tunnel distribution. The development script creates a temporary self-signed Authenticode certificate. Public distribution should use a trusted code-signing certificate and a protected signing workflow.
+Use a new App ID for your fork so it does not overwrite a different Home Tunnel distribution. The development script creates a temporary self-signed Authenticode certificate. Do not describe it as a trusted publisher signature; trusted distribution requires a public code-signing certificate and a protected signing workflow.
 
-`latest.json` is a Windows-only update manifest. It is intentionally absent while official Windows distribution is suspended; the control center and existing clients must treat its 404 response as “updates unavailable” without affecting tunnels. Historical self-signed Windows assets remain in old Releases for traceability but are unsupported and may show an unknown publisher warning.
+`latest.json` is a Windows-only update manifest promoted unchanged from the
+verified RC asset set. A missing manifest safely degrades to “updates
+unavailable” without affecting tunnels.
 
 ### Linux
 
@@ -137,7 +145,7 @@ Optional alerts are delivered to an outbound webhook and/or Telegram. Set `HOME_
 
 - Linux `amd64`/`arm64` server and headless systemd client: Stable
 - macOS `amd64`/`arm64` headless launchd client: Beta
-- Windows 10/11 x64 graphical client: Source / Experimental; no official binary
+- Windows 10/11 x64 graphical client: self-signed Experimental EXE plus source
 - HTTP and HTTPS local targets
 - One public tunnel domain per server deployment
 - Prebuilt and source-buildable `amd64` and `arm64` server containers

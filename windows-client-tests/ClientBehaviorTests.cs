@@ -21,7 +21,7 @@ public sealed class ClientBehaviorTests
 	[Fact]
 	public void TestSemanticVersions()
 	{
-		Assert.True(AppVersion.Current == "2.5.0", "client version must be 2.5.0");
+		Assert.True(AppVersion.Current == "3.0.0", "client version must be 3.0.0");
 		Assert.True(
 			typeof(AppVersion).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion == AppVersion.Current,
 			"public client version metadata does not expose a local source revision");
@@ -156,13 +156,13 @@ public sealed class ClientBehaviorTests
 	{
 		var now = new DateTimeOffset(2026, 8, 13, 12, 0, 0, TimeSpan.Zero);
 		Assert.True(
-			UpdateCoordinator.IsPromptSuppressed("2.5.0", "2.5.0", now.AddHours(-23), now),
+			UpdateCoordinator.IsPromptSuppressed("3.0.0", "3.0.0", now.AddHours(-23), now),
 			"the same release remains suppressed during the 24-hour quiet period");
 		Assert.False(
-			UpdateCoordinator.IsPromptSuppressed("2.5.0", "2.5.0", now.AddHours(-24), now),
+			UpdateCoordinator.IsPromptSuppressed("3.0.0", "3.0.0", now.AddHours(-24), now),
 			"the prompt becomes eligible at the 24-hour boundary");
 		Assert.False(
-			UpdateCoordinator.IsPromptSuppressed("2.5.1", "2.5.0", now.AddHours(-1), now),
+			UpdateCoordinator.IsPromptSuppressed("3.0.1", "3.0.0", now.AddHours(-1), now),
 			"a newer version is never hidden by a prior dismissal");
 	}
 
@@ -294,12 +294,12 @@ public sealed class ClientBehaviorTests
 	[Fact]
 	public async Task TestReleaseValidationAsync()
 	{
-		var validPayload = ReleasePayload("2.5.1", GitHubDownloadUri("2.5.1").AbsoluteUri);
+		var validPayload = ReleasePayload("3.0.1", GitHubDownloadUri("3.0.1").AbsoluteUri);
 		using (var service = new UpdateService(new StaticJsonHandler(validPayload)))
 		{
 			var result = await service.CheckAsync(CancellationToken.None);
 			Assert.True(result.IsUpdateAvailable, "newer release detected");
-			Assert.True(result.Release.Version == "2.5.1", "release metadata parsed");
+			Assert.True(result.Release.Version == "3.0.1", "release metadata parsed");
 		}
 
 		var maliciousPayload = ReleasePayload("2.4.1", "https://evil.example/downloads/HomeTunnel-Setup-2.4.1-x64.exe");
