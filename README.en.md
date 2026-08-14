@@ -9,7 +9,7 @@ Home Tunnel is a self-hosted tunneling platform for personal and family services
 
 ![The real Home Tunnel management dashboard showing connections, traffic, and component health](docs/assets/screenshots/admin-dashboard.jpg)
 
-> `v2.4.1` is the security maintenance release that must ship first. This complete source tree targets `v2.5.0-rc.1` and is available for testing only after its full RC matrix passes and the owner publishes it. Linux server `amd64`/`arm64` and the Linux client are Stable. macOS headless is Beta. Windows x64 is Source/Experimental with no official binary.
+> `v2.4.1` is the security maintenance release that must ship first. This complete source tree targets `v2.5.0-rc.2` and is available for testing only after its full RC matrix passes and the owner publishes it. Linux server `amd64`/`arm64` and the Linux client are Stable. macOS headless is Beta. Windows x64 is Source/Experimental with no official binary.
 
 ## Quick Start
 

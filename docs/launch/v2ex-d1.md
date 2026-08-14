@@ -5,7 +5,7 @@
 - Submit only after D0 Pages and the intended stable Release are live and verified.
 - Replace no facts from memory: open the live support matrix and Release assets first.
 - Confirm the exact title, body, screenshots, account, node, and links immediately before posting.
-- Do not describe `v2.5.0-rc.1` as stable. Do not claim an official Windows download.
+- Do not describe `v2.5.0-rc.2` as stable. Do not claim an official Windows download.
 
 ## Title
 

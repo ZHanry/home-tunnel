@@ -507,8 +507,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          find release -maxdepth 1 -type f ! -name '*.sigstore.json' ! -name 'SHA256SUMS.txt' -print0 |
-            sort -z | xargs -0 shasum -a 256 > release/SHA256SUMS.txt
+          (
+            cd release
+            find . -maxdepth 1 -type f ! -name '*.sigstore.json' ! -name 'SHA256SUMS.txt' -printf '%f\0' |
+              sort -z | xargs -0 shasum -a 256 > SHA256SUMS.txt
+            shasum -a 256 -c SHA256SUMS.txt
+          )
           cosign sign-blob --yes --bundle release/SHA256SUMS.txt.sigstore.json release/SHA256SUMS.txt
       - name: Attest the complete RC checksum manifest
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
