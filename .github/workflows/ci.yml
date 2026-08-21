@@ -78,20 +78,27 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      # windows runner 镜像不保证自带 mingw/windres，统一通过 choco 安装
-      # （mingw 包含 binutils 的 windres）。机器 PATH 的变更对本步骤进程
-      # 不可见，所以在同一步骤内定位 windres.exe 并显式传给构建脚本。
-      - name: Install windres (mingw binutils)
+      # 直接下载并校验固定的 MinGW 资产，避免 Chocolatey feed 成为发布单点。
+      - name: Install pinned windres (mingw binutils)
         shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          choco install mingw --version=16.1.0 -y --no-progress
-          $windres = (Get-Command windres -ErrorAction SilentlyContinue).Source
-          if (-not $windres) {
-            $windres = Get-ChildItem C:\ProgramData\chocolatey, C:\ProgramData\mingw64 -Recurse `
-              -Filter windres.exe -File -ErrorAction SilentlyContinue |
-              Select-Object -First 1 -ExpandProperty FullName
-          }
-          if (-not $windres) { throw 'windres.exe not found after mingw install' }
+          $archive = Join-Path $env:RUNNER_TEMP 'mingw-16.1.0.7z'
+          $extract = Join-Path $env:RUNNER_TEMP 'mingw-16.1.0'
+          Invoke-WebRequest -Headers @{
+            Accept = 'application/octet-stream'
+            Authorization = "Bearer $env:GH_TOKEN"
+            'X-GitHub-Api-Version' = '2022-11-28'
+          } -Uri 'https://api.github.com/repos/niXman/mingw-builds-binaries/releases/assets/412720050' -OutFile $archive
+          $actual = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          $expected = 'ecaceb42639d21c695f875800a29b2dea76bbb05eb2a1cca3049b65499b8d867'
+          if ($actual -ne $expected) { throw "MinGW archive checksum mismatch: $actual" }
+          & 7z x $archive "-o$extract" -y | Out-Null
+          if ($LASTEXITCODE -ne 0) { throw 'MinGW extraction failed' }
+          $windres = Get-ChildItem -LiteralPath $extract -Recurse -Filter windres.exe -File |
+            Select-Object -First 1 -ExpandProperty FullName
+          if (-not $windres) { throw 'windres.exe not found in the pinned MinGW archive' }
           "HOME_TUNNEL_WINDRES=$windres" >> $env:GITHUB_ENV
       # build-agent.ps1 自行下载 pinned Go 工具链与 FRP 源码、校验哈希、
       # 构建并自检版本；stdout 的 AGENT_SHA256= 行即发布基线哈希。

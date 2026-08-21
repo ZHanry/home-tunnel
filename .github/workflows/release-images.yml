@@ -228,17 +228,26 @@ jobs:
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: 10.0.400
-      - name: Install windres (mingw binutils)
+      - name: Install pinned windres (mingw binutils)
         shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          choco install mingw --version=16.1.0 -y --no-progress
-          $windres = (Get-Command windres -ErrorAction SilentlyContinue).Source
-          if (-not $windres) {
-            $windres = Get-ChildItem C:\ProgramData\chocolatey, C:\ProgramData\mingw64 -Recurse `
-              -Filter windres.exe -File -ErrorAction SilentlyContinue |
-              Select-Object -First 1 -ExpandProperty FullName
-          }
-          if (-not $windres) { throw 'windres.exe not found after mingw install' }
+          $archive = Join-Path $env:RUNNER_TEMP 'mingw-16.1.0.7z'
+          $extract = Join-Path $env:RUNNER_TEMP 'mingw-16.1.0'
+          Invoke-WebRequest -Headers @{
+            Accept = 'application/octet-stream'
+            Authorization = "Bearer $env:GH_TOKEN"
+            'X-GitHub-Api-Version' = '2022-11-28'
+          } -Uri 'https://api.github.com/repos/niXman/mingw-builds-binaries/releases/assets/412720050' -OutFile $archive
+          $actual = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          $expected = 'ecaceb42639d21c695f875800a29b2dea76bbb05eb2a1cca3049b65499b8d867'
+          if ($actual -ne $expected) { throw "MinGW archive checksum mismatch: $actual" }
+          & 7z x $archive "-o$extract" -y | Out-Null
+          if ($LASTEXITCODE -ne 0) { throw 'MinGW extraction failed' }
+          $windres = Get-ChildItem -LiteralPath $extract -Recurse -Filter windres.exe -File |
+            Select-Object -First 1 -ExpandProperty FullName
+          if (-not $windres) { throw 'windres.exe not found in the pinned MinGW archive' }
           "HOME_TUNNEL_WINDRES=$windres" >> $env:GITHUB_ENV
           $inno = @(
             (Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'),
