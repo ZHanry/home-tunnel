@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-workspace="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+workspace="$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)"
 test_root="$(mktemp -d)"
 alpine_image="alpine:3.22@sha256:14358309a308569c32bdc37e2e0e9694be33a9d99e68afb0f5ff33cc1f695dce"
 trap 'rm -rf -- "$test_root"' EXIT HUP INT TERM
