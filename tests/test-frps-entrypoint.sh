@@ -22,7 +22,7 @@ run_entrypoint() {
     -v "$workspace/deploy/frps/frps.toml.template:/etc/frp/frps.toml.template:ro" \
     -v "$test_root/secrets/frps_plugin_key:/run/secrets/frps_plugin_key:ro" \
     -v "$test_root/bin:/usr/local/bin:ro" \
-    "$alpine_image" /work/entrypoint.sh
+    "$alpine_image" /bin/sh /work/entrypoint.sh
 }
 
 disabled="$(run_entrypoint)"
