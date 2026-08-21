@@ -3,7 +3,7 @@ bindPort = 7000
 proxyBindAddr = "0.0.0.0"
 vhostHTTPPort = 8080
 detailedErrorsToClient = false
-__TCP_ALLOW_PORTS__
+__L4_ALLOW_PORTS__
 
 transport.tls.force = true
 transport.tls.certFile = "/run/secrets/frps_tls_cert"
@@ -16,4 +16,4 @@ transport.tcpKeepalive = 7200
 name = "home-tunnel-authorization"
 addr = "control-center:8080"
 path = "/internal/frps/plugin/__PLUGIN_TOKEN__"
-ops = ["Login", "NewProxy", "CloseProxy"]
+ops = ["Login", "NewProxy", "CloseProxy", "Ping"]

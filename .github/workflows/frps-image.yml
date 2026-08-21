@@ -11,7 +11,7 @@ permissions:
   artifact-metadata: write
 
 concurrency:
-  group: frps-dependency-0.70.1-r1
+  group: frps-dependency-0.70.1-r2
   cancel-in-progress: false
 
 env:
@@ -20,11 +20,11 @@ env:
   FRP_COMMIT: fa3bcca2b0c4753cd4f0e2ab189dd6a5a6a15708
   FRP_ARCHIVE_SHA256: 9c6b0188a8f74e982069dc89218cc3d79bada8663cedf3b514b98847530cbf7d
   IMAGE: ghcr.io/zhanry/home-tunnel-frps
-  IMAGE_TAG: 0.70.1-r1
+  IMAGE_TAG: 0.70.1-r2
 
 jobs:
   publish:
-    name: Build, sign, and attest FRPS 0.70.1-r1
+    name: Build, sign, and attest FRPS 0.70.1-r2
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -95,8 +95,8 @@ jobs:
             org.opencontainers.image.version=${{ env.IMAGE_TAG }}
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.vendor=Home Tunnel
-          cache-from: type=gha,scope=frps-0.70.1-r1
-          cache-to: type=gha,mode=max,scope=frps-0.70.1-r1
+          cache-from: type=gha,scope=frps-0.70.1-r2
+          cache-to: type=gha,mode=max,scope=frps-0.70.1-r2
 
       - name: Require the complete Linux architecture matrix
         shell: bash
@@ -109,6 +109,45 @@ jobs:
           jq -e \
             '[.manifests[].platform | select(.os == "linux") | .architecture] | sort == ["amd64", "arm64"]' \
             "$manifest" >/dev/null
+
+      - name: Verify the baked L4 entrypoint before immutable publication
+        shell: bash
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          set -euo pipefail
+          image_ref="$IMAGE@$DIGEST"
+          docker run --rm --platform linux/amd64 --entrypoint /bin/sh "$image_ref" -eu -c '
+            grep -Fq "__L4_ALLOW_PORTS__" /etc/frp/frps.toml.template
+            grep -Fq '\''ops = ["Login", "NewProxy", "CloseProxy", "Ping"]'\'' /etc/frp/frps.toml.template
+            grep -Fq "UDP_TUNNEL_ENABLED" /usr/local/bin/home-tunnel-frps-entrypoint
+          '
+
+          test_root=$(mktemp -d)
+          trap 'rm -rf -- "$test_root"' EXIT
+          mkdir "$test_root/rendered"
+          chmod 0777 "$test_root/rendered"
+          printf '%064d\n' 0 > "$test_root/plugin_key"
+          chmod 0444 "$test_root/plugin_key"
+          cat > "$test_root/frps" <<'EOF'
+          #!/bin/sh
+          set -eu
+          test "$1" = -c
+          cat "$2"
+          EOF
+          chmod 0555 "$test_root/frps"
+
+          rendered=$(docker run --rm --platform linux/amd64 \
+            -e PUBLIC_FRPS_PORT=17000 \
+            -e L4_TUNNEL_ENABLED=true \
+            -e L4_PORT_START=11000 \
+            -e L4_PORT_END=11009 \
+            -v "$test_root/plugin_key:/run/secrets/frps_plugin_key:ro" \
+            -v "$test_root/rendered:/run/frp" \
+            -v "$test_root/frps:/usr/local/bin/frps:ro" \
+            "$image_ref")
+          grep -Fq 'allowPorts = [{ start = 11000, end = 11009 }]' <<<"$rendered"
+          grep -Fq 'ops = ["Login", "NewProxy", "CloseProxy", "Ping"]' <<<"$rendered"
 
       - name: Publish GitHub image attestation
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
@@ -159,7 +198,7 @@ jobs:
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: frps-0.70.1-r1-dependency-manifest
+          name: frps-0.70.1-r2-dependency-manifest
           path: |
             frps-dependency.json
             frps-dependency.json.sigstore.json
