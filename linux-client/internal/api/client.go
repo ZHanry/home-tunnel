@@ -207,6 +207,7 @@ func (client *Client) Sync(ctx context.Context, deviceID string, lastVersion int
 	err := client.authJSON(ctx, http.MethodPost, "client/sync", map[string]any{
 		"device_id": deviceID, "last_config_version": lastVersion,
 		"supports_optional_lease": true, "lease_expires_at": expiry,
+		"supported_proxy_types": []string{"http", "tcp", "udp"},
 	}, &response)
 	return response, err
 }

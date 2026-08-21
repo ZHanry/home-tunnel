@@ -1,4 +1,4 @@
-import { api, refreshSession } from "./modules/api.js?v=3.0.0-modules1";
+import { api, refreshSession } from "./modules/api.js?v=3.1.0-modules1";
 import {
   componentLabel,
   configState,
@@ -7,10 +7,10 @@ import {
   formatBytes,
   formatDate,
   statusBadge,
-} from "./modules/format.js?v=3.0.0-modules1";
-import { localeTag, updateDocumentMetadata } from "./modules/locale.js?v=3.0.0-modules1";
-import { connectRealtime, disconnectRealtime } from "./modules/realtime.js?v=3.0.0-modules1";
-import { state } from "./modules/state.js?v=3.0.0-modules1";
+} from "./modules/format.js?v=3.1.0-modules1";
+import { localeTag, updateDocumentMetadata } from "./modules/locale.js?v=3.1.0-modules1";
+import { connectRealtime, disconnectRealtime } from "./modules/realtime.js?v=3.1.0-modules1";
+import { state } from "./modules/state.js?v=3.1.0-modules1";
 
 const landingScreen = document.querySelector("#landing-screen");
 const authScreen = document.querySelector("#auth-screen");
@@ -72,6 +72,37 @@ function toast(message, type = "success") {
   item.textContent = message;
   toastRegion.append(item);
   window.setTimeout(() => item.remove(), 4500);
+}
+
+function updateTransportTunnelState(payload) {
+  const incoming = payload?.transport_tunnels;
+  if (incoming?.tcp && incoming?.udp) {
+    state.transportTunnels = { tcp: incoming.tcp, udp: incoming.udp };
+    return;
+  }
+  if (incoming?.protocols) {
+    for (const protocol of ["tcp", "udp"]) {
+      state.transportTunnels[protocol] = {
+        enabled: incoming.protocols.includes(protocol),
+        port_start: incoming.port_start,
+        port_end: incoming.port_end,
+      };
+    }
+    return;
+  }
+  if (payload?.tcp_tunnels) state.transportTunnels.tcp = payload.tcp_tunnels;
+}
+
+function isRawProxy(proxyType) {
+  return proxyType === "tcp" || proxyType === "udp";
+}
+
+function transportSettings(proxyType) {
+  return state.transportTunnels[proxyType] ?? {
+    enabled: false,
+    port_start: 10000,
+    port_end: 10099,
+  };
 }
 
 // 登录后待改密时，登录密码保存在闭包变量中传递，避免写入隐藏的 DOM 输入框。
@@ -177,7 +208,7 @@ async function renderDashboard(renderId) {
     api("/api/v1/admin/system/health"),
   ]);
   if (renderId !== state.renderId) return;
-  state.tcpTunnels = summary.tcp_tunnels ?? state.tcpTunnels;
+  updateTransportTunnelState(summary);
   const totalTraffic = Number(summary.upload_24h) + Number(summary.download_24h);
   viewContent.innerHTML = `
     <div class="dashboard-hero-layout">
@@ -292,9 +323,21 @@ async function renderConnections(renderId = state.renderId) {
   const data = await api("/api/v1/admin/connections");
   if (renderId !== state.renderId) return;
   state.connections = data.items;
-  state.tcpTunnels = data.tcp_tunnels ?? state.tcpTunnels;
+  updateTransportTunnelState(data);
   viewContent.innerHTML = `
-    <section class="panel table-panel">${state.connections.length ? `<table class="data-table"><thead><tr><th>连接</th><th>归属</th><th>状态</th><th>访问控制</th><th>本地目标</th><th>连接上限</th><th>版本</th><th><span class="visually-hidden">操作</span></th></tr></thead><tbody>${state.connections.map((connection) => `<tr><td data-label="连接"><span class="cell-primary">${escapeHtml(connection.name)} ${connection.proxy_type === "tcp" ? '<span class="status-badge warn">TCP</span>' : ""}</span>${connection.public_url ? `<a class="cell-secondary mono" href="${escapeHtml(connection.public_url)}" target="_blank" rel="noopener">${escapeHtml(connection.public_url)}</a>` : `<span class="cell-secondary mono">tcp://${escapeHtml(connection.public_endpoint)}</span>`}${(connection.custom_domains ?? []).map((domain) => `<a class="cell-secondary mono" href="https://${escapeHtml(domain)}" target="_blank" rel="noopener">https://${escapeHtml(domain)}</a>`).join("")}</td><td data-label="归属"><span class="cell-primary">${escapeHtml(connection.username)}</span><span class="cell-secondary">${escapeHtml(connection.device_name)}</span></td><td data-label="状态">${statusBadge(connection.enabled ? connection.state : "disabled")}</td><td data-label="访问控制">${connection.proxy_type === "tcp" ? '<span class="cell-secondary">FRP 租约</span>' : accessBadges(connection)}</td><td data-label="本地目标" class="mono">${connection.proxy_type === "tcp" ? "tcp" : escapeHtml(connection.local_scheme)}://${escapeHtml(connection.local_host)}:${connection.local_port}</td><td data-label="连接上限" class="mono">${connection.proxy_type === "tcp" ? "—" : formatBps(connection.bandwidth_limit_bps)}</td><td data-label="版本" class="mono">v${connection.version} / a${connection.applied_version}</td><td class="actions-cell"><div class="actions">${connection.proxy_type === "http" ? `<button class="button button-quiet button-small" data-action="custom-domains" data-id="${connection.id}">域名</button>` : ""}<button class="button button-quiet button-small" data-action="edit-connection" data-id="${connection.id}">编辑</button><button class="button button-danger button-small" data-action="delete-connection" data-id="${connection.id}">删除</button></div></td></tr>`).join("")}</tbody></table>` : emptyState("还没有连接", "为已注册设备创建 HTTP/HTTPS 连接，或由管理员开启高级 TCP 隧道。")}</section>`;
+    <section class="panel table-panel">${state.connections.length ? `<table class="data-table"><thead><tr><th>连接</th><th>归属</th><th>状态</th><th>访问控制</th><th>本地目标</th><th>连接上限</th><th>版本</th><th><span class="visually-hidden">操作</span></th></tr></thead><tbody>${state.connections.map(renderConnectionRow).join("")}</tbody></table>` : emptyState("还没有连接", "为已注册设备创建 HTTP/HTTPS 连接，或由管理员开启通用 TCP / UDP 端口隧道。")}</section>`;
+}
+
+function renderConnectionRow(connection) {
+  const raw = isRawProxy(connection.proxy_type);
+  const transport = raw ? connection.proxy_type : connection.local_scheme;
+  const badge = raw
+    ? `<span class="status-badge warn">${escapeHtml(connection.proxy_type.toUpperCase())}</span>`
+    : "";
+  const publicAddress = connection.public_url
+    ? `<a class="cell-secondary mono" href="${escapeHtml(connection.public_url)}" target="_blank" rel="noopener">${escapeHtml(connection.public_url)}</a>`
+    : `<span class="cell-secondary mono">${escapeHtml(connection.proxy_type)}://${escapeHtml(connection.public_endpoint ?? "")}</span>`;
+  return `<tr><td data-label="连接"><span class="cell-primary">${escapeHtml(connection.name)} ${badge}</span>${publicAddress}${(connection.custom_domains ?? []).map((domain) => `<a class="cell-secondary mono" href="https://${escapeHtml(domain)}" target="_blank" rel="noopener">https://${escapeHtml(domain)}</a>`).join("")}</td><td data-label="归属"><span class="cell-primary">${escapeHtml(connection.username)}</span><span class="cell-secondary">${escapeHtml(connection.device_name)}</span></td><td data-label="状态">${statusBadge(connection.enabled ? connection.state : "disabled")}</td><td data-label="访问控制">${raw ? '<span class="cell-secondary">FRP 租约 · 主机防火墙</span>' : accessBadges(connection)}</td><td data-label="本地目标" class="mono">${escapeHtml(transport)}://${escapeHtml(connection.local_host)}:${connection.local_port}</td><td data-label="连接上限" class="mono">${raw ? "—" : formatBps(connection.bandwidth_limit_bps)}</td><td data-label="版本" class="mono">v${connection.version} / a${connection.applied_version}</td><td class="actions-cell"><div class="actions">${connection.proxy_type === "http" ? `<button class="button button-quiet button-small" data-action="custom-domains" data-id="${connection.id}">域名</button>` : ""}<button class="button button-quiet button-small" data-action="edit-connection" data-id="${connection.id}">编辑</button><button class="button button-danger button-small" data-action="delete-connection" data-id="${connection.id}">删除</button></div></td></tr>`;
 }
 
 async function renderAudit(renderId = state.renderId) {
@@ -471,6 +514,24 @@ function collectAccessPatch(form, connection = null) {
   return Object.keys(access).length ? access : undefined;
 }
 
+function proxyTypeOptions(selected = "http") {
+  const options = [
+    `<option value="http" ${selected === "http" ? "selected" : ""}>HTTP / HTTPS</option>`,
+  ];
+  const labels = {
+    tcp: "TCP（RTSP / SSH / RDP / 数据库等）",
+    udp: "UDP（固定端口）",
+  };
+  for (const proxyType of ["tcp", "udp"]) {
+    const settings = transportSettings(proxyType);
+    if (!settings.enabled && selected !== proxyType) continue;
+    options.push(
+      `<option value="${proxyType}" ${selected === proxyType ? "selected" : ""} ${!settings.enabled && selected !== proxyType ? "disabled" : ""}>${labels[proxyType]}</option>`,
+    );
+  }
+  return options.join("");
+}
+
 async function openCreateConnection() {
   if (!state.users.length) state.users = (await api("/api/v1/admin/users")).items;
   state.devices = (await api("/api/v1/admin/devices")).items.filter((item) => item.status === "active");
@@ -480,19 +541,21 @@ async function openCreateConnection() {
   }
   const userOptions = state.users.filter((item) => item.status === "active").map((user) => `<option value="${user.id}">${escapeHtml(user.display_name)} · ${escapeHtml(user.username)}</option>`).join("");
   const deviceOptions = state.devices.map((device) => `<option value="${device.id}" data-user="${device.user_id}">${escapeHtml(device.name)} · ${escapeHtml(device.username)}</option>`).join("");
-  const proxyTypeField = state.tcpTunnels.enabled
-    ? `<div class="field"><label for="modal-proxy_type">隧道类型</label><select id="modal-proxy_type" name="proxy_type"><option value="http">HTTP / HTTPS</option><option value="tcp">TCP（高级）</option></select><p class="helper">TCP 端口仅管理员可分配。</p></div>`
+  const hasRawTunnels = ["tcp", "udp"].some((proxyType) => transportSettings(proxyType).enabled);
+  const proxyTypeField = hasRawTunnels
+    ? `<div class="field"><label for="modal-proxy_type">隧道类型</label><select id="modal-proxy_type" name="proxy_type" aria-describedby="modal-proxy-type-helper">${proxyTypeOptions()}</select><p class="helper" id="modal-proxy-type-helper">端口隧道仅管理员可分配，且不经过 HTTP 网关。</p></div>`
     : '<input id="modal-proxy_type" name="proxy_type" type="hidden" value="http">';
   openModal({
     title: "创建受管连接",
     eyebrow: "受管连接",
-    body: `<div class="form-grid"><div class="field"><label for="modal-user_id">用户</label><select id="modal-user_id" name="user_id">${userOptions}</select></div><div class="field"><label for="modal-device_id">设备</label><select id="modal-device_id" name="device_id">${deviceOptions}</select></div>${field("name", "连接名称")}${field("subdomain", "连接标识", "", { helper: `HTTP 公网子域为 .${state.tunnelDomain}` })}${proxyTypeField}<div class="field" id="modal-tcp-port-field" hidden>${field("tcp_remote_port", "TCP 公网端口", state.tcpTunnels.port_start, { type: "number", min: state.tcpTunnels.port_start, max: state.tcpTunnels.port_end })}</div><div class="field"><label for="modal-local_scheme">本地协议</label><select id="modal-local_scheme" name="local_scheme"><option value="http">http</option><option value="https">https</option></select></div>${field("local_host", "本地地址", "127.0.0.1")}${field("local_port", "本地端口", "8080", { type: "number", min: 1, max: 65535 })}<div id="modal-http-options" class="field full"><div class="form-grid">${field("bandwidth_mbps", "连接上限 (Mbps)", "", { type: "number", required: false, min: 0.1 })}${accessFormFields()}</div></div><div class="field full"><label><input name="enabled" type="checkbox" checked> 创建后立即启用</label></div></div>`,
+    body: `<div class="form-grid"><div class="field"><label for="modal-user_id">用户</label><select id="modal-user_id" name="user_id">${userOptions}</select></div><div class="field"><label for="modal-device_id">设备</label><select id="modal-device_id" name="device_id">${deviceOptions}</select></div>${field("name", "连接名称")}${field("subdomain", "连接标识", "", { helper: `HTTP 公网子域为 .${state.tunnelDomain}；端口隧道中仅作为连接标识` })}${proxyTypeField}<div class="field hidden" id="modal-remote-port-field"><label for="modal-remote_port" id="modal-remote-port-label">公网端口</label><input id="modal-remote_port" name="remote_port" type="number" min="1" max="65535" aria-describedby="modal-remote-port-helper"><p class="helper" id="modal-remote-port-helper" aria-live="polite"></p></div><div class="field" id="modal-local-scheme-field"><label for="modal-local_scheme">本地协议</label><select id="modal-local_scheme" name="local_scheme"><option value="http">http</option><option value="https">https</option></select></div>${field("local_host", "本地地址", "127.0.0.1")}${field("local_port", "本地端口", "8080", { type: "number", min: 1, max: 65535 })}<div id="modal-http-options" class="field full"><div class="form-grid">${field("bandwidth_mbps", "连接上限 (Mbps)", "", { type: "number", required: false, min: 0.1 })}${accessFormFields()}</div></div><div class="field full"><label><input name="enabled" type="checkbox" checked> 创建后立即启用</label></div></div>`,
     submitLabel: "创建连接",
     onSubmit: async (form) => {
       const mbps = String(form.get("bandwidth_mbps") ?? "").trim();
       const proxyType = String(form.get("proxy_type") ?? "http");
+      const raw = isRawProxy(proxyType);
       const access = proxyType === "http" ? collectAccessPatch(form) : undefined;
-      await api("/api/v1/admin/connections", { method: "POST", body: JSON.stringify({ user_id: form.get("user_id"), device_id: form.get("device_id"), name: form.get("name"), subdomain: form.get("subdomain"), proxy_type: proxyType, tcp_remote_port: proxyType === "tcp" ? Number(form.get("tcp_remote_port")) : null, local_scheme: proxyType === "tcp" ? "http" : form.get("local_scheme"), local_host: form.get("local_host"), local_port: Number(form.get("local_port")), enabled: form.get("enabled") === "on", bandwidth_limit_bps: proxyType === "http" && mbps ? Math.round(Number(mbps) * 1_000_000) : null, ...(access ? { access } : {}) }) });
+      await api("/api/v1/admin/connections", { method: "POST", body: JSON.stringify({ user_id: form.get("user_id"), device_id: form.get("device_id"), name: form.get("name"), subdomain: form.get("subdomain"), proxy_type: proxyType, remote_port: raw ? Number(form.get("remote_port")) : null, local_scheme: raw ? "http" : form.get("local_scheme"), local_host: form.get("local_host"), local_port: Number(form.get("local_port")), enabled: form.get("enabled") === "on", bandwidth_limit_bps: proxyType === "http" && mbps ? Math.round(Number(mbps) * 1_000_000) : null, ...(access ? { access } : {}) }) });
       modal.close("saved");
       toast("连接已创建；设备离线时保持 Pending");
       await renderConnections();
@@ -516,34 +579,88 @@ async function openCreateConnection() {
 
 function bindProxyTypeToggle() {
   const type = modalBody.querySelector("#modal-proxy_type");
-  const portField = modalBody.querySelector("#modal-tcp-port-field");
-  const port = modalBody.querySelector("#modal-tcp_remote_port");
+  const portField = modalBody.querySelector("#modal-remote-port-field");
+  const port = modalBody.querySelector("#modal-remote_port");
+  const portLabel = modalBody.querySelector("#modal-remote-port-label");
+  const portHelper = modalBody.querySelector("#modal-remote-port-helper");
+  const schemeField = modalBody.querySelector("#modal-local-scheme-field");
   const scheme = modalBody.querySelector("#modal-local_scheme");
   const httpOptions = modalBody.querySelector("#modal-http-options");
   if (!type || !portField) return;
+  const originalProxyType = type.dataset.originalProxyType ?? "";
+  const originalPort = port?.dataset.originalPort ?? "";
+  const applyPortRange = (settings, coerce = false) => {
+    if (!port) return false;
+    const value = Number(port.value);
+    const withinRange = value >= settings.port_start && value <= settings.port_end;
+    const preservingLegacyPort =
+      type.value === originalProxyType && port.value === originalPort && !withinRange;
+    if (preservingLegacyPort) {
+      port.removeAttribute("min");
+      port.removeAttribute("max");
+      return true;
+    }
+    port.min = String(settings.port_start);
+    port.max = String(settings.port_end);
+    if (coerce && (!port.value || !withinRange)) port.value = String(settings.port_start);
+    return false;
+  };
+  const updatePortHelper = (settings, preservingLegacyPort) => {
+    if (!portHelper || !port) return;
+    if (preservingLegacyPort) {
+      portHelper.textContent = `当前端口 ${port.value} 已不在允许范围 ${settings.port_start}-${settings.port_end}；可停用，或改为范围内端口。`;
+      return;
+    }
+    portHelper.textContent = type.value === "tcp"
+      ? `允许范围 ${settings.port_start}-${settings.port_end}；RTSP 请在播放器中强制 TCP。`
+      : `允许范围 ${settings.port_start}-${settings.port_end}；请用主机防火墙限源，避免 UDP 反射放大。`;
+  };
   const apply = () => {
-    const isTCP = type.value === "tcp";
-    portField.hidden = !isTCP;
-    if (port) port.required = isTCP;
-    if (scheme) { scheme.disabled = isTCP; if (isTCP) scheme.value = "http"; }
-    if (httpOptions) httpOptions.hidden = isTCP;
+    const raw = isRawProxy(type.value);
+    const settings = transportSettings(type.value);
+    portField.classList.toggle("hidden", !raw);
+    if (port) {
+      port.required = raw;
+      port.disabled = !raw;
+      if (raw) {
+        const changedProtocol = !originalProxyType || type.value !== originalProxyType;
+        updatePortHelper(settings, applyPortRange(settings, changedProtocol));
+      }
+    }
+    if (portLabel && raw) portLabel.textContent = `${type.value.toUpperCase()} 公网端口`;
+    if (schemeField) schemeField.classList.toggle("hidden", raw);
+    if (scheme) { scheme.disabled = raw; if (raw) scheme.value = "http"; }
+    if (httpOptions) httpOptions.classList.toggle("hidden", raw);
   };
   type.addEventListener("change", apply);
+  port?.addEventListener("input", () => {
+    if (!isRawProxy(type.value)) return;
+    const settings = transportSettings(type.value);
+    updatePortHelper(settings, applyPortRange(settings));
+  });
   apply();
 }
 
 function openEditConnection(connectionId) {
   const connection = state.connections.find((item) => item.id === connectionId);
   if (!connection) return;
+  const raw = isRawProxy(connection.proxy_type);
+  const settings = transportSettings(connection.proxy_type);
   openModal({
     title: `编辑连接 · ${connection.name}`,
     eyebrow: "版本化更新",
-    body: `<div class="form-grid">${field("name", "连接名称", connection.name)}${field("subdomain", "连接标识", connection.subdomain)}<div class="field"><label for="modal-proxy_type">隧道类型</label><select id="modal-proxy_type" name="proxy_type"><option value="http" ${connection.proxy_type !== "tcp" ? "selected" : ""}>HTTP / HTTPS</option><option value="tcp" ${connection.proxy_type === "tcp" ? "selected" : ""} ${!state.tcpTunnels.enabled && connection.proxy_type !== "tcp" ? "disabled" : ""}>TCP（高级）</option></select></div><div class="field" id="modal-tcp-port-field" ${connection.proxy_type === "tcp" ? "" : "hidden"}>${field("tcp_remote_port", "TCP 公网端口", connection.tcp_remote_port ?? state.tcpTunnels.port_start, { type: "number", min: state.tcpTunnels.port_start, max: state.tcpTunnels.port_end })}</div><div class="field"><label for="modal-local_scheme">本地协议</label><select id="modal-local_scheme" name="local_scheme"><option value="http" ${connection.local_scheme === "http" ? "selected" : ""}>http</option><option value="https" ${connection.local_scheme === "https" ? "selected" : ""}>https</option></select></div>${field("local_host", "本地地址", connection.local_host)}${field("local_port", "本地端口", connection.local_port, { type: "number", min: 1, max: 65535 })}<div id="modal-http-options" class="field full" ${connection.proxy_type === "tcp" ? "hidden" : ""}><div class="form-grid">${field("bandwidth_mbps", "连接上限 (Mbps)", connection.bandwidth_limit_bps == null ? "" : connection.bandwidth_limit_bps / 1_000_000, { type: "number", required: false, min: 0.1 })}${accessFormFields(connection)}</div></div><div class="field full"><label><input name="enabled" type="checkbox" ${connection.enabled ? "checked" : ""}> 启用连接</label><p class="helper">当前版本 v${connection.version}；全局关闭 TCP 时，只允许停用既有 TCP 隧道或改回 HTTP。</p></div></div>`,
+    body: `<div class="form-grid">${field("name", "连接名称", connection.name)}${field("subdomain", "连接标识", connection.subdomain)}<div class="field"><label for="modal-proxy_type">隧道类型</label><select id="modal-proxy_type" name="proxy_type" data-original-proxy-type="${escapeHtml(connection.proxy_type)}" aria-describedby="modal-transport-policy-helper">${proxyTypeOptions(connection.proxy_type)}</select></div><div class="field ${raw ? "" : "hidden"}" id="modal-remote-port-field"><label for="modal-remote_port" id="modal-remote-port-label">${escapeHtml(connection.proxy_type.toUpperCase())} 公网端口</label><input id="modal-remote_port" name="remote_port" type="number" value="${escapeHtml(connection.remote_port ?? connection.tcp_remote_port ?? settings.port_start)}" data-original-port="${escapeHtml(connection.remote_port ?? connection.tcp_remote_port ?? "")}" min="${settings.port_start}" max="${settings.port_end}" aria-describedby="modal-remote-port-helper" ${raw ? "required" : "disabled"}><p class="helper" id="modal-remote-port-helper" aria-live="polite"></p></div><div class="field ${raw ? "hidden" : ""}" id="modal-local-scheme-field"><label for="modal-local_scheme">本地协议</label><select id="modal-local_scheme" name="local_scheme" ${raw ? "disabled" : ""}><option value="http" ${connection.local_scheme === "http" ? "selected" : ""}>http</option><option value="https" ${connection.local_scheme === "https" ? "selected" : ""}>https</option></select></div>${field("local_host", "本地地址", connection.local_host)}${field("local_port", "本地端口", connection.local_port, { type: "number", min: 1, max: 65535 })}<div id="modal-http-options" class="field full ${raw ? "hidden" : ""}"><div class="form-grid">${field("bandwidth_mbps", "连接上限 (Mbps)", connection.bandwidth_limit_bps == null ? "" : connection.bandwidth_limit_bps / 1_000_000, { type: "number", required: false, min: 0.1 })}${accessFormFields(connection)}</div></div><div class="field full"><label><input name="enabled" type="checkbox" ${connection.enabled ? "checked" : ""}> 启用连接</label><p class="helper" id="modal-transport-policy-helper">当前版本 v${connection.version}；全局关闭某种端口传输时，只允许停用既有连接或改回 HTTP。</p></div></div>`,
     onSubmit: async (form) => {
       const mbps = String(form.get("bandwidth_mbps") ?? "").trim();
       const proxyType = String(form.get("proxy_type") ?? "http");
+      const nextRaw = isRawProxy(proxyType);
+      const nextRemotePort = nextRaw ? Number(form.get("remote_port")) : null;
+      const currentRemotePort = connection.remote_port ?? connection.tcp_remote_port ?? null;
+      const remotePortChanged =
+        nextRaw &&
+        (proxyType !== connection.proxy_type || nextRemotePort !== Number(currentRemotePort));
       const access = proxyType === "http" ? collectAccessPatch(form, connection) : undefined;
-      await api(`/api/v1/admin/connections/${connection.id}`, { method: "PATCH", headers: { "if-match": `"${connection.version}"` }, body: JSON.stringify({ name: form.get("name"), subdomain: form.get("subdomain"), proxy_type: proxyType, tcp_remote_port: proxyType === "tcp" ? Number(form.get("tcp_remote_port")) : null, local_scheme: proxyType === "tcp" ? "http" : form.get("local_scheme"), local_host: form.get("local_host"), local_port: Number(form.get("local_port")), enabled: form.get("enabled") === "on", bandwidth_limit_bps: proxyType === "http" && mbps ? Math.round(Number(mbps) * 1_000_000) : null, ...(access ? { access } : {}) }) });
+      await api(`/api/v1/admin/connections/${connection.id}`, { method: "PATCH", headers: { "if-match": `"${connection.version}"` }, body: JSON.stringify({ name: form.get("name"), subdomain: form.get("subdomain"), proxy_type: proxyType, ...(remotePortChanged ? { remote_port: nextRemotePort } : {}), local_scheme: nextRaw ? "http" : form.get("local_scheme"), local_host: form.get("local_host"), local_port: Number(form.get("local_port")), enabled: form.get("enabled") === "on", bandwidth_limit_bps: proxyType === "http" && mbps ? Math.round(Number(mbps) * 1_000_000) : null, ...(access ? { access } : {}) }) });
       modal.close("saved");
       toast("连接配置已更新");
       await renderConnections();

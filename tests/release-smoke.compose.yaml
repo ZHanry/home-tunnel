@@ -19,6 +19,9 @@ services:
       TUNNEL_DOMAIN: tunnel.smoke.test
       PUBLIC_FRPS_HOST: frps.smoke.test
       PUBLIC_FRPS_PORT: "17000"
+      L4_TUNNEL_ENABLED: "true"
+      L4_PORT_START: "11000"
+      L4_PORT_END: "11009"
       COOKIE_SECURE: "true"
       PASSWORD_HASH_CONCURRENCY: "1"
       PASSWORD_HASH_QUEUE_MAX: "32"
@@ -96,8 +99,15 @@ services:
     init: true
     depends_on:
       control-center: { condition: service_healthy }
+    environment:
+      PUBLIC_FRPS_PORT: "17000"
+      L4_TUNNEL_ENABLED: "true"
+      L4_PORT_START: "11000"
+      L4_PORT_END: "11009"
     ports:
       - 127.0.0.1:17000:7000/tcp
+      - 127.0.0.1:11000-11009:11000-11009/tcp
+      - 127.0.0.1:11000-11009:11000-11009/udp
     secrets:
       - frps_plugin_key
       - frps_tls_cert

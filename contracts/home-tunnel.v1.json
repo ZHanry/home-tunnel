@@ -20,7 +20,8 @@
         "device_id",
         "last_config_version",
         "supports_optional_lease",
-        "lease_expires_at"
+        "lease_expires_at",
+        "supported_proxy_types"
       ],
       "response_fields": [
         "device_id",
@@ -45,6 +46,7 @@
         "local_host",
         "local_port",
         "proxy_type",
+        "remote_port",
         "tcp_remote_port",
         "enabled",
         "version",

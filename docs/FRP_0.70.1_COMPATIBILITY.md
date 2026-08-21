@@ -1,20 +1,22 @@
 # FRP 0.70.1 compatibility and promotion record
 
 Status: **approved for the supported release scope**. Production is pinned to
-the reviewed `0.70.1-r1` FRPS image. The Windows EXE is distributed only as a
+the reviewed `0.70.1-r2` FRPS image. The Windows EXE is distributed only as a
 self-signed Experimental asset; it is not a trusted-publisher build.
 
-Review completed: 2026-08-14
+Review completed: 2026-08-21
+
+Managed TCP/UDP extension review: 2026-08-21
 
 | Input | Reviewed identity |
 | --- | --- |
 | FRP release | `v0.70.1` (2026-07-23) |
 | Upstream commit | `fa3bcca2b0c4753cd4f0e2ab189dd6a5a6a15708` |
 | GitHub API source archive SHA-256 | `9c6b0188a8f74e982069dc89218cc3d79bada8663cedf3b514b98847530cbf7d` |
-| FRPS image tag | `ghcr.io/zhanry/home-tunnel-frps:0.70.1-r1` |
-| FRPS multi-architecture digest | `sha256:cffde7b39698a5faba3828bb4a78b444d2d9c2cfea7385e28989728f5d73732f` |
-| Protected FRPS workflow revision | `9b512cbc71b553a14e96cf02817a99d5e869c9a4` |
-| Protected FRPS workflow | [run 31762807301](https://github.com/ZHanry/home-tunnel/actions/runs/31762807301) |
+| FRPS image tag | `ghcr.io/zhanry/home-tunnel-frps:0.70.1-r2` |
+| FRPS multi-architecture digest | `sha256:0ca230caa4c3c71932efd9bd5b9024a6fdc289886b97a1db827eaf3f8b6de759` |
+| Protected FRPS workflow revision | `9e39c2b1aaa567c5ca3fda18f76b12dc2f77f52e` |
+| Protected FRPS workflow | [run 32460680110](https://github.com/ZHanry/home-tunnel/actions/runs/32460680110) |
 
 ## Decision
 
@@ -27,7 +29,7 @@ multi-architecture digest. The protected dependency workflow built it with Go
 `govulncheck`, required `linux/amd64` and `linux/arm64`, and published SBOM,
 provenance, GitHub attestation and keyless Cosign evidence.
 
-The restricted Agent is independently versioned `3.0.0`. Its source build is
+The restricted Agent is independently versioned `3.1.0`. Its source build is
 reproduced from the same pinned FRP tree. Release automation bundles it into
 the Experimental Windows EXE and publishes checksums, an SPDX SBOM, signed
 provenance, and GitHub attestations. No MSIX package is published.
@@ -43,13 +45,14 @@ create trusted publisher identity or promote Windows to Stable.
 | Gate | Result | Evidence |
 | --- | --- | --- |
 | Official tag and source identity | Pass | The tag resolves to `fa3bcca2…`; the downloaded API archive matches the recorded SHA-256. |
-| Restricted Agent API adaptation | Pass | Agent 3.0.0 uses the 0.70.1 configuration-source, aggregation, validation and unsafe-feature policy APIs. |
-| Managed whitelist tests | Pass | HTTP/TCP allowlists, visitor/plugin/common-field rejection, render shapes and CA checks pass. |
+| Restricted Agent API adaptation | Pass | Agent 3.1.0 uses the 0.70.1 configuration-source, aggregation, validation and unsafe-feature policy APIs. |
+| Managed whitelist tests | Pass | HTTP plus protocol-specific TCP/UDP allowlists, cross-protocol denial, visitor/plugin/common-field rejection, render shapes, and CA checks pass. |
 | Agent static and vulnerability checks | Pass | Go formatting, tests, `go vet` and `govulncheck` 1.6.0 report no reachable vulnerability. |
 | Managed CA pinning | Pass | The expected certificate is accepted and an incorrect SHA-256 is rejected. |
-| FRPS TLS and authorization plugin | Pass | Forced TLS and `Login`, `NewProxy` and `CloseProxy` authorization flows complete. |
-| HTTP and authorized TCP tunnels | Pass | Host-routed HTTP and byte-for-byte TCP echo tests complete; an unassigned TCP port is rejected. |
-| FRPS dependency supply chain | Pass | Protected run 31762807301 produced the signed, attested `amd64`/`arm64` digest recorded above. |
+| FRPS TLS and authorization plugin | Pass | Forced TLS and `Login`, `NewProxy`, `CloseProxy`, and `Ping` authorization flows complete; Ping rechecks lease and subject state. |
+| Managed L4 release smoke | Reproducible gate added | `tests/run-release-smoke.sh` drives the issued configuration through the managed Agent and verifies a 128 KiB+ binary TCP echo, a 1 KiB+ UDP datagram echo, RTSP-over-TCP `OPTIONS`/`SETUP`/`PLAY` with channel-0 interleaved media, raw disable while HTTPS remains available, and actual FRPS Ping revocation of a device within the heartbeat window. Static/helper checks pass locally; the complete Docker path runs with the RC images and package. |
+| L4 Compose exposure | Pass | `tests/run-compose-smoke.ps1` applies `deploy/compose.l4.yaml`, checks migration `008`, the generated FRPS allow-port range, and both TCP and UDP host bindings. |
+| FRPS dependency supply chain | Pass | Protected run 32460680110 produced and verified the signed, attested `amd64`/`arm64` digest recorded above. |
 | Windows EXE build/install/uninstall | Pass in release workflow | GitHub-hosted Windows runner verifies the self-signed package; trusted certificate and clean OS upgrade coverage remain future gates. |
 
 ## Required source adaptations
@@ -72,7 +75,7 @@ FRP 0.70.1 is not a pin-only upgrade:
 
 - [x] Apply the reviewed Agent API adaptation and `-tags noweb` FRPS build.
 - [x] Update every active FRP pin, build input and third-party notice atomically.
-- [x] Build, audit, sign and attest the protected `0.70.1-r1` FRPS dependency.
+- [x] Build, audit, test the baked L4/Ping entrypoint, sign, and attest the protected `0.70.1-r2` FRPS dependency.
 - [x] Pin the exact dependency manifest and immutable multi-architecture digest.
 - [x] Make the Windows Agent resource build reproducible with
       `SOURCE_DATE_EPOCH=0` and keep its expected SHA-256 fail-closed.
@@ -88,3 +91,39 @@ FRP 0.70.1 is not a pin-only upgrade:
 
 The reviewed source tree and the immutable dependency record above are
 authoritative after promotion.
+
+## Managed L4 scope
+
+The 2026-08-21 application extension keeps the reviewed FRP dependency and
+restricts its additional surface to general TCP and fixed-port UDP proxies.
+Both transports are disabled by default. The control center assigns an exact
+protocol/port pair, clients declare `supported_proxy_types`, and the Agent
+requires the same port to appear in the separate `--allow-tcp-ports` or
+`--allow-udp-ports` trust argument. A legacy client that omits the capability
+field receives UDP as `enabled=false`. Updated clients request one full sync on
+their first post-upgrade start, replacing any cached compatibility-disabled UDP
+record before persisting the new sync-capability marker.
+
+RTSP is covered only as an application carried by general TCP, for example
+public `10554` to local `554` with
+`ffplay -rtsp_transport tcp rtsp://PUBLIC_HOST:10554/path`. Native RTP/RTCP over
+UDP requires fixed media ports and one mapping per port; dynamic media ports
+are not guaranteed. Raw IP, ICMP, broadcast, multicast, STCP, XTCP, SUDP,
+visitors, and arbitrary plugins remain outside the managed whitelist.
+
+The managed L4 gate is reproducible with release artifacts:
+
+```sh
+CONTROL_IMAGE=<digest> \
+GATEWAY_IMAGE=<digest> \
+FRPS_IMAGE=<digest> \
+RC_VERSION=X.Y.Z-rc.N \
+tests/run-release-smoke.sh
+```
+
+It explicitly syncs `supported_proxy_types: [http, tcp, udp]`, renders all
+three proxy types, and starts the Agent with separate TCP ports `11000,11002`
+and UDP port `11001`. Local validation covered Python compilation, shell
+syntax, Compose rendering with placeholder digests, direct TCP/UDP/RTSP helper
+round trips, and denial helpers. A complete local Docker run still requires
+real immutable RC image digests and the matching Linux client package.

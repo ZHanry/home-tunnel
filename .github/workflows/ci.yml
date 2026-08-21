@@ -202,6 +202,7 @@ jobs:
           test -x linux-client/packaging/macos/build-release.sh
           test -x deploy/scripts/backup.sh
           test -x deploy/scripts/verify-backup.sh
+          test -x tests/test-frps-entrypoint.sh
       - name: Shellcheck shell scripts
         run: |
           shellcheck --severity=warning \
@@ -210,7 +211,8 @@ jobs:
             linux-client/packaging/macos/*.sh \
             linux-client/packaging/macos/home-tunnel-enroll \
             deploy/scripts/*.sh \
-            deploy/frps/entrypoint.sh
+            deploy/frps/entrypoint.sh \
+            tests/test-frps-entrypoint.sh
       - name: Lint Markdown
         uses: DavidAnson/markdownlint-cli2-action@21c1be1b93ad9ed58fa840aacc3f279cde2a72ff # v24.2.0
         with:
@@ -287,7 +289,7 @@ jobs:
           frps_image_tag=$(jq -r .image_tag deploy/frps/dependency.json)
           frps_digest=$(jq -r .digest deploy/frps/dependency.json)
           test "$frp_tag" = "v$frp_version"
-          test "$frps_image_tag" = "0.70.1-r1"
+          test "$frps_image_tag" = "0.70.1-r2"
           [[ "$frp_commit" =~ ^[0-9a-f]{40}$ ]]
           [[ "$frp_archive_sha256" =~ ^[0-9a-f]{64}$ ]]
           [[ "$frps_digest" =~ ^sha256:[0-9a-f]{64}$ ]]
@@ -324,12 +326,46 @@ jobs:
           # compose config only checks that secret files exist; stub PEM content is enough.
           printf -- '-----BEGIN CERTIFICATE-----\nstub\n-----END CERTIFICATE-----\n' > deploy/secrets/frps_tls_cert.pem
           printf -- '-----BEGIN PRIVATE KEY-----\nstub\n-----END PRIVATE KEY-----\n' > deploy/secrets/frps_tls_key.pem
+      - name: Validate IPv6 self-host configuration generation
+        run: |
+          set -euo pipefail
+          test_root=$(mktemp -d)
+          trap 'rm -rf -- "$test_root"' EXIT
+          mkdir -p "$test_root/repo/deploy/scripts"
+          cp deploy/scripts/new-selfhost-config.sh "$test_root/repo/deploy/scripts/"
+          (
+            cd "$test_root/repo"
+            sh ./deploy/scripts/new-selfhost-config.sh \
+              tunnel.home.test 2001:db8:1::10 console.home.test admin@home.test
+          )
+          grep -Fxq 'HOME_TUNNEL_FRPS_PUBLIC_HOST=2001:db8:1::10' "$test_root/repo/.env"
+          openssl x509 -in "$test_root/repo/deploy/secrets/frps_tls_cert.pem" \
+            -noout -checkip 2001:db8:1::10
+      - name: Validate PowerShell self-host input path
+        shell: pwsh
+        run: |
+          ./deploy/scripts/new-selfhost-config.ps1 `
+            -TunnelDomain tunnel.home.test `
+            -FrpsPublicHost 2001:db8:1::10 `
+            -ConsoleHost console.home.test `
+            -AcmeEmail admin@home.test `
+            -Force `
+            -WhatIf
       - run: docker compose config --quiet
       - run: docker compose -f compose.yaml -f compose.build.yaml config --quiet
+      - name: Validate TCP and UDP overlays
+        run: |
+          docker compose -f compose.yaml -f deploy/compose.tcp.yaml config --quiet
+          docker compose -f compose.yaml -f deploy/compose.udp.yaml config --quiet
+          docker compose -f compose.yaml -f deploy/compose.l4.yaml config --quiet
+          ./tests/test-frps-entrypoint.sh
       - name: Validate deploy Compose file
         run: |
           docker network inspect home-tunnel-edge >/dev/null 2>&1 || docker network create home-tunnel-edge
           docker compose -f deploy/compose.yaml --env-file .env config --quiet
+          docker compose -f deploy/compose.yaml -f deploy/compose.tcp.yaml --env-file .env config --quiet
+          docker compose -f deploy/compose.yaml -f deploy/compose.udp.yaml --env-file .env config --quiet
+          docker compose -f deploy/compose.yaml -f deploy/compose.l4.yaml --env-file .env config --quiet
       - name: Validate RC-aware offline deployment scripts
         shell: pwsh
         run: |

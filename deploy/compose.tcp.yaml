@@ -1,4 +1,5 @@
-# TCP 隧道默认关闭。管理员确认端口范围和主机防火墙后，显式叠加本文件：
+# 通用 TCP 隧道默认关闭。它可承载 RTSP-over-TCP、SSH、RDP、MQTT、
+# 数据库等任意 TCP 字节流。管理员确认端口范围和主机防火墙后显式叠加：
 # Portable root profile:
 # docker compose -f compose.yaml -f deploy/compose.tcp.yaml up -d
 # ARM64 deploy profile (from deploy/):
@@ -12,6 +13,7 @@ services:
 
   frps:
     environment:
+      PUBLIC_FRPS_PORT: "${HOME_TUNNEL_FRPS_PORT:-7000}"
       TCP_TUNNEL_ENABLED: "true"
       TCP_PORT_START: "${HOME_TUNNEL_TCP_PORT_START:-10000}"
       TCP_PORT_END: "${HOME_TUNNEL_TCP_PORT_END:-10099}"

@@ -27,13 +27,38 @@ public sealed record DeviceRegistration(
 
 public sealed class TunnelConnection
 {
+    private int? _remotePort;
+    private bool _canonicalRemotePortSeen;
+
     [JsonPropertyName("id")] public string Id { get; set; } = "";
     [JsonPropertyName("device_id")] public string DeviceId { get; set; } = "";
     [JsonPropertyName("name")] public string Name { get; set; } = "";
     [JsonPropertyName("subdomain")] public string Subdomain { get; set; } = "";
     [JsonPropertyName("proxy_type")] public string ProxyType { get; set; } = "http";
-    [JsonPropertyName("tcp_remote_port")] public int? TcpRemotePort { get; set; }
-    [JsonPropertyName("public_url")] public string PublicUrl { get; set; } = "";
+    [JsonPropertyName("remote_port")]
+    public int? RemotePort
+    {
+        get => _remotePort;
+        set
+        {
+            _remotePort = value;
+            _canonicalRemotePortSeen = true;
+        }
+    }
+    // Compatibility input for control centers predating the protocol-neutral
+    // remote_port contract. It is never written back to disk or the API.
+    [JsonPropertyName("tcp_remote_port")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public int? LegacyTcpRemotePort
+    {
+        get => null;
+        set
+        {
+            if (!_canonicalRemotePortSeen) _remotePort = value;
+        }
+    }
+    [JsonPropertyName("public_url")] public string? PublicUrl { get; set; }
+    [JsonPropertyName("public_endpoint")] public string? PublicEndpoint { get; set; }
     [JsonPropertyName("custom_domains")] public List<string> CustomDomains { get; set; } = [];
     [JsonPropertyName("local_scheme")] public string LocalScheme { get; set; } = "http";
     [JsonPropertyName("local_host")] public string LocalHost { get; set; } = "127.0.0.1";
@@ -44,6 +69,24 @@ public sealed class TunnelConnection
     [JsonPropertyName("applied_version")] public long AppliedVersion { get; set; }
     [JsonPropertyName("last_error_code")] public string? LastErrorCode { get; set; }
     [JsonPropertyName("proxy_name")] public string? ProxyName { get; set; }
+
+    [JsonIgnore]
+    public string PublicDisplayEndpoint
+    {
+        get
+        {
+            if (string.Equals(ProxyType, "http", StringComparison.OrdinalIgnoreCase) &&
+                !string.IsNullOrWhiteSpace(PublicUrl))
+                return PublicUrl;
+            if (!string.IsNullOrWhiteSpace(PublicEndpoint))
+            {
+                if (PublicEndpoint.Contains("://", StringComparison.Ordinal)) return PublicEndpoint;
+                if (ProxyType is "tcp" or "udp") return $"{ProxyType}://{PublicEndpoint}";
+                return PublicEndpoint;
+            }
+            return PublicUrl ?? "";
+        }
+    }
 }
 
 public sealed record ConnectionList([property: JsonPropertyName("items")] List<TunnelConnection> Items);
@@ -75,9 +118,12 @@ public sealed record ReleaseMetadata(
 
 public sealed class LocalState
 {
+    public const int CurrentSyncCapabilityVersion = 1;
+
     public string InstallId { get; set; } = Guid.NewGuid().ToString("N");
     public string? DeviceId { get; set; }
     public long LastConfigVersion { get; set; }
+    [JsonPropertyName("sync_capability_version")] public int SyncCapabilityVersion { get; set; }
     public long AppliedConfigVersion { get; set; }
     public string ServerBaseUrl { get; set; } = "";
     public string ApiBaseUrl { get; set; } = ProductConfiguration.ApiBaseUri.AbsoluteUri;
@@ -91,6 +137,10 @@ public sealed class LocalState
     public string? DismissedUpdateVersion { get; set; }
     public DateTimeOffset? DismissedUpdateAtUtc { get; set; }
     public List<TunnelConnection> CachedConnections { get; set; } = [];
+
+    [JsonIgnore]
+    public long SyncRequestConfigVersion =>
+        SyncCapabilityVersion < CurrentSyncCapabilityVersion ? 0 : LastConfigVersion;
 
     [JsonIgnore]
     public bool HasServerProfile =>

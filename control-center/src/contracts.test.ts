@@ -9,6 +9,7 @@ process.env.LEASE_SIGNING_KEY ??= "33".repeat(32);
 process.env.COOKIE_SECURE = "false";
 
 const { reservedSubdomains } = await import("./security.js");
+const { publicHostPort } = await import("./domain.js");
 
 type Contract = {
   reserved_subdomains: string[];
@@ -35,6 +36,13 @@ test("shared reserved-subdomain contract matches the control center", () => {
   assert.deepEqual([...reservedSubdomains].sort(), [...contract.reserved_subdomains].sort());
 });
 
+test("raw public endpoints format DNS, IPv4, and IPv6 authorities", () => {
+  assert.equal(publicHostPort("frps.example.com", 10001), "frps.example.com:10001");
+  assert.equal(publicHostPort("203.0.113.10", 10001), "203.0.113.10:10001");
+  assert.equal(publicHostPort("2001:db8::10", 10001), "[2001:db8::10]:10001");
+  assert.equal(publicHostPort("[2001:db8::10]", 10001), "[2001:db8::10]:10001");
+});
+
 test("REST and WebSocket compatibility contract preserves the v1 surface", () => {
   assert.equal(contract.rest.client_sync.path, "/api/v1/client/sync");
   assert.deepEqual(contract.rest.client_sync.request_fields, [
@@ -42,6 +50,7 @@ test("REST and WebSocket compatibility contract preserves the v1 surface", () =>
     "last_config_version",
     "supports_optional_lease",
     "lease_expires_at",
+    "supported_proxy_types",
   ]);
   assert.deepEqual(contract.rest.client_sync.response_fields, [
     "device_id",
@@ -76,6 +85,7 @@ test("REST and WebSocket compatibility contract preserves the v1 surface", () =>
     last_config_version: 7,
     supports_optional_lease: true,
     lease_expires_at: null,
+    supported_proxy_types: ["http", "tcp", "udp"],
   };
   exactKeys(representativeRequest, contract.rest.client_sync.request_fields);
   const representativeResponse = {

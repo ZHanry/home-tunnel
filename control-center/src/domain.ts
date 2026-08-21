@@ -9,6 +9,8 @@ import { hashBasicPassword, normalizeSubdomain, parseCidr, validateSubdomain } f
 // 冒号分隔 user:pass，含冒号的用户名无法无歧义还原）。
 // eslint-disable-next-line no-control-regex
 const basicAuthUsernamePattern = /^[^\u0000-\u001f\u007f:]{1,64}$/;
+const proxyTypeSchema = z.enum(["http", "tcp", "udp"]);
+export type ProxyType = z.infer<typeof proxyTypeSchema>;
 
 export const connectionAccessSchema = z.object({
   ip_allowlist: z
@@ -45,7 +47,8 @@ export const connectionInputSchema = z.object({
   local_host: z.string().trim().min(1).max(255),
   local_port: z.number().int().min(1).max(65_535),
   enabled: z.boolean().default(true),
-  proxy_type: z.enum(["http", "tcp"]).default("http"),
+  proxy_type: proxyTypeSchema.default("http"),
+  remote_port: z.number().int().min(1).max(65_535).nullable().optional(),
   tcp_remote_port: z.number().int().min(1).max(65_535).nullable().optional(),
   bandwidth_limit_bps: z.number().int().positive().max(10_000_000_000).nullable().optional(),
   access: connectionAccessSchema.optional(),
@@ -55,7 +58,7 @@ export const connectionInputSchema = z.object({
 // PATCH 解析都注入 enabled=true（把纯 ACL 编辑误判成 Agent 变更，还会隐式
 // re-enable 已停用的连接）。先覆盖掉 default 再 partial。
 export const connectionPatchSchema = connectionInputSchema
-  .extend({ enabled: z.boolean(), proxy_type: z.enum(["http", "tcp"]) })
+  .extend({ enabled: z.boolean(), proxy_type: proxyTypeSchema })
   .partial()
   .extend({ expected_version: z.number().int().positive().optional() });
 
@@ -71,6 +74,8 @@ export type ConnectionRow = {
   local_scheme: "http" | "https";
   local_host: string;
   local_port: number;
+  transport_type?: ProxyType;
+  remote_port?: string | number | null;
   proxy_type?: "http" | "tcp";
   tcp_remote_port?: string | number | null;
   enabled: boolean;
@@ -106,30 +111,47 @@ export function parseStoredAllowlist(value: string | null | undefined): string[]
   }
 }
 
+export function connectionTransport(row: ConnectionRow): ProxyType {
+  return row.transport_type ?? row.proxy_type ?? "http";
+}
+
+export function connectionRemotePort(row: ConnectionRow): number | null {
+  const transportType = connectionTransport(row);
+  if (transportType === "http") return null;
+  const stored = row.remote_port ?? (transportType === "tcp" ? row.tcp_remote_port : null);
+  return stored == null ? null : Number(stored);
+}
+
+export function publicHostPort(host: string, port: number): string {
+  const bracketedHost = host.includes(":") && !host.startsWith("[") ? `[${host}]` : host;
+  return `${bracketedHost}:${port}`;
+}
+
 export function publicConnection(
   row: ConnectionRow,
   customDomains: string[] = row.custom_domains ?? [],
 ) {
+  const proxyType = connectionTransport(row);
+  const remotePort = connectionRemotePort(row);
   return {
     id: row.id,
     user_id: row.user_id,
     device_id: row.device_id,
     name: row.name,
     subdomain: row.subdomain,
-    public_url:
-      (row.proxy_type ?? "http") === "http"
-        ? `https://${row.subdomain}.${config.tunnelDomain}`
-        : null,
+    public_url: proxyType === "http" ? `https://${row.subdomain}.${config.tunnelDomain}` : null,
     public_endpoint:
-      (row.proxy_type ?? "http") === "tcp" && row.tcp_remote_port != null
-        ? `${config.publicFrpsHost}:${Number(row.tcp_remote_port)}`
+      proxyType !== "http" && remotePort != null
+        ? publicHostPort(config.publicFrpsHost, remotePort)
         : null,
     custom_domains: customDomains,
     local_scheme: row.local_scheme,
     local_host: row.local_host,
     local_port: Number(row.local_port),
-    proxy_type: row.proxy_type ?? "http",
-    tcp_remote_port: row.tcp_remote_port == null ? null : Number(row.tcp_remote_port),
+    proxy_type: proxyType,
+    remote_port: remotePort,
+    // 旧字段只对 TCP 返回端口；UDP 返回 null，避免旧客户端错误建立 TCP 代理。
+    tcp_remote_port: proxyType === "tcp" ? remotePort : null,
     enabled: row.enabled,
     version: Number(row.version),
     state: row.state ?? (row.enabled ? "Pending" : "Disabled"),
@@ -182,6 +204,35 @@ export async function bumpDeviceConfig(
   return configVersion;
 }
 
+type RemotePortInput = {
+  remote_port?: number | null;
+  tcp_remote_port?: number | null;
+};
+
+function requestedRemotePort(input: RemotePortInput): number | null {
+  const hasCanonical = Object.hasOwn(input, "remote_port");
+  const hasLegacy = Object.hasOwn(input, "tcp_remote_port");
+  const canonical = input.remote_port ?? null;
+  const legacy = input.tcp_remote_port ?? null;
+  if (hasCanonical && hasLegacy && canonical !== legacy) {
+    throw new HttpError(400, "VALIDATION_ERROR", "remote_port 与 tcp_remote_port 不能冲突", {
+      field_errors: {
+        remote_port: "必须与 tcp_remote_port 相同",
+        tcp_remote_port: "必须与 remote_port 相同",
+      },
+    });
+  }
+  return hasCanonical ? canonical : hasLegacy ? legacy : null;
+}
+
+function legacyProxyType(proxyType: ProxyType): "http" | "tcp" {
+  return proxyType === "http" ? "http" : "tcp";
+}
+
+function legacyTcpRemotePort(proxyType: ProxyType, remotePort: number | null): number | null {
+  return proxyType === "tcp" ? remotePort : null;
+}
+
 export async function createConnection(
   client: DatabaseClient,
   userId: string,
@@ -208,13 +259,18 @@ export async function createConnection(
     throw new HttpError(404, "OWNERSHIP_MISMATCH", "设备不存在");
   }
   if (device.rows[0].status !== "active") throw new HttpError(423, "DEVICE_REVOKED", "设备已撤销");
-  validateProxySettings(input.proxy_type, input.tcp_remote_port ?? null, input.enabled);
-  if (input.proxy_type === "tcp") {
+  const remotePort = requestedRemotePort(input);
+  validateProxySettings(input.proxy_type, remotePort, input.enabled);
+  if (input.proxy_type !== "http") {
     const occupied = await client.query<{ id: string }>(
-      "SELECT id FROM connections WHERE proxy_type='tcp' AND tcp_remote_port=? AND deleted_at IS NULL LIMIT 1",
-      [input.tcp_remote_port],
+      `SELECT id FROM connections
+        WHERE transport_type=? AND remote_port=? AND deleted_at IS NULL LIMIT 1`,
+      [input.proxy_type, remotePort],
     );
-    if (occupied.rows[0]) throw new HttpError(409, "TCP_PORT_CONFLICT", "该 TCP 公网端口已被占用");
+    if (occupied.rows[0]) {
+      const label = input.proxy_type.toUpperCase();
+      throw new HttpError(409, `${label}_PORT_CONFLICT`, `该 ${label} 公网端口已被占用`);
+    }
   }
   const connectionId = randomUUID();
   const access = input.access;
@@ -225,9 +281,10 @@ export async function createConnection(
   const accessBasicHash = access?.basic_auth ? hashBasicPassword(access.basic_auth.password) : null;
   const connection = await client.query<ConnectionRow>(
     `INSERT INTO connections(
-       id,user_id,device_id,name,subdomain,local_scheme,local_host,local_port,enabled,proxy_type,tcp_remote_port,
+       id,user_id,device_id,name,subdomain,local_scheme,local_host,local_port,enabled,
+       transport_type,remote_port,proxy_type,tcp_remote_port,
        access_ip_allowlist,access_basic_user,access_basic_hash)
-     VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?) RETURNING *`,
+     VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) RETURNING *`,
     [
       connectionId,
       userId,
@@ -239,7 +296,9 @@ export async function createConnection(
       input.local_port,
       input.enabled,
       input.proxy_type,
-      input.tcp_remote_port ?? null,
+      remotePort,
+      legacyProxyType(input.proxy_type),
+      legacyTcpRemotePort(input.proxy_type, remotePort),
       accessAllowlistJson,
       accessBasicUser,
       accessBasicHash,
@@ -291,6 +350,7 @@ const agentPatchFields = [
   "enabled",
   "bandwidth_limit_bps",
   "proxy_type",
+  "remote_port",
   "tcp_remote_port",
 ] as const;
 
@@ -330,26 +390,34 @@ export async function updateConnection(
         { field_errors: { subdomain: subdomainError } },
       );
     }
-    const proxyType = patch.proxy_type ?? current.proxy_type ?? "http";
-    const tcpRemotePort = Object.hasOwn(patch, "tcp_remote_port")
-      ? (patch.tcp_remote_port ?? null)
+    const currentProxyType = connectionTransport(current);
+    const proxyType = patch.proxy_type ?? currentProxyType;
+    const hasRemotePortPatch =
+      Object.hasOwn(patch, "remote_port") || Object.hasOwn(patch, "tcp_remote_port");
+    const remotePort = hasRemotePortPatch
+      ? requestedRemotePort(patch)
       : proxyType === "http"
         ? null
-        : (current.tcp_remote_port ?? null);
+        : connectionRemotePort(current);
     const enabled = patch.enabled ?? current.enabled;
-    validateProxySettings(proxyType, tcpRemotePort == null ? null : Number(tcpRemotePort), enabled);
-    if (proxyType === "tcp") {
+    const preserveExistingDisabledPort =
+      enabled === false && proxyType === currentProxyType && !hasRemotePortPatch;
+    validateProxySettings(proxyType, remotePort, enabled, preserveExistingDisabledPort);
+    if (proxyType !== "http") {
       const occupied = await client.query<{ id: string }>(
         `SELECT id FROM connections
-          WHERE proxy_type='tcp' AND tcp_remote_port=? AND id<>? AND deleted_at IS NULL LIMIT 1`,
-        [tcpRemotePort, connectionId],
+          WHERE transport_type=? AND remote_port=? AND id<>? AND deleted_at IS NULL LIMIT 1`,
+        [proxyType, remotePort, connectionId],
       );
-      if (occupied.rows[0])
-        throw new HttpError(409, "TCP_PORT_CONFLICT", "该 TCP 公网端口已被占用");
+      if (occupied.rows[0]) {
+        const label = proxyType.toUpperCase();
+        throw new HttpError(409, `${label}_PORT_CONFLICT`, `该 ${label} 公网端口已被占用`);
+      }
     }
     const updated = await client.query<ConnectionRow>(
       `UPDATE connections SET
-         name=?,subdomain=?,local_scheme=?,local_host=?,local_port=?,enabled=?,proxy_type=?,tcp_remote_port=?,
+         name=?,subdomain=?,local_scheme=?,local_host=?,local_port=?,enabled=?,
+         transport_type=?,remote_port=?,proxy_type=?,tcp_remote_port=?,
          version=version+1,updated_at=home_tunnel_now()
         WHERE id=? AND version=? AND deleted_at IS NULL RETURNING *`,
       [
@@ -360,7 +428,9 @@ export async function updateConnection(
         patch.local_port ?? current.local_port,
         enabled,
         proxyType,
-        tcpRemotePort,
+        remotePort,
+        legacyProxyType(proxyType),
+        legacyTcpRemotePort(proxyType, remotePort),
         connectionId,
         expectedVersion,
       ],
@@ -449,27 +519,42 @@ export async function updateConnection(
 }
 
 function validateProxySettings(
-  proxyType: "http" | "tcp",
+  proxyType: ProxyType,
   remotePort: number | null,
   enabled = true,
+  preserveExistingDisabledPort = false,
 ): void {
   if (proxyType === "http") {
     if (remotePort !== null)
-      throw new HttpError(400, "VALIDATION_ERROR", "HTTP 连接不能设置 TCP 远程端口");
+      throw new HttpError(400, "VALIDATION_ERROR", "HTTP 连接不能设置公网远程端口");
     return;
   }
-  if (!config.tcpTunnels.enabled && enabled) {
-    throw new HttpError(403, "TCP_TUNNELS_DISABLED", "部署未启用 TCP 隧道高级特性");
+  const label = proxyType.toUpperCase();
+  const settings = config.transportTunnels[proxyType];
+  // 部署关闭 raw transport 或收窄端口范围后，管理员仍必须能停用既有连接。
+  // 调用方只会在“协议未变、端口字段未触碰、最终 enabled=false”时开启此例外；
+  // 端口仍需满足数据库级 1..65535 完整性约束。
+  if (
+    preserveExistingDisabledPort &&
+    !enabled &&
+    Number.isInteger(remotePort) &&
+    remotePort! >= 1 &&
+    remotePort! <= 65_535
+  ) {
+    return;
+  }
+  if (!settings.enabled && enabled) {
+    throw new HttpError(403, `${label}_TUNNELS_DISABLED`, `部署未启用 ${label} L4 隧道`);
   }
   if (
     !Number.isInteger(remotePort) ||
-    remotePort! < config.tcpTunnels.portStart ||
-    remotePort! > config.tcpTunnels.portEnd
+    remotePort! < settings.portStart ||
+    remotePort! > settings.portEnd
   ) {
     throw new HttpError(
       400,
-      "TCP_PORT_NOT_ALLOWED",
-      `TCP 远程端口必须位于 ${config.tcpTunnels.portStart}-${config.tcpTunnels.portEnd}`,
+      `${label}_PORT_NOT_ALLOWED`,
+      `${label} 远程端口必须位于 ${settings.portStart}-${settings.portEnd}`,
     );
   }
 }

@@ -1,4 +1,4 @@
-import { state } from "./state.js?v=3.0.0-modules1";
+import { state } from "./state.js?v=3.1.0-modules1";
 
 const appShell = document.querySelector("#app-shell");
 
@@ -10,13 +10,13 @@ const zhToEn = {
   "访问 Home Tunnel GitHub 仓库": "Visit the Home Tunnel GitHub repository",
   "GitHub 仓库": "GitHub repository",
   "登录后台": "Admin sign in",
-  "自托管 · 受管 HTTP/HTTPS 隧道": "Self-hosted · Managed HTTP/HTTPS tunnels",
+  "自托管 · 受管 Web / TCP / UDP 隧道": "Self-hosted · Managed Web / TCP / UDP tunnels",
   "家庭私有服务，": "Private services at home,",
   "安全穿透直达": "securely accessible anywhere",
-  "无需公网 IP 或路由器端口映射，为 NAS、Home Assistant 和开发服务提供独立 HTTPS 地址、集中策略与可审计访问。": "Give your NAS, Home Assistant, and development services dedicated HTTPS addresses, centralized policies, and auditable access—without a public IP or router port forwarding.",
+  "无需家庭公网 IP 或路由器端口映射，受管发布 Web、通用 TCP 与固定端口 UDP 服务；RTSP-over-TCP 可直接使用通用 TCP 映射。": "Publish managed Web, general TCP, and fixed-port UDP services without a public IP at home or router port forwarding; RTSP-over-TCP uses a general TCP mapping.",
   "选择客户端平台": "Choose a client platform",
   "Windows 图形客户端": "Windows desktop client",
-  "Home Tunnel 3.0.0 Windows 图形客户端预览": "Home Tunnel 3.0.0 Windows desktop client preview",
+  "Home Tunnel 3.1.0 Windows 图形客户端预览": "Home Tunnel 3.1.0 Windows desktop client preview",
   "Linux 客户端快速开始": "Linux client quick start",
   "Windows x64 EXE": "Windows x64 EXE",
   "Windows EXE 为自签名 Experimental；安装时会提示未知发布者，请先核对 Release SHA-256。": "The Windows EXE is self-signed Experimental software. Expect an unknown-publisher warning and verify the Release SHA-256 first.",
@@ -37,12 +37,12 @@ const zhToEn = {
   "创建连接": "Create connection",
   "切换至浅色主题": "Switch to light theme",
   "切换至深色主题": "Switch to dark theme",
-  "填写本地地址和需要的公网子域。": "Enter the local target and the public subdomain you need.",
+  "填写本地目标；端口隧道由管理员分配精确公网端口。": "Enter the local target; an administrator assigns the exact public port for raw-port tunnels.",
   "云端管理": "Central management",
   "统一查看设备、状态和访问策略。": "Manage devices, status, and access policies in one place.",
   "同一套安全边界": "One consistent security boundary",
   "按设备选择运行方式": "Choose how each device runs",
-  "两种客户端都只接受控制中心签发的 HTTP/HTTPS、自定义域名与管理员授权 TCP 配置和短期租约，不提供通用 FRP 命令行。": "Both clients accept only control-center-issued HTTP/HTTPS, verified custom-domain, administrator-authorized TCP configurations, and short-lived leases; neither exposes a general-purpose FRP CLI.",
+  "两种客户端都只接受控制中心签发的 HTTP/HTTPS、自定义域名与管理员精确授权的 TCP/UDP 端口。端口隧道默认关闭并绕过 HTTP 网关；应用必须自行认证加密，并在防火墙限源限速。不提供通用 FRP 命令行。": "Both clients accept only control-center-issued HTTP/HTTPS and custom-domain configurations plus exact administrator-authorized TCP/UDP ports. Raw-port tunnels are off by default and bypass the HTTP gateway; applications must authenticate and encrypt, with firewall source/rate limits. Neither client exposes a general-purpose FRP CLI.",
   "自签名 / Experimental": "Self-signed / Experimental",
   "登录、连接管理与实时配置通知": "Sign-in, connection management, and real-time configuration updates",
   "系统托盘、开机启动与诊断": "System tray, startup, and diagnostics",
@@ -70,7 +70,7 @@ const zhToEn = {
   "保存新密码": "Save new password",
   "返回产品首页": "Back to product home",
   "主导航": "Main navigation",
-  "控制中心 v3.0.0": "Control Center v3.0.0",
+  "控制中心 v3.1.0": "Control Center v3.1.0",
   "工作区": "Workspace",
   "系统总览": "Overview",
   "用户管理": "Users",
@@ -149,8 +149,9 @@ const zhToEn = {
   "编辑": "Edit",
   "开放": "Open",
   "FRP 租约": "FRP lease",
+  "FRP 租约 · 主机防火墙": "FRP lease · host firewall",
   "还没有连接": "No connections yet",
-  "为已注册设备创建 HTTP/HTTPS 连接，或由管理员开启高级 TCP 隧道。": "Create an HTTP/HTTPS connection for a registered device, or let an administrator enable an advanced TCP tunnel.",
+  "为已注册设备创建 HTTP/HTTPS 连接，或由管理员开启通用 TCP / UDP 端口隧道。": "Create an HTTP/HTTPS connection for a registered device, or let an administrator enable a general TCP / UDP port tunnel.",
   "关键词": "Keywords",
   "动作": "Action",
   "目标类型": "Target type",
@@ -174,8 +175,13 @@ const zhToEn = {
   "连接标识": "Connection identifier",
   "隧道类型": "Tunnel type",
   "TCP（高级）": "TCP (advanced)",
+  "TCP（RTSP / SSH / RDP / 数据库等）": "TCP (RTSP / SSH / RDP / databases, etc.)",
+  "UDP（固定端口）": "UDP (fixed port)",
   "TCP 端口仅管理员可分配。": "Only administrators can assign TCP ports.",
+  "端口隧道仅管理员可分配，且不经过 HTTP 网关。": "Only administrators can assign raw-port tunnels; their traffic bypasses the HTTP gateway.",
+  "公网端口": "Public port",
   "TCP 公网端口": "Public TCP port",
+  "UDP 公网端口": "Public UDP port",
   "本地协议": "Local protocol",
   "本地地址": "Local address",
   "本地端口": "Local port",
@@ -240,7 +246,7 @@ const zhToEn = {
   "用户": "User",
   "设备": "Device",
   "HTTP 公网子域为": "The public HTTP subdomain is",
-  "全局关闭 TCP 时，只允许停用既有 TCP 隧道或改回 HTTP。": "When TCP is globally disabled, an existing TCP tunnel can only be disabled or changed back to HTTP.",
+  "全局关闭某种端口传输时，只允许停用既有连接或改回 HTTP。": "When a raw transport is globally disabled, an existing connection can only be disabled or changed back to HTTP.",
   "例如 nas.example.com": "For example, nas.example.com",
   "验证记录已创建，请配置 DNS": "Verification record created; configure DNS",
   "域名验证成功，正在同步隧道": "Domain verified; synchronizing the tunnel",
@@ -311,6 +317,26 @@ export function localizedText(value, targetLocale = state.locale) {
       .replace(/^自定义域名 · (.+)$/, "Custom domains · $1")
       .replace(/^账号带宽与配额 · (.+)$/, "Account bandwidth and quota · $1")
       .replace(/^应用 v(\d+) · 目标 v(\d+)$/, "Applied v$1 · target v$2")
+      .replace(
+        /^HTTP 公网子域为 \.(.+)；端口隧道中仅作为连接标识$/,
+        "The public HTTP subdomain is .$1; for raw-port tunnels this is only an identifier",
+      )
+      .replace(
+        /^允许范围 (\d+)-(\d+)；RTSP 请在播放器中强制 TCP。$/,
+        "Allowed range $1-$2; force TCP in the RTSP player.",
+      )
+      .replace(
+        /^允许范围 (\d+)-(\d+)；请用主机防火墙限源，避免 UDP 反射放大。$/,
+        "Allowed range $1-$2; restrict sources in the host firewall to reduce UDP reflection/amplification risk.",
+      )
+      .replace(
+        /^当前端口 (\d+) 已不在允许范围 (\d+)-(\d+)；可停用，或改为范围内端口。$/,
+        "Current port $1 is outside the allowed range $2-$3; disable the tunnel or choose a port inside the range.",
+      )
+      .replace(
+        /^当前版本 v(\d+)；全局关闭某种端口传输时，只允许停用既有连接或改回 HTTP。$/,
+        "Current version v$1; when a raw transport is globally disabled, an existing connection can only be disabled or changed back to HTTP.",
+      )
       .replace(/^当前版本 v(\d+)；(.*)$/, "Current version v$1; $2")
       .replace(/^删除设备 (.+)$/, "Delete device $1");
     translated = translated
@@ -325,6 +351,26 @@ export function localizedText(value, targetLocale = state.locale) {
       .replace(/^Custom domains · (.+)$/, "自定义域名 · $1")
       .replace(/^Account bandwidth and quota · (.+)$/, "账号带宽与配额 · $1")
       .replace(/^Applied v(\d+) · target v(\d+)$/, "应用 v$1 · 目标 v$2")
+      .replace(
+        /^The public HTTP subdomain is \.(.+); for raw-port tunnels this is only an identifier$/,
+        "HTTP 公网子域为 .$1；端口隧道中仅作为连接标识",
+      )
+      .replace(
+        /^Allowed range (\d+)-(\d+); force TCP in the RTSP player\.$/,
+        "允许范围 $1-$2；RTSP 请在播放器中强制 TCP。",
+      )
+      .replace(
+        /^Allowed range (\d+)-(\d+); restrict sources in the host firewall to reduce UDP reflection\/amplification risk\.$/,
+        "允许范围 $1-$2；请用主机防火墙限源，避免 UDP 反射放大。",
+      )
+      .replace(
+        /^Current port (\d+) is outside the allowed range (\d+)-(\d+); disable the tunnel or choose a port inside the range\.$/,
+        "当前端口 $1 已不在允许范围 $2-$3；可停用，或改为范围内端口。",
+      )
+      .replace(
+        /^Current version v(\d+); when a raw transport is globally disabled, an existing connection can only be disabled or changed back to HTTP\.$/,
+        "当前版本 v$1；全局关闭某种端口传输时，只允许停用既有连接或改回 HTTP。",
+      )
       .replace(/^Delete device (.+)$/, "删除设备 $1");
     translated = translated
       .replace(/^(\d+) live checks$/, "$1 项实时检查")
@@ -350,6 +396,10 @@ export function localizedApiError(data, status) {
     PROXY_TYPE_UNSUPPORTED: "This tunnel type does not support the requested operation",
     TCP_TUNNELS_DISABLED: "TCP tunnels are disabled by the administrator",
     TCP_PORT_CONFLICT: "This public TCP port is already assigned",
+    TCP_PORT_NOT_ALLOWED: "This public TCP port is outside the allowed range",
+    UDP_TUNNELS_DISABLED: "UDP tunnels are disabled by the administrator",
+    UDP_PORT_CONFLICT: "This public UDP port is already assigned",
+    UDP_PORT_NOT_ALLOWED: "This public UDP port is outside the allowed range",
   }[data?.error_code] ?? `Request failed (${status})`;
 }
 
@@ -397,8 +447,8 @@ export function updateDocumentMetadata() {
   document.querySelector('meta[name="description"]')?.setAttribute(
     "content",
     t(
-      "Home Tunnel 让家里的 Web 服务拥有安全、稳定的 HTTPS 访问地址。",
-      "Home Tunnel gives your web services at home secure, reliable HTTPS addresses.",
+      "Home Tunnel 受管发布 Web、通用 TCP 与固定端口 UDP 服务。",
+      "Home Tunnel publishes managed Web, general TCP, and fixed-port UDP services.",
     ),
   );
 }

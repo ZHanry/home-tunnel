@@ -109,6 +109,18 @@ router.get(
       ...summary,
       upload_24h: Number(summary?.upload_24h ?? 0),
       download_24h: Number(summary?.download_24h ?? 0),
+      transport_tunnels: {
+        tcp: {
+          enabled: config.transportTunnels.tcp.enabled,
+          port_start: config.transportTunnels.tcp.portStart,
+          port_end: config.transportTunnels.tcp.portEnd,
+        },
+        udp: {
+          enabled: config.transportTunnels.udp.enabled,
+          port_start: config.transportTunnels.udp.portStart,
+          port_end: config.transportTunnels.udp.portEnd,
+        },
+      },
       tcp_tunnels: {
         enabled: config.tcpTunnels.enabled,
         port_start: config.tcpTunnels.portStart,

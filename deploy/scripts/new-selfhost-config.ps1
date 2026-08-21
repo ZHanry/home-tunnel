@@ -19,6 +19,9 @@ $secretRoot = Join-Path $deployRoot "secrets"
 
 $TunnelDomain = $TunnelDomain.Trim().Trim(".").ToLowerInvariant()
 $FrpsPublicHost = $FrpsPublicHost.Trim()
+if ($FrpsPublicHost.StartsWith("[") -and $FrpsPublicHost.EndsWith("]")) {
+    $FrpsPublicHost = $FrpsPublicHost.Substring(1, $FrpsPublicHost.Length - 2)
+}
 if (-not $ConsoleHost) { $ConsoleHost = "console.$TunnelDomain" }
 $ConsoleHost = $ConsoleHost.Trim().Trim(".").ToLowerInvariant()
 if (-not $AcmeEmail) { $AcmeEmail = "admin@$TunnelDomain" }
@@ -27,7 +30,11 @@ $AcmeEmail = $AcmeEmail.Trim()
 $dnsPattern = '^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$'
 if ($TunnelDomain -notmatch $dnsPattern) { throw "TunnelDomain is not a valid DNS suffix" }
 if ($ConsoleHost -notmatch $dnsPattern) { throw "ConsoleHost is not a valid DNS name" }
-if ($FrpsPublicHost -notmatch '^[A-Za-z0-9.-]{1,253}$') { throw "FrpsPublicHost is not a valid host or IP address" }
+$parsedFrpsIp = $null
+$frpsHostIsIp = [Net.IPAddress]::TryParse($FrpsPublicHost, [ref]$parsedFrpsIp)
+if (-not $frpsHostIsIp -and $FrpsPublicHost -notmatch '^[A-Za-z0-9.-]{1,253}$') {
+    throw "FrpsPublicHost is not a valid host or IP address"
+}
 if ($AcmeEmail -notmatch '^[^\s@]+@[^\s@]+$') { throw "AcmeEmail is not valid" }
 
 $secretNames = @(
@@ -36,8 +43,10 @@ $secretNames = @(
     "lease_signing_key",
     "bootstrap_admin_password"
 )
-$existing = @($environmentPath) + @($secretNames | ForEach-Object { Join-Path $secretRoot $_ }) |
-    Where-Object { Test-Path -LiteralPath $_ }
+$existing = @(
+    @($environmentPath) + @($secretNames | ForEach-Object { Join-Path $secretRoot $_ }) |
+        Where-Object { Test-Path -LiteralPath $_ }
+)
 if ($existing.Count -gt 0 -and -not $Force) {
     throw "Local configuration already exists. Re-run with -Force only if you intend to rotate and replace it."
 }
@@ -70,11 +79,12 @@ if ($PSCmdlet.ShouldProcess($workspaceRoot, "create local self-host configuratio
                 $key,
                 [Security.Cryptography.HashAlgorithmName]::SHA256)
             $sanBuilder = [Security.Cryptography.X509Certificates.SubjectAlternativeNameBuilder]::new()
-            $parsedIp = $null
-            if ([Net.IPAddress]::TryParse($FrpsPublicHost, [ref]$parsedIp)) {
-                $sanBuilder.AddIpAddress($parsedIp)
+            if ($frpsHostIsIp) {
+                $sanBuilder.AddIpAddress($parsedFrpsIp)
             }
-            $sanBuilder.AddDnsName($FrpsPublicHost)
+            else {
+                $sanBuilder.AddDnsName($FrpsPublicHost)
+            }
             $request.CertificateExtensions.Add($sanBuilder.Build())
             $notBefore = [DateTimeOffset]::UtcNow.AddMinutes(-5)
             $certificate = $request.CreateSelfSigned($notBefore, $notBefore.AddDays(3650))
@@ -110,13 +120,22 @@ if ($PSCmdlet.ShouldProcess($workspaceRoot, "create local self-host configuratio
     }
 
     $environment = @"
-HOME_TUNNEL_VERSION=3.0.0-rc.2
+HOME_TUNNEL_VERSION=3.1.0-rc.1
 HOME_TUNNEL_CONSOLE_HOST=$ConsoleHost
 HOME_TUNNEL_TUNNEL_DOMAIN=$TunnelDomain
 HOME_TUNNEL_PUBLIC_BASE_URL=https://$ConsoleHost
 HOME_TUNNEL_FRPS_PUBLIC_HOST=$FrpsPublicHost
 HOME_TUNNEL_FRPS_BIND_ADDRESS=0.0.0.0
 HOME_TUNNEL_FRPS_PORT=7000
+HOME_TUNNEL_TCP_BIND_ADDRESS=0.0.0.0
+HOME_TUNNEL_TCP_PORT_START=10000
+HOME_TUNNEL_TCP_PORT_END=10099
+HOME_TUNNEL_UDP_BIND_ADDRESS=0.0.0.0
+HOME_TUNNEL_UDP_PORT_START=10000
+HOME_TUNNEL_UDP_PORT_END=10099
+HOME_TUNNEL_L4_BIND_ADDRESS=0.0.0.0
+HOME_TUNNEL_L4_PORT_START=10000
+HOME_TUNNEL_L4_PORT_END=10099
 HOME_TUNNEL_ACME_EMAIL=$AcmeEmail
 HOME_TUNNEL_BOOTSTRAP_ADMIN_USERNAME=admin
 "@

@@ -3,9 +3,18 @@
 This directory contains the headless client for Linux and macOS. It uses two processes:
 
 - `home-tunnel-client` owns control-center authentication, device registration, configuration sync, lease renewal, heartbeat reporting, state persistence, and process supervision.
-- `home-tunnel-agent` is built from the same restricted FRP 0.70.1 source and `windows-agent/main.go` validation surface as the Windows release. It rejects generic FRP commands, UDP proxies, unassigned TCP ports, visitors, and arbitrary plugins.
+- `home-tunnel-agent` is built from the same restricted FRP 0.70.1 source and
+  `windows-agent/main.go` validation surface as the Windows release. It accepts
+  only issued HTTP connections and administrator-authorized exact TCP/UDP
+  ports, and rejects generic FRP commands, cross-protocol port reuse, visitors,
+  and arbitrary plugins.
 
-The service supports Linux `amd64`/`arm64` and macOS (darwin) `amd64`/`arm64`. It publishes HTTP or HTTPS targets reachable from the host and administrator-assigned TCP ports when that advanced feature is explicitly enabled; it is not a general-purpose VPN or unrestricted TCP/UDP tunnel.
+The service supports Linux `amd64`/`arm64` and macOS (darwin) `amd64`/`arm64`.
+It publishes HTTP or HTTPS targets reachable from the host, general TCP byte
+streams, and fixed-port UDP services when those advanced transports are
+explicitly enabled. It is not a general-purpose VPN: raw IP, ICMP, broadcast,
+multicast, STCP, XTCP, SUDP, visitor configurations, dynamic UDP media-port
+negotiation, and arbitrary FRP plugins are unsupported.
 
 ## Build a package
 
@@ -28,8 +37,8 @@ Each script downloads the pinned FRP source archive, verifies its SHA-256, build
 On the target Linux machine:
 
 ```sh
-tar -xzf home-tunnel-linux-3.0.0-amd64.tar.gz
-cd home-tunnel-linux-3.0.0-amd64
+tar -xzf home-tunnel-linux-3.1.0-rc.1-amd64.tar.gz
+cd home-tunnel-linux-3.1.0-rc.1-amd64
 sudo ./install.sh
 sudo home-tunnel-enroll
 ```
@@ -43,8 +52,8 @@ The permanent device credential and cached configuration are stored in `/var/lib
 On the target Mac:
 
 ```sh
-tar -xzf home-tunnel-macos-3.0.0-arm64.tar.gz
-cd home-tunnel-macos-3.0.0-arm64
+tar -xzf home-tunnel-macos-3.1.0-rc.1-arm64.tar.gz
+cd home-tunnel-macos-3.1.0-rc.1-arm64
 sudo ./install.sh
 sudo home-tunnel-enroll
 ```
@@ -80,5 +89,27 @@ launchd restarts the daemon after a crash (`KeepAlive` with `SuccessfulExit=fals
 ## Behaviour common to both platforms
 
 Connections are currently created and assigned through the control-center administrator UI. The daemon receives configuration changes within seconds over a WebSocket notification channel and keeps a three-minute safety poll as the fallback, sends heartbeats every 30 seconds, renews leases before expiry, stops an expired tunnel, and restarts a crashed Agent up to five times with exponential backoff.
+
+For RTSP, create a general TCP connection rather than looking for a separate
+RTSP type. A typical mapping is public `10554/tcp` to the camera's local
+`554/tcp`, used as follows:
+
+```sh
+ffplay -rtsp_transport tcp rtsp://PUBLIC_HOST:10554/path
+```
+
+Native RTP/RTCP over UDP requires fixed camera media ports and one managed UDP
+mapping per port; dynamically selected ports are not guaranteed to work. Raw
+TCP/UDP bypass Caddy and the Traffic Gateway, so the target application must
+provide its own authentication and encryption. Operators must enforce source
+and rate limits in the host/cloud firewall, especially for UDP reflection and
+amplification risks.
+
+Upgrade the server/control center and all clients before enabling UDP. This
+client declares `supported_proxy_types` during sync. A legacy client that omits
+the field receives UDP connections as `disabled` and cannot start them. On its
+first post-upgrade launch, the current client requests one full sync before
+persisting the new sync-capability marker, so a compatibility-disabled cached
+UDP record is refreshed.
 
 The headless client does not yet implement the Windows client's automatic package updater. While the WebSocket channel is unavailable, configuration changes still arrive within three minutes through the safety poll.

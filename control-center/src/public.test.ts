@@ -71,13 +71,13 @@ test("public landing page stays available while Windows release metadata is abse
     );
     assert.match(
       landing.body.toString("utf8"),
-      /id="hero-download"[^>]*HomeTunnel-Setup-3\.0\.0-x64\.exe/,
+      /id="hero-download"[^>]*HomeTunnel-Setup-3\.1\.0-x64\.exe/,
     );
     assert.match(landing.body.toString("utf8"), /home-tunnel-client status/);
-    assert.match(landing.body.toString("utf8"), /app\.js\?v=3\.0\.0-modules1/);
+    assert.match(landing.body.toString("utf8"), /app\.js\?v=3\.1\.0-modules1/);
     assert.match(landing.body.toString("utf8"), /type="module"/);
-    assert.match(landing.body.toString("utf8"), /v2\.css\?v=3\.0\.0-ui5/);
-    assert.match(landing.body.toString("utf8"), /theme\.js\?v=3\.0\.0-locale/);
+    assert.match(landing.body.toString("utf8"), /v2\.css\?v=3\.1\.0-ui5/);
+    assert.match(landing.body.toString("utf8"), /theme\.js\?v=3\.1\.0-locale/);
     assert.match(landing.body.toString("utf8"), /data-locale-toggle/);
     assert.doesNotMatch(landing.body.toString("utf8"), /实时同步正常|系统健康|受管请求路径/);
     assert.match(landing.body.toString("utf8"), /id="page-actions"/);
@@ -98,27 +98,27 @@ test("public landing page stays available while Windows release metadata is abse
     assert.equal(publicConfigValue.frps_port, 7000);
     assert.equal(publicConfigValue.frps_tls_certificate_pem, frpsCertificatePem);
 
-    const stylesheet = await request(origin + "/v2.css?v=3.0.0-ui5");
+    const stylesheet = await request(origin + "/v2.css?v=3.1.0-ui5");
     assert.equal(stylesheet.status, 200);
     assert.equal(stylesheet.headers["cache-control"], "public, max-age=31536000, immutable");
 
-    const themeScript = await request(origin + "/theme.js?v=3.0.0-locale");
+    const themeScript = await request(origin + "/theme.js?v=3.1.0-locale");
     assert.equal(themeScript.status, 200);
     assert.match(themeScript.body.toString("utf8"), /ht_locale/);
 
-    const applicationScript = await request(origin + "/app.js?v=3.0.0-modules1");
+    const applicationScript = await request(origin + "/app.js?v=3.1.0-modules1");
     assert.equal(applicationScript.status, 200);
     assert.match(
       applicationScript.body.toString("utf8"),
-      /\.\/modules\/api\.js\?v=3\.0\.0-modules1/,
+      /\.\/modules\/api\.js\?v=3\.1\.0-modules1/,
     );
     assert.match(
       applicationScript.body.toString("utf8"),
-      /\.\/modules\/locale\.js\?v=3\.0\.0-modules1/,
+      /\.\/modules\/locale\.js\?v=3\.1\.0-modules1/,
     );
     assert.match(
       applicationScript.body.toString("utf8"),
-      /\.\/modules\/realtime\.js\?v=3\.0\.0-modules1/,
+      /\.\/modules\/realtime\.js\?v=3\.1\.0-modules1/,
     );
     assert.match(applicationScript.body.toString("utf8"), /toLocaleString\(localeTag\(\)/);
     assert.equal(applicationScript.headers["cache-control"], "public, max-age=31536000, immutable");
@@ -132,9 +132,11 @@ test("public landing page stays available while Windows release metadata is abse
       applicationScript.body.toString("utf8"),
       /Windows 图形客户端或 Linux\/macOS 无界面服务/,
     );
+    assert.match(applicationScript.body.toString("utf8"), /TCP（RTSP \/ SSH \/ RDP \/ 数据库等）/);
+    assert.match(applicationScript.body.toString("utf8"), /UDP（固定端口）/);
     assert.doesNotMatch(applicationScript.body.toString("utf8"), /data-action="revoke-device"/);
 
-    const localeModule = await request(origin + "/modules/locale.js?v=3.0.0-modules1");
+    const localeModule = await request(origin + "/modules/locale.js?v=3.1.0-modules1");
     assert.equal(localeModule.status, 200);
     assert.match(localeModule.body.toString("utf8"), /const zhToEn =/);
     assert.match(localeModule.body.toString("utf8"), /Switch to English/);
@@ -146,7 +148,7 @@ test("public landing page stays available while Windows release metadata is abse
     assert.match(localeModule.body.toString("utf8"), /record\.type === "characterData"/);
     assert.equal(localeModule.headers["cache-control"], "public, max-age=31536000, immutable");
 
-    const realtimeModule = await request(origin + "/modules/realtime.js?v=3.0.0-modules1");
+    const realtimeModule = await request(origin + "/modules/realtime.js?v=3.1.0-modules1");
     assert.equal(realtimeModule.status, 200);
     assert.match(realtimeModule.body.toString("utf8"), /config\.version\.changed/);
     assert.match(realtimeModule.body.toString("utf8"), /export function disconnectRealtime/);

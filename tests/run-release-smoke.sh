@@ -148,8 +148,8 @@ for service in control-center frps traffic-gateway; do
 done
 
 [[ "$(docker exec "$control_container" node --input-type=module -e \
-  "import {DatabaseSync} from 'node:sqlite';const d=new DatabaseSync(process.env.SQLITE_PATH,{readOnly:true});console.log(d.prepare('select max(version) v from schema_migrations').get().v);d.close()")" == 7 ]] || {
-  echo "Migration 007 was not applied" >&2
+  "import {DatabaseSync} from 'node:sqlite';const d=new DatabaseSync(process.env.SQLITE_PATH,{readOnly:true});console.log(d.prepare('select max(version) v from schema_migrations').get().v);d.close()")" == 8 ]] || {
+  echo "Migration 008 was not applied" >&2
   exit 1
 }
 
@@ -199,6 +199,7 @@ if [[ "$containerized_driver" == 1 ]]; then
     --frps-server frps --frps-port 7000 \
     --frps-ca-file /smoke/secrets/frps_tls_cert.pem \
     --tunnel-domain tunnel.smoke.test \
+    --raw-connect-host frps \
     --public-connect-host caddy --public-connect-port 443 --public-ca-file /smoke/caddy.crt \
     --bootstrap-password-file /smoke/secrets/bootstrap_admin_password \
     --admin-password-file /smoke/admin_final_password \
@@ -212,6 +213,7 @@ else
     --frps-server 127.0.0.1 --frps-port 17000 \
     --frps-ca-file "$python_smoke_root/secrets/frps_tls_cert.pem" \
     --tunnel-domain tunnel.smoke.test \
+    --raw-connect-host 127.0.0.1 \
     --public-connect-host 127.0.0.1 --public-connect-port 18443 --insecure-public-tls \
     --bootstrap-password-file "$python_smoke_root/secrets/bootstrap_admin_password" \
     --admin-password-file "$python_smoke_root/admin_final_password" \
@@ -237,4 +239,4 @@ else
 fi
 printf '{"status":"passed","version":"%s","control_image":"%s","gateway_image":"%s"}\n' \
   "$RC_VERSION" "$CONTROL_IMAGE" "$GATEWAY_IMAGE" > "$evidence_dir/release-smoke.json"
-echo "Release smoke passed with authenticated API, HTTP/HTTPS/WebSocket, revocation, and backup restore."
+echo "Release smoke passed with authenticated API, HTTP/HTTPS/WebSocket, TCP/UDP echo, RTSP interleaving, raw revocation, and backup restore."

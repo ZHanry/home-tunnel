@@ -26,15 +26,16 @@ internal sealed record AgentTrustProfile(
     string Domain,
     IReadOnlyList<string> AllowedCustomDomains,
     IReadOnlyList<int> AllowedTcpPorts,
+    IReadOnlyList<int> AllowedUdpPorts,
     string? TlsCaSha256 = null);
 
 public sealed partial class FrpcSupervisor : IDisposable
 {
-    public const string Version = "3.0.0";
+    public const string Version = "3.1.0";
     public const string FrpVersion = "0.70.1";
     public const string BinaryFileName = "HomeTunnel.Agent.exe";
     internal const string FrpsCaFileName = "frps-ca.pem";
-    private const string DevelopmentSha256 = "ecdff82be85b04a859a7608cc6a525e63469a48e34b6360122c9a022ee38538e";
+    private const string DevelopmentSha256 = "e37a9eee2d02b14283a6a41c43a578e79b2d52e3898d37d6e579c63a94044565";
     public static string ExpectedSha256 { get; } = ReadAssemblyMetadata("HomeTunnelAgentSha256") ?? DevelopmentSha256;
     public static string? ExpectedSignerThumbprint { get; } = NormalizeOptional(ReadAssemblyMetadata("HomeTunnelAgentSignerThumbprint"));
 
@@ -121,23 +122,7 @@ public sealed partial class FrpcSupervisor : IDisposable
             var pending = Path.Combine(_store.RuntimeDirectory, $"pending-{Guid.NewGuid():N}.toml");
             await File.WriteAllTextAsync(pending, RenderConfig(state, sync, caPath), new UTF8Encoding(false), cancellationToken);
             Report("Applying", $"正在应用配置 v{sync.TargetConfigVersion}", lease.ExpiresAt, state.AppliedConfigVersion);
-            var allowedCustomDomains = sync.Connections
-                .SelectMany(connection => connection.CustomDomains)
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .Order(StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-            var trustProfile = new AgentTrustProfile(
-                state.FrpsHost,
-                state.FrpsPort,
-                state.TunnelDomain,
-                allowedCustomDomains,
-                sync.Connections
-                    .Where(connection => connection.ProxyType == "tcp" && connection.TcpRemotePort.HasValue)
-                    .Select(connection => connection.TcpRemotePort!.Value)
-                    .Distinct()
-                    .Order()
-                    .ToArray(),
-                caSha256);
+            var trustProfile = CreateTrustProfile(state, sync.Connections, caSha256);
 
             var verification = await RunAndCaptureAsync(binary, "verify", pending, trustProfile, TimeSpan.FromSeconds(12), cancellationToken);
             if (verification.ExitCode != 0)
@@ -227,6 +212,35 @@ public sealed partial class FrpcSupervisor : IDisposable
         string.IsNullOrWhiteSpace(connection.ProxyName)
             ? $"ht_{connection.Id.Replace("-", "")}_v{connection.Version}"
             : connection.ProxyName;
+
+    internal static AgentTrustProfile CreateTrustProfile(
+        LocalState state,
+        IEnumerable<TunnelConnection> connections,
+        string? tlsCaSha256 = null)
+    {
+        var values = connections.ToArray();
+        return new AgentTrustProfile(
+            state.FrpsHost,
+            state.FrpsPort,
+            state.TunnelDomain,
+            values
+                .Where(connection => connection.Enabled && connection.ProxyType == "http")
+                .SelectMany(connection => connection.CustomDomains)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Order(StringComparer.OrdinalIgnoreCase)
+                .ToArray(),
+            CollectRemotePorts(values, "tcp"),
+            CollectRemotePorts(values, "udp"),
+            tlsCaSha256);
+    }
+
+    private static int[] CollectRemotePorts(IEnumerable<TunnelConnection> connections, string proxyType) =>
+        connections
+            .Where(connection => connection.Enabled && connection.ProxyType == proxyType && connection.RemotePort is > 0)
+            .Select(connection => connection.RemotePort!.Value)
+            .Distinct()
+            .Order()
+            .ToArray();
 
     private void RegisterProxyConnections(IEnumerable<TunnelConnection> connections)
     {
@@ -428,25 +442,32 @@ public sealed partial class FrpcSupervisor : IDisposable
             builder.AppendLine();
             builder.AppendLine("[[proxies]]");
             builder.AppendLine(CultureInfo.InvariantCulture, $"name = {Toml(ProxyNameFor(connection))}");
-            if (connection.ProxyType == "tcp")
+            switch (connection.ProxyType)
             {
-                builder.AppendLine("type = \"tcp\"");
-                builder.AppendLine(CultureInfo.InvariantCulture, $"remotePort = {connection.TcpRemotePort ?? throw new InvalidOperationException("TCP 连接缺少远程端口")}");
-            }
-            else
-            {
-                builder.AppendLine("type = \"http\"");
-                var domains = new[] { connection.Subdomain + "." + state.TunnelDomain }
-                    .Concat(connection.CustomDomains)
-                    .Select(Toml);
-                builder.AppendLine(CultureInfo.InvariantCulture, $"customDomains = [{string.Join(", ", domains)}]");
+                case "http":
+                    builder.AppendLine("type = \"http\"");
+                    var domains = new[] { connection.Subdomain + "." + state.TunnelDomain }
+                        .Concat(connection.CustomDomains)
+                        .Select(Toml);
+                    builder.AppendLine(CultureInfo.InvariantCulture, $"customDomains = [{string.Join(", ", domains)}]");
+                    break;
+                case "tcp":
+                case "udp":
+                    builder.AppendLine(CultureInfo.InvariantCulture, $"type = {Toml(connection.ProxyType)}");
+                    builder.AppendLine(CultureInfo.InvariantCulture, $"remotePort = {connection.RemotePort ?? throw new InvalidOperationException($"{connection.ProxyType.ToUpperInvariant()} 连接缺少远程端口")}");
+                    break;
+                default:
+                    throw new InvalidOperationException($"连接 {connection.Id} 使用了不支持的代理类型：{connection.ProxyType}");
             }
             builder.AppendLine("transport.useEncryption = true");
             builder.AppendLine("transport.useCompression = true");
-            builder.AppendLine("healthCheck.type = \"tcp\"");
-            builder.AppendLine("healthCheck.timeoutSeconds = 3");
-            builder.AppendLine("healthCheck.intervalSeconds = 10");
-            if (connection.ProxyType != "tcp" && connection.LocalScheme == "https")
+            if (connection.ProxyType != "udp")
+            {
+                builder.AppendLine("healthCheck.type = \"tcp\"");
+                builder.AppendLine("healthCheck.timeoutSeconds = 3");
+                builder.AppendLine("healthCheck.intervalSeconds = 10");
+            }
+            if (connection.ProxyType == "http" && connection.LocalScheme == "https")
             {
                 builder.AppendLine("[proxies.plugin]");
                 builder.AppendLine("type = \"http2https\"");
@@ -465,7 +486,7 @@ public sealed partial class FrpcSupervisor : IDisposable
     private static string Toml(string value) => $"\"{value.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\r", "").Replace("\n", "")}\"";
 
     /// <summary>verify 与 run 两条命令路径共用的受管信任参数；含 CA 时追加哈希复核参数。</summary>
-    private static void AddTrustArguments(ProcessStartInfo start, string command, string configPath, AgentTrustProfile trustProfile)
+    internal static void AddTrustArguments(ProcessStartInfo start, string command, string configPath, AgentTrustProfile trustProfile)
     {
         start.ArgumentList.Add(command);
         start.ArgumentList.Add("--config");
@@ -485,6 +506,11 @@ public sealed partial class FrpcSupervisor : IDisposable
         {
             start.ArgumentList.Add("--allow-tcp-ports");
             start.ArgumentList.Add(string.Join(",", trustProfile.AllowedTcpPorts));
+        }
+        if (trustProfile.AllowedUdpPorts.Count > 0)
+        {
+            start.ArgumentList.Add("--allow-udp-ports");
+            start.ArgumentList.Add(string.Join(",", trustProfile.AllowedUdpPorts));
         }
         if (trustProfile.TlsCaSha256 is not null)
         {

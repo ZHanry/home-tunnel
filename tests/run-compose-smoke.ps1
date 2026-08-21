@@ -1,6 +1,6 @@
 param(
     [ValidatePattern('^[0-9]+\.[0-9]+\.[0-9]+(?:-rc\.[0-9]+)?$')]
-    [string]$Version = "3.0.0-rc.2",
+    [string]$Version = "3.1.0-rc.1",
     [ValidateSet("amd64", "arm64")]
     [string]$Architecture = "arm64"
 )
@@ -24,10 +24,10 @@ try {
     New-Item -ItemType Directory -Path $testRoot, (Join-Path $testRoot "secrets"), (Join-Path $testRoot "status"), (Join-Path $testRoot "downloads") | Out-Null
     $composeSource = Get-Content -Raw -LiteralPath (Join-Path $workspace "deploy\compose.yaml")
     $composeSource = $composeSource.Replace(
-        "home-tunnel/control-center:3.0.0-rc.2-arm64",
+        "home-tunnel/control-center:3.1.0-rc.1-arm64",
         "home-tunnel/control-center:$Version-$Architecture"
     ).Replace(
-        "home-tunnel/traffic-gateway:3.0.0-rc.2-arm64",
+        "home-tunnel/traffic-gateway:3.1.0-rc.1-arm64",
         "home-tunnel/traffic-gateway:$Version-$Architecture"
     )
     [IO.File]::WriteAllText(
@@ -35,7 +35,7 @@ try {
         $composeSource,
         [Text.UTF8Encoding]::new($false)
     )
-    Copy-Item -LiteralPath (Join-Path $workspace "deploy\compose.tcp.yaml") -Destination (Join-Path $testRoot "compose.tcp.yaml")
+    Copy-Item -LiteralPath (Join-Path $workspace "deploy\compose.l4.yaml") -Destination (Join-Path $testRoot "compose.l4.yaml")
     # Docker Desktop validates the ARM64 release images through emulation on
     # x64 hosts. Node startup and health commands are much slower under QEMU,
     # so keep the production checks but give only this local smoke stack a
@@ -62,7 +62,7 @@ services:
     )
     $composeArgs = @(
         "-f", (Join-Path $testRoot "compose.yaml"),
-        "-f", (Join-Path $testRoot "compose.tcp.yaml"),
+        "-f", (Join-Path $testRoot "compose.l4.yaml"),
         "-f", (Join-Path $testRoot "compose.smoke.yaml")
     )
     $composePrepared = $true
@@ -123,9 +123,9 @@ services:
     $env:HOME_TUNNEL_TUNNEL_DOMAIN = "tunnel.home-tunnel.test"
     $env:HOME_TUNNEL_FRPS_PUBLIC_HOST = "frps.home-tunnel.test"
     $env:HOME_TUNNEL_FRPS_PORT = "17000"
-    $env:HOME_TUNNEL_TCP_BIND_ADDRESS = "127.0.0.1"
-    $env:HOME_TUNNEL_TCP_PORT_START = "11000"
-    $env:HOME_TUNNEL_TCP_PORT_END = "11009"
+    $env:HOME_TUNNEL_L4_BIND_ADDRESS = "127.0.0.1"
+    $env:HOME_TUNNEL_L4_PORT_START = "11000"
+    $env:HOME_TUNNEL_L4_PORT_END = "11009"
     & docker compose @composeArgs up -d
     if ($LASTEXITCODE -ne 0) {
         & docker compose @composeArgs ps -a
@@ -178,10 +178,13 @@ services:
         Write-Output "$name uid=$uid"
     }
     $migrationVersion = Invoke-ContainerCommand "home-tunnel-control-center" @("node", "--input-type=module", "-e", "import { DatabaseSync } from 'node:sqlite'; const db=new DatabaseSync(process.env.SQLITE_PATH,{readOnly:true}); console.log(db.prepare('SELECT max(version) AS version FROM schema_migrations').get().version); db.close()") "Migration query failed"
-    if ($migrationVersion -ne "7") { throw "Expected migration 7, received $migrationVersion" }
+    if ($migrationVersion -ne "8") { throw "Expected migration 8, received $migrationVersion" }
     Write-Output "schema migration=$migrationVersion"
-    $allowPorts = Invoke-ContainerCommand "home-tunnel-frps" @("grep", "-F", "allowPorts = [{ start = 11000, end = 11009 }]", "/run/frp/frps.toml") "FRPS TCP allowPorts configuration was not applied"
+    $allowPorts = Invoke-ContainerCommand "home-tunnel-frps" @("grep", "-F", "allowPorts = [{ start = 11000, end = 11009 }]", "/run/frp/frps.toml") "FRPS L4 allowPorts configuration was not applied"
     Write-Output $allowPorts
+    $frpsBindings = (& docker inspect -f "{{json .HostConfig.PortBindings}}" home-tunnel-frps | ConvertFrom-Json)
+    if (-not $frpsBindings.PSObject.Properties["11000/tcp"]) { throw "FRPS TCP range is not published" }
+    if (-not $frpsBindings.PSObject.Properties["11000/udp"]) { throw "FRPS UDP range is not published" }
     & docker compose @composeArgs ps
 }
 finally {

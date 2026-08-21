@@ -8,7 +8,7 @@ x-logging: &default-logging
 
 services:
   control-center:
-    image: ${HOME_TUNNEL_CONTROL_IMAGE:-ghcr.io/zhanry/home-tunnel-control-center}:${HOME_TUNNEL_VERSION:-3.0.0-rc.2}
+    image: ${HOME_TUNNEL_CONTROL_IMAGE:-ghcr.io/zhanry/home-tunnel-control-center}:${HOME_TUNNEL_VERSION:-3.1.0-rc.1}
     restart: unless-stopped
     init: true
     environment:
@@ -69,7 +69,7 @@ services:
     logging: *default-logging
 
   traffic-gateway:
-    image: ${HOME_TUNNEL_GATEWAY_IMAGE:-ghcr.io/zhanry/home-tunnel-traffic-gateway}:${HOME_TUNNEL_VERSION:-3.0.0-rc.2}
+    image: ${HOME_TUNNEL_GATEWAY_IMAGE:-ghcr.io/zhanry/home-tunnel-traffic-gateway}:${HOME_TUNNEL_VERSION:-3.1.0-rc.1}
     restart: unless-stopped
     init: true
     depends_on:
@@ -109,9 +109,11 @@ services:
     logging: *default-logging
 
   frps:
-    image: ${HOME_TUNNEL_FRPS_IMAGE:-ghcr.io/zhanry/home-tunnel-frps:0.70.1-r1@sha256:cffde7b39698a5faba3828bb4a78b444d2d9c2cfea7385e28989728f5d73732f}
+    image: ${HOME_TUNNEL_FRPS_IMAGE:-ghcr.io/zhanry/home-tunnel-frps:0.70.1-r2@sha256:0ca230caa4c3c71932efd9bd5b9024a6fdc289886b97a1db827eaf3f8b6de759}
     restart: unless-stopped
     init: true
+    environment:
+      PUBLIC_FRPS_PORT: "${HOME_TUNNEL_FRPS_PORT:-7000}"
     depends_on:
       control-center:
         condition: service_healthy

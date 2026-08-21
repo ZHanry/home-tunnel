@@ -359,6 +359,7 @@ public partial class MainWindow : Window
             }
             _state.DeviceId = null;
             _state.LastConfigVersion = 0;
+            _state.SyncCapabilityVersion = 0;
             _state.AppliedConfigVersion = 0;
             _state.CachedConnections.Clear();
         }
@@ -879,14 +880,10 @@ public partial class MainWindow : Window
             var needsLease = _agentCoordinator.ShouldRequestLease(_agentState, now);
             var sync = await _api.SyncAsync(
                 _state.DeviceId,
-                _state.LastConfigVersion,
+                _state.SyncRequestConfigVersion,
                 needsLease ? null : _agentCoordinator.LastAppliedLeaseExpires,
                 cancellationToken);
-            if (sync.FullSync)
-            {
-                _state.CachedConnections = sync.Connections;
-                _state.LastConfigVersion = sync.TargetConfigVersion;
-            }
+            ApplyFullSyncState(_state, sync);
             var complete = sync with { Connections = _state.CachedConnections };
             await _agentCoordinator.ApplyIfRequiredAsync(
                 _state,
@@ -908,7 +905,7 @@ public partial class MainWindow : Window
             _logger.Warn("SYNC_FAILED", SafeMessage(error));
             ApplyAgentStatus(new AgentSnapshot(
                 "Degraded",
-                "控制中心暂不可达；现有租约到期前继续运行。",
+                "控制中心暂不可达；端口隧道在 FRPS 授权持续失败约 90 秒后停止。",
                 _agentCoordinator.LastAppliedLeaseExpires,
                 _state.AppliedConfigVersion));
         }
@@ -992,6 +989,14 @@ public partial class MainWindow : Window
 
     internal static bool ShouldRequestLease(string agentState, DateTimeOffset? leaseExpiresAt, DateTimeOffset now) =>
         AgentCoordinator.ShouldRequestLease(agentState, leaseExpiresAt, now);
+
+    internal static void ApplyFullSyncState(LocalState state, SyncResponse sync)
+    {
+        if (!sync.FullSync) return;
+        state.CachedConnections = sync.Connections;
+        state.LastConfigVersion = sync.TargetConfigVersion;
+        state.SyncCapabilityVersion = LocalState.CurrentSyncCapabilityVersion;
+    }
 
     private void StartRealtime()
     {

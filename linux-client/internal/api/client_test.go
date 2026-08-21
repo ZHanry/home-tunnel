@@ -74,6 +74,7 @@ func TestDiscoverParsesOptionalFrpsTlsCertificate(t *testing.T) {
 func TestLinuxLoginAndRefreshPayloads(t *testing.T) {
 	var loginType string
 	var refreshType string
+	var supportedProxyTypes []string
 	var protectedCalls atomic.Int32
 	server := httptest.NewTLSServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 		switch request.URL.Path {
@@ -95,6 +96,11 @@ func TestLinuxLoginAndRefreshPayloads(t *testing.T) {
 			})
 		case "/api/v1/client/sync":
 			protectedCalls.Add(1)
+			var body struct {
+				SupportedProxyTypes []string `json:"supported_proxy_types"`
+			}
+			_ = json.NewDecoder(request.Body).Decode(&body)
+			supportedProxyTypes = body.SupportedProxyTypes
 			if request.Header.Get("Authorization") != "Bearer new-access" {
 				http.Error(response, `{"error_code":"SESSION_REVOKED","message":"bad token"}`, http.StatusUnauthorized)
 				return
@@ -123,6 +129,9 @@ func TestLinuxLoginAndRefreshPayloads(t *testing.T) {
 	}
 	if protectedCalls.Load() != 1 {
 		t.Fatalf("protected calls = %d, want 1", protectedCalls.Load())
+	}
+	if strings.Join(supportedProxyTypes, ",") != "http,tcp,udp" {
+		t.Fatalf("supported proxy types = %v, want [http tcp udp]", supportedProxyTypes)
 	}
 }
 

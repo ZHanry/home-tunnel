@@ -65,7 +65,7 @@
           <ColumnDefinition Width="84" />
           <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <Label Content="公网子域" Target="{Binding ElementName=SubdomainBox}"
+        <Label x:Name="SubdomainLabel" Content="公网子域" Target="{Binding ElementName=SubdomainBox}"
                VerticalAlignment="Top" Padding="0" Margin="0,9,0,0" />
         <StackPanel Grid.Column="1">
           <TextBox x:Name="SubdomainBox" MaxLength="63"

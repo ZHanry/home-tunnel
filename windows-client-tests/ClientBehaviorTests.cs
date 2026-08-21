@@ -21,7 +21,7 @@ public sealed class ClientBehaviorTests
 	[Fact]
 	public void TestSemanticVersions()
 	{
-		Assert.True(AppVersion.Current == "3.0.0", "client version must be 3.0.0");
+		Assert.True(AppVersion.Current == "3.1.0", "client version must be 3.1.0");
 		Assert.True(
 			typeof(AppVersion).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion == AppVersion.Current,
 			"public client version metadata does not expose a local source revision");
@@ -128,6 +128,101 @@ public sealed class ClientBehaviorTests
 	}
 
 	[Fact]
+	public void TestSyncCapabilityUpgradeState()
+	{
+		var legacyState = JsonSerializer.Deserialize<LocalState>("""
+            {
+              "lastConfigVersion":9,
+              "cachedConnections":[{"id":"cached-udp","proxy_type":"udp","enabled":false}]
+            }
+            """, WebJson);
+		Assert.NotNull(legacyState);
+		Assert.Equal(0, legacyState.SyncCapabilityVersion);
+		Assert.Equal(0, legacyState.SyncRequestConfigVersion);
+		Assert.Equal(9, legacyState.LastConfigVersion);
+
+		var unchanged = new SyncResponse(
+			"device-id", false, 9, [], "hash", null, DateTimeOffset.UtcNow);
+		MainWindow.ApplyFullSyncState(legacyState, unchanged);
+		Assert.Equal(0, legacyState.SyncCapabilityVersion);
+		Assert.Equal("cached-udp", legacyState.CachedConnections.Single().Id);
+
+		var full = unchanged with
+		{
+			FullSync = true,
+			TargetConfigVersion = 10,
+			Connections = [new TunnelConnection { Id = "enabled-udp", ProxyType = "udp", Enabled = true }],
+		};
+		MainWindow.ApplyFullSyncState(legacyState, full);
+		Assert.Equal(LocalState.CurrentSyncCapabilityVersion, legacyState.SyncCapabilityVersion);
+		Assert.Equal(10, legacyState.SyncRequestConfigVersion);
+		Assert.Equal("enabled-udp", legacyState.CachedConnections.Single().Id);
+
+		var persisted = JsonSerializer.Serialize(legacyState, WebJson);
+		Assert.Contains("\"sync_capability_version\":1", persisted, StringComparison.Ordinal);
+		var reloaded = JsonSerializer.Deserialize<LocalState>(persisted, WebJson);
+		Assert.NotNull(reloaded);
+		Assert.Equal(10, reloaded.SyncRequestConfigVersion);
+	}
+
+	[Fact]
+	public void TestLayer4ClientContracts()
+	{
+		var canonical = JsonSerializer.Deserialize<TunnelConnection>(
+			"""{"proxy_type":"udp","remote_port":20001,"tcp_remote_port":10001,"public_endpoint":"edge.example.com:20001"}""",
+			WebJson);
+		Assert.NotNull(canonical);
+		Assert.Equal(20001, canonical.RemotePort);
+		Assert.Equal("udp://edge.example.com:20001", canonical.PublicDisplayEndpoint);
+
+		var legacy = JsonSerializer.Deserialize<TunnelConnection>(
+			"""{"proxy_type":"tcp","tcp_remote_port":10001,"public_endpoint":"edge.example.com:10001"}""",
+			WebJson);
+		Assert.NotNull(legacy);
+		Assert.Equal(10001, legacy.RemotePort);
+		Assert.Equal("tcp://edge.example.com:10001", legacy.PublicDisplayEndpoint);
+
+		var persisted = JsonSerializer.Serialize(legacy, WebJson);
+		Assert.Contains("\"remote_port\":10001", persisted, StringComparison.Ordinal);
+		Assert.DoesNotContain("tcp_remote_port", persisted, StringComparison.Ordinal);
+
+		var syncPayload = JsonSerializer.SerializeToElement(
+			ApiClient.SyncPayload("device-id", 4, null),
+			WebJson);
+		Assert.Equal(
+			["http", "tcp", "udp"],
+			syncPayload.GetProperty("supported_proxy_types").EnumerateArray().Select(item => item.GetString() ?? "").ToArray());
+
+		var createPayload = JsonSerializer.SerializeToElement(
+			ApiClient.CreateConnectionPayload("device-id", new TunnelConnection
+			{
+				Name = "web",
+				Subdomain = "web",
+				LocalHost = "127.0.0.1",
+				LocalPort = 8080,
+			}),
+			WebJson);
+		Assert.Equal("http", createPayload.GetProperty("proxy_type").GetString());
+		Assert.False(createPayload.TryGetProperty("remote_port", out _));
+
+		Assert.True(ConnectionDialog.IsRawProxy("tcp"));
+		Assert.True(ConnectionDialog.IsRawProxy("udp"));
+		Assert.False(ConnectionDialog.IsRawProxy("http"));
+		Assert.True(ConnectionDialog.ShouldProbeLocalTarget("tcp"));
+		Assert.False(ConnectionDialog.ShouldProbeLocalTarget("udp"));
+		Assert.Equal(
+			"udp://edge.example.com:20001",
+			ConnectionDialog.PublicAddressFor(canonical, canonical.Subdomain, "tunnel.example.com"));
+
+		canonical.CustomDomains = ["camera.example.net"];
+		var dialogCopy = ConnectionDialog.Clone(canonical);
+		Assert.Equal("udp", dialogCopy.ProxyType);
+		Assert.Equal(20001, dialogCopy.RemotePort);
+		Assert.Equal("edge.example.com:20001", dialogCopy.PublicEndpoint);
+		Assert.Equal(["camera.example.net"], dialogCopy.CustomDomains);
+	}
+
+	[Fact]
 	public void TestCoordinatorPolicies()
 	{
 		var now = new DateTimeOffset(2026, 8, 13, 0, 0, 0, TimeSpan.Zero);
@@ -180,8 +275,9 @@ public sealed class ClientBehaviorTests
 			true,
 			3,
 			[
-				new TunnelConnection { Id = "1111-2222", Subdomain = "app", CustomDomains = ["home.example.net"], LocalScheme = "http", LocalHost = "127.0.0.1", LocalPort = 8080, Enabled = true, Version = 3 },
-				new TunnelConnection { Id = "tcp-3333", Subdomain = "ssh", ProxyType = "tcp", TcpRemotePort = 10001, LocalHost = "127.0.0.1", LocalPort = 22, Enabled = true, Version = 4 },
+				new TunnelConnection { Id = "1111-2222", Subdomain = "app", ProxyType = "http", CustomDomains = ["home.example.net"], LocalScheme = "http", LocalHost = "127.0.0.1", LocalPort = 8080, Enabled = true, Version = 3 },
+				new TunnelConnection { Id = "tcp-3333", Subdomain = "ssh", ProxyType = "tcp", RemotePort = 10001, LocalHost = "127.0.0.1", LocalPort = 22, Enabled = true, Version = 4 },
+				new TunnelConnection { Id = "udp-4444", Subdomain = "dns", ProxyType = "udp", RemotePort = 20001, LocalHost = "127.0.0.1", LocalPort = 53, Enabled = true, Version = 5 },
 			],
 			"hash",
 			new LeaseInfo("signed-lease", DateTimeOffset.UtcNow.AddHours(1), 3),
@@ -193,6 +289,42 @@ public sealed class ClientBehaviorTests
 		Assert.True(withoutCa.Contains($"serverAddr = \"{ProductConfiguration.FrpsHost}\"", StringComparison.Ordinal), "config keeps the discovered FRPS host");
 		Assert.True(withoutCa.Contains($"customDomains = [\"app.{ProductConfiguration.TunnelDomain}\", \"home.example.net\"]", StringComparison.Ordinal), "config renders the managed and verified custom domains");
 		Assert.True(withoutCa.Contains("type = \"tcp\"", StringComparison.Ordinal) && withoutCa.Contains("remotePort = 10001", StringComparison.Ordinal), "config renders an administrator-authorized TCP proxy");
+		var udpSection = withoutCa[withoutCa.IndexOf("name = \"ht_udp4444_v5\"", StringComparison.Ordinal)..];
+		Assert.Contains("type = \"udp\"", udpSection, StringComparison.Ordinal);
+		Assert.Contains("remotePort = 20001", udpSection, StringComparison.Ordinal);
+		Assert.Contains("localIP = \"127.0.0.1\"", udpSection, StringComparison.Ordinal);
+		Assert.Contains("localPort = 53", udpSection, StringComparison.Ordinal);
+		Assert.DoesNotContain("healthCheck.", udpSection, StringComparison.Ordinal);
+
+		var trustProfile = FrpcSupervisor.CreateTrustProfile(state,
+			[
+				new TunnelConnection { ProxyType = "http", Enabled = true, CustomDomains = ["HOME.example.net", "blog.example.net"] },
+				new TunnelConnection { ProxyType = "http", Enabled = false, CustomDomains = ["disabled.example.net"] },
+				new TunnelConnection { ProxyType = "tcp", Enabled = true, RemotePort = 10002, CustomDomains = ["raw.example.net"] },
+				new TunnelConnection { ProxyType = "udp", RemotePort = 20002 },
+				new TunnelConnection { ProxyType = "udp", RemotePort = 20001 },
+				new TunnelConnection { ProxyType = "tcp", RemotePort = 10001 },
+				new TunnelConnection { ProxyType = "udp", RemotePort = 20002 },
+				new TunnelConnection { ProxyType = "tcp", RemotePort = 10002 },
+				new TunnelConnection { ProxyType = "udp", Enabled = false, RemotePort = 20003 },
+				new TunnelConnection { ProxyType = "tcp", Enabled = false, RemotePort = 10003 },
+			]);
+		Assert.Equal(["blog.example.net", "HOME.example.net"], trustProfile.AllowedCustomDomains);
+		Assert.Equal([10001, 10002], trustProfile.AllowedTcpPorts);
+		Assert.Equal([20001, 20002], trustProfile.AllowedUdpPorts);
+		var start = new System.Diagnostics.ProcessStartInfo();
+		FrpcSupervisor.AddTrustArguments(start, "verify", "config.toml", trustProfile);
+		var arguments = string.Join(" ", start.ArgumentList);
+		Assert.Contains("--allow-tcp-ports 10001,10002", arguments, StringComparison.Ordinal);
+		Assert.Contains("--allow-udp-ports 20001,20002", arguments, StringComparison.Ordinal);
+
+		var unsupported = sync with
+		{
+			Connections = [new TunnelConnection { Id = "unsupported", ProxyType = "stcp", Enabled = true }],
+		};
+		TestAssert.Throws<InvalidOperationException>(
+			() => FrpcSupervisor.RenderConfig(state, unsupported, null),
+			"unknown proxy types must not fall through to HTTP");
 
 		var caPath = @"C:\Users\test user\HomeTunnel\runtime\frps-ca.pem";
 		var withCa = FrpcSupervisor.RenderConfig(state, sync, caPath);
@@ -294,12 +426,12 @@ public sealed class ClientBehaviorTests
 	[Fact]
 	public async Task TestReleaseValidationAsync()
 	{
-		var validPayload = ReleasePayload("3.0.1", GitHubDownloadUri("3.0.1").AbsoluteUri);
+		var validPayload = ReleasePayload("3.1.1", GitHubDownloadUri("3.1.1").AbsoluteUri);
 		using (var service = new UpdateService(new StaticJsonHandler(validPayload)))
 		{
 			var result = await service.CheckAsync(CancellationToken.None);
 			Assert.True(result.IsUpdateAvailable, "newer release detected");
-			Assert.True(result.Release.Version == "3.0.1", "release metadata parsed");
+			Assert.True(result.Release.Version == "3.1.1", "release metadata parsed");
 		}
 
 		var maliciousPayload = ReleasePayload("2.4.1", "https://evil.example/downloads/HomeTunnel-Setup-2.4.1-x64.exe");

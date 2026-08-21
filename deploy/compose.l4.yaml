@@ -1,0 +1,22 @@
+# 同时启用通用 TCP 与固定端口 UDP 隧道。两种传输共用端口数字范围，
+# 但 TCP/UDP 是独立的网络命名空间；务必同步限制两种协议的主机防火墙。
+# Portable root profile:
+# docker compose -f compose.yaml -f deploy/compose.l4.yaml up -d
+# ARM64 deploy profile (from deploy/):
+# docker compose -f compose.yaml -f compose.l4.yaml up -d
+services:
+  control-center:
+    environment:
+      L4_TUNNEL_ENABLED: "true"
+      L4_PORT_START: "${HOME_TUNNEL_L4_PORT_START:-10000}"
+      L4_PORT_END: "${HOME_TUNNEL_L4_PORT_END:-10099}"
+
+  frps:
+    environment:
+      PUBLIC_FRPS_PORT: "${HOME_TUNNEL_FRPS_PORT:-7000}"
+      L4_TUNNEL_ENABLED: "true"
+      L4_PORT_START: "${HOME_TUNNEL_L4_PORT_START:-10000}"
+      L4_PORT_END: "${HOME_TUNNEL_L4_PORT_END:-10099}"
+    ports:
+      - "${HOME_TUNNEL_L4_BIND_ADDRESS:-0.0.0.0}:${HOME_TUNNEL_L4_PORT_START:-10000}-${HOME_TUNNEL_L4_PORT_END:-10099}:${HOME_TUNNEL_L4_PORT_START:-10000}-${HOME_TUNNEL_L4_PORT_END:-10099}/tcp"
+      - "${HOME_TUNNEL_L4_BIND_ADDRESS:-0.0.0.0}:${HOME_TUNNEL_L4_PORT_START:-10000}-${HOME_TUNNEL_L4_PORT_END:-10099}:${HOME_TUNNEL_L4_PORT_START:-10000}-${HOME_TUNNEL_L4_PORT_END:-10099}/udp"

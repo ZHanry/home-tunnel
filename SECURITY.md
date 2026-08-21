@@ -10,8 +10,8 @@ versions. Older builds should be upgraded before reporting a problem.
 
 | Version | Supported |
 | --- | --- |
-| 3.0.x | Yes |
-| 3.0.0 RC builds | Prerelease testing only |
+| 3.1.x | Yes |
+| 3.1.0 RC builds | Prerelease testing only |
 | Earlier versions | No |
 
 ## Reporting a vulnerability
@@ -28,7 +28,20 @@ The maintainers will acknowledge a complete report as soon as practical, validat
 - Never commit `.env`, `secrets/`, signing keys, deployment handoff files or administrator credentials.
 - Use a unique administrator password and rotate any credential that may have entered Git history or a shared artifact.
 - Restrict TCP port 7000 to the clients that need it where practical, and keep ports 80/443 behind a maintained Caddy instance.
-- Treat the v3.0 Windows EXE as self-signed Experimental software. Verify its
+- Keep general TCP and fixed-port UDP tunnels disabled unless they are needed.
+  When enabling them, publish only a narrow range, let administrators assign
+  exact ports, and restrict the same protocol/port pairs in the host or cloud
+  firewall.
+- Treat raw TCP/UDP as direct public exposure. These transports bypass Caddy
+  and the Traffic Gateway, so gateway Basic Auth, IP allowlists, rate limits,
+  traffic metering, and monthly quotas do not protect them. Require the local
+  application to authenticate users and encrypt sensitive traffic.
+- Restrict UDP by source and rate wherever possible, and do not expose a UDP
+  service until its reflection/amplification behavior has been assessed.
+- Do not attempt to use Home Tunnel for raw IP, ICMP, broadcast, multicast,
+  STCP, XTCP, SUDP, visitor configurations, or arbitrary FRP plugins; those
+  surfaces are intentionally rejected by the managed Agent.
+- Treat the current Windows EXE as self-signed Experimental software. Verify its
   Release SHA-256 and Sigstore evidence; the ephemeral Authenticode certificate
   is not a substitute for publisher trust.
 - Review logs before sharing them; Home Tunnel attempts to redact secrets, but diagnostics can still reveal hostnames and network topology.

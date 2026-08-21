@@ -1,8 +1,12 @@
 package model
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
-const Version = "3.0.0"
+const Version = "3.1.0"
+const CurrentSyncCapabilityVersion = 1
 
 type Profile struct {
 	PublicBaseURL string `json:"public_base_url"`
@@ -45,8 +49,9 @@ type Connection struct {
 	Name             string   `json:"name"`
 	Subdomain        string   `json:"subdomain"`
 	ProxyType        string   `json:"proxy_type"`
-	TCPRemotePort    int      `json:"tcp_remote_port"`
+	RemotePort       int      `json:"remote_port"`
 	PublicURL        string   `json:"public_url"`
+	PublicEndpoint   string   `json:"public_endpoint"`
 	CustomDomains    []string `json:"custom_domains"`
 	LocalScheme      string   `json:"local_scheme"`
 	LocalHost        string   `json:"local_host"`
@@ -58,6 +63,28 @@ type Connection struct {
 	LastErrorCode    string   `json:"last_error_code,omitempty"`
 	LastErrorSummary string   `json:"-"`
 	ProxyName        string   `json:"proxy_name,omitempty"`
+}
+
+// UnmarshalJSON reads the protocol-neutral remote_port field while retaining
+// compatibility with control centers that still send tcp_remote_port. When
+// both are present, the canonical field always wins, including an explicit 0.
+func (connection *Connection) UnmarshalJSON(data []byte) error {
+	type connectionAlias Connection
+	var wire struct {
+		connectionAlias
+		RemotePort       *int `json:"remote_port"`
+		LegacyRemotePort *int `json:"tcp_remote_port"`
+	}
+	if err := json.Unmarshal(data, &wire); err != nil {
+		return err
+	}
+	*connection = Connection(wire.connectionAlias)
+	if wire.RemotePort != nil {
+		connection.RemotePort = *wire.RemotePort
+	} else if wire.LegacyRemotePort != nil {
+		connection.RemotePort = *wire.LegacyRemotePort
+	}
+	return nil
 }
 
 type Lease struct {
@@ -77,17 +104,28 @@ type SyncResponse struct {
 }
 
 type State struct {
-	InstallID            string       `json:"install_id"`
-	Profile              Profile      `json:"profile"`
-	DeviceID             string       `json:"device_id"`
-	DeviceCredential     string       `json:"device_credential"`
-	LastConfigVersion    int64        `json:"last_config_version"`
-	AppliedConfigVersion int64        `json:"applied_config_version"`
-	CachedConnections    []Connection `json:"cached_connections"`
-	LeaseExpiresAt       *time.Time   `json:"lease_expires_at,omitempty"`
-	AgentState           string       `json:"agent_state"`
-	AgentMessage         string       `json:"agent_message"`
-	UpdatedAt            time.Time    `json:"updated_at"`
+	InstallID             string       `json:"install_id"`
+	Profile               Profile      `json:"profile"`
+	DeviceID              string       `json:"device_id"`
+	DeviceCredential      string       `json:"device_credential"`
+	LastConfigVersion     int64        `json:"last_config_version"`
+	SyncCapabilityVersion int          `json:"sync_capability_version"`
+	AppliedConfigVersion  int64        `json:"applied_config_version"`
+	CachedConnections     []Connection `json:"cached_connections"`
+	LeaseExpiresAt        *time.Time   `json:"lease_expires_at,omitempty"`
+	AgentState            string       `json:"agent_state"`
+	AgentMessage          string       `json:"agent_message"`
+	UpdatedAt             time.Time    `json:"updated_at"`
+}
+
+// SyncRequestConfigVersion forces one full synchronization after a client
+// capability upgrade. State files written before the marker was introduced
+// decode as version 0 and therefore cannot retain capability-filtered caches.
+func (state State) SyncRequestConfigVersion() int64 {
+	if state.SyncCapabilityVersion < CurrentSyncCapabilityVersion {
+		return 0
+	}
+	return state.LastConfigVersion
 }
 
 func (state State) Enrolled() bool {

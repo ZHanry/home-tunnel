@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { isIP } from "node:net";
 import { dirname, join } from "node:path";
 
 const nodeEnvironment = process.env.NODE_ENV ?? "production";
@@ -53,18 +54,28 @@ function secret(name: string, fileName: string, required = true): string {
 function isDocumentationPlaceholder(host: string): boolean {
   return (
     /^(?:192\.0\.2|198\.51\.100|203\.0\.113)\.\d{1,3}$/.test(host) ||
+    /^2001:db8(?::|$)/i.test(host) ||
     /(?:^|\.)example(?:\.(?:com|net|org))?$/i.test(host)
   );
 }
 
 function publicFrpsHost(): string {
-  const value = process.env.PUBLIC_FRPS_HOST?.trim();
-  if (!value) {
+  const configured = process.env.PUBLIC_FRPS_HOST?.trim();
+  if (!configured) {
     if (nodeEnvironment === "production")
       throw new Error("PUBLIC_FRPS_HOST is required in production");
     return "203.0.113.10";
   }
-  if (value.length > 253 || /[\s/\\]/.test(value)) throw new Error("PUBLIC_FRPS_HOST is invalid");
+  const bracketMatch = /^\[([^\]]+)]$/.exec(configured);
+  const value = bracketMatch?.[1] ?? configured;
+  const dnsName =
+    value.length <= 253 &&
+    value
+      .split(".")
+      .every((label) => /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$/.test(label));
+  if ((!isIP(value) && !dnsName) || /[\s/\\]/.test(value)) {
+    throw new Error("PUBLIC_FRPS_HOST is invalid");
+  }
   if (nodeEnvironment === "production" && isDocumentationPlaceholder(value)) {
     throw new Error("PUBLIC_FRPS_HOST must not use a documentation placeholder in production");
   }
@@ -151,10 +162,64 @@ function alertTelegram(): { botToken: string; chatId: string } | null {
 }
 
 const sqlitePath = process.env.SQLITE_PATH?.trim() || "/data/home-tunnel.db";
-const tcpTunnelEnabled = boolean("TCP_TUNNEL_ENABLED", false);
-const tcpPortStart = port("TCP_PORT_START", 10_000);
-const tcpPortEnd = port("TCP_PORT_END", 10_099);
-if (tcpPortStart > tcpPortEnd) throw new Error("TCP_PORT_START must not exceed TCP_PORT_END");
+const publicFrpsPortValue = port("PUBLIC_FRPS_PORT", 7000);
+// L4_* 提供两种 raw transport 的共同默认值；显式 TCP_*/UDP_* 分别覆盖。
+// 因此旧部署仅设置 TCP_TUNNEL_ENABLED 时不会在升级后意外开放 UDP。
+const commonL4Enabled = boolean("L4_TUNNEL_ENABLED", false);
+const commonL4PortStart = port("L4_PORT_START", 10_000);
+const commonL4PortEnd = port("L4_PORT_END", 10_099);
+if (commonL4PortStart > commonL4PortEnd) {
+  throw new Error("L4_PORT_START must not exceed L4_PORT_END");
+}
+
+function transportTunnelSettings(protocol: "TCP" | "UDP") {
+  const enabledName = `${protocol}_TUNNEL_ENABLED`;
+  const startName = `${protocol}_PORT_START`;
+  const endName = `${protocol}_PORT_END`;
+  const settings = {
+    enabled: process.env[enabledName]?.trim()
+      ? boolean(enabledName, commonL4Enabled)
+      : commonL4Enabled,
+    portStart: process.env[startName]?.trim()
+      ? port(startName, commonL4PortStart)
+      : commonL4PortStart,
+    portEnd: process.env[endName]?.trim() ? port(endName, commonL4PortEnd) : commonL4PortEnd,
+  };
+  if (settings.portStart > settings.portEnd) {
+    throw new Error(`${startName} must not exceed ${endName}`);
+  }
+  return settings;
+}
+
+const transportTunnels = {
+  tcp: transportTunnelSettings("TCP"),
+  udp: transportTunnelSettings("UDP"),
+};
+
+function rejectReservedTransportPorts(
+  protocol: "TCP" | "UDP",
+  settings: { enabled: boolean; portStart: number; portEnd: number },
+  reservedPorts: number[],
+) {
+  if (!settings.enabled) return;
+  const conflict = reservedPorts.find(
+    (reservedPort) => settings.portStart <= reservedPort && reservedPort <= settings.portEnd,
+  );
+  if (conflict !== undefined) {
+    throw new Error(`${protocol} port range includes reserved deployment port ${conflict}`);
+  }
+}
+
+// Root/deploy Compose reserve 80/443 for Caddy; FRPS itself reserves TCP
+// 7000 and 8080. Fail before an apparently valid range reaches a bind error.
+rejectReservedTransportPorts("TCP", transportTunnels.tcp, [
+  80,
+  443,
+  7000,
+  8080,
+  publicFrpsPortValue,
+]);
+rejectReservedTransportPorts("UDP", transportTunnels.udp, [443]);
 
 export const config = {
   nodeEnv: nodeEnvironment,
@@ -163,7 +228,7 @@ export const config = {
   downloadsDirectory: process.env.DOWNLOADS_DIRECTORY ?? "/app/downloads",
   tunnelDomain: tunnelDomain(),
   publicFrpsHost: publicFrpsHost(),
-  publicFrpsPort: integer("PUBLIC_FRPS_PORT", 7000),
+  publicFrpsPort: publicFrpsPortValue,
   frpsTlsCertificatePem: frpsTlsCertificatePem(),
   cookieSecure: boolean("COOKIE_SECURE", true),
   database: {
@@ -204,11 +269,9 @@ export const config = {
     process.env.GATEWAY_HEALTH_URL ?? "http://home-tunnel-traffic-gateway:8080/healthz",
   frpsHost: process.env.FRPS_HOST ?? "home-tunnel-frps",
   frpsPort: integer("FRPS_PORT", 7000),
-  tcpTunnels: {
-    enabled: tcpTunnelEnabled,
-    portStart: tcpPortStart,
-    portEnd: tcpPortEnd,
-  },
+  transportTunnels,
+  // 代码与管理 API 的旧名称只映射 TCP，绝不隐式开放 UDP。
+  tcpTunnels: transportTunnels.tcp,
   caddyHost: process.env.CADDY_HOST ?? "caddy",
   caddyPort: integer("CADDY_PORT", 80),
   backupStatusFile: process.env.BACKUP_STATUS_FILE ?? "/run/home-tunnel-status/backup.json",

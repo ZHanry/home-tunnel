@@ -36,10 +36,11 @@ func TestRenderConfigMatchesManagedSurface(t *testing.T) {
 	}, model.SyncResponse{
 		DeviceID: "device-id", Lease: &model.Lease{Value: "signed-lease", ExpiresAt: expires},
 		Connections: []model.Connection{
-			{ID: "11111111-2222-3333-4444-555555555555", Subdomain: "http-app", CustomDomains: []string{"home.example.net"}, LocalScheme: "http", LocalHost: "127.0.0.1", LocalPort: 8080, Enabled: true, Version: 2},
-			{ID: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", Subdomain: "secure-app", LocalScheme: "https", LocalHost: "nas.lan", LocalPort: 8443, Enabled: true, Version: 3},
-			{ID: "tcp-connection", Subdomain: "ssh", ProxyType: "tcp", TCPRemotePort: 10001, LocalHost: "127.0.0.1", LocalPort: 22, Enabled: true, Version: 4},
-			{ID: "disabled", Subdomain: "disabled", LocalScheme: "http", LocalHost: "127.0.0.1", LocalPort: 9, Enabled: false},
+			{ID: "11111111-2222-3333-4444-555555555555", Subdomain: "http-app", ProxyType: "http", CustomDomains: []string{"home.example.net"}, LocalScheme: "http", LocalHost: "127.0.0.1", LocalPort: 8080, Enabled: true, Version: 2},
+			{ID: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", Subdomain: "secure-app", ProxyType: "http", LocalScheme: "https", LocalHost: "nas.lan", LocalPort: 8443, Enabled: true, Version: 3},
+			{ID: "tcp-connection", Subdomain: "ssh", ProxyType: "tcp", RemotePort: 10001, LocalHost: "127.0.0.1", LocalPort: 22, Enabled: true, Version: 4},
+			{ID: "udp-connection", Subdomain: "dns", ProxyType: "udp", RemotePort: 10002, LocalHost: "127.0.0.1", LocalPort: 53, Enabled: true, Version: 5},
+			{ID: "disabled", Subdomain: "disabled", ProxyType: "http", LocalScheme: "http", LocalHost: "127.0.0.1", LocalPort: 9, Enabled: false},
 		},
 	}, "")
 	if err != nil {
@@ -57,6 +58,15 @@ func TestRenderConfigMatchesManagedSurface(t *testing.T) {
 	}
 	if strings.Contains(configuration, "trustedCaFile") || strings.Contains(configuration, "serverName") {
 		t.Fatalf("configuration without a CA must not pin TLS files:\n%s", configuration)
+	}
+	udpSection := configuration[strings.Index(configuration, `name = "ht_udpconnection_v5"`):]
+	for _, expected := range []string{`type = "udp"`, "remotePort = 10002", `localIP = "127.0.0.1"`, "localPort = 53"} {
+		if !strings.Contains(udpSection, expected) {
+			t.Fatalf("UDP configuration missing %q:\n%s", expected, udpSection)
+		}
+	}
+	if strings.Contains(udpSection, "healthCheck.") {
+		t.Fatalf("UDP configuration must not contain TCP health checks:\n%s", udpSection)
 	}
 }
 
@@ -84,6 +94,19 @@ func TestRenderConfigPinsTrustedCa(t *testing.T) {
 func TestRenderConfigRequiresLease(t *testing.T) {
 	if _, err := RenderConfig(model.Profile{}, model.SyncResponse{}, ""); err == nil {
 		t.Fatal("RenderConfig unexpectedly accepted a missing lease")
+	}
+}
+
+func TestRenderConfigRejectsUnsupportedProxyType(t *testing.T) {
+	_, err := RenderConfig(model.Profile{}, model.SyncResponse{
+		DeviceID: "device-id",
+		Lease:    &model.Lease{Value: "signed-lease", ExpiresAt: time.Now().Add(time.Hour)},
+		Connections: []model.Connection{{
+			ID: "unsupported", ProxyType: "stcp", Enabled: true,
+		}},
+	}, "")
+	if err == nil || !strings.Contains(err.Error(), "unsupported proxy type") {
+		t.Fatalf("RenderConfig error = %v, want unsupported proxy type", err)
 	}
 }
 
@@ -155,9 +178,16 @@ func TestSupervisorPassesCustomDomainAllowlist(t *testing.T) {
 		model.Profile{FRPSHost: "frps.example.com", FRPSPort: 7000, TunnelDomain: "tunnel.example.com"},
 		nil,
 		[]model.Connection{
-			{CustomDomains: []string{"HOME.example.net", "blog.example.net"}},
-			{ProxyType: "tcp", TCPRemotePort: 10002},
-			{ProxyType: "tcp", TCPRemotePort: 10001},
+			{ProxyType: "http", Enabled: true, CustomDomains: []string{"HOME.example.net", "blog.example.net"}},
+			{ProxyType: "http", Enabled: false, CustomDomains: []string{"disabled.example.net"}},
+			{ProxyType: "tcp", Enabled: true, RemotePort: 10002, CustomDomains: []string{"raw.example.net"}},
+			{ProxyType: "tcp", Enabled: true, RemotePort: 10001},
+			{ProxyType: "tcp", Enabled: true, RemotePort: 10002},
+			{ProxyType: "tcp", Enabled: false, RemotePort: 10003},
+			{ProxyType: "udp", Enabled: true, RemotePort: 20002},
+			{ProxyType: "udp", Enabled: true, RemotePort: 20001},
+			{ProxyType: "udp", Enabled: true, RemotePort: 20002},
+			{ProxyType: "udp", Enabled: false, RemotePort: 20003},
 		},
 	)
 	if err != nil {
@@ -169,6 +199,14 @@ func TestSupervisorPassesCustomDomainAllowlist(t *testing.T) {
 	}
 	if !strings.Contains(arguments, "--allow-tcp-ports 10001,10002") {
 		t.Fatalf("arguments missing sorted TCP port allowlist: %s", arguments)
+	}
+	if !strings.Contains(arguments, "--allow-udp-ports 20001,20002") {
+		t.Fatalf("arguments missing sorted UDP port allowlist: %s", arguments)
+	}
+	for _, forbidden := range []string{"disabled.example.net", "raw.example.net", "10003", "20003"} {
+		if strings.Contains(arguments, forbidden) {
+			t.Fatalf("arguments unexpectedly allow disabled or non-HTTP resource %q: %s", forbidden, arguments)
+		}
 	}
 }
 
@@ -211,7 +249,7 @@ func TestApplyStartsAndStopsManagedAgent(t *testing.T) {
 		t.Fatal(err)
 	}
 	state := model.State{Profile: profile, CachedConnections: []model.Connection{{
-		ID: "11111111-2222-3333-4444-555555555555", Subdomain: "app", LocalScheme: "http",
+		ID: "11111111-2222-3333-4444-555555555555", Subdomain: "app", ProxyType: "http", LocalScheme: "http",
 		LocalHost: "127.0.0.1", LocalPort: 8080, Enabled: true, Version: 1,
 	}}}
 	syncResponse := model.SyncResponse{

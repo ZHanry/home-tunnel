@@ -1,0 +1,21 @@
+# 固定端口 UDP 隧道默认关闭。UDP 流量绕过 HTTP 网关，请先限制主机防火墙
+# 来源并评估反射放大风险，再显式叠加本文件：
+# Portable root profile:
+# docker compose -f compose.yaml -f deploy/compose.udp.yaml up -d
+# ARM64 deploy profile (from deploy/):
+# docker compose -f compose.yaml -f compose.udp.yaml up -d
+services:
+  control-center:
+    environment:
+      UDP_TUNNEL_ENABLED: "true"
+      UDP_PORT_START: "${HOME_TUNNEL_UDP_PORT_START:-10000}"
+      UDP_PORT_END: "${HOME_TUNNEL_UDP_PORT_END:-10099}"
+
+  frps:
+    environment:
+      PUBLIC_FRPS_PORT: "${HOME_TUNNEL_FRPS_PORT:-7000}"
+      UDP_TUNNEL_ENABLED: "true"
+      UDP_PORT_START: "${HOME_TUNNEL_UDP_PORT_START:-10000}"
+      UDP_PORT_END: "${HOME_TUNNEL_UDP_PORT_END:-10099}"
+    ports:
+      - "${HOME_TUNNEL_UDP_BIND_ADDRESS:-0.0.0.0}:${HOME_TUNNEL_UDP_PORT_START:-10000}-${HOME_TUNNEL_UDP_PORT_END:-10099}:${HOME_TUNNEL_UDP_PORT_START:-10000}-${HOME_TUNNEL_UDP_PORT_END:-10099}/udp"

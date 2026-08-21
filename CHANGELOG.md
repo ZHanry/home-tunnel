@@ -2,6 +2,64 @@
 
 All notable changes to Home Tunnel are documented in this file. The project follows [Semantic Versioning](https://semver.org/).
 
+## [3.1.0] - 2026-08-21
+
+### Added
+
+- Extended the existing administrator-managed TCP forwarding with fixed-port
+  UDP, and documented that TCP already carries RTSP-over-TCP, SSH, RDP, MQTT,
+  databases, and other TCP byte streams.
+- Added protocol-neutral `remote_port` and `supported_proxy_types` contracts,
+  while retaining the legacy TCP fields needed for rolling compatibility.
+- Added opt-in `deploy/compose.tcp.yaml`, `deploy/compose.udp.yaml`, and
+  `deploy/compose.l4.yaml` profiles with independent TCP, UDP, and shared L4
+  bind/range settings.
+- Added unit and integration coverage for exact TCP/UDP authorization and
+  legacy-client fallback, plus a reproducible release smoke that drives the
+  managed Agent through a 128 KiB+ binary TCP echo, a 1 KiB+ UDP datagram echo,
+  RTSP-over-TCP `OPTIONS`/`SETUP`/`PLAY` with an interleaved media frame, and
+  TCP/UDP revocation checks. The local Compose smoke also checks migration
+  `008`, the FRPS allow-port range, and both protocol bindings.
+
+### Security
+
+- Published the independently reviewed FRPS `0.70.1-r2` wrapper from the same
+  upstream `fa3bcca` source, with the L4/Ping entrypoint baked into a signed,
+  attested `amd64`/`arm64` image pinned at
+  `sha256:0ca230caa4c3c71932efd9bd5b9024a6fdc289886b97a1db827eaf3f8b6de759`.
+- Kept TCP and UDP disabled by default and administrator-only. The managed
+  Agent accepts only the exact protocol and remote port issued by the control
+  center, with separate TCP and UDP allowlists, and continues to reject raw IP,
+  ICMP, broadcast, multicast, STCP, XTCP, SUDP, visitors, and arbitrary
+  plugins.
+- Documented that raw TCP/UDP bypass Caddy and the Traffic Gateway, so gateway
+  Basic Auth, IP allowlists, rate limits, traffic metering, and monthly quotas
+  do not apply. Exposed applications must provide their own authentication and
+  encryption.
+- Added explicit UDP guidance to restrict sources and rates at the host or
+  cloud firewall and to assess reflection/amplification risk before enabling a
+  public port.
+- Enabled FRPS `Ping` authorization so lease expiry and user/device/token/
+  configuration revocation remove raw listeners within the roughly 90-second
+  heartbeat window; a prolonged control-plane outage intentionally fails raw
+  tunnels closed.
+
+### Upgrade notes
+
+- Upgrade the control center/FRPS deployment and every managed client before
+  enabling UDP. A client that omits `supported_proxy_types` still receives a
+  UDP connection record for compatibility, but the server forces it to
+  `disabled`, so the old client must not start it. Updated clients force one
+  full sync on their first post-upgrade start before recording the new sync
+  capability, which replaces any cached compatibility-disabled UDP state.
+- Existing deployments that only set `TCP_TUNNEL_ENABLED` remain TCP-only;
+  upgrading does not implicitly expose UDP. Review and explicitly select the
+  TCP, UDP, or combined L4 Compose profile and its matching environment-variable
+  range before opening firewall ports.
+- Back up SQLite before the additive migration to schema `008`. Preserve the
+  legacy TCP fields during mixed-version operation, then use the canonical
+  `remote_port` field after all components have been upgraded.
+
 ## [3.0.0] - 2026-08-14
 
 Home Tunnel 3.0.0 is the first release promoted from one fully verified RC

@@ -5,11 +5,11 @@
   <p><a href="https://zhanry.github.io/home-tunnel/en/">Website</a> · <a href="README.md">中文</a> · <a href="docs/SELF_HOSTING.md">Self-hosting</a> · <a href="SECURITY.md">Security</a></p>
 </div>
 
-Home Tunnel is a self-hosted tunneling platform for personal and family services. Publish NAS, Home Assistant, and development services through an auditable, rate-limited control plane that you can revoke at any time.
+Home Tunnel is a self-hosted tunneling platform for personal and family services. Publish Web services, general TCP byte streams, and fixed-port UDP services through an auditable control plane that you can revoke at any time.
 
 ![The real Home Tunnel management dashboard showing connections, traffic, and component health](docs/site/assets/admin-dashboard.jpg)
 
-> `v3.0.0` is promoted from the same commit and immutable artifact set as `v3.0.0-rc.2`. Linux server `amd64`/`arm64` and the Linux client are Stable. macOS headless is Beta. The Windows x64 EXE is self-signed Experimental software and displays an unknown-publisher warning.
+> `v3.1.0` is promoted from the same commit and immutable artifact set as `v3.1.0-rc.1`. Linux server `amd64`/`arm64` and the Linux client are Stable. macOS headless is Beta. The Windows x64 EXE is self-signed Experimental software and displays an unknown-publisher warning.
 
 ## Quick Start
 
@@ -42,14 +42,14 @@ Read the one-time password from `deploy/secrets/bootstrap_admin_password`, open 
 
 The Windows EXE is built with the same RC artifact set later promoted unchanged to Stable and includes SHA-256, an SPDX SBOM, Sigstore bundles, and GitHub provenance. Self-signing proves only artifact-set consistency, not a trusted publisher identity. Trusted distribution still requires a public Authenticode certificate and protected signing environment.
 
-[Download the latest Windows x64 EXE](https://github.com/ZHanry/home-tunnel/releases/latest/download/HomeTunnel-Setup-3.0.0-x64.exe), verify its published SHA-256, and expect an unknown-publisher or SmartScreen prompt.
+[Download the latest Windows x64 EXE](https://github.com/ZHanry/home-tunnel/releases/latest/download/HomeTunnel-Setup-3.1.0-x64.exe), verify its published SHA-256, and expect an unknown-publisher or SmartScreen prompt.
 
 ## Why not raw FRP?
 
-- A capability-restricted Agent accepts only issued HTTP/HTTPS, verified custom-domain, and administrator-authorized TCP configurations. It rejects arbitrary FRP commands, UDP, visitors, and plugins.
-- Users, devices, connections, short-lived leases, bandwidth, and runtime state are controlled centrally. Revocation closes active streams.
+- A capability-restricted Agent accepts only issued HTTP/HTTPS and verified custom-domain configurations plus TCP/UDP ports explicitly assigned by an administrator. It rejects arbitrary FRP commands and configurations that were not issued by the control center.
+- Users, devices, connections, short-lived leases, and runtime state are controlled centrally. Web policy converges directly; FRPS `Ping` makes revoked TCP/UDP sessions fail closed within the roughly 90-second heartbeat window.
 - Caddy is the only public Web entry point and issues certificates only for authorized names.
-- IP allowlists, Basic Auth, hierarchical rate limits, traffic aggregation, and monthly quotas are built in.
+- The HTTP/HTTPS path provides IP allowlists, Basic Auth, hierarchical rate limits, traffic aggregation, and monthly quotas.
 - Audit events, component health, verified backups, restore, and rollback tools support operations.
 - SQLite and internal services expose no host ports by default; containers use read-only filesystems and minimal capabilities.
 
@@ -57,11 +57,32 @@ The Windows EXE is built with the same RC artifact set later promoted unchanged 
 
 ```text
 Remote browser ─HTTPS→ Caddy ─→ Traffic Gateway ─→ FRPS ═managed tunnel═→ home device
+Remote TCP/UDP client ─assigned public port→ FRPS ═managed tunnel═→ fixed home TCP/UDP port
 Administrator  ─HTTPS→ Caddy ─→ Control Center ─→ SQLite
 Windows/Linux/macOS clients ─REST + WebSocket→ Control Center
 ```
 
 Control traffic and application traffic are separated. See [Architecture](docs/ARCHITECTURE.md) and the [Security Model](docs/SECURITY_MODEL.md). The project intentionally provides no public dynamic demo. Screenshots are generated from the current UI Preview and production frontend using local fixture domains and data.
+
+## General TCP, fixed-port UDP, and RTSP
+
+Home Tunnel manages transport types, not an application-protocol catalog:
+
+| Type | Typical use | Public path |
+| --- | --- | --- |
+| HTTP/HTTPS | Web applications and HTTPS local targets | Caddy → Traffic Gateway → FRPS |
+| TCP | RTSP-over-TCP, SSH, RDP, MQTT, databases, and other TCP byte streams | Fixed public port → FRPS |
+| UDP | Fixed UDP ports used by DNS, games, or media | Fixed public port → FRPS |
+
+RTSP is not a separate tunnel type. If a camera serves RTSP on local `554/tcp`, an administrator can create a general TCP mapping from public `10554` to the camera's local port `554`, then force TCP in the player:
+
+```sh
+ffplay -rtsp_transport tcp rtsp://PUBLIC_HOST:10554/path
+```
+
+Native RTP/RTCP over UDP requires the camera to use fixed media ports and one UDP mapping for every port. Dynamically negotiated or randomly selected media ports are not guaranteed to work. Home Tunnel does not support raw IP, ICMP, broadcast, multicast, STCP, XTCP, SUDP, visitors, or arbitrary FRP plugins.
+
+TCP and UDP are disabled by default. Only an administrator can assign an exact public port inside an enabled range, and the exposed application must provide its own authentication and encryption. These raw transports bypass Caddy and the Traffic Gateway, so gateway Basic Auth, IP allowlists, rate limits, traffic metering, and monthly quotas do not apply. For UDP, also restrict sources and rates in the host or cloud firewall and assess reflection/amplification risk. See the [self-hosting guide](docs/SELF_HOSTING.md) to enable them.
 
 ## Security evidence
 

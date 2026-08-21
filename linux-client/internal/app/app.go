@@ -89,6 +89,7 @@ func Enroll(ctx context.Context, options EnrollOptions) error {
 	state.DeviceID = registration.DeviceID
 	state.DeviceCredential = registration.DeviceCredential
 	state.LastConfigVersion = 0
+	state.SyncCapabilityVersion = 0
 	state.AppliedConfigVersion = 0
 	state.CachedConnections = nil
 	state.LeaseExpiresAt = nil
@@ -187,7 +188,7 @@ func Run(ctx context.Context, options RunOptions) error {
 			if supervisor.Running() && state.LeaseExpiresAt != nil {
 				reportedExpiry = state.LeaseExpiresAt
 			}
-			response, syncErr := client.Sync(ctx, state.DeviceID, state.LastConfigVersion, reportedExpiry)
+			response, syncErr := client.Sync(ctx, state.DeviceID, state.SyncRequestConfigVersion(), reportedExpiry)
 			if syncErr != nil {
 				if isSessionRevoked(syncErr) && !retriedLogin {
 					if _, loginErr := client.DeviceLogin(ctx, state.DeviceID, state.DeviceCredential); loginErr == nil {
@@ -202,10 +203,7 @@ func Run(ctx context.Context, options RunOptions) error {
 				}
 				return syncErr
 			}
-			if response.FullSync {
-				state.CachedConnections = response.Connections
-				state.LastConfigVersion = response.TargetConfigVersion
-			}
+			applyFullSyncState(&state, response)
 			complete := response
 			complete.Connections = state.CachedConnections
 			needsLease := !supervisor.Running() || state.LeaseExpiresAt == nil || state.LeaseExpiresAt.Before(time.Now().Add(15*time.Minute))
@@ -361,6 +359,15 @@ func snapshotState(state model.State) model.State {
 	snapshot := state
 	snapshot.CachedConnections = append([]model.Connection(nil), state.CachedConnections...)
 	return snapshot
+}
+
+func applyFullSyncState(state *model.State, response model.SyncResponse) {
+	if !response.FullSync {
+		return
+	}
+	state.CachedConnections = response.Connections
+	state.LastConfigVersion = response.TargetConfigVersion
+	state.SyncCapabilityVersion = model.CurrentSyncCapabilityVersion
 }
 
 type permanentError struct {

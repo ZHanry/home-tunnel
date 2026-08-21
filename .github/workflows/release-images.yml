@@ -99,7 +99,7 @@ jobs:
           frps_digest=$(jq -r .digest deploy/frps/dependency.json)
           frps_revision=$(jq -r .repository_revision deploy/frps/dependency.json)
           test "$frps_version" = 0.70.1
-          test "$frps_image_tag" = 0.70.1-r1
+          test "$frps_image_tag" = 0.70.1-r2
           [[ "$frps_digest" =~ ^sha256:[0-9a-f]{64}$ ]]
           git merge-base --is-ancestor "$frps_revision" "$GITHUB_SHA"
           grep -Fq "$frps_image:$frps_image_tag@$frps_digest" compose.yaml
@@ -580,7 +580,7 @@ jobs:
           jq -e '.images["control-center"].digest | test("^sha256:[0-9a-f]{64}$")' release/image-digests.json >/dev/null
           jq -e '.images["traffic-gateway"].digest | test("^sha256:[0-9a-f]{64}$")' release/image-digests.json >/dev/null
           jq -e '.dependencies.frps.version == "0.70.1" and
-            .dependencies.frps.image_tag == "0.70.1-r1" and
+            .dependencies.frps.image_tag == "0.70.1-r2" and
             (.dependencies.frps.digest | test("^sha256:[0-9a-f]{64}$"))' release/image-digests.json >/dev/null
           cmp -s deploy/frps/dependency.json release/frps-dependency.json
       - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
@@ -666,6 +666,15 @@ jobs:
           make_latest: false
           generate_release_notes: true
           body: |
+            Before enabling TCP/UDP port tunnels, back up SQLite (this release
+            migrates through schema 008), upgrade the control center, FRPS,
+            and every managed client, then select exactly one of the TCP, UDP,
+            or combined L4 Compose overlays and mirror its range in the host
+            firewall. Raw TCP/UDP bypass Caddy and the Traffic Gateway, so
+            gateway Basic Auth, IP allowlists, rate limits, metering, and
+            monthly quotas do not apply. RTSP-over-TCP uses a TCP mapping;
+            dynamic RTP/RTCP UDP ports require explicit fixed mappings.
+
             Windows x64 EXE is Experimental and uses an ephemeral self-signed
             certificate. Windows can show an unknown-publisher or SmartScreen
             warning. Verify SHA256SUMS.txt and the attached Sigstore evidence.
@@ -824,6 +833,15 @@ jobs:
           make_latest: false
           generate_release_notes: true
           body: |
+            Before enabling TCP/UDP port tunnels, back up SQLite (this release
+            migrates through schema 008), upgrade the control center, FRPS,
+            and every managed client, then select exactly one of the TCP, UDP,
+            or combined L4 Compose overlays and mirror its range in the host
+            firewall. Raw TCP/UDP bypass Caddy and the Traffic Gateway, so
+            gateway Basic Auth, IP allowlists, rate limits, metering, and
+            monthly quotas do not apply. RTSP-over-TCP uses a TCP mapping;
+            dynamic RTP/RTCP UDP ports require explicit fixed mappings.
+
             Windows x64 EXE is Experimental and uses an ephemeral self-signed
             certificate. Windows can show an unknown-publisher or SmartScreen
             warning. Verify SHA256SUMS.txt and the attached Sigstore evidence.

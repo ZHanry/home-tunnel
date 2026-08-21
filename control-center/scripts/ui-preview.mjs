@@ -54,8 +54,8 @@ const devices = [
     name: "书房主机",
     status: "active",
     online: true,
-    client_version: "3.0.0",
-    agent_version: "3.0.0",
+    client_version: "3.1.0",
+    agent_version: "3.1.0",
     applied_config_version: 12,
     config_version: 12,
     last_seen_at: new Date(now - 12_000).toISOString(),
@@ -68,8 +68,8 @@ const devices = [
     name: "家庭服务器",
     status: "active",
     online: false,
-    client_version: "3.0.0",
-    agent_version: "3.0.0",
+    client_version: "3.1.0",
+    agent_version: "3.1.0",
     applied_config_version: 4,
     config_version: 5,
     last_seen_at: new Date(now - 3_600_000).toISOString(),
@@ -85,6 +85,7 @@ const connections = [
     device_name: "书房主机",
     name: "NAS 控制台",
     subdomain: "nas-home",
+    proxy_type: "http",
     public_url: "https://nas-home.tunnel.example.com",
     local_scheme: "http",
     local_host: "127.0.0.1",
@@ -103,6 +104,7 @@ const connections = [
     device_name: "书房主机",
     name: "照片管理",
     subdomain: "photos-home",
+    proxy_type: "http",
     public_url: "https://photos-home.tunnel.example.com",
     local_scheme: "http",
     local_host: "127.0.0.1",
@@ -168,6 +170,10 @@ app.get("/api/v1/admin/summary", (_request, response) =>
     online_connections: 1,
     upload_24h: 348_127_232,
     download_24h: 1_492_611_072,
+    transport_tunnels: {
+      tcp: { enabled: true, port_start: 10000, port_end: 10099 },
+      udp: { enabled: true, port_start: 10000, port_end: 10099 },
+    },
     tcp_tunnels: { enabled: true, port_start: 10000, port_end: 10099 },
   }),
 );
@@ -209,6 +215,10 @@ app.get("/api/v1/admin/devices", (_request, response) => response.json({ items: 
 app.get("/api/v1/admin/connections", (_request, response) =>
   response.json({
     items: connections,
+    transport_tunnels: {
+      tcp: { enabled: true, port_start: 10000, port_end: 10099 },
+      udp: { enabled: true, port_start: 10000, port_end: 10099 },
+    },
     tcp_tunnels: { enabled: true, port_start: 10000, port_end: 10099 },
   }),
 );

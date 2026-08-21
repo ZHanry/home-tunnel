@@ -25,6 +25,7 @@ internal sealed class SessionCoordinator
         }
         _state.DeviceId = registration.DeviceId;
         _state.LastConfigVersion = 0;
+        _state.SyncCapabilityVersion = 0;
         _state.AppliedConfigVersion = 0;
         CredentialStore.Write(
             CredentialStore.Target(_state.ServerBaseUrl, registration.DeviceId),
@@ -42,6 +43,7 @@ internal sealed class SessionCoordinator
         }
         _state.DeviceId = null;
         _state.LastConfigVersion = 0;
+        _state.SyncCapabilityVersion = 0;
         _state.AppliedConfigVersion = 0;
         _state.CachedConnections.Clear();
         _stateStore.Save(_state);

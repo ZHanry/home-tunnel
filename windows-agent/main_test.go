@@ -68,6 +68,28 @@ localIP = "127.0.0.1"
 localPort = 22
 `
 
+const validManagedUDPConfig = `serverAddr = "203.0.113.10"
+serverPort = 7000
+user = "test-device"
+loginFailExit = true
+transport.tls.enable = true
+transport.tls.disableCustomTLSFirstByte = true
+transport.heartbeatInterval = 30
+transport.heartbeatTimeout = 90
+metadatas.home_tunnel_lease = "test-only-lease"
+log.to = "console"
+log.level = "info"
+
+[[proxies]]
+name = "ht_udp_test_v1"
+type = "udp"
+remotePort = 10002
+transport.useEncryption = true
+transport.useCompression = true
+localIP = "127.0.0.1"
+localPort = 554
+`
+
 func loadConfig(t *testing.T, content string) error {
 	t.Helper()
 	return loadConfigWithTrust(t, content, trustProfile{server: testServer, port: testPort, domain: testDomain})
@@ -130,6 +152,119 @@ func TestTCPRemotePortMustBeAuthorized(t *testing.T) {
 	}
 	if err := loadConfigWithTrust(t, validManagedTCPConfig, trust); err == nil {
 		t.Fatal("untrusted TCP remote port was accepted")
+	}
+}
+
+func TestAuthorizedManagedUDPConfigAccepted(t *testing.T) {
+	trust := trustProfile{
+		server: testServer, port: testPort, domain: testDomain,
+		allowedUDPPorts: map[int]struct{}{10002: {}},
+	}
+	if err := loadConfigWithTrust(t, validManagedUDPConfig, trust); err != nil {
+		t.Fatalf("authorized UDP config rejected: %v", err)
+	}
+}
+
+func TestUDPRemotePortMustBeAuthorizedByUDPAllowlist(t *testing.T) {
+	cases := []struct {
+		name  string
+		trust trustProfile
+	}{
+		{
+			name: "unauthorized UDP port",
+			trust: trustProfile{
+				server: testServer, port: testPort, domain: testDomain,
+				allowedUDPPorts: map[int]struct{}{10003: {}},
+			},
+		},
+		{
+			name: "TCP allowlist cannot authorize UDP",
+			trust: trustProfile{
+				server: testServer, port: testPort, domain: testDomain,
+				allowedTCPPorts: map[int]struct{}{10002: {}},
+			},
+		},
+	}
+	for _, test := range cases {
+		t.Run(test.name, func(t *testing.T) {
+			if err := loadConfigWithTrust(t, validManagedUDPConfig, test.trust); err == nil {
+				t.Fatal("UDP config without an exact UDP authorization was accepted")
+			}
+		})
+	}
+}
+
+func TestAllowUDPPortsFlagIsIndependent(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "managed.toml")
+	if err := os.WriteFile(path, []byte(validManagedUDPConfig), 0o600); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+	baseArgs := []string{
+		"verify", "--config", path, "--server", testServer, "--port", "7000", "--domain", testDomain,
+	}
+	if err := execute(append(append([]string(nil), baseArgs...), "--allow-udp-ports", "10002")); err != nil {
+		t.Fatalf("--allow-udp-ports rejected authorized UDP config: %v", err)
+	}
+	if err := execute(append(append([]string(nil), baseArgs...), "--allow-tcp-ports", "10002")); err == nil {
+		t.Fatal("--allow-tcp-ports authorized a UDP config")
+	}
+}
+
+func TestManagedUDPRestrictions(t *testing.T) {
+	trust := trustProfile{
+		server: testServer, port: testPort, domain: testDomain,
+		allowedUDPPorts: map[int]struct{}{10002: {}},
+	}
+	tests := []struct {
+		name   string
+		config string
+	}{
+		{
+			name: "client plugin",
+			config: strings.Replace(validManagedUDPConfig,
+				"localIP = \"127.0.0.1\"\nlocalPort = 554\n",
+				"[proxies.plugin]\ntype = \"http2https\"\nlocalAddr = \"127.0.0.1:554\"\nhostHeaderRewrite = \"127.0.0.1\"\n", 1),
+		},
+		{
+			name: "health check",
+			config: strings.Replace(validManagedUDPConfig,
+				"localIP = \"127.0.0.1\"",
+				"healthCheck.type = \"tcp\"\nhealthCheck.timeoutSeconds = 3\nhealthCheck.intervalSeconds = 10\nlocalIP = \"127.0.0.1\"", 1),
+		},
+		{
+			name: "invalid local host",
+			config: strings.Replace(validManagedUDPConfig,
+				"localIP = \"127.0.0.1\"", "localIP = \"127.0.0.1 / attacker\"", 1),
+		},
+		{
+			name: "invalid local port",
+			config: strings.Replace(validManagedUDPConfig,
+				"localPort = 554", "localPort = 0", 1),
+		},
+		{
+			name: "encryption disabled",
+			config: strings.Replace(validManagedUDPConfig,
+				"transport.useEncryption = true", "transport.useEncryption = false", 1),
+		},
+		{
+			name: "compression disabled",
+			config: strings.Replace(validManagedUDPConfig,
+				"transport.useCompression = true", "transport.useCompression = false", 1),
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if err := loadConfigWithTrust(t, test.config, trust); err == nil {
+				t.Fatalf("UDP config with %s was accepted", test.name)
+			}
+		})
+	}
+}
+
+func TestUnknownProxyTypeStillRejected(t *testing.T) {
+	config := strings.Replace(validManagedConfig, `type = "http"`, `type = "https"`, 1)
+	if err := loadConfig(t, config); err == nil {
+		t.Fatal("unmanaged proxy type was accepted")
 	}
 }
 

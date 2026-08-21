@@ -11,11 +11,11 @@
   <p><a href="https://zhanry.github.io/home-tunnel/">项目网站</a> · <a href="README.en.md">English</a> · <a href="docs/SELF_HOSTING.md">自托管指南</a> · <a href="SECURITY.md">安全报告</a></p>
 </div>
 
-Home Tunnel 是面向个人与家庭服务的自托管内网穿透平台，用可审计、可限速、可随时撤销的控制面，安全发布 NAS、Home Assistant 和开发服务。
+Home Tunnel 是面向个人与家庭服务的自托管内网穿透平台，用可审计、可随时撤销的控制面，安全发布 Web 服务、通用 TCP 字节流与固定端口 UDP 服务。
 
 ![Home Tunnel 真实管理后台，显示连接、流量和组件健康状态](docs/site/assets/admin-dashboard.jpg)
 
-> `v3.0.0` 由 `v3.0.0-rc.2` 的同一提交和同一套不可变资产提升。服务端 Linux `amd64`/`arm64` 与 Linux 客户端为 Stable；macOS headless 为 Beta；Windows x64 EXE 为自签名 Experimental，会显示未知发布者提示。
+> `v3.1.0` 由 `v3.1.0-rc.1` 的同一提交和同一套不可变资产提升。服务端 Linux `amd64`/`arm64` 与 Linux 客户端为 Stable；macOS headless 为 Beta；Windows x64 EXE 为自签名 Experimental，会显示未知发布者提示。
 
 ## 三步启动
 
@@ -63,10 +63,10 @@ Windows EXE 与其他平台资产来自同一个 RC 构建并随 Stable 原样�
 
 ## 为什么不是“裸 FRP”
 
-- **能力受限的 Agent**：只接受控制中心签发且与服务器配置一致的 HTTP/HTTPS、自定义域名和管理员授权 TCP 连接；拒绝通用 FRP 命令、UDP、访客配置和任意插件。
-- **集中策略**：用户、设备、连接、短期租约、带宽与状态统一管理，策略撤销会切断活动连接。
+- **能力受限的 Agent**：只接受控制中心签发且与服务器配置一致的 HTTP/HTTPS、自定义域名，以及管理员逐端口授权的 TCP/UDP 连接；拒绝通用 FRP 命令和未签发配置。
+- **集中策略**：用户、设备、连接、短期租约与运行状态统一管理；Web 策略直接收敛，FRPS `Ping` 在约 90 秒心跳窗口内让 TCP/UDP 撤销失效。
 - **自动 HTTPS**：Caddy 是唯一公网 Web 入口，按已分配且验证的域名签发证书。
-- **访问与流量控制**：IP 允许集、Basic Auth、分层限速、流量聚合和月度配额。
+- **Web 访问与流量控制**：HTTP/HTTPS 路径提供 IP 允许集、Basic Auth、分层限速、流量聚合和月度配额。
 - **可审计运维**：审计事件、组件健康、备份验证、恢复与回滚工具。
 - **默认隔离**：SQLite、控制中心和网关不直接发布主机端口；容器使用只读文件系统和最小能力集。
 
@@ -74,11 +74,32 @@ Windows EXE 与其他平台资产来自同一个 RC 构建并随 Stable 原样�
 
 ```text
 远程浏览器 ─HTTPS→ Caddy ─→ 流量网关 ─→ FRPS ═受管隧道═→ 家中 Windows/Linux/macOS 主机
+远程 TCP/UDP 客户端 ─已分配公网端口→ FRPS ═受管隧道═→ 家中固定 TCP/UDP 端口
 管理员     ─HTTPS→ Caddy ─→ 控制中心 ─→ SQLite
 Windows/Linux/macOS 客户端 ─REST + WebSocket→ 控制中心
 ```
 
 控制流和业务流量分离；详细边界见 [架构说明](docs/ARCHITECTURE.md) 与 [安全模型](docs/SECURITY_MODEL.md)。项目不提供公开动态演示站，Pages 中的截图由当前 UI Preview 和真实前端代码生成，示例域名与数据均为本地夹具。
+
+## 通用 TCP、固定端口 UDP 与 RTSP
+
+Home Tunnel 的“类型”是受管传输类型，不是应用协议清单：
+
+| 类型 | 用途 | 公网路径 |
+| --- | --- | --- |
+| HTTP/HTTPS | Web 应用与 HTTPS 本地目标 | Caddy → 流量网关 → FRPS |
+| TCP | RTSP-over-TCP、SSH、RDP、MQTT、数据库及其他 TCP 字节流 | 公网固定端口 → FRPS |
+| UDP | DNS、游戏或媒体使用的固定 UDP 端口 | 公网固定端口 → FRPS |
+
+RTSP 不是独立隧道类型。若摄像头在本地 `554/tcp` 提供 RTSP，可由管理员创建通用 TCP 映射“公网 `10554` → 本地摄像头 `554`”，然后强制播放器使用 TCP：
+
+```sh
+ffplay -rtsp_transport tcp rtsp://PUBLIC_HOST:10554/path
+```
+
+若设备使用原生 RTP/RTCP over UDP，必须先把摄像头配置为固定媒体端口，再为每个 UDP 端口逐条创建映射；动态协商或随机选择的媒体端口无法保证穿透。项目不支持 raw IP、ICMP、广播、组播、STCP、XTCP、SUDP、visitor 或任意 FRP 插件。
+
+TCP 与 UDP 默认关闭，只能由管理员在允许范围内分配精确公网端口，并要求目标应用自己提供认证与加密。它们绕过 Caddy 和流量网关，因此不具备网关的 Basic Auth、IP 允许集、限速、流量计量或月度配额。UDP 还必须在主机/云防火墙限源、限速，并评估反射放大风险。启用方式见 [自托管指南](docs/SELF_HOSTING.md)。
 
 ## 客户端
 
@@ -88,7 +109,7 @@ Linux Stable 客户端以 systemd 服务运行；macOS Beta 客户端以 launchd
 
 ### Windows x64（Experimental EXE）
 
-从 [最新 Release 下载 Windows x64 EXE](https://github.com/ZHanry/home-tunnel/releases/latest/download/HomeTunnel-Setup-3.0.0-x64.exe)。客户端支持图形化登录、连接管理、系统托盘、自动启动和诊断导出。安装前请核对 Release 中的 SHA-256；自签名版本会触发未知发布者或 SmartScreen 提示。
+从 [最新 Release 下载 Windows x64 EXE](https://github.com/ZHanry/home-tunnel/releases/latest/download/HomeTunnel-Setup-3.1.0-x64.exe)。客户端支持图形化登录、连接管理、系统托盘、自动启动和诊断导出。安装前请核对 Release 中的 SHA-256；自签名版本会触发未知发布者或 SmartScreen 提示。
 
 也可以在 Windows 上自行构建：
 

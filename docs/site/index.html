@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Home Tunnel — 面向个人与家庭服务的自托管内网穿透平台</title>
-  <meta name="description" content="用可审计、可限速、可随时撤销的控制面，安全发布 NAS、Home Assistant 和开发服务。">
+  <meta name="description" content="用可审计、可随时撤销的控制面，安全发布 Web、通用 TCP 与固定端口 UDP 服务。">
   <link rel="canonical" href="https://zhanry.github.io/home-tunnel/">
   <link rel="alternate" hreflang="zh-CN" href="https://zhanry.github.io/home-tunnel/">
   <link rel="alternate" hreflang="en" href="https://zhanry.github.io/home-tunnel/en/">
@@ -13,7 +13,7 @@
   <meta property="og:site_name" content="Home Tunnel">
   <meta property="og:locale" content="zh_CN">
   <meta property="og:title" content="Home Tunnel — 可审计的家庭内网穿透">
-  <meta property="og:description" content="安全发布 NAS、Home Assistant 和开发服务。自托管、可审计、可限速、可撤销。">
+  <meta property="og:description" content="安全发布 Web、通用 TCP 与固定端口 UDP 服务。自托管、可审计、可撤销。">
   <meta property="og:url" content="https://zhanry.github.io/home-tunnel/">
   <meta property="og:image" content="https://zhanry.github.io/home-tunnel/assets/social-preview.jpg">
   <meta property="og:image:width" content="1280">
@@ -21,7 +21,7 @@
   <meta property="og:image:alt" content="Home Tunnel 自托管家庭内网穿透平台及真实管理后台">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="assets/HomeTunnel.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="assets/site.css?v=3.0.0">
+  <link rel="stylesheet" href="assets/site.css?v=3.1.0">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -55,10 +55,10 @@
       <div class="hero-copy">
         <p class="eyebrow">Self-hosted · Apache-2.0 · Home services</p>
         <h1 id="hero-title">把家里的服务，安全地带到公网。</h1>
-        <p class="lead">Home Tunnel 是面向个人与家庭服务的自托管内网穿透平台，用可审计、可限速、可随时撤销的控制面，安全发布 NAS、Home Assistant 和开发服务。</p>
+        <p class="lead">Home Tunnel 是面向个人与家庭服务的自托管内网穿透平台，用可审计、可随时撤销的控制面，安全发布 Web、通用 TCP 与固定端口 UDP 服务。</p>
         <div class="actions">
           <a class="button primary" href="#quick-start" data-goatcounter-click="quick-start">三步开始部署</a>
-          <a class="button" href="https://github.com/ZHanry/home-tunnel?utm_source=pages&amp;utm_medium=hero&amp;utm_campaign=release_3_0" data-goatcounter-click="github">查看 GitHub</a>
+          <a class="button" href="https://github.com/ZHanry/home-tunnel?utm_source=pages&amp;utm_medium=hero&amp;utm_campaign=release_3_1" data-goatcounter-click="github">查看 GitHub</a>
         </div>
       </div>
       <figure class="hero-visual">
@@ -68,8 +68,8 @@
     </section>
 
     <div class="proof-strip" aria-label="工程与安全证据">
-      <div class="proof"><strong>43 + 31</strong><span>控制中心与网关测试（2026-08-13）</span></div>
-      <div class="proof"><strong>0</strong><span>已知 High / Moderate 生产依赖公告（审计于 2026-08-13）</span></div>
+      <div class="proof"><strong>45 + 31</strong><span>控制中心与网关测试（2026-08-21）</span></div>
+      <div class="proof"><strong>0</strong><span>已知 High / Moderate 生产依赖公告（审计于 2026-08-21）</span></div>
       <div class="proof"><strong>64 KiB</strong><span>WebSocket 完整消息上限</span></div>
       <div class="proof"><strong>Apache-2.0</strong><span>开放源码许可证</span></div>
     </div>
@@ -83,11 +83,11 @@
     </section>
 
     <section id="fit" aria-labelledby="fit-title">
-      <div class="section-head"><p class="eyebrow">适用边界</p><h2 id="fit-title">为家庭服务设计，不是通用代理。</h2><p>Home Tunnel 把公开入口、身份、策略、流量和审计集中到一个控制面，同时把客户端能力限制在管理员签发的配置范围内。</p></div>
+      <div class="section-head"><p class="eyebrow">适用边界</p><h2 id="fit-title">为家庭服务设计，不是通用代理。</h2><p>Home Tunnel 集中管理身份、配置与审计，Web 路径另有访问和流量策略；客户端能力始终限制在管理员签发的范围内。</p></div>
       <div class="grid-3">
-        <article class="card"><h3>适合</h3><ul><li>远程访问 NAS 与家庭相册</li><li>安全发布 Home Assistant</li><li>分享短期开发预览</li><li>需要用户、设备与带宽管理</li></ul></article>
-        <article class="card"><h3>不适合</h3><ul><li>完全匿名的公共代理服务</li><li>任意 FRP 命令与 UDP 转发</li><li>无需认证的敏感管理后台</li><li>把动态演示站暴露给陌生人</li></ul></article>
-        <article class="card"><h3>默认安全边界</h3><ul><li>短期租约和即时策略撤销</li><li>能力受限的固定 FRP Agent</li><li>独立控制与业务流量路径</li><li>连接、流量与操作审计</li></ul></article>
+        <article class="card"><h3>适合</h3><ul><li>远程访问 NAS 与家庭相册</li><li>安全发布 Home Assistant</li><li>RTSP-over-TCP 与固定端口 UDP</li><li>需要用户、设备与带宽管理</li></ul></article>
+        <article class="card"><h3>不适合</h3><ul><li>完全匿名的公共代理服务</li><li>raw IP、ICMP、广播或组播</li><li>无需认证的敏感管理后台</li><li>STCP、XTCP、SUDP、visitor 或任意插件</li></ul></article>
+        <article class="card"><h3>默认安全边界</h3><ul><li>短期租约和即时策略撤销</li><li>能力受限的固定 FRP Agent</li><li>独立控制与业务流量路径</li><li>连接配置与操作审计</li></ul></article>
       </div>
     </section>
 
@@ -108,13 +108,13 @@ docker compose pull
 docker compose up -d
 docker compose ps</code></pre>
       <div class="actions">
-        <a class="button primary" href="https://github.com/ZHanry/home-tunnel/blob/main/docs/SELF_HOSTING.md?utm_source=pages&amp;utm_medium=quick_start&amp;utm_campaign=release_3_0" data-goatcounter-click="quick-start-guide">阅读完整自托管指南</a>
-        <a class="button" href="https://github.com/ZHanry/home-tunnel/releases?utm_source=pages&amp;utm_medium=release&amp;utm_campaign=release_3_0" data-goatcounter-click="release">查看 Releases</a>
+        <a class="button primary" href="https://github.com/ZHanry/home-tunnel/blob/main/docs/SELF_HOSTING.md?utm_source=pages&amp;utm_medium=quick_start&amp;utm_campaign=release_3_1" data-goatcounter-click="quick-start-guide">阅读完整自托管指南</a>
+        <a class="button" href="https://github.com/ZHanry/home-tunnel/releases?utm_source=pages&amp;utm_medium=release&amp;utm_campaign=release_3_1" data-goatcounter-click="release">查看 Releases</a>
       </div>
     </section>
 
     <section id="support" aria-labelledby="support-title">
-      <div class="section-head"><p class="eyebrow">公开支持矩阵</p><h2 id="support-title">稳定性声明以实际 Release 产物为准。</h2><p><code>v3.0.0</code> 从 <code>v3.0.0-rc.2</code> 的同一提交与同一套不可变资产提升。“Stable”只用于完整验证的平台；Windows x64 EXE 明确标为自签名 Experimental。</p></div>
+      <div class="section-head"><p class="eyebrow">公开支持矩阵</p><h2 id="support-title">稳定性声明以实际 Release 产物为准。</h2><p><code>v3.1.0</code> 从 <code>v3.1.0-rc.1</code> 的同一提交与同一套不可变资产提升。“Stable”只用于完整验证的平台；Windows x64 EXE 明确标为自签名 Experimental。</p></div>
       <div class="support-wrap">
         <table>
           <thead><tr><th>组件</th><th>平台</th><th>状态</th><th>分发与限制</th></tr></thead>
@@ -129,7 +129,7 @@ docker compose ps</code></pre>
     </section>
 
     <section id="security" aria-labelledby="security-title">
-      <div class="section-head"><p class="eyebrow">Security by boundaries</p><h2 id="security-title">可审计、可限速、可撤销。</h2><p>控制面只签发允许的连接和短期租约；客户端 Agent 再次核对服务器地址、域名、端口与代理类型，拒绝任意 FRP 配置。</p></div>
+      <div class="section-head"><p class="eyebrow">Security by boundaries</p><h2 id="security-title">可审计、可控制、可撤销。</h2><p>控制面只签发允许的连接和短期租约；客户端 Agent 再次核对服务器地址、域名、精确端口与代理类型，拒绝任意 FRP 配置。</p></div>
       <div class="architecture" aria-label="Home Tunnel 数据路径">
         <div class="node">远程浏览器<br>HTTPS</div><div class="arrow" aria-hidden="true">→</div>
         <div class="node">Caddy + 网关<br>策略与限速</div><div class="arrow" aria-hidden="true">→</div>
@@ -137,7 +137,7 @@ docker compose ps</code></pre>
       </div>
       <div class="grid-3" style="margin-top:1rem">
         <article class="card"><h3>依赖与代码</h3><p>生产依赖审计、CodeQL、多语言 CI、Secret Scanning 与 Push Protection 构成合并前证据链。</p></article>
-        <article class="card"><h3>运行时限制</h3><p>WebSocket 总负载、碎片与缓冲分块均有明确上限；异常断连后连接计数必须回收且可重新连接。</p></article>
+        <article class="card"><h3>端口隧道边界</h3><p>TCP/UDP 默认关闭并绕过 Caddy/网关；应用必须自行认证加密，UDP 还应在防火墙限源限速，防止反射放大。</p></article>
         <article class="card"><h3>漏洞报告</h3><p>疑似漏洞不要创建公开 Issue。请通过 GitHub 私密漏洞报告通道提交最小复现与影响范围。</p><p><a href="https://github.com/ZHanry/home-tunnel/security/advisories/new">私密报告漏洞</a></p></article>
       </div>
     </section>
@@ -146,6 +146,7 @@ docker compose ps</code></pre>
       <div class="section-head"><p class="eyebrow">FAQ</p><h2 id="faq-title">部署前最常见的问题。</h2></div>
       <div class="faq">
         <details><summary>它与直接使用 FRP 有什么不同？</summary><p>Home Tunnel 在 FRP 之上增加用户、设备、连接、短期租约、访问控制、限速、采样与审计，并限制 Agent 只能执行控制中心签发的配置。</p></details>
+        <details><summary>如何穿透 RTSP 或 RTP/RTCP？</summary><p>RTSP 不是独立类型：将公网 10554/TCP 映射到摄像头本地 554，并使用 <code>ffplay -rtsp_transport tcp rtsp://PUBLIC_HOST:10554/path</code>。原生 RTP/RTCP UDP 必须固定媒体端口并逐条映射；动态端口不保证可用。</p></details>
         <details><summary>可以公开访问我的真实控制台吗？</summary><p>不建议把管理控制台作为公开演示站。Pages 仅展示本地夹具生成的静态截图，不连接任何真实部署。</p></details>
         <details><summary>Windows EXE 为什么提示未知发布者？</summary><p>当前 EXE 使用临时自签名证书并作为 Experimental 资产发布。请核对 Release 的 SHA-256 与 Sigstore 证据；可信发布者提示仍需要公开 Authenticode 证书和受保护签名环境。</p></details>
         <details><summary>会收集家庭服务地址或凭据吗？</summary><p>不会。Pages 只接收聚合访问与点击事件；部署反馈也明确禁止提交域名、IP、令牌或凭据。</p></details>
@@ -157,7 +158,7 @@ docker compose ps</code></pre>
         <p class="eyebrow">真实部署反馈</p><h2 id="feedback-title">部署成功了，或者被哪一步卡住？</h2>
         <p>请提交真实平台、安装结果及阻碍；不要求公开域名、IP 或任何凭据。非维护者的有效部署结果会作为 30 天验证指标。</p>
         <div class="actions">
-          <a class="button primary" href="https://github.com/ZHanry/home-tunnel/issues/new?template=deployment_feedback.yml&amp;utm_source=pages&amp;utm_medium=feedback&amp;utm_campaign=release_3_0" data-goatcounter-click="deployment-feedback">提交部署反馈</a>
+          <a class="button primary" href="https://github.com/ZHanry/home-tunnel/issues/new?template=deployment_feedback.yml&amp;utm_source=pages&amp;utm_medium=feedback&amp;utm_campaign=release_3_1" data-goatcounter-click="deployment-feedback">提交部署反馈</a>
           <a class="button" href="privacy.html">查看隐私说明</a>
         </div>
       </div>

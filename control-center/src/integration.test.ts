@@ -20,14 +20,19 @@ export async function runIntegrationSuite(): Promise<void> {
   process.env.TCP_TUNNEL_ENABLED = "true";
   process.env.TCP_PORT_START = "10000";
   process.env.TCP_PORT_END = "10099";
+  process.env.UDP_TUNNEL_ENABLED = "true";
+  process.env.UDP_PORT_START = "10000";
+  process.env.UDP_PORT_END = "10099";
 
-  const [{ createApplication }, database, maintenance, quota, customDomains] = await Promise.all([
-    import("./server.js"),
-    import("./db.js"),
-    import("./maintenance.js"),
-    import("./quota.js"),
-    import("./custom-domains.js"),
-  ]);
+  const [{ createApplication }, database, maintenance, quota, customDomains, configuration] =
+    await Promise.all([
+      import("./server.js"),
+      import("./db.js"),
+      import("./maintenance.js"),
+      import("./quota.js"),
+      import("./custom-domains.js"),
+      import("./config.js"),
+    ]);
   const noopAlert = async () => ({ delivered: false, deduplicated: false, results: [] });
   const app = await createApplication(true);
   const server = app.listen(0, "127.0.0.1");
@@ -642,6 +647,8 @@ export async function runIntegrationSuite(): Promise<void> {
     );
     assert.equal(adminTcp.status, 201);
     assert.equal(adminTcp.payload.proxy_type, "tcp");
+    assert.equal(adminTcp.payload.remote_port, 10001);
+    assert.equal(adminTcp.payload.tcp_remote_port, 10001);
     assert.equal(adminTcp.payload.public_endpoint, "203.0.113.10:10001");
     const tcpId = adminTcp.payload.id as string;
 
@@ -700,7 +707,7 @@ export async function runIntegrationSuite(): Promise<void> {
       },
     });
     assert.equal(tcpProxy.payload.reject, false);
-    await database.query("UPDATE connections SET tcp_remote_port=9999 WHERE id=?", [tcpId]);
+    await database.query("UPDATE connections SET remote_port=9999 WHERE id=?", [tcpId]);
     const outOfRangeTcp = await call("POST", `${pluginBase}?version=0.1.0&op=NewProxy`, {
       version: "0.1.0",
       op: "NewProxy",
@@ -713,7 +720,7 @@ export async function runIntegrationSuite(): Promise<void> {
     });
     assert.equal(outOfRangeTcp.payload.reject, true);
     assert.equal(outOfRangeTcp.payload.reject_reason, "PROXY_NOT_ALLOWED");
-    await database.query("UPDATE connections SET tcp_remote_port=10001 WHERE id=?", [tcpId]);
+    await database.query("UPDATE connections SET remote_port=10001 WHERE id=?", [tcpId]);
     const forgedTcp = await call("POST", `${pluginBase}?version=0.1.0&op=NewProxy`, {
       version: "0.1.0",
       op: "NewProxy",
@@ -727,11 +734,241 @@ export async function runIntegrationSuite(): Promise<void> {
     assert.equal(forgedTcp.payload.reject, true);
     assert.equal(forgedTcp.payload.reject_reason, "PROXY_NOT_ALLOWED");
 
+    // UDP 与 TCP 可复用同一数值端口（按 transport_type + remote_port 唯一）。
+    // 未声明 UDP 能力的旧客户端仍收到该连接，但服务端强制禁用。
+    const adminUdp = await call(
+      "POST",
+      "/api/v1/admin/connections",
+      {
+        user_id: userId,
+        device_id: deviceId,
+        name: "admin-udp",
+        subdomain: `udp-${suffix}`,
+        proxy_type: "udp",
+        remote_port: 10001,
+        local_scheme: "http",
+        local_host: "127.0.0.1",
+        local_port: 554,
+        enabled: true,
+      },
+      adminToken,
+    );
+    assert.equal(adminUdp.status, 201);
+    assert.equal(adminUdp.payload.proxy_type, "udp");
+    assert.equal(adminUdp.payload.remote_port, 10001);
+    assert.equal(adminUdp.payload.tcp_remote_port, null);
+    assert.equal(adminUdp.payload.public_endpoint, "203.0.113.10:10001");
+    const udpId = adminUdp.payload.id as string;
+    const udpStored = await database.query<{
+      transport_type: string;
+      remote_port: string;
+      proxy_type: string;
+      tcp_remote_port: string | null;
+    }>(
+      `SELECT transport_type,remote_port,proxy_type,tcp_remote_port
+         FROM connections WHERE id=?`,
+      [udpId],
+    );
+    assert.equal(udpStored[0]?.transport_type, "udp");
+    assert.equal(Number(udpStored[0]?.remote_port), 10001);
+    assert.equal(udpStored[0]?.proxy_type, "tcp");
+    assert.equal(udpStored[0]?.tcp_remote_port, null);
+
+    const conflictingPortAliases = await call(
+      "POST",
+      "/api/v1/admin/connections",
+      {
+        user_id: userId,
+        device_id: deviceId,
+        name: "conflicting-port-aliases",
+        subdomain: `conflicting-port-${suffix}`,
+        proxy_type: "udp",
+        remote_port: 10002,
+        tcp_remote_port: 10003,
+        local_scheme: "http",
+        local_host: "127.0.0.1",
+        local_port: 554,
+        enabled: true,
+      },
+      adminToken,
+    );
+    assert.equal(conflictingPortAliases.status, 400);
+    assert.equal(conflictingPortAliases.payload.error_code, "VALIDATION_ERROR");
+
+    const adminConnections = await call("GET", "/api/v1/admin/connections", undefined, adminToken);
+    assert.equal(adminConnections.payload.transport_tunnels.tcp.enabled, true);
+    assert.equal(adminConnections.payload.transport_tunnels.udp.enabled, true);
+    assert.deepEqual(adminConnections.payload.tcp_tunnels, {
+      enabled: true,
+      port_start: 10000,
+      port_end: 10099,
+    });
+
+    const legacyUdpSync = await call(
+      "POST",
+      "/api/v1/client/sync",
+      { device_id: deviceId, last_config_version: 0 },
+      userToken,
+    );
+    const legacyUdpConnection = legacyUdpSync.payload.connections.find(
+      (item: any) => item.id === udpId,
+    );
+    assert.equal(legacyUdpConnection.proxy_type, "udp");
+    assert.equal(legacyUdpConnection.enabled, false);
+
+    const udpSync = await call(
+      "POST",
+      "/api/v1/client/sync",
+      {
+        device_id: deviceId,
+        last_config_version: 0,
+        supported_proxy_types: ["http", "tcp", "udp"],
+      },
+      userToken,
+    );
+    const udpConnection = udpSync.payload.connections.find((item: any) => item.id === udpId);
+    assert.equal(udpConnection.enabled, true);
+    assert.equal(udpConnection.remote_port, 10001);
+    assert.equal(udpConnection.tcp_remote_port, null);
+    const udpLease = udpSync.payload.lease.lease as string;
+    const udpProxyName = udpConnection.proxy_name as string;
+    const udpProxy = await call("POST", `${pluginBase}?version=0.1.0&op=NewProxy`, {
+      version: "0.1.0",
+      op: "NewProxy",
+      content: {
+        user: { user: deviceId, metas: { home_tunnel_lease: udpLease }, run_id: "udp-run" },
+        proxy_name: `${deviceId}.${udpProxyName}`,
+        proxy_type: "udp",
+        remote_port: 10001,
+      },
+    });
+    assert.equal(udpProxy.payload.reject, false);
+    const forgedUdpType = await call("POST", `${pluginBase}?version=0.1.0&op=NewProxy`, {
+      version: "0.1.0",
+      op: "NewProxy",
+      content: {
+        user: { user: deviceId, metas: { home_tunnel_lease: udpLease }, run_id: "udp-run" },
+        proxy_name: `${deviceId}.${udpProxyName}`,
+        proxy_type: "tcp",
+        remote_port: 10001,
+      },
+    });
+    assert.equal(forgedUdpType.payload.reject, true);
+    const forgedUdpPort = await call("POST", `${pluginBase}?version=0.1.0&op=NewProxy`, {
+      version: "0.1.0",
+      op: "NewProxy",
+      content: {
+        user: { user: deviceId, metas: { home_tunnel_lease: udpLease }, run_id: "udp-run" },
+        proxy_name: `${deviceId}.${udpProxyName}`,
+        proxy_type: "udp",
+        remote_port: 10002,
+      },
+    });
+    assert.equal(forgedUdpPort.payload.reject, true);
+    const udpTls = await call("GET", `/internal/tls/allow?domain=udp-${suffix}.tunnel.example.com`);
+    assert.equal(udpTls.status, 404);
+
+    // 部署关闭 UDP 或收窄端口范围时，同步必须停用越界连接；管理员仍能在不
+    // 改协议/端口的前提下将既有连接置为 disabled。创建、改端口、改协议不
+    // 享受该保留例外。
+    const udpSettings = configuration.config.transportTunnels.udp;
+    const tcpSettings = configuration.config.transportTunnels.tcp;
+    const originalUdpSettings = { ...udpSettings };
+    const originalTcpSettings = { ...tcpSettings };
+    try {
+      udpSettings.enabled = false;
+      udpSettings.portStart = 10_050;
+      tcpSettings.portStart = 10_050;
+
+      const narrowedSync = await call(
+        "POST",
+        "/api/v1/client/sync",
+        {
+          device_id: deviceId,
+          last_config_version: 0,
+          supported_proxy_types: ["http", "tcp", "udp"],
+        },
+        userToken,
+      );
+      assert.equal(
+        narrowedSync.payload.connections.find((item: any) => item.id === udpId)?.enabled,
+        false,
+      );
+
+      const disableOutOfRangeUdp = await call(
+        "PATCH",
+        `/api/v1/admin/connections/${udpId}`,
+        { enabled: false },
+        adminToken,
+        { "if-match": '"1"' },
+      );
+      assert.equal(disableOutOfRangeUdp.status, 200);
+      assert.equal(disableOutOfRangeUdp.payload.enabled, false);
+      assert.equal(disableOutOfRangeUdp.payload.remote_port, 10001);
+
+      const changeOutOfRangePort = await call(
+        "PATCH",
+        `/api/v1/admin/connections/${udpId}`,
+        { enabled: false, remote_port: 10002 },
+        adminToken,
+        { "if-match": '"2"' },
+      );
+      assert.equal(changeOutOfRangePort.status, 400);
+      assert.equal(changeOutOfRangePort.payload.error_code, "UDP_PORT_NOT_ALLOWED");
+
+      const changeOutOfRangeTransport = await call(
+        "PATCH",
+        `/api/v1/admin/connections/${udpId}`,
+        { enabled: false, proxy_type: "tcp" },
+        adminToken,
+        { "if-match": '"2"' },
+      );
+      assert.equal(changeOutOfRangeTransport.status, 400);
+      assert.equal(changeOutOfRangeTransport.payload.error_code, "TCP_PORT_NOT_ALLOWED");
+
+      const createOutOfRangeUdp = await call(
+        "POST",
+        "/api/v1/admin/connections",
+        {
+          user_id: userId,
+          device_id: deviceId,
+          name: "out-of-range-udp",
+          subdomain: `out-of-range-udp-${suffix}`,
+          proxy_type: "udp",
+          remote_port: 10002,
+          local_scheme: "http",
+          local_host: "127.0.0.1",
+          local_port: 554,
+          enabled: false,
+        },
+        adminToken,
+      );
+      assert.equal(createOutOfRangeUdp.status, 400);
+      assert.equal(createOutOfRangeUdp.payload.error_code, "UDP_PORT_NOT_ALLOWED");
+    } finally {
+      Object.assign(udpSettings, originalUdpSettings);
+      Object.assign(tcpSettings, originalTcpSettings);
+    }
+
+    const reenableUdp = await call(
+      "PATCH",
+      `/api/v1/admin/connections/${udpId}`,
+      { enabled: true },
+      adminToken,
+      { "if-match": '"2"' },
+    );
+    assert.equal(reenableUdp.status, 200);
+    assert.equal(reenableUdp.payload.enabled, true);
+
     const tcpPolicySnapshot = await call("GET", "/internal/policies/sync", undefined, undefined, {
       "x-home-tunnel-key": process.env.INTERNAL_SERVICE_KEY!,
     });
     assert.equal(
       tcpPolicySnapshot.payload.connections.some((item: any) => item.connection_id === tcpId),
+      false,
+    );
+    assert.equal(
+      tcpPolicySnapshot.payload.connections.some((item: any) => item.connection_id === udpId),
       false,
     );
 
@@ -766,7 +1003,7 @@ export async function runIntegrationSuite(): Promise<void> {
     assert.match(metricsText, /^home_tunnel_uptime_seconds \d+$/m);
     assert.match(metricsText, /^home_tunnel_users_total 2$/m);
     assert.match(metricsText, /^home_tunnel_devices_total 1$/m);
-    assert.match(metricsText, /^home_tunnel_connections_total\{enabled="true"\} 2$/m);
+    assert.match(metricsText, /^home_tunnel_connections_total\{enabled="true"\} 3$/m);
     assert.match(metricsText, /^home_tunnel_connections_total\{enabled="false"\} 0$/m);
     assert.match(metricsText, /^home_tunnel_connections_access_protected_total 0$/m);
     assert.match(metricsText, /^home_tunnel_active_sessions_total \d+$/m);

@@ -54,6 +54,7 @@ type trustProfile struct {
 	domain               string
 	allowedCustomDomains map[string]struct{}
 	allowedTCPPorts      map[int]struct{}
+	allowedUDPPorts      map[int]struct{}
 	// tlsCaSha256 是客户端写入 frps-ca.pem 后计算的文件字节 SHA-256（小写
 	// 十六进制）。为空表示服务端未下发 FRPS 证书，保持历史行为。
 	tlsCaSha256 string
@@ -77,7 +78,7 @@ func execute(args []string) error {
 	command := args[0]
 	flags := flag.NewFlagSet(command, flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
-	var configPath, server, domain, tlsCaSha256, allowedCustomDomains, allowedTCPPorts string
+	var configPath, server, domain, tlsCaSha256, allowedCustomDomains, allowedTCPPorts, allowedUDPPorts string
 	var port int
 	flags.StringVar(&configPath, "config", "", "managed configuration path")
 	flags.StringVar(&server, "server", "", "user-selected FRPS host")
@@ -85,6 +86,7 @@ func execute(args []string) error {
 	flags.StringVar(&domain, "domain", "", "user-selected tunnel domain")
 	flags.StringVar(&allowedCustomDomains, "allow-custom-domains", "", "comma-separated server-authorized custom domains")
 	flags.StringVar(&allowedTCPPorts, "allow-tcp-ports", "", "comma-separated server-authorized TCP remote ports")
+	flags.StringVar(&allowedUDPPorts, "allow-udp-ports", "", "comma-separated server-authorized UDP remote ports")
 	flags.StringVar(&tlsCaSha256, "tls-ca-sha256", "", "expected SHA-256 of the managed FRPS CA file")
 	if err := flags.Parse(args[1:]); err != nil || flags.NArg() != 0 {
 		return errors.New("受管启动参数无效")
@@ -101,12 +103,17 @@ func execute(args []string) error {
 	if err != nil {
 		return err
 	}
+	udpPorts, err := parseAllowedUDPPorts(allowedUDPPorts)
+	if err != nil {
+		return err
+	}
 	trust := trustProfile{
 		server:               strings.TrimSpace(server),
 		port:                 port,
 		domain:               strings.ToLower(strings.Trim(strings.TrimSpace(domain), ".")),
 		allowedCustomDomains: allowed,
 		allowedTCPPorts:      tcpPorts,
+		allowedUDPPorts:      udpPorts,
 		tlsCaSha256:          tlsCaSha256,
 	}
 	if err := validateTrustProfile(trust); err != nil {
@@ -255,6 +262,28 @@ func parseAllowedTCPPorts(value string) (map[int]struct{}, error) {
 		}
 		if _, exists := allowed[port]; exists {
 			return nil, errors.New("TCP 端口允许集包含重复项")
+		}
+		allowed[port] = struct{}{}
+	}
+	return allowed, nil
+}
+
+func parseAllowedUDPPorts(value string) (map[int]struct{}, error) {
+	allowed := make(map[int]struct{})
+	if strings.TrimSpace(value) == "" {
+		return allowed, nil
+	}
+	parts := strings.Split(value, ",")
+	if len(parts) > 1000 {
+		return nil, errors.New("UDP 端口允许集超过上限")
+	}
+	for _, part := range parts {
+		port, err := strconv.Atoi(strings.TrimSpace(part))
+		if err != nil || port < 1 || port > 65535 {
+			return nil, errors.New("UDP 端口允许集无效")
+		}
+		if _, exists := allowed[port]; exists {
+			return nil, errors.New("UDP 端口允许集包含重复项")
 		}
 		allowed[port] = struct{}{}
 	}
@@ -418,18 +447,20 @@ func validateTrustedCaFile(path, expectedSha256 string) error {
 	return nil
 }
 
-// validateManagedProxy 对每条连接按白名单模板比对。可变输入只有 name、
-// customDomains 里唯一的受管域名，以及本地后端：localIP+localPort（HTTP 直连）
-// 或 http2https 插件的 localAddr+hostHeaderRewrite（HTTPS 后端）。校验可变项
-// 格式后拷贝进期望配置，Complete 填充默认值，其余字段偏离模板即拒绝。
+// validateManagedProxy 对每条连接按白名单模板比对。HTTP 只允许受管域名与
+// 本地直连/受管 HTTPS 转换插件；TCP 和 UDP 只允许本地直连，且远程端口
+// 必须分别命中协议独立的控制中心允许集。校验可变项后拷贝进期望配置，
+// Complete 填充默认值，其余字段偏离模板即拒绝。
 func validateManagedProxy(proxy v1.ProxyConfigurer, user string, trust trustProfile) error {
 	switch typed := proxy.(type) {
 	case *v1.HTTPProxyConfig:
 		return validateManagedHTTPProxy(typed, user, trust)
 	case *v1.TCPProxyConfig:
 		return validateManagedTCPProxy(typed, user, trust)
+	case *v1.UDPProxyConfig:
+		return validateManagedUDPProxy(typed, user, trust)
 	default:
-		return errors.New("只允许 HTTP 或管理员授权的 TCP 类型连接")
+		return errors.New("只允许 HTTP 或管理员授权的 TCP/UDP 类型连接")
 	}
 }
 
@@ -541,6 +572,36 @@ func validateManagedTCPProxy(tcpProxy *v1.TCPProxyConfig, user string, trust tru
 	expected.Name = base.Name
 	if !reflect.DeepEqual(tcpProxy, &expected) {
 		return templateMismatchError(fmt.Sprintf("TCP 连接 %q ", base.Name), *tcpProxy, expected)
+	}
+	return nil
+}
+
+func validateManagedUDPProxy(udpProxy *v1.UDPProxyConfig, user string, trust trustProfile) error {
+	base := udpProxy.GetBaseConfig()
+	if _, allowed := trust.allowedUDPPorts[udpProxy.RemotePort]; !allowed {
+		return errors.New("UDP 远程端口不在控制中心允许集内")
+	}
+	if base.LocalPort < 1 || base.LocalPort > 65535 || !validLocalHost(base.LocalIP) {
+		return errors.New("本地 UDP 目标无效")
+	}
+	if base.Plugin.ClientPluginOptions != nil {
+		return errors.New("UDP 连接不允许客户端插件")
+	}
+	expected := v1.UDPProxyConfig{
+		ProxyBaseConfig: v1.ProxyBaseConfig{
+			Type: "udp",
+			ProxyBackend: v1.ProxyBackend{
+				LocalIP:   base.LocalIP,
+				LocalPort: base.LocalPort,
+			},
+			Transport: v1.ProxyTransport{UseEncryption: true, UseCompression: true},
+		},
+		RemotePort: udpProxy.RemotePort,
+	}
+	expected.Complete()
+	expected.Name = base.Name
+	if !reflect.DeepEqual(udpProxy, &expected) {
+		return templateMismatchError(fmt.Sprintf("UDP 连接 %q ", base.Name), *udpProxy, expected)
 	}
 	return nil
 }

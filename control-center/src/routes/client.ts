@@ -13,6 +13,8 @@ import {
 import {
   connectionInputSchema,
   connectionPatchSchema,
+  connectionRemotePort,
+  connectionTransport,
   createConnection,
   deleteConnection,
   publicConnection,
@@ -174,7 +176,7 @@ router.post(
     const actor = clientGuard(request);
     const body = parseBody(
       connectionInputSchema
-        .omit({ proxy_type: true, tcp_remote_port: true })
+        .omit({ proxy_type: true, remote_port: true, tcp_remote_port: true })
         .extend({ device_id: z.string().uuid(), proxy_type: z.literal("http").default("http") }),
       request.body,
     );
@@ -214,6 +216,7 @@ router.patch(
       connectionPatchSchema.omit({
         bandwidth_limit_bps: true,
         proxy_type: true,
+        remote_port: true,
         tcp_remote_port: true,
       }),
       request.body,
@@ -325,6 +328,12 @@ router.post(
         last_config_version: z.number().int().min(0),
         supports_optional_lease: z.boolean().optional().default(false),
         lease_expires_at: z.string().datetime().nullable().optional(),
+        supported_proxy_types: z
+          .array(z.enum(["http", "tcp", "udp"]))
+          .min(1)
+          .max(3)
+          .refine((types) => new Set(types).size === types.length, "代理类型不能重复")
+          .optional(),
       }),
       request.body,
     );
@@ -334,6 +343,9 @@ router.post(
     const device = await loadDeviceLeaseSubject(actor.userId, body.device_id);
     const targetVersion = Number(device.config_version);
     const fullSync = body.last_config_version !== targetVersion;
+    // 缺省代表尚未声明能力的旧客户端：它们认识既有 HTTP/TCP，但绝不能把
+    // 新 UDP 类型误渲染成 HTTP。连接仍返回，只强制 enabled=false。
+    const supportedProxyTypes = body.supported_proxy_types ?? ["http", "tcp"];
     let connections: ReturnType<typeof publicConnection>[] = [];
     if (fullSync) {
       const rows = await query<ConnectionRow>(
@@ -341,17 +353,27 @@ router.post(
         [body.device_id],
       );
       const domains = await customDomainsByConnection(rows.map((row) => row.id));
-      connections = rows.map((row) => ({
-        ...publicConnection(
-          {
-            ...row,
-            enabled:
-              row.enabled && ((row.proxy_type ?? "http") === "http" || config.tcpTunnels.enabled),
-          },
-          domains.get(row.id) ?? [],
-        ),
-        proxy_name: `ht_${row.id.replaceAll("-", "")}_v${Number(row.version)}`,
-      }));
+      connections = rows.map((row) => {
+        const proxyType = connectionTransport(row);
+        const remotePort = connectionRemotePort(row);
+        const deploymentEnabled =
+          proxyType === "http" ||
+          (config.transportTunnels[proxyType].enabled &&
+            remotePort !== null &&
+            Number.isInteger(remotePort) &&
+            remotePort >= config.transportTunnels[proxyType].portStart &&
+            remotePort <= config.transportTunnels[proxyType].portEnd);
+        return {
+          ...publicConnection(
+            {
+              ...row,
+              enabled: row.enabled && deploymentEnabled && supportedProxyTypes.includes(proxyType),
+            },
+            domains.get(row.id) ?? [],
+          ),
+          proxy_name: `ht_${row.id.replaceAll("-", "")}_v${Number(row.version)}`,
+        };
+      });
     }
     const renewalBoundary = Date.now() + 15 * 60 * 1000;
     const reportedExpiry = body.lease_expires_at ? Date.parse(body.lease_expires_at) : 0;

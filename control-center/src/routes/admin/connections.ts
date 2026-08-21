@@ -68,6 +68,18 @@ router.get(
     const domains = await customDomainsByConnection(rows.map((row) => row.id));
     response.json({
       items: rows.map((row) => publicConnection(row, domains.get(row.id) ?? [])),
+      transport_tunnels: {
+        tcp: {
+          enabled: config.transportTunnels.tcp.enabled,
+          port_start: config.transportTunnels.tcp.portStart,
+          port_end: config.transportTunnels.tcp.portEnd,
+        },
+        udp: {
+          enabled: config.transportTunnels.udp.enabled,
+          port_start: config.transportTunnels.udp.portStart,
+          port_end: config.transportTunnels.udp.portEnd,
+        },
+      },
       tcp_tunnels: {
         enabled: config.tcpTunnels.enabled,
         port_start: config.tcpTunnels.portStart,

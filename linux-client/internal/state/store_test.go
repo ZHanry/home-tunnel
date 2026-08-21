@@ -13,9 +13,11 @@ func TestStoreRoundTripProtectsCredentialFile(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "data", "state.json")
 	store := Store{Path: path}
 	input := model.State{
-		InstallID:        "install-12345678",
-		DeviceID:         "device-id",
-		DeviceCredential: "secret-device-credential",
+		InstallID:             "install-12345678",
+		DeviceID:              "device-id",
+		DeviceCredential:      "secret-device-credential",
+		LastConfigVersion:     7,
+		SyncCapabilityVersion: model.CurrentSyncCapabilityVersion,
 		Profile: model.Profile{
 			PublicBaseURL: "https://console.example.com/",
 			APIBaseURL:    "https://console.example.com/api/v1/",
@@ -35,8 +37,27 @@ func TestStoreRoundTripProtectsCredentialFile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if loaded.DeviceCredential != input.DeviceCredential || loaded.Profile.APIBaseURL != input.Profile.APIBaseURL {
+	if loaded.DeviceCredential != input.DeviceCredential || loaded.Profile.APIBaseURL != input.Profile.APIBaseURL ||
+		loaded.SyncCapabilityVersion != model.CurrentSyncCapabilityVersion || loaded.SyncRequestConfigVersion() != 7 {
 		t.Fatalf("round trip mismatch: %#v", loaded)
+	}
+}
+
+func TestLoadLegacyStateRequiresCapabilityFullSync(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "state.json")
+	if err := os.WriteFile(path, []byte(`{
+  "install_id": "install-12345678",
+  "last_config_version": 9,
+  "cached_connections": [{"id":"cached-udp","proxy_type":"udp","enabled":false}]
+}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	loaded, err := (Store{Path: path}).Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if loaded.SyncCapabilityVersion != 0 || loaded.SyncRequestConfigVersion() != 0 || loaded.LastConfigVersion != 9 {
+		t.Fatalf("legacy state did not preserve data while forcing a full sync: %#v", loaded)
 	}
 }
 

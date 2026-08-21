@@ -65,13 +65,260 @@ test("the earliest public database upgrades additively through every migration",
       .prepare("PRAGMA table_info(connections)")
       .all()
       .map((row) => String(row.name));
-    for (const column of ["access_policy_version", "proxy_type", "tcp_remote_port"])
+    for (const column of [
+      "access_policy_version",
+      "proxy_type",
+      "tcp_remote_port",
+      "transport_type",
+      "remote_port",
+    ])
       assert.ok(columns.includes(column));
     assert.ok(
       database
         .prepare("PRAGMA table_info(schema_migrations)")
         .all()
         .some((row) => String(row.name) === "checksum_sha256"),
+    );
+  } finally {
+    database.close();
+  }
+});
+
+test("the L4 migration copies legacy TCP and mirrors canonical TCP/UDP fields", () => {
+  const database = new DatabaseSync(":memory:", { enableForeignKeyConstraints: true });
+  try {
+    const l4Index = migrations.findIndex((name) => name.startsWith("008_"));
+    assert.ok(l4Index > 0, "008 L4 migration is present");
+    apply(database, migrations.slice(0, l4Index));
+    database.exec(`
+      INSERT INTO users(id,username,display_name,password_hash,password_state,role)
+      VALUES('user-l4','l4-user','L4 User','hash','normal','user');
+      INSERT INTO devices(id,user_id,name,install_id,fingerprint_hash,credential_hash)
+      VALUES('device-l4','user-l4','L4 Device','install-l4','fingerprint-l4','credential-l4');
+      INSERT INTO connections(
+        id,user_id,device_id,name,subdomain,local_scheme,local_host,local_port,
+        proxy_type,tcp_remote_port)
+      VALUES(
+        'connection-tcp','user-l4','device-l4','Legacy TCP','legacy-tcp','http','127.0.0.1',22,
+        'tcp',10001);
+    `);
+
+    apply(database, migrations.slice(l4Index));
+    assert.deepEqual(
+      {
+        ...database
+          .prepare(
+            `SELECT transport_type,remote_port,proxy_type,tcp_remote_port
+             FROM connections WHERE id='connection-tcp'`,
+          )
+          .get(),
+      },
+      {
+        transport_type: "tcp",
+        remote_port: 10001,
+        proxy_type: "tcp",
+        tcp_remote_port: 10001,
+      },
+    );
+
+    // 模拟数据库已升级但 v3.0 进程仍在运行：INSERT 完全不提新列。
+    database
+      .prepare(
+        `INSERT INTO connections(
+           id,user_id,device_id,name,subdomain,local_scheme,local_host,local_port,
+           proxy_type,tcp_remote_port)
+         VALUES('connection-old-writer','user-l4','device-l4','Old writer TCP','old-writer-tcp',
+                'http','127.0.0.1',22,'tcp',10002)`,
+      )
+      .run();
+    assert.deepEqual(
+      {
+        ...database
+          .prepare(
+            `SELECT transport_type,remote_port,proxy_type,tcp_remote_port
+               FROM connections WHERE id='connection-old-writer'`,
+          )
+          .get(),
+      },
+      {
+        transport_type: "tcp",
+        remote_port: 10002,
+        proxy_type: "tcp",
+        tcp_remote_port: 10002,
+      },
+    );
+
+    // 旧 writer 只更新 legacy 端口时，canonical 端口同步前进。
+    database
+      .prepare(
+        `UPDATE connections SET tcp_remote_port=10003
+          WHERE id='connection-old-writer'`,
+      )
+      .run();
+    assert.deepEqual(
+      {
+        ...database
+          .prepare(
+            `SELECT transport_type,remote_port,proxy_type,tcp_remote_port
+               FROM connections WHERE id='connection-old-writer'`,
+          )
+          .get(),
+      },
+      {
+        transport_type: "tcp",
+        remote_port: 10003,
+        proxy_type: "tcp",
+        tcp_remote_port: 10003,
+      },
+    );
+
+    // 旧 writer 把 TCP 改回 HTTP 时，新列与残留端口也必须同步清理。
+    database
+      .prepare(
+        `UPDATE connections SET proxy_type='http',tcp_remote_port=NULL
+          WHERE id='connection-old-writer'`,
+      )
+      .run();
+    assert.deepEqual(
+      {
+        ...database
+          .prepare(
+            `SELECT transport_type,remote_port,proxy_type,tcp_remote_port
+               FROM connections WHERE id='connection-old-writer'`,
+          )
+          .get(),
+      },
+      {
+        transport_type: "http",
+        remote_port: null,
+        proxy_type: "http",
+        tcp_remote_port: null,
+      },
+    );
+
+    assert.throws(() =>
+      database
+        .prepare(
+          `UPDATE connections SET proxy_type='tcp',tcp_remote_port=10001
+            WHERE id='connection-old-writer'`,
+        )
+        .run(),
+    );
+    assert.deepEqual(
+      {
+        ...database
+          .prepare(
+            `SELECT transport_type,remote_port,proxy_type,tcp_remote_port
+               FROM connections WHERE id='connection-old-writer'`,
+          )
+          .get(),
+      },
+      {
+        transport_type: "http",
+        remote_port: null,
+        proxy_type: "http",
+        tcp_remote_port: null,
+      },
+    );
+
+    // 唯一约束必须在旧 INSERT 被 canonicalize 后生效，并原子回滚整次写入。
+    assert.throws(() =>
+      database
+        .prepare(
+          `INSERT INTO connections(
+             id,user_id,device_id,name,subdomain,local_scheme,local_host,local_port,
+             proxy_type,tcp_remote_port)
+           VALUES('connection-old-conflict','user-l4','device-l4','Old writer conflict',
+                  'old-writer-conflict','http','127.0.0.1',22,'tcp',10001)`,
+        )
+        .run(),
+    );
+    assert.equal(
+      database
+        .prepare("SELECT count(*) AS count FROM connections WHERE id='connection-old-conflict'")
+        .get()?.count,
+      0,
+    );
+
+    database
+      .prepare(
+        `INSERT INTO connections(
+           id,user_id,device_id,name,subdomain,local_scheme,local_host,local_port,
+           transport_type,remote_port,proxy_type,tcp_remote_port)
+         VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`,
+      )
+      .run(
+        "connection-udp",
+        "user-l4",
+        "device-l4",
+        "UDP",
+        "udp",
+        "http",
+        "127.0.0.1",
+        53,
+        "udp",
+        10001,
+        "http",
+        10002,
+      );
+    assert.deepEqual(
+      {
+        ...database
+          .prepare(
+            `SELECT transport_type,remote_port,proxy_type,tcp_remote_port
+             FROM connections WHERE id='connection-udp'`,
+          )
+          .get(),
+      },
+      {
+        transport_type: "udp",
+        remote_port: 10001,
+        proxy_type: "tcp",
+        tcp_remote_port: null,
+      },
+    );
+    assert.throws(() =>
+      database
+        .prepare(
+          `UPDATE connections SET proxy_type='tcp',tcp_remote_port=10002
+            WHERE id='connection-udp'`,
+        )
+        .run(),
+    );
+    assert.deepEqual(
+      {
+        ...database
+          .prepare(
+            `SELECT transport_type,remote_port,proxy_type,tcp_remote_port
+               FROM connections WHERE id='connection-udp'`,
+          )
+          .get(),
+      },
+      {
+        transport_type: "udp",
+        remote_port: 10001,
+        proxy_type: "tcp",
+        tcp_remote_port: null,
+      },
+    );
+    assert.throws(() =>
+      database
+        .prepare(
+          `INSERT INTO connections(
+             id,user_id,device_id,name,subdomain,local_scheme,local_host,local_port,
+             transport_type,remote_port,proxy_type)
+           VALUES('connection-udp-duplicate','user-l4','device-l4','UDP duplicate','udp-duplicate',
+                  'http','127.0.0.1',53,'udp',10001,'tcp')`,
+        )
+        .run(),
+    );
+    assert.throws(() =>
+      database
+        .prepare(
+          `UPDATE connections SET transport_type='http',remote_port=10002
+            WHERE id='connection-udp'`,
+        )
+        .run(),
     );
   } finally {
     database.close();

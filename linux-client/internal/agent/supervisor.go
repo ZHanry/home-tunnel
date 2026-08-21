@@ -44,6 +44,7 @@ type Supervisor struct {
 	tlsCaSha256          string
 	allowedCustomDomains []string
 	allowedTCPPorts      []int
+	allowedUDPPorts      []int
 	process              *processRecord
 	stopping             bool
 	applying             bool
@@ -74,6 +75,7 @@ func New(agentPath, runtimeDir, expectedHash string, profile model.Profile, init
 	if len(connections) > 0 {
 		supervisor.allowedCustomDomains = collectCustomDomains(connections[0])
 		supervisor.allowedTCPPorts = collectTCPPorts(connections[0])
+		supervisor.allowedUDPPorts = collectUDPPorts(connections[0])
 	}
 	files, _ := filepath.Glob(filepath.Join(runtimeDir, "lkg-*.toml"))
 	sort.Slice(files, func(left, right int) bool {
@@ -119,12 +121,15 @@ func (supervisor *Supervisor) Apply(ctx context.Context, state *model.State, syn
 	keepPending := false
 	previousAllowedDomains := append([]string(nil), supervisor.allowedCustomDomains...)
 	previousAllowedTCPPorts := append([]int(nil), supervisor.allowedTCPPorts...)
+	previousAllowedUDPPorts := append([]int(nil), supervisor.allowedUDPPorts...)
 	supervisor.allowedCustomDomains = collectCustomDomains(syncResponse.Connections)
 	supervisor.allowedTCPPorts = collectTCPPorts(syncResponse.Connections)
+	supervisor.allowedUDPPorts = collectUDPPorts(syncResponse.Connections)
 	defer func() {
 		if !keepPending {
 			supervisor.allowedCustomDomains = previousAllowedDomains
 			supervisor.allowedTCPPorts = previousAllowedTCPPorts
+			supervisor.allowedUDPPorts = previousAllowedUDPPorts
 		}
 	}()
 	pending, err := supervisor.writePending(configuration)
@@ -371,18 +376,28 @@ func (supervisor *Supervisor) arguments(command, configPath string) []string {
 		arguments = append(arguments, "--allow-custom-domains", strings.Join(supervisor.allowedCustomDomains, ","))
 	}
 	if len(supervisor.allowedTCPPorts) > 0 {
-		ports := make([]string, 0, len(supervisor.allowedTCPPorts))
-		for _, port := range supervisor.allowedTCPPorts {
-			ports = append(ports, strconv.Itoa(port))
-		}
-		arguments = append(arguments, "--allow-tcp-ports", strings.Join(ports, ","))
+		arguments = append(arguments, "--allow-tcp-ports", joinPorts(supervisor.allowedTCPPorts))
+	}
+	if len(supervisor.allowedUDPPorts) > 0 {
+		arguments = append(arguments, "--allow-udp-ports", joinPorts(supervisor.allowedUDPPorts))
 	}
 	return arguments
+}
+
+func joinPorts(values []int) string {
+	ports := make([]string, 0, len(values))
+	for _, port := range values {
+		ports = append(ports, strconv.Itoa(port))
+	}
+	return strings.Join(ports, ",")
 }
 
 func collectCustomDomains(connections []model.Connection) []string {
 	seen := make(map[string]struct{})
 	for _, connection := range connections {
+		if !connection.Enabled || connection.ProxyType != "http" {
+			continue
+		}
 		for _, value := range connection.CustomDomains {
 			domain := strings.ToLower(strings.Trim(strings.TrimSpace(value), "."))
 			if domain != "" {
@@ -399,10 +414,18 @@ func collectCustomDomains(connections []model.Connection) []string {
 }
 
 func collectTCPPorts(connections []model.Connection) []int {
+	return collectRemotePorts(connections, "tcp")
+}
+
+func collectUDPPorts(connections []model.Connection) []int {
+	return collectRemotePorts(connections, "udp")
+}
+
+func collectRemotePorts(connections []model.Connection, proxyType string) []int {
 	seen := make(map[int]struct{})
 	for _, connection := range connections {
-		if connection.ProxyType == "tcp" && connection.TCPRemotePort > 0 {
-			seen[connection.TCPRemotePort] = struct{}{}
+		if connection.Enabled && connection.ProxyType == proxyType && connection.RemotePort > 0 {
+			seen[connection.RemotePort] = struct{}{}
 		}
 	}
 	result := make([]int, 0, len(seen))
@@ -510,14 +533,8 @@ func RenderConfig(profile model.Profile, syncResponse model.SyncResponse, truste
 		}
 		builder.WriteString("\n[[proxies]]\n")
 		fmt.Fprintf(&builder, "name = %s\n", toml(proxyName))
-		isTCP := connection.ProxyType == "tcp"
-		if isTCP {
-			if connection.TCPRemotePort < 1 {
-				return "", fmt.Errorf("TCP connection %q is missing remote port", connection.ID)
-			}
-			builder.WriteString("type = \"tcp\"\n")
-			fmt.Fprintf(&builder, "remotePort = %d\n", connection.TCPRemotePort)
-		} else {
+		switch connection.ProxyType {
+		case "http":
 			builder.WriteString("type = \"http\"\n")
 			domains := []string{connection.Subdomain + "." + profile.TunnelDomain}
 			domains = append(domains, connection.CustomDomains...)
@@ -526,13 +543,23 @@ func RenderConfig(profile model.Profile, syncResponse model.SyncResponse, truste
 				quotedDomains = append(quotedDomains, toml(domain))
 			}
 			fmt.Fprintf(&builder, "customDomains = [%s]\n", strings.Join(quotedDomains, ", "))
+		case "tcp", "udp":
+			if connection.RemotePort < 1 {
+				return "", fmt.Errorf("%s connection %q is missing remote port", strings.ToUpper(connection.ProxyType), connection.ID)
+			}
+			fmt.Fprintf(&builder, "type = %s\n", toml(connection.ProxyType))
+			fmt.Fprintf(&builder, "remotePort = %d\n", connection.RemotePort)
+		default:
+			return "", fmt.Errorf("connection %q has unsupported proxy type %q", connection.ID, connection.ProxyType)
 		}
 		builder.WriteString("transport.useEncryption = true\n")
 		builder.WriteString("transport.useCompression = true\n")
-		builder.WriteString("healthCheck.type = \"tcp\"\n")
-		builder.WriteString("healthCheck.timeoutSeconds = 3\n")
-		builder.WriteString("healthCheck.intervalSeconds = 10\n")
-		if !isTCP && connection.LocalScheme == "https" {
+		if connection.ProxyType != "udp" {
+			builder.WriteString("healthCheck.type = \"tcp\"\n")
+			builder.WriteString("healthCheck.timeoutSeconds = 3\n")
+			builder.WriteString("healthCheck.intervalSeconds = 10\n")
+		}
+		if connection.ProxyType == "http" && connection.LocalScheme == "https" {
 			builder.WriteString("[proxies.plugin]\n")
 			builder.WriteString("type = \"http2https\"\n")
 			fmt.Fprintf(&builder, "localAddr = %s\n", toml(fmt.Sprintf("%s:%d", connection.LocalHost, connection.LocalPort)))

@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ZHanry/home-tunnel/linux-client/internal/model"
 	statepkg "github.com/ZHanry/home-tunnel/linux-client/internal/state"
 )
 
@@ -59,11 +60,45 @@ func TestEnrollPersistsDeviceCredentialWithoutPassword(t *testing.T) {
 	if state.DeviceCredential != "persistent-device-credential" || !state.Enrolled() {
 		t.Fatalf("unexpected enrolled state: %#v", state)
 	}
+	if state.SyncCapabilityVersion != 0 || state.SyncRequestConfigVersion() != 0 {
+		t.Fatalf("new enrollment must require its first full sync: %#v", state)
+	}
 	data, err := os.ReadFile(statePath)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if strings.Contains(string(data), "account-password") || strings.Contains(string(data), "access-token") || strings.Contains(string(data), "refresh-token") {
 		t.Fatal("state persisted an account password or session token")
+	}
+}
+
+func TestSyncCapabilityUpgradeForcesAndRecordsFullSync(t *testing.T) {
+	state := model.State{
+		LastConfigVersion:     7,
+		SyncCapabilityVersion: 0,
+		CachedConnections: []model.Connection{{
+			ID: "cached-udp", ProxyType: "udp", Enabled: false,
+		}},
+	}
+	if got := state.SyncRequestConfigVersion(); got != 0 {
+		t.Fatalf("legacy state requested config version %d, want 0", got)
+	}
+
+	applyFullSyncState(&state, model.SyncResponse{FullSync: false, TargetConfigVersion: 7})
+	if state.SyncCapabilityVersion != 0 || state.LastConfigVersion != 7 {
+		t.Fatalf("non-full sync advanced capability state: %#v", state)
+	}
+
+	replacement := []model.Connection{{ID: "enabled-udp", ProxyType: "udp", Enabled: true}}
+	applyFullSyncState(&state, model.SyncResponse{
+		FullSync: true, TargetConfigVersion: 8, Connections: replacement,
+	})
+	if state.SyncCapabilityVersion != model.CurrentSyncCapabilityVersion ||
+		state.LastConfigVersion != 8 || len(state.CachedConnections) != 1 ||
+		state.CachedConnections[0].ID != "enabled-udp" {
+		t.Fatalf("full sync did not replace and advance capability state: %#v", state)
+	}
+	if got := state.SyncRequestConfigVersion(); got != 8 {
+		t.Fatalf("upgraded state requested config version %d, want 8", got)
 	}
 }

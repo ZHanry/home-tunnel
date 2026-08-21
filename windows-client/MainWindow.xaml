@@ -203,7 +203,7 @@
               <StackPanel Orientation="Horizontal">
                 <TextBlock Text="Home Tunnel" Foreground="{DynamicResource SidebarTextBrush}"
                            FontWeight="Bold" FontSize="15" />
-                <TextBlock x:Name="MainClientVersionText" Text="v3.0.0"
+                <TextBlock x:Name="MainClientVersionText" Text="v3.1.0"
                            Foreground="{DynamicResource PrimaryBrush}" FontSize="11" Margin="7,2,0,0" FontWeight="SemiBold" />
               </StackPanel>
               <TextBlock x:Name="AccountText" Foreground="{DynamicResource SidebarMutedBrush}" FontSize="11"
@@ -398,7 +398,7 @@
                       <!-- Public Address (Level 1) -->
                       <TextBlock Style="{StaticResource MonoTextStyle}" Foreground="{DynamicResource PrimaryBrush}"
                                  FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
-                                 ToolTip="{Binding PublicUrl}" Text="{Binding PublicUrl}" Margin="0,6,0,0" />
+                                 ToolTip="{Binding PublicDisplayEndpoint}" Text="{Binding PublicDisplayEndpoint}" Margin="0,6,0,0" />
 
                       <!-- Local Target Address (Level 2) -->
                       <TextBlock Foreground="{DynamicResource MutedBrush}" FontSize="11"

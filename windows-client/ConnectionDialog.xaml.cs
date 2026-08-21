@@ -56,14 +56,30 @@ public partial class ConnectionDialog : Window
         }
         else
         {
+            var raw = IsRawProxy(_snapshot.ProxyType);
             DialogTitleText.Text = "编辑连接";
-            DialogSubtitleText.Text = "修改连接配置与本地服务目标";
+            DialogSubtitleText.Text = _snapshot.ProxyType == "udp"
+                ? "修改 UDP 本地目标；保存后请以隧道运行状态验证可达性"
+                : raw
+                    ? "修改端口隧道的本地服务目标"
+                    : "修改连接配置与本地服务目标";
             HeaderIconPath.Data = (System.Windows.Media.Geometry)FindResource("IconEdit");
             HeaderIconBorder.Background = (System.Windows.Media.Brush)FindResource("SurfaceMutedBrush");
             HeaderIconBorder.BorderBrush = (System.Windows.Media.Brush)FindResource("BorderStrongBrush");
             ConnectionNameBox.Text = _snapshot.Name;
             SubdomainBox.Text = _snapshot.Subdomain;
-            SchemeBox.SelectedIndex = _snapshot.LocalScheme == "https" ? 1 : 0;
+            if (raw)
+            {
+                SubdomainLabel.Content = "连接标识";
+                SchemeBox.Items.Clear();
+                SchemeBox.Items.Add(new ComboBoxItem { Content = _snapshot.ProxyType });
+                SchemeBox.SelectedIndex = 0;
+                SchemeBox.IsEnabled = false;
+            }
+            else
+            {
+                SchemeBox.SelectedIndex = _snapshot.LocalScheme == "https" ? 1 : 0;
+            }
             EnabledBox.IsChecked = _snapshot.Enabled;
             LocalHostBox.Text = _snapshot.LocalHost;
             LocalPortBox.Text = _snapshot.LocalPort.ToString(CultureInfo.InvariantCulture);
@@ -92,7 +108,8 @@ public partial class ConnectionDialog : Window
         SetBusy(true, "正在验证本地目标…");
         try
         {
-            if (!await ProbeLocalAsync(value.LocalHost, value.LocalPort) &&
+            if (ShouldProbeLocalTarget(value.ProxyType) &&
+                !await ProbeLocalAsync(value.LocalHost, value.LocalPort) &&
                 !BrandDialog.Confirm(
                     this,
                     "本地目标暂不可达",
@@ -100,7 +117,7 @@ public partial class ConnectionDialog : Window
                     "仍然保存",
                     BrandDialogTone.Warning,
                     "返回修改",
-                    $"{value.LocalScheme}://{value.LocalHost}:{value.LocalPort}"))
+                    $"{(IsRawProxy(value.ProxyType) ? value.ProxyType : value.LocalScheme)}://{value.LocalHost}:{value.LocalPort}"))
                 return;
 
             SetBusy(true, "正在保存连接…");
@@ -133,9 +150,7 @@ public partial class ConnectionDialog : Window
                 "删除连接",
                 BrandDialogTone.Danger,
                 "取消",
-                string.IsNullOrWhiteSpace(_snapshot.PublicUrl)
-                    ? $"https://{_snapshot.Subdomain}.{_tunnelDomain}"
-                    : _snapshot.PublicUrl))
+                PublicAddressFor(_snapshot, _snapshot.Subdomain, _tunnelDomain)))
             return;
 
         ShowDialogError("");
@@ -184,14 +199,23 @@ public partial class ConnectionDialog : Window
             return null;
         }
 
-        return new TunnelConnection
+        var proxyType = _snapshot?.ProxyType ?? "http";
+        var value = new TunnelConnection
         {
             Id = _snapshot?.Id ?? "",
             DeviceId = _snapshot?.DeviceId ?? "",
             Name = name,
             Subdomain = subdomain,
-            PublicUrl = _snapshot?.PublicUrl ?? $"https://{subdomain}.{_tunnelDomain}",
-            LocalScheme = ((ComboBoxItem)SchemeBox.SelectedItem).Content?.ToString() ?? "http",
+            ProxyType = proxyType,
+            RemotePort = _snapshot?.RemotePort,
+            PublicUrl = proxyType == "http"
+                ? _snapshot?.PublicUrl ?? $"https://{subdomain}.{_tunnelDomain}"
+                : _snapshot?.PublicUrl,
+            PublicEndpoint = _snapshot?.PublicEndpoint,
+            CustomDomains = _snapshot?.CustomDomains.ToList() ?? [],
+            LocalScheme = IsRawProxy(proxyType)
+                ? _snapshot?.LocalScheme ?? "http"
+                : ((ComboBoxItem)SchemeBox.SelectedItem).Content?.ToString() ?? "http",
             LocalHost = localHost,
             LocalPort = port,
             Enabled = EnabledBox.IsChecked == true,
@@ -201,6 +225,7 @@ public partial class ConnectionDialog : Window
             LastErrorCode = _snapshot?.LastErrorCode,
             ProxyName = _snapshot?.ProxyName,
         };
+        return value;
     }
 
     private void ShowError(string message, System.Windows.Controls.TextBox field, bool selectAll = false)
@@ -234,7 +259,7 @@ public partial class ConnectionDialog : Window
     private void UpdatePublicAddressHint()
     {
         var subdomain = SubdomainBox.Text.Trim().ToLowerInvariant();
-        PublicAddressHint.Text = $"https://{(subdomain.Length == 0 ? "<子域>" : subdomain)}.{_tunnelDomain}";
+        PublicAddressHint.Text = PublicAddressFor(_snapshot, subdomain, _tunnelDomain);
     }
 
     private void RequestClose()
@@ -299,6 +324,24 @@ public partial class ConnectionDialog : Window
         }
     }
 
+    internal static bool IsRawProxy(string? proxyType) => proxyType is "tcp" or "udp";
+
+    internal static bool ShouldProbeLocalTarget(string? proxyType) => proxyType != "udp";
+
+    internal static string PublicAddressFor(
+        TunnelConnection? snapshot,
+        string subdomain,
+        string tunnelDomain)
+    {
+        if (snapshot is not null && IsRawProxy(snapshot.ProxyType))
+        {
+            if (!string.IsNullOrWhiteSpace(snapshot.PublicDisplayEndpoint))
+                return snapshot.PublicDisplayEndpoint;
+            return $"{snapshot.ProxyType}://<public-host>:{snapshot.RemotePort?.ToString(CultureInfo.InvariantCulture) ?? "<port>"}";
+        }
+        return $"https://{(subdomain.Length == 0 ? "<子域>" : subdomain)}.{tunnelDomain}";
+    }
+
     private static string Friendly(Exception error) => error switch
     {
         ApiException api => api.Message,
@@ -316,13 +359,17 @@ public partial class ConnectionDialog : Window
             : ProductConfiguration.TunnelDomain;
     }
 
-    private static TunnelConnection Clone(TunnelConnection source) => new()
+    internal static TunnelConnection Clone(TunnelConnection source) => new()
     {
         Id = source.Id,
         DeviceId = source.DeviceId,
         Name = source.Name,
         Subdomain = source.Subdomain,
+        ProxyType = source.ProxyType,
+        RemotePort = source.RemotePort,
         PublicUrl = source.PublicUrl,
+        PublicEndpoint = source.PublicEndpoint,
+        CustomDomains = source.CustomDomains.ToList(),
         LocalScheme = source.LocalScheme,
         LocalHost = source.LocalHost,
         LocalPort = source.LocalPort,

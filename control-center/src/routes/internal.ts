@@ -32,7 +32,7 @@ router.get(
       ? await one<{ ok: number }>(
           `SELECT 1 AS ok FROM connections c
              JOIN users u ON u.id=c.user_id JOIN devices d ON d.id=c.device_id
-            WHERE lower(c.subdomain)=lower(?) AND c.proxy_type='http' AND c.deleted_at IS NULL AND c.enabled=true
+            WHERE lower(c.subdomain)=lower(?) AND c.transport_type='http' AND c.deleted_at IS NULL AND c.enabled=true
               AND u.status='active' AND u.quota_suspended_at IS NULL AND d.status='active' LIMIT 1`,
           [subdomain],
         )
@@ -40,7 +40,7 @@ router.get(
           `SELECT 1 AS ok FROM custom_domains cd JOIN connections c ON c.id=cd.connection_id
              JOIN users u ON u.id=c.user_id JOIN devices d ON d.id=c.device_id
             WHERE lower(cd.domain)=lower(?) AND cd.status='verified'
-              AND c.proxy_type='http' AND c.deleted_at IS NULL AND c.enabled=true AND u.status='active'
+              AND c.transport_type='http' AND c.deleted_at IS NULL AND c.enabled=true AND u.status='active'
               AND u.quota_suspended_at IS NULL AND d.status='active' LIMIT 1`,
           [domain],
         );
@@ -140,7 +140,7 @@ router.get(
          FROM connections c JOIN users u ON u.id=c.user_id JOIN devices d ON d.id=c.device_id
          LEFT JOIN traffic_policies cp ON cp.scope_type='connection' AND cp.scope_id=c.id
          LEFT JOIN traffic_policies up ON up.scope_type='user' AND up.scope_id=u.id
-        WHERE c.deleted_at IS NULL AND c.proxy_type='http'`,
+        WHERE c.deleted_at IS NULL AND c.transport_type='http'`,
     );
     response.json({
       revision: revisionNumber,
@@ -431,8 +431,21 @@ router.post(
       const deviceId = user.deviceId;
       const parsed = parseManagedProxyName(proxyName, deviceId);
       const activeSubject = await activePluginSubject(user);
-      const proxyType = text(content.proxy_type ?? content.proxyType).toLowerCase();
-      if (!parsed || !activeSubject || (proxyType !== "http" && proxyType !== "tcp")) {
+      const hasSnakeProxyType = Object.hasOwn(content, "proxy_type");
+      const hasCamelProxyType = Object.hasOwn(content, "proxyType");
+      const proxyType = text(
+        hasSnakeProxyType ? content.proxy_type : content.proxyType,
+      ).toLowerCase();
+      const proxyTypeAliasesAgree =
+        !hasSnakeProxyType ||
+        !hasCamelProxyType ||
+        text(content.proxy_type).toLowerCase() === text(content.proxyType).toLowerCase();
+      if (
+        !parsed ||
+        !activeSubject ||
+        !proxyTypeAliasesAgree ||
+        (proxyType !== "http" && proxyType !== "tcp" && proxyType !== "udp")
+      ) {
         pluginReject(response, "PROXY_NOT_ALLOWED");
         return;
       }
@@ -443,13 +456,13 @@ router.post(
         version: string;
         subdomain: string;
         custom_domains: string;
-        proxy_type: string;
-        tcp_remote_port: string | null;
+        transport_type: string;
+        remote_port: string | null;
         enabled: boolean;
         user_status: string;
         device_status: string;
       }>(
-        `SELECT c.id,c.user_id,c.device_id,c.version,c.subdomain,c.enabled,c.proxy_type,c.tcp_remote_port,
+        `SELECT c.id,c.user_id,c.device_id,c.version,c.subdomain,c.enabled,c.transport_type,c.remote_port,
                 (SELECT json_group_array(cd.domain) FROM custom_domains cd
                   WHERE cd.connection_id=c.id AND cd.status='verified') AS custom_domains,
                 u.status AS user_status,d.status AS device_status
@@ -457,10 +470,13 @@ router.post(
           WHERE c.id=? AND c.deleted_at IS NULL`,
         [parsed.connectionId],
       );
-      const requestedSubdomain = text(content.subdomain).toLowerCase();
-      const customDomains = Array.isArray(content.custom_domains ?? content.customDomains)
-        ? ((content.custom_domains ?? content.customDomains) as unknown[])
-        : [];
+      const rawSubdomain = content.subdomain;
+      const requestedSubdomain = text(rawSubdomain).toLowerCase();
+      const rawCustomDomains = content.custom_domains ?? content.customDomains;
+      const customDomains = Array.isArray(rawCustomDomains) ? rawCustomDomains : [];
+      const proxyAddressFieldsValid =
+        (rawSubdomain == null || typeof rawSubdomain === "string") &&
+        (rawCustomDomains == null || Array.isArray(rawCustomDomains));
       let allowedDomains: string[] = [];
       try {
         const parsedDomains = JSON.parse(connection?.custom_domains ?? "[]") as unknown;
@@ -481,19 +497,33 @@ router.post(
           (domain) => domain === managedDomain || allowedDomains.includes(domain),
         ) &&
         new Set(requestedDomains).size === requestedDomains.length;
-      const remotePort = Number(content.remote_port ?? content.remotePort ?? 0);
-      const tcpAllowed =
-        proxyType === "tcp" &&
-        config.tcpTunnels.enabled &&
-        connection?.proxy_type === "tcp" &&
+      const hasSnakeRemotePort = Object.hasOwn(content, "remote_port");
+      const hasCamelRemotePort = Object.hasOwn(content, "remotePort");
+      const rawRemotePort = hasSnakeRemotePort ? content.remote_port : content.remotePort;
+      const remotePort = typeof rawRemotePort === "number" ? rawRemotePort : null;
+      const remotePortAliasesAgree =
+        !hasSnakeRemotePort || !hasCamelRemotePort || content.remote_port === content.remotePort;
+      const transportSettings =
+        proxyType === "tcp" || proxyType === "udp" ? config.transportTunnels[proxyType] : null;
+      const rawAllowed =
+        transportSettings !== null &&
+        proxyAddressFieldsValid &&
+        remotePortAliasesAgree &&
+        transportSettings.enabled &&
+        connection?.transport_type === proxyType &&
         Number.isInteger(remotePort) &&
-        remotePort >= config.tcpTunnels.portStart &&
-        remotePort <= config.tcpTunnels.portEnd &&
-        remotePort === Number(connection.tcp_remote_port) &&
+        remotePort! >= transportSettings.portStart &&
+        remotePort! <= transportSettings.portEnd &&
+        remotePort === Number(connection.remote_port) &&
         customDomains.length === 0 &&
         requestedSubdomain === "";
       const httpAllowed =
-        proxyType === "http" && connection?.proxy_type === "http" && customDomainAllowed;
+        proxyType === "http" &&
+        proxyAddressFieldsValid &&
+        remotePortAliasesAgree &&
+        connection?.transport_type === "http" &&
+        (rawRemotePort == null || rawRemotePort === 0) &&
+        customDomainAllowed;
       if (
         !connection ||
         connection.user_id !== activeSubject.lease.user_id ||
@@ -503,7 +533,7 @@ router.post(
         connection.user_status !== "active" ||
         connection.device_status !== "active" ||
         (requestedSubdomain && requestedSubdomain !== connection.subdomain) ||
-        !(httpAllowed || tcpAllowed)
+        !(httpAllowed || rawAllowed)
       ) {
         pluginReject(
           response,

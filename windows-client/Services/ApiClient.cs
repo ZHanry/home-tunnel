@@ -86,16 +86,19 @@ public sealed class ApiClient : IDisposable
         string deviceId,
         TunnelConnection value,
         CancellationToken cancellationToken) =>
-        SendJsonAsync<TunnelConnection>(HttpMethod.Post, "client/connections", new
-        {
-            device_id = deviceId,
-            name = value.Name,
-            subdomain = value.Subdomain,
-            local_scheme = value.LocalScheme,
-            local_host = value.LocalHost,
-            local_port = value.LocalPort,
-            enabled = value.Enabled,
-        }, cancellationToken);
+        SendJsonAsync<TunnelConnection>(HttpMethod.Post, "client/connections", CreateConnectionPayload(deviceId, value), cancellationToken);
+
+    internal static object CreateConnectionPayload(string deviceId, TunnelConnection value) => new
+    {
+        device_id = deviceId,
+        name = value.Name,
+        subdomain = value.Subdomain,
+        local_scheme = value.LocalScheme,
+        local_host = value.LocalHost,
+        local_port = value.LocalPort,
+        enabled = value.Enabled,
+        proxy_type = "http",
+    };
 
     public Task<TunnelConnection> UpdateConnectionAsync(TunnelConnection value, CancellationToken cancellationToken) =>
         SendJsonAsync<TunnelConnection>(HttpMethod.Patch, $"client/connections/{Uri.EscapeDataString(value.Id)}", new
@@ -121,13 +124,16 @@ public sealed class ApiClient : IDisposable
         long lastConfigVersion,
         DateTimeOffset? leaseExpiresAt,
         CancellationToken cancellationToken) =>
-        SendJsonAsync<SyncResponse>(HttpMethod.Post, "client/sync", new
+        SendJsonAsync<SyncResponse>(HttpMethod.Post, "client/sync", SyncPayload(deviceId, lastConfigVersion, leaseExpiresAt), cancellationToken);
+
+    internal static object SyncPayload(string deviceId, long lastConfigVersion, DateTimeOffset? leaseExpiresAt) => new
         {
             device_id = deviceId,
             last_config_version = lastConfigVersion,
             supports_optional_lease = true,
             lease_expires_at = leaseExpiresAt.HasValue ? FormatUtcTimestamp(leaseExpiresAt.Value) : null,
-        }, cancellationToken);
+            supported_proxy_types = new[] { "http", "tcp", "udp" },
+        };
 
     public async Task ListenForConfigurationChangesAsync(
         string deviceId,
