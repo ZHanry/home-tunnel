@@ -396,18 +396,18 @@ def tcp_echo_denied(host: str, port: int, attempts: int = 15) -> None:
     raise RuntimeError("Disabled TCP tunnel continued to accept byte-for-byte echo connections")
 
 
-def tcp_listener_denied(host: str, port: int, attempts: int = 120) -> None:
+def rtsp_interleaved_denied(host: str, port: int, attempts: int = 75) -> None:
     consecutive_failures = 0
     for _ in range(attempts):
         try:
-            with socket.create_connection((host, port), timeout=1):
-                consecutive_failures = 0
-        except (ConnectionError, OSError, TimeoutError):
+            rtsp_interleaved_roundtrip(host, port, attempts=1)
+            consecutive_failures = 0
+        except RuntimeError:
             consecutive_failures += 1
             if consecutive_failures >= 3:
                 return
-        time.sleep(1)
-    raise RuntimeError("Revoked device retained an active FRPS TCP listener past the Ping timeout")
+        time.sleep(0.5)
+    raise RuntimeError("Revoked device continued to pass RTSP application traffic")
 
 
 def udp_echo_denied(host: str, port: int, attempts: int = 12) -> None:
@@ -1116,7 +1116,7 @@ try {
                 token=admin_token,
                 expected=(204,),
             )
-            tcp_listener_denied(raw_connect_host, 11002)
+            rtsp_interleaved_denied(raw_connect_host, 11002)
 
             health = api("GET", "/api/v1/admin/system/health", token=admin_token)
             unhealthy = [item.get("component") for item in health["components"] if item.get("status") == "unhealthy"]

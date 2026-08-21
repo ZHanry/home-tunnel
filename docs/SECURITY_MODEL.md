@@ -14,7 +14,7 @@ Home Tunnel is intended for personal and small trusted-user deployments. It redu
 - **FRPS → control center authorization:** `Login`, `NewProxy`, `CloseProxy`,
   and `Ping` are authenticated through the authorization plugin. Each Ping
   rechecks lease expiry plus user, device, token, and configuration status.
-  Revocation therefore closes raw listeners within the FRPS heartbeat window
+  Revocation therefore stops raw forwarding within the FRPS heartbeat window
   (about 90 seconds). A control-center/plugin outage lasting past that window
   also fails raw tunnels closed; this is an intentional security tradeoff.
 - **Caddy → gateway/control center:** clear HTTP is carried on isolated Docker networks on the same host.

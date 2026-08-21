@@ -37,8 +37,8 @@ Each script downloads the pinned FRP source archive, verifies its SHA-256, build
 On the target Linux machine:
 
 ```sh
-tar -xzf home-tunnel-linux-3.1.0-rc.1-amd64.tar.gz
-cd home-tunnel-linux-3.1.0-rc.1-amd64
+tar -xzf home-tunnel-linux-3.1.0-rc.2-amd64.tar.gz
+cd home-tunnel-linux-3.1.0-rc.2-amd64
 sudo ./install.sh
 sudo home-tunnel-enroll
 ```
@@ -52,8 +52,8 @@ The permanent device credential and cached configuration are stored in `/var/lib
 On the target Mac:
 
 ```sh
-tar -xzf home-tunnel-macos-3.1.0-rc.1-arm64.tar.gz
-cd home-tunnel-macos-3.1.0-rc.1-arm64
+tar -xzf home-tunnel-macos-3.1.0-rc.2-arm64.tar.gz
+cd home-tunnel-macos-3.1.0-rc.2-arm64
 sudo ./install.sh
 sudo home-tunnel-enroll
 ```

@@ -221,8 +221,8 @@ connection while 3.1 is still running, then restore the pre-`008` database
 backup together with the old images. Do not let a 3.0 writer reinterpret a UDP
 compatibility mirror as TCP; schema `008` rejects that protocol drift.
 FRPS authorizes `Ping` as well as login and proxy creation. Every heartbeat
-rechecks the lease and subject status, so deleting/revoking a device removes
-raw listeners within roughly the 90-second heartbeat window. A control-center
+rechecks the lease and subject status, so deleting/revoking a device stops raw
+forwarding within roughly the 90-second heartbeat window. A control-center
 or authorization-plugin outage that lasts beyond the same window also stops
 raw tunnels; restore the control plane and clients reconnect with valid leases.
 Use the host firewall or restart FRPS when an immediate cutoff is required.

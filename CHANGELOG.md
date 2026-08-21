@@ -40,7 +40,7 @@ All notable changes to Home Tunnel are documented in this file. The project foll
   cloud firewall and to assess reflection/amplification risk before enabling a
   public port.
 - Enabled FRPS `Ping` authorization so lease expiry and user/device/token/
-  configuration revocation remove raw listeners within the roughly 90-second
+  configuration revocation stop raw forwarding within the roughly 90-second
   heartbeat window; a prolonged control-plane outage intentionally fails raw
   tunnels closed.
 

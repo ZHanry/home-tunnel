@@ -1,6 +1,6 @@
 param(
     [ValidatePattern('^[0-9]+\.[0-9]+\.[0-9]+(?:-rc\.[0-9]+)?$')]
-    [string]$Version = "3.1.0-rc.1",
+    [string]$Version = "3.1.0-rc.2",
     [ValidateSet("amd64", "arm64")]
     [string]$Architecture = "arm64"
 )
@@ -24,10 +24,10 @@ try {
     New-Item -ItemType Directory -Path $testRoot, (Join-Path $testRoot "secrets"), (Join-Path $testRoot "status"), (Join-Path $testRoot "downloads") | Out-Null
     $composeSource = Get-Content -Raw -LiteralPath (Join-Path $workspace "deploy\compose.yaml")
     $composeSource = $composeSource.Replace(
-        "home-tunnel/control-center:3.1.0-rc.1-arm64",
+        "home-tunnel/control-center:3.1.0-rc.2-arm64",
         "home-tunnel/control-center:$Version-$Architecture"
     ).Replace(
-        "home-tunnel/traffic-gateway:3.1.0-rc.1-arm64",
+        "home-tunnel/traffic-gateway:3.1.0-rc.2-arm64",
         "home-tunnel/traffic-gateway:$Version-$Architecture"
     )
     [IO.File]::WriteAllText(
