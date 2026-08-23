@@ -9,7 +9,7 @@ Home Tunnel is a self-hosted tunneling platform for personal and family services
 
 ![The real Home Tunnel management dashboard showing connections, traffic, and component health](docs/site/assets/admin-dashboard.jpg)
 
-> `v3.2.0` is promoted from the same commit and immutable artifact set as `v3.2.0-rc.2`. The Linux server/client are Stable, macOS headless is Beta, and the Windows x64 plus Android 8.0+ `arm64-v8a` clients are Experimental.
+> `v3.2.0` is promoted from the same commit and immutable artifact set as `v3.2.0-rc.3`. The Linux server/client are Stable, macOS headless is Beta, and the Windows x64 plus Android 8.0+ `arm64-v8a` clients are Experimental.
 
 ## Quick Start
 

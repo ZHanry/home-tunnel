@@ -609,22 +609,24 @@ jobs:
               repository_revision:$revision,build_identity:$build_identity,
               validations:["unit_tests","lint","apk_signature_v2","aab_signature","bundletool_validate","package_identity","version","arm64_abi","embedded_agent_hash"],
               physical_arm64_install:"not_run_in_github_actions"}' > "$EVIDENCE"
-      - name: Generate Android APK SPDX SBOM
-        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+      - id: android-syft
+        name: Install the pinned Android SBOM scanner
+        uses: anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
         with:
-          path: ${{ steps.android.outputs.apk }}
-          format: spdx-json
-          output-file: ${{ steps.android.outputs.apk-sbom }}
-          upload-artifact: false
-          upload-release-assets: false
-      - name: Generate Android AAB SPDX SBOM
-        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
-        with:
-          path: ${{ steps.android.outputs.aab }}
-          format: spdx-json
-          output-file: ${{ steps.android.outputs.aab-sbom }}
-          upload-artifact: false
-          upload-release-assets: false
+          syft-version: v1.42.3
+      - name: Generate per-package Android SPDX SBOMs
+        shell: bash
+        env:
+          SYFT: ${{ steps.android-syft.outputs.cmd }}
+          APK: ${{ steps.android.outputs.apk }}
+          AAB: ${{ steps.android.outputs.aab }}
+          APK_SBOM: ${{ steps.android.outputs.apk-sbom }}
+          AAB_SBOM: ${{ steps.android.outputs.aab-sbom }}
+        run: |
+          set -euo pipefail
+          "$SYFT" scan "file:$APK" -o spdx-json > "$APK_SBOM"
+          "$SYFT" scan "file:$AAB" -o spdx-json > "$AAB_SBOM"
+          test -s "$APK_SBOM" && test -s "$AAB_SBOM"
       - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
       - name: Keyless-sign the Android package and evidence set
         shell: bash
