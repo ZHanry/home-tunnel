@@ -548,7 +548,11 @@ jobs:
           apk_signature=$($apksigner verify --verbose --print-certs "$APK")
           printf '%s\n' "$apk_signature"
           grep -Fq 'Verified using v2 scheme (APK Signature Scheme v2): true' <<< "$apk_signature"
-          apk_cert=$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' <<< "$apk_signature" | tr -d '[:space:]:' | tr 'A-F' 'a-f')
+          apk_cert=$(sed -nE \
+            -e 's/^Signer #1 certificate SHA-256 digest: //p' \
+            -e 's/^V[0-9.]+ Signer: certificate SHA-256 digest: //p' \
+            <<< "$apk_signature" | tr 'A-F' 'a-f' | sort -u | tr -d '[:space:]:' )
+          [[ "$apk_cert" =~ ^[0-9a-f]{64}$ ]]
           test "$apk_cert" = "$expected_cert"
           test "$($apkanalyzer manifest application-id "$APK")" = io.github.zhanry.hometunnel
           test "$($apkanalyzer manifest version-name "$APK")" = "$VERSION"
@@ -1142,7 +1146,11 @@ jobs:
           test -x "$apksigner" && test -x "$apkanalyzer"
           android_apk_signature=$($apksigner verify --verbose --print-certs "$android_apk")
           grep -Fq 'Verified using v2 scheme (APK Signature Scheme v2): true' <<< "$android_apk_signature"
-          android_apk_cert=$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' <<< "$android_apk_signature" | tr -d '[:space:]:' | tr 'A-F' 'a-f')
+          android_apk_cert=$(sed -nE \
+            -e 's/^Signer #1 certificate SHA-256 digest: //p' \
+            -e 's/^V[0-9.]+ Signer: certificate SHA-256 digest: //p' \
+            <<< "$android_apk_signature" | tr 'A-F' 'a-f' | sort -u | tr -d '[:space:]:' )
+          [[ "$android_apk_cert" =~ ^[0-9a-f]{64}$ ]]
           test "$android_apk_cert" = "$expected_android_cert"
           test "$($apkanalyzer manifest application-id "$android_apk")" = io.github.zhanry.hometunnel
           test "$($apkanalyzer manifest version-name "$android_apk")" = "$BASE_VERSION"
