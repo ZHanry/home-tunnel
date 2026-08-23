@@ -112,9 +112,11 @@ android {
         abortOnError = true
         checkReleaseBuilds = true
         warningsAsErrors = true
-        // The GitHub Experimental APK is intentionally arm64-only; local/CI
-        // builds can additionally request x86_64 for emulator coverage.
-        disable += setOf("GradleDependency", "ChromeOsAbiSupport")
+        // The first GitHub Experimental APK intentionally targets API 35 and
+        // arm64 only. Android 16 target behavior and ChromeOS are not claimed
+        // until their physical-device matrices are complete; all other lint
+        // warnings remain release-blocking.
+        disable += setOf("GradleDependency", "ChromeOsAbiSupport", "OldTargetApi")
     }
 }
 
