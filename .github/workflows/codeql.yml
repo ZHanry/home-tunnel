@@ -149,7 +149,9 @@ jobs:
       - if: matrix.target == 'android-client'
         name: Build Android client under CodeQL
         working-directory: android-client
-        run: ./gradlew --no-daemon test lint assembleDebug
+        # CodeQL must observe a real Kotlin/Java compilation. A fully restored
+        # Gradle build cache can otherwise make the manual-build database empty.
+        run: ./gradlew --no-daemon clean test lint assembleDebug --no-build-cache --rerun-tasks
       - uses: github/codeql-action/analyze@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
         with:
           category: "/language:${{ matrix.language }}/target:${{ matrix.target || 'default' }}"
