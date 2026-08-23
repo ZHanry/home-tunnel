@@ -1,4 +1,4 @@
-import { api, refreshSession } from "./modules/api.js?v=3.1.0-modules1";
+import { api, refreshSession } from "./modules/api.js?v=3.2.0-modules1";
 import {
   componentLabel,
   configState,
@@ -7,10 +7,10 @@ import {
   formatBytes,
   formatDate,
   statusBadge,
-} from "./modules/format.js?v=3.1.0-modules1";
-import { localeTag, updateDocumentMetadata } from "./modules/locale.js?v=3.1.0-modules1";
-import { connectRealtime, disconnectRealtime } from "./modules/realtime.js?v=3.1.0-modules1";
-import { state } from "./modules/state.js?v=3.1.0-modules1";
+} from "./modules/format.js?v=3.2.0-modules1";
+import { localeTag, updateDocumentMetadata } from "./modules/locale.js?v=3.2.0-modules1";
+import { connectRealtime, disconnectRealtime } from "./modules/realtime.js?v=3.2.0-modules1";
+import { state } from "./modules/state.js?v=3.2.0-modules1";
 
 const landingScreen = document.querySelector("#landing-screen");
 const authScreen = document.querySelector("#auth-screen");

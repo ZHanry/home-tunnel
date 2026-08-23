@@ -10,6 +10,7 @@ Requirements:
 - .NET 10 LTS SDK on Windows for the desktop client
 - Docker with Compose for integration and container checks
 - Go 1.26.6 for the Linux client; `windres` is additionally required when rebuilding the managed Windows Agent
+- JDK 17 plus the Android SDK/NDK versions pinned by `android-client/` for the Experimental mobile client
 
 Install and verify the TypeScript services:
 
@@ -53,6 +54,20 @@ govulncheck ./...
 go build ./cmd/home-tunnel-client
 ```
 
+Verify the Android client without a release signing key:
+
+```sh
+cd android-client
+ANDROID_AGENT_ABIS=arm64-v8a,x86_64 ./scripts/build-agent.sh
+./gradlew --no-daemon test lint assembleDebug
+cd ..
+test -z "$(git ls-files -- '*.apk' '*.aab' '*.aar' '*.jks' '*.keystore' '*.so')"
+```
+
+Pull requests and ordinary `main` CI never receive the persistent Android
+release key. Do not add debug-signing fallback to the release path, print
+keystore secrets, or commit APK/AAB/AAR/SO/keystore output.
+
 ## Pull requests
 
 1. Create a branch from `main` and keep the change scoped to one concern.
@@ -61,6 +76,6 @@ go build ./cmd/home-tunnel-client
 4. Run the relevant checks locally and describe the results in the pull request.
 5. Update `CHANGELOG.md` when a user-visible behavior or compatibility boundary changes.
 
-Changes to authentication, lease validation, FRPS authorization, update trust, Caddy routing or secret handling require an explicit security rationale in the pull request.
+Changes to authentication, lease validation, FRPS authorization, update trust, Android foreground-service or native-Agent boundaries, signing, Caddy routing, or secret handling require an explicit security rationale in the pull request.
 
 By submitting a contribution, you agree that it is licensed under the Apache License 2.0 used by this repository.

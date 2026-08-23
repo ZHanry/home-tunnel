@@ -22,6 +22,21 @@ deploy/frps/frps
 *.appx
 *.tar
 *.tar.gz
+*.apk
+*.aab
+*.aar
+*.jks
+*.keystore
+
+# Android and Gradle local/generated state
+.gradle/
+**/.gradle/
+**/build/
+local.properties
+android-client/.android/
+android-client/.agent-build/
+android-client/app/src/main/jniLibs/**/libhometunnel_agent.so
+android-client/signing.properties
 
 # Secrets and machine-local configuration
 .env

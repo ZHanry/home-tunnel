@@ -52,6 +52,73 @@ jobs:
       - if: matrix.service == 'control-center'
         run: pnpm run test:integration
 
+  android-client:
+    name: Android client
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Verify the pinned Gradle wrapper
+        run: |
+          set -euo pipefail
+          echo '498495120a03b9a6ab5d155f5de3c8f0d986a449153702fb80fc80e134484f17  android-client/gradle/wrapper/gradle-wrapper.jar' | sha256sum -c -
+          grep -Fxq 'distributionUrl=https\://services.gradle.org/distributions/gradle-8.9-bin.zip' android-client/gradle/wrapper/gradle-wrapper.properties
+          grep -Fxq 'distributionSha256Sum=d725d707bfabd4dfdc958c624003b3c80accc03f7037b5122c4b1d0ef15cecab' android-client/gradle/wrapper/gradle-wrapper.properties
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+          cache-dependency-path: |
+            android-client/**/*.gradle*
+            android-client/gradle.properties
+            android-client/gradle/wrapper/gradle-wrapper.properties
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: 1.26.6
+          cache: false
+      - name: Select the pinned Android NDK for the x86_64 test Agent
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdk_root=${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}
+          test -d "$sdk_root"
+          ndk="$sdk_root/ndk/27.2.12479018"
+          if [ ! -x "$ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android26-clang" ]; then
+            sdkmanager_bin=$(command -v sdkmanager || find "$sdk_root/cmdline-tools" -type f -path '*/bin/sdkmanager' | sort -V | tail -n 1)
+            test -x "$sdkmanager_bin"
+            "$sdkmanager_bin" 'ndk;27.2.12479018'
+          fi
+          test -x "$ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android26-clang"
+          {
+            echo "ANDROID_NDK_HOME=$ndk"
+            echo "ANDROID_NDK_ROOT=$ndk"
+            echo "ANDROID_NDK_VERSION=27.2.12479018"
+          } >> "$GITHUB_ENV"
+      - name: Build embedded Android Agent test ABIs
+        working-directory: android-client
+        env:
+          ANDROID_AGENT_ABIS: arm64-v8a,x86_64
+        run: ./scripts/build-agent.sh
+      - name: Verify embedded Agent outputs
+        run: |
+          set -euo pipefail
+          test -s android-client/app/src/main/jniLibs/arm64-v8a/libhometunnel_agent.so
+          test -s android-client/app/src/main/jniLibs/x86_64/libhometunnel_agent.so
+      - name: Test, lint, and assemble the unsigned debug client
+        working-directory: android-client
+        run: ./gradlew --no-daemon test lint assembleDebug
+      - name: Require generated Android binaries to remain untracked
+        shell: bash
+        run: |
+          set -euo pipefail
+          tracked=$(git ls-files -- '*.apk' '*.aab' '*.aar' '*.jks' '*.keystore' '*.so')
+          if [ -n "$tracked" ]; then
+            echo 'Generated Android binaries or signing stores must not be committed:' >&2
+            printf '%s\n' "$tracked" >&2
+            exit 1
+          fi
+          git diff --exit-code
+
   windows-client:
     name: Windows client
     runs-on: windows-latest
@@ -197,6 +264,7 @@ jobs:
       - name: Check release packaging scripts
         run: |
           bash -n \
+            android-client/scripts/build-agent.sh \
             linux-client/packaging/build-release.sh \
             linux-client/packaging/install.sh \
             linux-client/packaging/home-tunnel-enroll \
@@ -206,6 +274,7 @@ jobs:
       - name: Check executable release entrypoints
         run: |
           test -x linux-client/packaging/build-release.sh
+          test -x android-client/scripts/build-agent.sh
           test -x linux-client/packaging/macos/build-release.sh
           test -x deploy/scripts/backup.sh
           test -x deploy/scripts/verify-backup.sh
@@ -213,6 +282,7 @@ jobs:
       - name: Shellcheck shell scripts
         run: |
           shellcheck --severity=warning \
+            android-client/scripts/build-agent.sh \
             linux-client/packaging/*.sh \
             linux-client/packaging/home-tunnel-enroll \
             linux-client/packaging/macos/*.sh \
@@ -244,16 +314,22 @@ jobs:
           windows_agent_version=$(tr -d '\r' < windows-client/build-agent.ps1 | sed -n 's/^\$agentVersion = "\([^"]*\)"$/\1/p')
           windows_agent_resource_version=$(sed -n 's/.*VALUE "ProductVersion", "\([^"]*\)\\0".*/\1/p' windows-agent/HomeTunnel.Agent.rc)
           windows_agent_reported_version=$(tr -d '\r' < windows-client/Services/FrpcSupervisor.cs | sed -n 's/^[[:space:]]*public const string Version = "\([^"]*\)";$/\1/p')
+          android_version_name=$(sed -n 's/^HOME_TUNNEL_VERSION_NAME=//p' android-client/gradle.properties)
+          android_version_code=$(sed -n 's/^HOME_TUNNEL_VERSION_CODE=//p' android-client/gradle.properties)
+          android_agent_version=$(sed -n 's/^agent_version=//p' android-client/scripts/build-agent.sh)
+          android_agent_ps_version=$(tr -d '\r' < android-client/scripts/build-agent.ps1 | sed -n 's/^\$agentVersion = "\([^"]*\)"$/\1/p')
           root_compose_versions=$(sed -n 's/.*{HOME_TUNNEL_VERSION:-\([^}]*\)}.*/\1/p' compose.yaml | sort -u)
           deploy_compose_versions=$(grep -oE 'home-tunnel/(control-center|traffic-gateway):[0-9][0-9A-Za-z.-]*' deploy/compose.yaml | sed 's/.*://; s/-arm64$//' | sort -u)
           test "$(grep -Ec 'home-tunnel/(control-center|traffic-gateway):[0-9][0-9A-Za-z.-]*-arm64$' deploy/compose.yaml)" = 2
           generated_config_versions=$(grep -h '^HOME_TUNNEL_VERSION=' deploy/scripts/new-selfhost-config.sh deploy/scripts/new-selfhost-config.ps1 | tr -d '\r' | sed 's/.*=//' | sort -u)
           public_versions=$(grep -hoE 'v=?[0-9]+\.[0-9]+\.[0-9]+' control-center/public/index.html control-center/public/modules/*.js | sed -E 's/^v=?//' | sort -u)
-          echo "model=$model_version env=$env_version release=$release_version control_center=$control_center_version gateway=$gateway_version app=$app_version windows_project=$windows_project_version windows_manifest=$windows_manifest_version windows_appx=$windows_appx_version windows_inno=$windows_inno_version windows_agent=$windows_agent_version windows_agent_resource=$windows_agent_resource_version windows_agent_reported=$windows_agent_reported_version root_compose=$root_compose_versions deploy_compose=$deploy_compose_versions generated_config=$generated_config_versions public=$public_versions"
+          echo "model=$model_version env=$env_version release=$release_version control_center=$control_center_version gateway=$gateway_version app=$app_version windows_project=$windows_project_version windows_manifest=$windows_manifest_version windows_appx=$windows_appx_version windows_inno=$windows_inno_version windows_agent=$windows_agent_version windows_agent_resource=$windows_agent_resource_version windows_agent_reported=$windows_agent_reported_version android_name=$android_version_name android_code=$android_version_code android_agent=$android_agent_version android_agent_ps=$android_agent_ps_version root_compose=$root_compose_versions deploy_compose=$deploy_compose_versions generated_config=$generated_config_versions public=$public_versions"
           test -n "$model_version" && test -n "$env_version" && test -n "$release_version" && test -n "$control_center_version" && test -n "$gateway_version" && test -n "$app_version" && test -n "$windows_project_version" && test -n "$windows_manifest_version" && test -n "$windows_appx_version" && test -n "$windows_inno_version" && test -n "$windows_agent_version" && test -n "$windows_agent_resource_version" && test -n "$windows_agent_reported_version"
+          test -n "$android_version_name" && [[ "$android_version_code" =~ ^[1-9][0-9]*$ ]]
+          test -n "$android_agent_version" && test -n "$android_agent_ps_version"
           test -n "$root_compose_versions" && test -n "$deploy_compose_versions"
           test -n "$generated_config_versions" && test -n "$public_versions"
-          for candidate in "$release_version" "$control_center_version" "$gateway_version" "$app_version" "$windows_project_version" "$windows_manifest_version" "$windows_appx_version" "$windows_inno_version" $public_versions; do
+          for candidate in "$release_version" "$control_center_version" "$gateway_version" "$app_version" "$windows_project_version" "$windows_manifest_version" "$windows_appx_version" "$windows_inno_version" "$android_version_name" "$android_agent_version" "$android_agent_ps_version" $public_versions; do
             if [ "$candidate" != "$model_version" ]; then
               echo "version mismatch: expected $model_version, found $candidate" >&2
               exit 1
@@ -265,6 +341,12 @@ jobs:
           done
           test "$windows_agent_resource_version" = "$windows_agent_version"
           test "$windows_agent_reported_version" = "$windows_agent_version"
+          [[ "$model_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]
+          expected_android_code=$((10#${BASH_REMATCH[1]} * 1000000 + 10#${BASH_REMATCH[2]} * 1000 + 10#${BASH_REMATCH[3]}))
+          test "$android_version_code" -eq "$expected_android_code" || {
+            echo "Android versionCode mismatch: expected $expected_android_code, found $android_version_code" >&2
+            exit 1
+          }
           grep -q -- '-X main.agentVersion=$agent_version' linux-client/packaging/build-release.sh
           grep -q -- '-X main.agentVersion=$agent_version' linux-client/packaging/macos/build-release.sh
       - name: Build release package smoke matrix
@@ -310,6 +392,16 @@ jobs:
           grep -Fq "frp_commit=$frp_commit" linux-client/packaging/macos/build-release.sh
           grep -Fq "frp_archive_sha256=$frp_archive_sha256" linux-client/packaging/build-release.sh
           grep -Fq "frp_archive_sha256=$frp_archive_sha256" linux-client/packaging/macos/build-release.sh
+          grep -Fq "frp_version=$frp_version" android-client/scripts/build-agent.sh
+          grep -Fq "frp_commit=$frp_commit" android-client/scripts/build-agent.sh
+          grep -Fq "frp_archive_sha256=$frp_archive_sha256" android-client/scripts/build-agent.sh
+          grep -Fq "\$frpVersion = \"$frp_version\"" android-client/scripts/build-agent.ps1
+          grep -Fq "\$frpCommit = \"$frp_commit\"" android-client/scripts/build-agent.ps1
+          grep -Fq "\$frpArchiveSha256 = \"$frp_archive_sha256\"" android-client/scripts/build-agent.ps1
+          grep -Fq 'go_version=1.26.6' android-client/scripts/build-agent.sh
+          grep -Fq 'ndk_version=27.2.12479018' android-client/scripts/build-agent.sh
+          grep -Fq '$goVersion = "1.26.6"' android-client/scripts/build-agent.ps1
+          grep -Fq '$ndkVersion = "27.2.12479018"' android-client/scripts/build-agent.ps1
           grep -Fq "ARG FRP_VERSION=$frp_tag" deploy/frps/Dockerfile
           grep -Fq "ARG FRP_COMMIT=$frp_commit" deploy/frps/Dockerfile
           grep -Fq "FRP_VERSION: $frp_tag" compose.build.yaml
@@ -377,6 +469,7 @@ jobs:
         shell: pwsh
         run: |
           $paths = @(
+            'android-client/scripts/build-agent.ps1',
             'deploy/build-ui-release.ps1',
             'deploy/build-release.ps1',
             'deploy/deploy-ui.ps1'
@@ -437,6 +530,7 @@ jobs:
             --no-progress
             './*.md'
             './.github/*.md'
+            './android-client/**/*.md'
             './deploy/**/*.md'
             './docs/**/*.md'
             './linux-client/**/*.md'
@@ -445,7 +539,7 @@ jobs:
 
   quality-gate:
     name: Quality Gate
-    needs: [services, windows-client, windows-agent, repository, links, dependency-review]
+    needs: [services, android-client, windows-client, windows-agent, repository, links, dependency-review]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -453,6 +547,7 @@ jobs:
       - name: Require every CI job to succeed
         env:
           SERVICES_RESULT: ${{ needs.services.result }}
+          ANDROID_CLIENT_RESULT: ${{ needs.android-client.result }}
           WINDOWS_CLIENT_RESULT: ${{ needs.windows-client.result }}
           WINDOWS_AGENT_RESULT: ${{ needs.windows-agent.result }}
           REPOSITORY_RESULT: ${{ needs.repository.result }}
@@ -460,6 +555,7 @@ jobs:
           DEPENDENCY_REVIEW_RESULT: ${{ needs.dependency-review.result }}
         run: |
           test "$SERVICES_RESULT" = success
+          test "$ANDROID_CLIENT_RESULT" = success
           test "$WINDOWS_CLIENT_RESULT" = success
           test "$WINDOWS_AGENT_RESULT" = success
           test "$REPOSITORY_RESULT" = success

@@ -38,6 +38,11 @@ jobs:
             name: C# Windows client
             os: windows-latest
             build-mode: none
+          - language: java-kotlin
+            name: Java/Kotlin Android client
+            os: ubuntu-latest
+            build-mode: manual
+            target: android-client
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     permissions:
@@ -52,6 +57,40 @@ jobs:
         with:
           go-version: 1.26.6
           cache: false
+      - if: matrix.target == 'android-client'
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+          cache-dependency-path: |
+            android-client/**/*.gradle*
+            android-client/gradle.properties
+            android-client/gradle/wrapper/gradle-wrapper.properties
+      - if: matrix.target == 'android-client'
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: 1.26.6
+          cache: false
+      - if: matrix.target == 'android-client'
+        name: Select the pinned Android NDK for the x86_64 analysis Agent
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdk_root=${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}
+          test -d "$sdk_root"
+          ndk="$sdk_root/ndk/27.2.12479018"
+          if [ ! -x "$ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android26-clang" ]; then
+            sdkmanager_bin=$(command -v sdkmanager || find "$sdk_root/cmdline-tools" -type f -path '*/bin/sdkmanager' | sort -V | tail -n 1)
+            test -x "$sdkmanager_bin"
+            "$sdkmanager_bin" 'ndk;27.2.12479018'
+          fi
+          test -x "$ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android26-clang"
+          {
+            echo "ANDROID_NDK_HOME=$ndk"
+            echo "ANDROID_NDK_ROOT=$ndk"
+            echo "ANDROID_NDK_VERSION=27.2.12479018"
+          } >> "$GITHUB_ENV"
       - uses: github/codeql-action/init@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
         with:
           languages: ${{ matrix.language }}
@@ -101,6 +140,16 @@ jobs:
             if ($LASTEXITCODE -ne 0) { throw 'Agent build failed' }
           }
           finally { Pop-Location }
+      - if: matrix.target == 'android-client'
+        name: Build embedded Android Agent for Java/Kotlin analysis
+        working-directory: android-client
+        env:
+          ANDROID_AGENT_ABIS: arm64-v8a,x86_64
+        run: ./scripts/build-agent.sh
+      - if: matrix.target == 'android-client'
+        name: Build Android client under CodeQL
+        working-directory: android-client
+        run: ./gradlew --no-daemon test lint assembleDebug
       - uses: github/codeql-action/analyze@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
         with:
           category: "/language:${{ matrix.language }}/target:${{ matrix.target || 'default' }}"

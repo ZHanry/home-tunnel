@@ -21,7 +21,7 @@ public sealed class ClientBehaviorTests
 	[Fact]
 	public void TestSemanticVersions()
 	{
-		Assert.True(AppVersion.Current == "3.1.0", "client version must be 3.1.0");
+		Assert.True(AppVersion.Current == "3.2.0", "client version must be 3.2.0");
 		Assert.True(
 			typeof(AppVersion).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion == AppVersion.Current,
 			"public client version metadata does not expose a local source revision");
@@ -426,12 +426,12 @@ public sealed class ClientBehaviorTests
 	[Fact]
 	public async Task TestReleaseValidationAsync()
 	{
-		var validPayload = ReleasePayload("3.1.1", GitHubDownloadUri("3.1.1").AbsoluteUri);
+		var validPayload = ReleasePayload("3.2.1", GitHubDownloadUri("3.2.1").AbsoluteUri);
 		using (var service = new UpdateService(new StaticJsonHandler(validPayload)))
 		{
 			var result = await service.CheckAsync(CancellationToken.None);
 			Assert.True(result.IsUpdateAvailable, "newer release detected");
-			Assert.True(result.Release.Version == "3.1.1", "release metadata parsed");
+			Assert.True(result.Release.Version == "3.2.1", "release metadata parsed");
 		}
 
 		var maliciousPayload = ReleasePayload("2.4.1", "https://evil.example/downloads/HomeTunnel-Setup-2.4.1-x64.exe");

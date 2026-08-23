@@ -177,7 +177,24 @@ export async function runIntegrationSuite(): Promise<void> {
     assert.equal(linuxRefresh.status, 200);
     assert.equal(typeof linuxRefresh.payload.access_token, "string");
     assert.equal(typeof linuxRefresh.payload.refresh_token, "string");
-    const userToken = linuxRefresh.payload.access_token as string;
+    const androidLogin = await call("POST", "/api/v1/auth/login", {
+      username: `user-${suffix}`,
+      password: userNextPassword,
+      client_type: "android",
+    });
+    assert.equal(androidLogin.status, 200);
+    assert.equal(typeof androidLogin.payload.access_token, "string");
+    assert.equal(typeof androidLogin.payload.refresh_token, "string");
+    assert.equal(androidLogin.headers.get("set-cookie"), null);
+    const androidRefresh = await call("POST", "/api/v1/auth/refresh", {
+      refresh_token: androidLogin.payload.refresh_token,
+      client_type: "android",
+    });
+    assert.equal(androidRefresh.status, 200);
+    assert.equal(typeof androidRefresh.payload.access_token, "string");
+    assert.equal(typeof androidRefresh.payload.refresh_token, "string");
+    assert.equal(androidRefresh.headers.get("set-cookie"), null);
+    const userToken = androidRefresh.payload.access_token as string;
 
     const ordinaryWebLogin = await call("POST", "/api/v1/auth/login", {
       username: `user-${suffix}`,
@@ -506,6 +523,8 @@ export async function runIntegrationSuite(): Promise<void> {
     assert.equal(sync.status, 200);
     assert.equal(sync.payload.connections.length, 1);
     assert.deepEqual(sync.payload.connections[0].custom_domains, [customDomain]);
+    assert.ok(!("username" in sync.payload.connections[0]));
+    assert.ok(!("device_name" in sync.payload.connections[0]));
     const lease = sync.payload.lease.lease as string;
     const proxyName = sync.payload.connections[0].proxy_name as string;
     const legacyUnchangedSync = await call(

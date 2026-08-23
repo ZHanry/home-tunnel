@@ -21,7 +21,7 @@
   <meta property="og:image:alt" content="Home Tunnel 自托管家庭内网穿透平台及真实管理后台">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="assets/HomeTunnel.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="assets/site.css?v=3.1.0">
+  <link rel="stylesheet" href="assets/site.css?v=3.2.0">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -114,7 +114,7 @@ docker compose ps</code></pre>
     </section>
 
     <section id="support" aria-labelledby="support-title">
-      <div class="section-head"><p class="eyebrow">公开支持矩阵</p><h2 id="support-title">稳定性声明以实际 Release 产物为准。</h2><p><code>v3.1.0</code> 从 <code>v3.1.0-rc.2</code> 的同一提交与同一套不可变资产提升。“Stable”只用于完整验证的平台；Windows x64 EXE 明确标为自签名 Experimental。</p></div>
+      <div class="section-head"><p class="eyebrow">公开支持矩阵</p><h2 id="support-title">稳定性声明以实际 Release 产物为准。</h2><p><code>v3.2.0</code> 从 <code>v3.2.0-rc.1</code> 的同一提交与同一套不可变资产提升。“Stable”只用于完整验证的平台；Windows x64 与 Android 8.0+ arm64 客户端明确标为 Experimental。</p></div>
       <div class="support-wrap">
         <table>
           <thead><tr><th>组件</th><th>平台</th><th>状态</th><th>分发与限制</th></tr></thead>
@@ -123,6 +123,7 @@ docker compose ps</code></pre>
             <tr><td>Headless 客户端</td><td>Linux amd64 / arm64</td><td><span class="status stable">Stable</span></td><td>systemd 服务，支持实时配置和安全轮询。</td></tr>
             <tr><td>Headless 客户端</td><td>macOS amd64 / arm64</td><td><span class="status beta">Beta</span></td><td>launchd 包；需完成包结构和升级验证。</td></tr>
             <tr><td>图形客户端</td><td>Windows 10 / 11 x64</td><td><span class="status experimental">Experimental</span></td><td>Release 提供自签名 EXE、校验和、SBOM 与来源证明；Windows 会提示未知发布者。</td></tr>
+            <tr><td>移动客户端</td><td>Android 8.0+ arm64-v8a</td><td><span class="status experimental">Experimental</span></td><td>GitHub Release 提供长期证书签名的侧载 APK；AAB 不可直装，也不表示 Play-ready。前台服务与 OEM 省电限制可能影响后台可靠性。</td></tr>
           </tbody>
         </table>
       </div>

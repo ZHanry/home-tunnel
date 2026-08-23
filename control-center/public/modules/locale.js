@@ -1,4 +1,4 @@
-import { state } from "./state.js?v=3.1.0-modules1";
+import { state } from "./state.js?v=3.2.0-modules1";
 
 const appShell = document.querySelector("#app-shell");
 
@@ -16,7 +16,7 @@ const zhToEn = {
   "无需家庭公网 IP 或路由器端口映射，受管发布 Web、通用 TCP 与固定端口 UDP 服务；RTSP-over-TCP 可直接使用通用 TCP 映射。": "Publish managed Web, general TCP, and fixed-port UDP services without a public IP at home or router port forwarding; RTSP-over-TCP uses a general TCP mapping.",
   "选择客户端平台": "Choose a client platform",
   "Windows 图形客户端": "Windows desktop client",
-  "Home Tunnel 3.1.0 Windows 图形客户端预览": "Home Tunnel 3.1.0 Windows desktop client preview",
+  "Home Tunnel 3.2.0 Windows 图形客户端预览": "Home Tunnel 3.2.0 Windows desktop client preview",
   "Linux 客户端快速开始": "Linux client quick start",
   "Windows x64 EXE": "Windows x64 EXE",
   "Windows EXE 为自签名 Experimental；安装时会提示未知发布者，请先核对 Release SHA-256。": "The Windows EXE is self-signed Experimental software. Expect an unknown-publisher warning and verify the Release SHA-256 first.",
@@ -70,7 +70,7 @@ const zhToEn = {
   "保存新密码": "Save new password",
   "返回产品首页": "Back to product home",
   "主导航": "Main navigation",
-  "控制中心 v3.1.0": "Control Center v3.1.0",
+  "控制中心 v3.2.0": "Control Center v3.2.0",
   "工作区": "Workspace",
   "系统总览": "Overview",
   "用户管理": "Users",

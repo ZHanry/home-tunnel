@@ -1,5 +1,6 @@
 import type { IncomingMessage, Server } from "node:http";
 import { WebSocket, WebSocketServer, type ServerOptions } from "ws";
+import { config } from "./config.js";
 import { databaseEvents, one, transaction } from "./db.js";
 import { parseCookieHeader } from "./http.js";
 import { tokenHash } from "./security.js";
@@ -11,8 +12,10 @@ type SocketIdentity = {
 };
 
 type LiveSocket = WebSocket & { identity?: SocketIdentity; alive?: boolean };
+type UpgradeCredential = { token: string; source: "bearer" | "cookie" };
 
 let websocketClientCount = 0;
+const publicBrowserOrigin = new URL(config.publicBaseUrl).origin;
 
 export const REALTIME_MAX_PAYLOAD_BYTES = 64 * 1024;
 export const REALTIME_MAX_FRAGMENTS = 256;
@@ -37,18 +40,25 @@ export function getWebsocketClientCount(): number {
   return websocketClientCount;
 }
 
-async function authenticateUpgrade(request: IncomingMessage): Promise<SocketIdentity | null> {
+function upgradeCredential(request: IncomingMessage): UpgradeCredential | null {
   const authorization = request.headers.authorization;
   const bearer = authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
   const cookieToken = parseCookieHeader(request.headers.cookie).ht_access;
-  const token = bearer ?? cookieToken;
-  if (!token) return null;
+  if (bearer) return { token: bearer, source: "bearer" };
+  return cookieToken ? { token: cookieToken, source: "cookie" } : null;
+}
+
+function cookieOriginAllowed(request: IncomingMessage, credential: UpgradeCredential): boolean {
+  return credential.source === "bearer" || request.headers.origin === publicBrowserOrigin;
+}
+
+async function authenticateUpgrade(credential: UpgradeCredential): Promise<SocketIdentity | null> {
   return one<SocketIdentity>(
     `SELECT s.user_id AS "userId",s.device_id AS "deviceId",u.role
        FROM sessions s JOIN users u ON u.id=s.user_id
       WHERE s.access_token_hash=? AND s.revoked_at IS NULL AND s.access_expires_at>home_tunnel_now()
         AND s.token_version=u.token_version AND u.status='active'`,
-    [tokenHash(token)],
+    [tokenHash(credential.token)],
   );
 }
 
@@ -75,7 +85,18 @@ export function attachRealtime(
       socket.destroy();
       return;
     }
-    void authenticateUpgrade(request)
+    const credential = upgradeCredential(request);
+    if (credential && !cookieOriginAllowed(request, credential)) {
+      socket.write("HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n");
+      socket.destroy();
+      return;
+    }
+    if (!credential) {
+      socket.write("HTTP/1.1 401 Unauthorized\r\nConnection: close\r\n\r\n");
+      socket.destroy();
+      return;
+    }
+    void authenticateUpgrade(credential)
       .then((identity) => {
         if (!identity) {
           socket.write("HTTP/1.1 401 Unauthorized\r\nConnection: close\r\n\r\n");

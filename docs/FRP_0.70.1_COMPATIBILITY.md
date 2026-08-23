@@ -29,7 +29,7 @@ multi-architecture digest. The protected dependency workflow built it with Go
 `govulncheck`, required `linux/amd64` and `linux/arm64`, and published SBOM,
 provenance, GitHub attestation and keyless Cosign evidence.
 
-The restricted Agent is independently versioned `3.1.0`. Its source build is
+The restricted Agent is independently versioned `3.2.0`. Its source build is
 reproduced from the same pinned FRP tree. Release automation bundles it into
 the Experimental Windows EXE and publishes checksums, an SPDX SBOM, signed
 provenance, and GitHub attestations. No MSIX package is published.
@@ -45,7 +45,7 @@ create trusted publisher identity or promote Windows to Stable.
 | Gate | Result | Evidence |
 | --- | --- | --- |
 | Official tag and source identity | Pass | The tag resolves to `fa3bcca2…`; the downloaded API archive matches the recorded SHA-256. |
-| Restricted Agent API adaptation | Pass | Agent 3.1.0 uses the 0.70.1 configuration-source, aggregation, validation and unsafe-feature policy APIs. |
+| Restricted Agent API adaptation | Pass | Agent 3.2.0 uses the 0.70.1 configuration-source, aggregation, validation and unsafe-feature policy APIs. |
 | Managed whitelist tests | Pass | HTTP plus protocol-specific TCP/UDP allowlists, cross-protocol denial, visitor/plugin/common-field rejection, render shapes, and CA checks pass. |
 | Agent static and vulnerability checks | Pass | Go formatting, tests, `go vet` and `govulncheck` 1.6.0 report no reachable vulnerability. |
 | Managed CA pinning | Pass | The expected certificate is accepted and an incorrect SHA-256 is rejected. |

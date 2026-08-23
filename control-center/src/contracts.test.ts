@@ -9,11 +9,12 @@ process.env.LEASE_SIGNING_KEY ??= "33".repeat(32);
 process.env.COOKIE_SECURE = "false";
 
 const { reservedSubdomains } = await import("./security.js");
-const { publicHostPort } = await import("./domain.js");
+const { publicConnection, publicHostPort } = await import("./domain.js");
 
 type Contract = {
   reserved_subdomains: string[];
   rest: {
+    auth: { client_types: string[] };
     client_sync: {
       path: string;
       request_fields: string[];
@@ -21,7 +22,12 @@ type Contract = {
       connection_fields: string[];
     };
   };
-  websocket: { path: string; events: string[]; envelope_fields: string[] };
+  websocket: {
+    path: string;
+    events: string[];
+    realtime_connected_fields: string[];
+    envelope_fields: string[];
+  };
 };
 
 const contract = JSON.parse(
@@ -44,6 +50,7 @@ test("raw public endpoints format DNS, IPv4, and IPv6 authorities", () => {
 });
 
 test("REST and WebSocket compatibility contract preserves the v1 surface", () => {
+  assert.deepEqual(contract.rest.auth.client_types, ["web", "windows", "linux", "android"]);
   assert.equal(contract.rest.client_sync.path, "/api/v1/client/sync");
   assert.deepEqual(contract.rest.client_sync.request_fields, [
     "device_id",
@@ -62,7 +69,31 @@ test("REST and WebSocket compatibility contract preserves the v1 surface", () =>
     "lease",
     "server_time",
   ]);
-  assert.ok(contract.rest.client_sync.connection_fields.includes("proxy_name"));
+  const representativeConnection = JSON.parse(
+    JSON.stringify({
+      ...publicConnection({
+        id: "22222222-2222-4222-8222-222222222222",
+        user_id: "33333333-3333-4333-8333-333333333333",
+        device_id: "11111111-1111-4111-8111-111111111111",
+        name: "Home service",
+        subdomain: "home",
+        local_scheme: "http",
+        local_host: "127.0.0.1",
+        local_port: 8080,
+        transport_type: "http",
+        remote_port: null,
+        enabled: true,
+        version: 7,
+        deleted_at: null,
+        created_at: new Date("2026-08-13T00:00:00.000Z"),
+        updated_at: new Date("2026-08-13T00:00:00.000Z"),
+      }),
+      proxy_name: "ht_22222222222242228222222222222222_v7",
+    }),
+  ) as Record<string, unknown>;
+  exactKeys(representativeConnection, contract.rest.client_sync.connection_fields);
+  assert.ok(!contract.rest.client_sync.connection_fields.includes("username"));
+  assert.ok(!contract.rest.client_sync.connection_fields.includes("device_name"));
   assert.equal(contract.websocket.path, "/api/v1/ws");
   for (const event of [
     "realtime.connected",
@@ -80,6 +111,11 @@ test("REST and WebSocket compatibility contract preserves the v1 surface", () =>
     "payload",
     "at",
   ]);
+  const representativeConnectedEvent = {
+    event: "realtime.connected",
+    at: "2026-08-13T00:00:00.000Z",
+  };
+  exactKeys(representativeConnectedEvent, contract.websocket.realtime_connected_fields);
   const representativeRequest = {
     device_id: "11111111-1111-4111-8111-111111111111",
     last_config_version: 7,

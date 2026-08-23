@@ -8,7 +8,7 @@ This guide describes the portable root-level `compose.yaml`. The scripts under `
 - An `amd64` or `arm64` CPU, at least 1 GiB RAM (with swap on small hosts) and 2 GiB free disk space
 - A public IPv4 or IPv6 address reachable on TCP 80, 443 and 7000; UDP 443 is optional for HTTP/3. Optional raw TCP/UDP tunnels also require their explicitly configured port ranges.
 - A domain you control
-- An `amd64`/`arm64` Linux machine for the Stable headless systemd client; Windows x64 EXE is Experimental and macOS headless is Beta
+- An `amd64`/`arm64` Linux machine for the Stable headless systemd client; Windows x64 EXE and Android 8.0+ `arm64-v8a` APK are Experimental, while macOS headless is Beta
 
 Create DNS records before starting:
 
@@ -149,7 +149,7 @@ and rates before exposing it.
 
 ### Windows
 
-Download `HomeTunnel-Setup-3.1.0-x64.exe` from the latest GitHub Release and
+Download `HomeTunnel-Setup-3.2.0-x64.exe` from the latest GitHub Release and
 verify its published SHA-256 before installation. The Windows x64 package is
 Experimental and self-signed, so Windows can show an unknown-publisher or
 SmartScreen warning. On first launch, enter the control-center root address,
@@ -169,6 +169,23 @@ Use a new App ID for your fork so it does not overwrite a different Home Tunnel 
 `latest.json` is a Windows-only update manifest promoted unchanged from the
 verified RC asset set. A missing manifest safely degrades to “updates
 unavailable” without affecting tunnels.
+
+### Android
+
+On an Android 8.0+ `arm64-v8a` device, download
+`HomeTunnel-Android-3.2.0-arm64-v8a.apk` from the latest GitHub Release. Verify
+the adjacent SHA-256 or aggregate `SHA256SUMS.txt`, the Sigstore evidence, the
+application ID `io.github.zhanry.hometunnel`, and the published persistent
+signing-certificate SHA-256 before allowing the sideload. The AAB attached to
+the Release cannot be installed directly and is not declared Google Play-ready.
+
+Enter the control-center HTTPS root selected for this deployment; the generic
+client does not embed the project maintainer's server. Keep the foreground
+service notification enabled. Android battery optimization and OEM background
+policies can interrupt a tunnel or delay reconnects, so exclude the Experimental
+client from device-specific optimization only after reviewing the security and
+battery tradeoff. See [`android-client/README.md`](../android-client/README.md)
+for permissions, foreground-service behavior, diagnostics, and current limits.
 
 ### Linux
 
@@ -211,7 +228,9 @@ and FRPS first, then upgrade every Windows, Linux, and macOS client before
 enabling UDP. Updated clients declare
 `supported_proxy_types = ["http", "tcp", "udp"]`. A legacy client that omits
 `supported_proxy_types` receives a UDP record with `enabled=false` and must not
-start it. On first launch after upgrading, a current client requests one full
+start it. The Android 3.2.0 Experimental client intentionally advertises only
+`["http"]`; it may display assigned TCP/UDP records but must not start them. On
+first launch after upgrading, a current desktop/headless client requests one full
 sync before recording the new sync-capability marker, replacing any cached
 compatibility-disabled UDP state. An existing deployment that only sets
 `TCP_TUNNEL_ENABLED` stays TCP-only; the upgrade does not implicitly open UDP.
@@ -244,6 +263,7 @@ Optional alerts are delivered to an outbound webhook and/or Telegram. Set `HOME_
 - Linux `amd64`/`arm64` server and headless systemd client: Stable
 - macOS `amd64`/`arm64` headless launchd client: Beta
 - Windows 10/11 x64 graphical client: self-signed Experimental EXE plus source
+- Android 8.0+ `arm64-v8a`: Experimental GitHub-sideloaded APK plus source; AAB is non-installable and not declared Play-ready
 - HTTP and HTTPS local targets
 - Administrator-managed general TCP and fixed-port UDP targets
 - One public tunnel domain per server deployment

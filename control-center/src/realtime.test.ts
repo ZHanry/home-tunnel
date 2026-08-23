@@ -11,6 +11,7 @@ process.env.INTERNAL_SERVICE_KEY ??= "11".repeat(32);
 process.env.FRPS_PLUGIN_KEY ??= "22".repeat(32);
 process.env.LEASE_SIGNING_KEY ??= "33".repeat(32);
 process.env.COOKIE_SECURE = "false";
+process.env.PUBLIC_BASE_URL = "https://console.tunnel.example.com";
 
 const [{ migrate, closeDatabase, transaction }, { issueSession }, realtime] = await Promise.all([
   import("./db.js"),
@@ -65,6 +66,19 @@ async function connect(): Promise<WebSocket> {
   await once(socket, "open");
   await connected;
   return socket;
+}
+
+async function expectUpgradeRejected(
+  headers: Record<string, string>,
+  expectedStatus: number,
+): Promise<void> {
+  const socket = new WebSocket(origin, { headers });
+  socket.on("error", () => undefined);
+  const [request, response] = await once(socket, "unexpected-response");
+  assert.ok(request);
+  assert.equal(response.statusCode, expectedStatus);
+  response.resume();
+  await once(response, "end");
 }
 
 async function waitForClientCount(expected: number): Promise<void> {
@@ -132,6 +146,45 @@ test("publishes and marks a recipient outbox event delivered", async () => {
   assert.equal(event.resource_version, 7);
   assert.deepEqual(event.payload, { ok: true });
 
+  socket.close();
+  await once(socket, "close");
+  await waitForClientCount(0);
+});
+
+test("accepts a same-origin cookie-authenticated upgrade", async () => {
+  const socket = new WebSocket(origin, {
+    headers: {
+      cookie: `ht_access=${accessToken}`,
+      origin: "https://console.tunnel.example.com",
+    },
+  });
+  socket.on("error", () => undefined);
+  const connected = once(socket, "message");
+  await once(socket, "open");
+  await connected;
+  socket.close();
+  await once(socket, "close");
+  await waitForClientCount(0);
+});
+
+test("rejects cookie-authenticated upgrades from another origin", async () => {
+  await expectUpgradeRejected(
+    {
+      cookie: `ht_access=${accessToken}`,
+      origin: "https://evil.tunnel.example.com",
+    },
+    403,
+  );
+  await waitForClientCount(0);
+});
+
+test("rejects cookie-authenticated upgrades without an origin", async () => {
+  await expectUpgradeRejected({ cookie: `ht_access=${accessToken}` }, 403);
+  await waitForClientCount(0);
+});
+
+test("accepts an originless bearer-authenticated upgrade", async () => {
+  const socket = await connect();
   socket.close();
   await once(socket, "close");
   await waitForClientCount(0);

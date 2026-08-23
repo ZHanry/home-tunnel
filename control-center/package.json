@@ -1,6 +1,6 @@
 {
   "name": "home-tunnel-control-center",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,7 +11,8 @@
     "preview": "node scripts/preview.mjs",
     "preview:ui": "node scripts/ui-preview.mjs",
     "start": "node dist/server.js",
-    "test": "node --test dist/security.test.js dist/db.test.js dist/backup.test.js dist/notifications.test.js dist/quota.test.js dist/public.test.js dist/realtime.test.js dist/contracts.test.js dist/migrations.test.js && node scripts/run-integration.mjs",
+    "test": "node --test dist/security.test.js dist/db.test.js dist/backup.test.js dist/notifications.test.js dist/quota.test.js dist/public.test.js dist/realtime.test.js dist/contracts.test.js dist/migrations.test.js && node --test scripts/api-module.test.mjs && node scripts/run-integration.mjs",
+    "test:public-modules": "node --test scripts/api-module.test.mjs",
     "test:public": "node --test dist/public.test.js",
     "test:integration": "node scripts/run-integration.mjs",
     "test:coverage": "c8 --all --include=dist/security.js --include=dist/db.js --include=dist/notifications.js --include=dist/realtime.js --check-coverage --lines=75 --branches=68 --functions=85 --reporter=text --reporter=lcov node --test dist/security.test.js dist/db.test.js dist/notifications.test.js dist/realtime.test.js dist/contracts.test.js dist/migrations.test.js",

@@ -1,5 +1,7 @@
-import { localizedApiError } from "./locale.js?v=3.1.0-modules1";
-import { state } from "./state.js?v=3.1.0-modules1";
+import { localizedApiError } from "./locale.js?v=3.2.0-modules1";
+import { state } from "./state.js?v=3.2.0-modules1";
+
+let refreshInFlight = null;
 
 async function parseResponse(response) {
   if (response.status === 204) return null;
@@ -7,7 +9,7 @@ async function parseResponse(response) {
   return type.includes("application/json") ? response.json() : response.text();
 }
 
-export async function refreshSession() {
+async function performSessionRefresh() {
   const response = await fetch("/api/v1/auth/refresh", {
     method: "POST",
     credentials: "same-origin",
@@ -18,6 +20,15 @@ export async function refreshSession() {
   const data = await response.json();
   state.csrf = data.csrf_token;
   return data;
+}
+
+export function refreshSession() {
+  if (!refreshInFlight) {
+    refreshInFlight = performSessionRefresh().finally(() => {
+      refreshInFlight = null;
+    });
+  }
+  return refreshInFlight;
 }
 
 export async function api(path, options = {}, canRefresh = true) {

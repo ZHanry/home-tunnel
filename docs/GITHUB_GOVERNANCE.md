@@ -24,7 +24,7 @@ Configure only after the checks have succeeded on `main` at least once so their 
 - Require pull requests.
 - Require one approval, dismiss stale approvals, and require Code Owner review where applicable.
 - Require every conversation to be resolved.
-- Require the observed stable `Quality Gate`, each language CodeQL result, Secret Scan, and `Build and validate Pages`. The Pages deploy job is intentionally absent on pull requests and must not be required.
+- Require the observed stable `Quality Gate`, each language CodeQL result (including Java/Kotlin Android), Secret Scan, and `Build and validate Pages`. The Pages deploy job is intentionally absent on pull requests and must not be required.
 - Require linear history.
 - Block force pushes and branch deletion.
 - Add `merge_group` triggers to every required workflow before enabling merge queue.
@@ -37,6 +37,23 @@ One approval is practical only after a second trusted reviewer exists. A solo ow
 - Test the RC and stable workflows before enabling the rule.
 - Restrict bypass to the documented emergency-security process.
 - Never move an existing release tag. Rebuilds use a new version.
+
+## Android release signing environment
+
+- Create a protected `android-release` Environment restricted to protected `v*`
+  tags and require an owner/reviewer approval before its secrets are exposed.
+- Store only the persistent keystore base64, store password, key alias, and key
+  password as Environment secrets. Never use repository variables, artifacts,
+  caches, logs, or source files for private signing material.
+- Keep the reviewed public certificate SHA-256 in
+  `android-client/release-signing-cert.sha256`. Any secret/fingerprint mismatch
+  must fail closed; do not generate a debug or ephemeral fallback key.
+- Protect `.github/workflows/release-images.yml`, Android signing configuration,
+  and the reviewed fingerprint with CODEOWNERS. Approval must inspect the tagged
+  workflow revision before releasing the environment.
+- Treat application ID and signer continuity as permanent public identity. If a
+  future Play distribution uses another signing identity, document channel
+  incompatibility before publishing it.
 
 ## Repository presentation
 

@@ -2,6 +2,32 @@
 
 All notable changes to Home Tunnel are documented in this file. The project follows [Semantic Versioning](https://semver.org/).
 
+## [3.2.0] - 2026-08-23
+
+### Added
+
+- Added an Experimental native Android 8.0+ client for `arm64-v8a`, distributed
+  as a GitHub-sideloadable APK plus a non-installable AAB audit/upload artifact.
+- Added Android Agent, Gradle test/lint/build, Java/Kotlin CodeQL, package
+  identity, version, ABI, signature, and binary-repository gates to CI.
+
+### Security
+
+- Android release candidates now fail closed unless the protected persistent
+  keystore secrets are present and its signer matches the reviewed certificate
+  SHA-256. Debug or ephemeral signing keys are never accepted for releases.
+- Added per-package SHA-256, SPDX SBOMs, keyless Sigstore bundles, GitHub
+  attestations, and signed machine-readable Android release evidence. Stable
+  releases verify and promote the exact RC APK/AAB without rebuilding or
+  re-signing them.
+
+### Known limitations
+
+- Android remains Experimental while Android 8–16 real-device coverage and OEM
+  foreground-service, notification, battery-optimization, and reconnect
+  behavior are expanded. The published AAB is not a claim of Google Play
+  readiness and cannot be installed directly.
+
 ## [3.1.0] - 2026-08-21
 
 ### Added

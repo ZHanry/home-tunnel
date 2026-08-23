@@ -15,7 +15,7 @@ Home Tunnel 是面向个人与家庭服务的自托管内网穿透平台，用�
 
 ![Home Tunnel 真实管理后台，显示连接、流量和组件健康状态](docs/site/assets/admin-dashboard.jpg)
 
-> `v3.1.0` 由 `v3.1.0-rc.2` 的同一提交和同一套不可变资产提升。服务端 Linux `amd64`/`arm64` 与 Linux 客户端为 Stable；macOS headless 为 Beta；Windows x64 EXE 为自签名 Experimental，会显示未知发布者提示。
+> `v3.2.0` 由 `v3.2.0-rc.1` 的同一提交和同一套不可变资产提升。服务端 Linux `amd64`/`arm64` 与 Linux 客户端为 Stable；macOS headless 为 Beta；Windows x64 EXE 与 Android 8.0+ `arm64-v8a` 客户端为 Experimental。
 
 ## 三步启动
 
@@ -58,8 +58,9 @@ Home Tunnel 是面向个人与家庭服务的自托管内网穿透平台，用�
 | Headless 客户端 | Linux `amd64` / `arm64` | Stable | systemd 服务，实时配置与安全轮询 |
 | Headless 客户端 | macOS `amd64` / `arm64` | Beta | launchd 包；仍需扩大真实硬件验证 |
 | 图形客户端 | Windows 10/11 x64 | Experimental | Release 提供自签名 EXE 与更新清单；Windows 会提示未知发布者 |
+| 移动客户端 | Android 8.0+ `arm64-v8a` | Experimental | GitHub Release 侧载 APK；AAB 不可直接安装，也不代表 Play-ready |
 
-Windows EXE 与其他平台资产来自同一个 RC 构建并随 Stable 原样提升，包含 SHA-256、SPDX SBOM、Sigstore 和 GitHub provenance。自签名只能证明同一资产集内的完整性，不能建立可信发布者身份；正式可信签名仍需 Authenticode 证书和受保护签名环境。
+Windows EXE、Android APK/AAB 与其他平台资产来自同一个 RC 构建并随 Stable 原样提升，包含 SHA-256、SPDX SBOM、Sigstore 和 GitHub provenance。Windows 自签名只能证明同一资产集内的完整性，不能建立可信发布者身份；Android 使用必须长期保留的固定发布证书，升级前必须保持 application ID 与证书一致。
 
 ## 为什么不是“裸 FRP”
 
@@ -73,10 +74,10 @@ Windows EXE 与其他平台资产来自同一个 RC 构建并随 Stable 原样�
 ## 工作方式
 
 ```text
-远程浏览器 ─HTTPS→ Caddy ─→ 流量网关 ─→ FRPS ═受管隧道═→ 家中 Windows/Linux/macOS 主机
+远程浏览器 ─HTTPS→ Caddy ─→ 流量网关 ─→ FRPS ═受管隧道═→ 家中 Windows/Linux/macOS/Android 主机
 远程 TCP/UDP 客户端 ─已分配公网端口→ FRPS ═受管隧道═→ 家中固定 TCP/UDP 端口
 管理员     ─HTTPS→ Caddy ─→ 控制中心 ─→ SQLite
-Windows/Linux/macOS 客户端 ─REST + WebSocket→ 控制中心
+Windows/Linux/macOS/Android 客户端 ─REST + WebSocket→ 控制中心
 ```
 
 控制流和业务流量分离；详细边界见 [架构说明](docs/ARCHITECTURE.md) 与 [安全模型](docs/SECURITY_MODEL.md)。项目不提供公开动态演示站，Pages 中的截图由当前 UI Preview 和真实前端代码生成，示例域名与数据均为本地夹具。
@@ -109,7 +110,7 @@ Linux Stable 客户端以 systemd 服务运行；macOS Beta 客户端以 launchd
 
 ### Windows x64（Experimental EXE）
 
-从 [最新 Release 下载 Windows x64 EXE](https://github.com/ZHanry/home-tunnel/releases/latest/download/HomeTunnel-Setup-3.1.0-x64.exe)。客户端支持图形化登录、连接管理、系统托盘、自动启动和诊断导出。安装前请核对 Release 中的 SHA-256；自签名版本会触发未知发布者或 SmartScreen 提示。
+从 [最新 Release 下载 Windows x64 EXE](https://github.com/ZHanry/home-tunnel/releases/latest/download/HomeTunnel-Setup-3.2.0-x64.exe)。客户端支持图形化登录、连接管理、系统托盘、自动启动和诊断导出。安装前请核对 Release 中的 SHA-256；自签名版本会触发未知发布者或 SmartScreen 提示。
 
 也可以在 Windows 上自行构建：
 
@@ -120,12 +121,22 @@ Linux Stable 客户端以 systemd 服务运行；macOS Beta 客户端以 launchd
 
 开发打包脚本生成的自签名证书不能替代可信发布者签名；分叉仓库不得把它描述为受信任签名。
 
+### Android 8.0+ arm64（Experimental）
+
+从最新 GitHub Release 下载 `HomeTunnel-Android-3.2.0-arm64-v8a.apk`，核对
+`SHA256SUMS.txt`、APK 签名证书 SHA-256 与 Sigstore 证据后侧载。应用 ID
+为 `io.github.zhanry.hometunnel`。同一 Release 的 AAB 仅供审计或未来商店
+上传，不能直接安装，也不表示已满足 Google Play 要求。Android 前台服务
+通知、省电策略和 OEM 后台限制可能影响长期隧道可靠性；首版因此保持
+Experimental，并且只声明 HTTP 支持，不会启动已分配的 TCP/UDP 记录。
+构建与使用限制见 [Android 客户端说明](android-client/README.md)。
+
 ## 安全证据
 
 - 控制中心 WebSocket 完整消息上限为 64 KiB，并限制碎片数和缓冲分块；回归覆盖超限、鉴权失败、异常断连、资源回收与重连。
 - CI 对生产依赖执行 Moderate 以上审计，并运行 TypeScript、Go、.NET、Compose、契约与文档检查。
-- CodeQL 显式分析 JavaScript/TypeScript、Go 与 C#；Secret Scanning 与 Push Protection 应始终保持启用。
-- Stable 发布要求同一提交和同一套已验证产物，包含哈希、SBOM、provenance 与签名证据；Windows EXE 还必须通过安装、版本、自签名一致性和卸载验证。
+- CodeQL 显式分析 JavaScript/TypeScript、Go、C# 与 Android Java/Kotlin；Secret Scanning 与 Push Protection 应始终保持启用。
+- Stable 发布要求同一提交和同一套已验证产物，包含哈希、SBOM、provenance 与签名证据；Windows EXE 还必须通过安装、版本、自签名一致性和卸载验证，Android APK/AAB 必须通过包名、版本、ABI 与长期证书一致性验证。
 
 不要在公开 Issue 中提交漏洞细节、域名、IP、令牌、密码或日志中的私密信息。请使用 [GitHub 私密漏洞报告](https://github.com/ZHanry/home-tunnel/security/advisories/new)；详细政策见 [SECURITY.md](SECURITY.md)。
 
@@ -137,6 +148,7 @@ Linux Stable 客户端以 systemd 服务运行；macOS Beta 客户端以 launchd
 | `traffic-gateway/` | Host 授权、反向代理、访问控制、限速与采样 |
 | `windows-client/` | Windows WPF 源码与本地打包脚本 |
 | `linux-client/` | Linux/macOS headless 客户端及 systemd/launchd 包 |
+| `android-client/` | Android 8.0+ 原生客户端、嵌入式 Agent 与 Gradle 构建 |
 | `windows-agent/` | 能力受限的 FRP Agent 源码与第三方许可 |
 | `contracts/` | 跨组件保留字、配置与协议契约夹具 |
 | `deploy/` | Caddy、FRPS、配置、发布、备份和回滚工具 |
@@ -145,7 +157,7 @@ Linux Stable 客户端以 systemd 服务运行；macOS Beta 客户端以 launchd
 
 ## 本地验证
 
-要求 Node.js 24 LTS、pnpm、Go 1.26、.NET 10 SDK、Docker Compose，以及重建 Windows Agent 时使用的 `windres`。实际命令以 [CONTRIBUTING.md](CONTRIBUTING.md) 和 CI 为准。
+要求 Node.js 24 LTS、pnpm、Go 1.26、.NET 10 SDK、JDK 17、Android SDK/NDK、Docker Compose，以及重建 Windows Agent 时使用的 `windres`。实际命令以 [CONTRIBUTING.md](CONTRIBUTING.md) 和 CI 为准。
 
 ```powershell
 Set-Location control-center

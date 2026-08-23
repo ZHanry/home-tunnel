@@ -82,8 +82,11 @@ jobs:
           control_version=$(node -p "require('./control-center/package.json').version")
           gateway_version=$(node -p "require('./traffic-gateway/package.json').version")
           linux_version=$(sed -n 's/^const Version = "\([^"]*\)"$/\1/p' linux-client/internal/model/model.go)
+          android_version_name=$(sed -n 's/^HOME_TUNNEL_VERSION_NAME=//p' android-client/gradle.properties)
+          android_version_code=$(sed -n 's/^HOME_TUNNEL_VERSION_CODE=//p' android-client/gradle.properties)
+          android_agent_version=$(sed -n 's/^agent_version=//p' android-client/scripts/build-agent.sh)
           deployment_version=$(sed -n 's/^HOME_TUNNEL_VERSION=//p' .env.example)
-          for candidate in "$control_version" "$gateway_version" "$linux_version"; do
+          for candidate in "$control_version" "$gateway_version" "$linux_version" "$android_version_name" "$android_agent_version"; do
             test "$candidate" = "$base_version" || {
               echo "Tag $version does not match source version $candidate" >&2
               exit 1
@@ -91,6 +94,12 @@ jobs:
           done
           test "$deployment_version" = "$rc_version" || {
             echo "Deployment default $deployment_version must identify the promoted RC $rc_version" >&2
+            exit 1
+          }
+          [[ "$base_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]
+          expected_android_code=$((10#${BASH_REMATCH[1]} * 1000000 + 10#${BASH_REMATCH[2]} * 1000 + 10#${BASH_REMATCH[3]}))
+          test "$android_version_code" -eq "$expected_android_code" || {
+            echo "Android versionCode mismatch: expected $expected_android_code, found $android_version_code" >&2
             exit 1
           }
           frps_version=$(jq -r .version deploy/frps/dependency.json)
@@ -137,6 +146,7 @@ jobs:
             'Analyze (Go Linux client)'
             'Analyze (Go Windows Agent)'
             'Analyze (C# Windows client)'
+            'Analyze (Java/Kotlin Android client)'
             'Secret Scan'
             'Build and validate Pages'
           )
@@ -406,6 +416,254 @@ jobs:
           path: release-windows/*
           if-no-files-found: error
 
+  android-package:
+    name: Android 8+ arm64 Experimental APK and AAB
+    if: needs.metadata.outputs.stable != 'true'
+    needs: metadata
+    runs-on: ubuntu-latest
+    environment: android-release
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Verify the pinned Gradle wrapper
+        run: |
+          set -euo pipefail
+          echo '498495120a03b9a6ab5d155f5de3c8f0d986a449153702fb80fc80e134484f17  android-client/gradle/wrapper/gradle-wrapper.jar' | sha256sum -c -
+          grep -Fxq 'distributionUrl=https\://services.gradle.org/distributions/gradle-8.9-bin.zip' android-client/gradle/wrapper/gradle-wrapper.properties
+          grep -Fxq 'distributionSha256Sum=d725d707bfabd4dfdc958c624003b3c80accc03f7037b5122c4b1d0ef15cecab' android-client/gradle/wrapper/gradle-wrapper.properties
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: 1.26.6
+          cache: false
+      - id: android-agent
+        name: Build the embedded arm64 Android Agent
+        working-directory: android-client
+        env:
+          ANDROID_AGENT_ABIS: arm64-v8a
+        run: |
+          set -euo pipefail
+          evidence=$(mktemp)
+          ./scripts/build-agent.sh | tee "$evidence"
+          agent=app/src/main/jniLibs/arm64-v8a/libhometunnel_agent.so
+          test -s "$agent"
+          reported_abi=$(sed -n 's/^ANDROID_AGENT_ABI=//p' "$evidence")
+          reported_sha=$(sed -n 's/^ANDROID_AGENT_SHA256=//p' "$evidence")
+          test "$reported_abi" = arm64-v8a
+          [[ "$reported_sha" =~ ^[0-9a-f]{64}$ ]]
+          test "$(sha256sum "$agent" | awk '{print $1}')" = "$reported_sha"
+          native_outputs=$(find app/src/main/jniLibs -type f -name libhometunnel_agent.so -printf '%P\n' | sort)
+          test "$native_outputs" = arm64-v8a/libhometunnel_agent.so
+          {
+            echo "sha256=$reported_sha"
+            echo "path=$PWD/$agent"
+          } >> "$GITHUB_OUTPUT"
+      - id: android
+        name: Build the persistently signed Android release packages
+        working-directory: ${{ github.workspace }}
+        shell: bash
+        env:
+          VERSION: ${{ needs.metadata.outputs.base-version }}
+          # Keep Gradle's ABI filter aligned with the Agent build step. Without
+          # this, transitive native libraries can add an unusable x86_64 split
+          # even though the Experimental release packages only the arm64 Agent.
+          ANDROID_AGENT_ABIS: arm64-v8a
+          ANDROID_RELEASE_KEYSTORE_BASE64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}
+          ANDROID_RELEASE_STORE_PASSWORD: ${{ secrets.ANDROID_RELEASE_STORE_PASSWORD }}
+          ANDROID_RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}
+          ANDROID_RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for secret_name in \
+            ANDROID_RELEASE_KEYSTORE_BASE64 \
+            ANDROID_RELEASE_STORE_PASSWORD \
+            ANDROID_RELEASE_KEY_ALIAS \
+            ANDROID_RELEASE_KEY_PASSWORD; do
+            test -n "${!secret_name:-}" || {
+              echo "Protected Android signing secret is missing: $secret_name" >&2
+              exit 1
+            }
+          done
+          test -s android-client/release-signing-cert.sha256 || {
+            echo 'The reviewed Android release certificate fingerprint is missing.' >&2
+            exit 1
+          }
+          keystore="$RUNNER_TEMP/home-tunnel-android-release.p12"
+          umask 077
+          trap 'rm -f -- "$keystore"' EXIT
+          printf '%s' "$ANDROID_RELEASE_KEYSTORE_BASE64" | base64 --decode > "$keystore"
+          test -s "$keystore"
+          export ANDROID_RELEASE_STORE_FILE="$keystore"
+          (
+            cd android-client
+            ./gradlew --no-daemon clean test lint assembleRelease bundleRelease
+          )
+          source_apk=android-client/app/build/outputs/apk/release/app-release.apk
+          source_aab=android-client/app/build/outputs/bundle/release/app-release.aab
+          test -s "$source_apk" && test -s "$source_aab" || {
+            echo 'Signed Android APK or AAB output is missing; unsigned output is never accepted.' >&2
+            exit 1
+          }
+          mkdir release-android
+          apk="$PWD/release-android/HomeTunnel-Android-$VERSION-arm64-v8a.apk"
+          aab="$PWD/release-android/HomeTunnel-Android-$VERSION.aab"
+          cp "$source_apk" "$apk"
+          cp "$source_aab" "$aab"
+          {
+            echo "apk=$apk"
+            echo "aab=$aab"
+            echo "apk-sbom=$apk.spdx.json"
+            echo "aab-sbom=$aab.spdx.json"
+            echo "evidence=$PWD/release-android/android-release-evidence.json"
+          } >> "$GITHUB_OUTPUT"
+      - id: android-verify
+        name: Verify package identity, version, ABI, and persistent signer
+        shell: bash
+        env:
+          APK: ${{ steps.android.outputs.apk }}
+          AAB: ${{ steps.android.outputs.aab }}
+          EVIDENCE: ${{ steps.android.outputs.evidence }}
+          VERSION: ${{ needs.metadata.outputs.base-version }}
+          AGENT_SHA256: ${{ steps.android-agent.outputs.sha256 }}
+        run: |
+          set -euo pipefail
+          export LC_ALL=C
+          expected_code=$(sed -n 's/^HOME_TUNNEL_VERSION_CODE=//p' android-client/gradle.properties)
+          expected_cert=$(tr -d '[:space:]:' < android-client/release-signing-cert.sha256 | tr 'A-F' 'a-f')
+          [[ "$expected_code" =~ ^[1-9][0-9]*$ ]]
+          [[ "$expected_cert" =~ ^[0-9a-f]{64}$ ]]
+
+          sdk_root=${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}
+          test -d "$sdk_root"
+          apksigner=$(find "$sdk_root/build-tools" -type f -name apksigner | sort -V | tail -n 1)
+          apkanalyzer=$(command -v apkanalyzer || find "$sdk_root/cmdline-tools" -type f -path '*/bin/apkanalyzer' | sort -V | tail -n 1)
+          test -x "$apksigner" && test -x "$apkanalyzer"
+          apk_signature=$($apksigner verify --verbose --print-certs "$APK")
+          printf '%s\n' "$apk_signature"
+          grep -Fq 'Verified using v2 scheme (APK Signature Scheme v2): true' <<< "$apk_signature"
+          apk_cert=$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' <<< "$apk_signature" | tr -d '[:space:]:' | tr 'A-F' 'a-f')
+          test "$apk_cert" = "$expected_cert"
+          test "$($apkanalyzer manifest application-id "$APK")" = io.github.zhanry.hometunnel
+          test "$($apkanalyzer manifest version-name "$APK")" = "$VERSION"
+          test "$($apkanalyzer manifest version-code "$APK")" = "$expected_code"
+          min_sdk=$($apkanalyzer manifest min-sdk "$APK")
+          target_sdk=$($apkanalyzer manifest target-sdk "$APK")
+          test "$min_sdk" -eq 26
+          test "$target_sdk" -ge 35
+          apk_abis=$(unzip -Z1 "$APK" | sed -n 's#^lib/\([^/]*\)/.*#\1#p' | sort -u)
+          test "$apk_abis" = arm64-v8a
+          unzip -Z1 "$APK" | grep -Fxq lib/arm64-v8a/libhometunnel_agent.so
+          apk_agent_sha=$(unzip -p "$APK" lib/arm64-v8a/libhometunnel_agent.so | sha256sum | awk '{print $1}')
+          test "$apk_agent_sha" = "$AGENT_SHA256"
+
+          bundletool="$RUNNER_TEMP/bundletool-all-1.18.3.jar"
+          curl --fail --location --proto '=https' --tlsv1.2 \
+            https://github.com/google/bundletool/releases/download/1.18.3/bundletool-all-1.18.3.jar \
+            --output "$bundletool"
+          echo 'a099cfa1543f55593bc2ed16a70a7c67fe54b1747bb7301f37fdfd6d91028e29  '"$bundletool" | sha256sum -c -
+          java -jar "$bundletool" validate --bundle="$AAB"
+          aab_signature=$(jarsigner -verify -verbose -certs "$AAB" 2>&1)
+          grep -Fq 'jar verified.' <<< "$aab_signature"
+          aab_cert=$(keytool -printcert -jarfile "$AAB" | sed -n 's/^[[:space:]]*SHA256: //p' | tr -d '[:space:]:' | tr 'A-F' 'a-f')
+          test "$aab_cert" = "$expected_cert"
+          test "$(java -jar "$bundletool" dump manifest --bundle="$AAB" --xpath=/manifest/@package)" = io.github.zhanry.hometunnel
+          test "$(java -jar "$bundletool" dump manifest --bundle="$AAB" --xpath=/manifest/@android:versionName)" = "$VERSION"
+          test "$(java -jar "$bundletool" dump manifest --bundle="$AAB" --xpath=/manifest/@android:versionCode)" = "$expected_code"
+          aab_abis=$(unzip -Z1 "$AAB" | sed -n 's#^base/lib/\([^/]*\)/.*#\1#p' | sort -u)
+          test "$aab_abis" = arm64-v8a
+          unzip -Z1 "$AAB" | grep -Fxq base/lib/arm64-v8a/libhometunnel_agent.so
+          aab_agent_sha=$(unzip -p "$AAB" base/lib/arm64-v8a/libhometunnel_agent.so | sha256sum | awk '{print $1}')
+          test "$aab_agent_sha" = "$AGENT_SHA256"
+
+          apk_sha=$(sha256sum "$APK" | awk '{print $1}')
+          aab_sha=$(sha256sum "$AAB" | awk '{print $1}')
+          (cd "$(dirname "$APK")" && sha256sum "$(basename "$APK")" > "$(basename "$APK").sha256")
+          (cd "$(dirname "$AAB")" && sha256sum "$(basename "$AAB")" > "$(basename "$AAB").sha256")
+          jq -n \
+            --arg version "$VERSION" \
+            --argjson version_code "$expected_code" \
+            --argjson min_sdk "$min_sdk" \
+            --argjson target_sdk "$target_sdk" \
+            --arg apk_sha256 "$apk_sha" \
+            --arg aab_sha256 "$aab_sha" \
+            --arg agent_sha256 "$AGENT_SHA256" \
+            --arg signing_certificate_sha256 "$expected_cert" \
+            --arg revision "$GITHUB_SHA" \
+            --arg build_identity "https://github.com/$GITHUB_REPOSITORY/.github/workflows/release-images.yml@refs/tags/$GITHUB_REF_NAME" \
+            '{schema_version:1,status:"passed",release_channel:"experimental",
+              platform:"android",application_id:"io.github.zhanry.hometunnel",
+              version_name:$version,version_code:$version_code,min_sdk:$min_sdk,target_sdk:$target_sdk,
+              abis:["arm64-v8a"],apk_sha256:$apk_sha256,aab_sha256:$aab_sha256,
+              agent_sha256:$agent_sha256,signing_certificate_sha256:$signing_certificate_sha256,
+              repository_revision:$revision,build_identity:$build_identity,
+              validations:["unit_tests","lint","apk_signature_v2","aab_signature","bundletool_validate","package_identity","version","arm64_abi","embedded_agent_hash"],
+              physical_arm64_install:"not_run_in_github_actions"}' > "$EVIDENCE"
+      - name: Generate Android APK SPDX SBOM
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with:
+          path: ${{ steps.android.outputs.apk }}
+          format: spdx-json
+          output-file: ${{ steps.android.outputs.apk-sbom }}
+          upload-artifact: false
+          upload-release-assets: false
+      - name: Generate Android AAB SPDX SBOM
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with:
+          path: ${{ steps.android.outputs.aab }}
+          format: spdx-json
+          output-file: ${{ steps.android.outputs.aab-sbom }}
+          upload-artifact: false
+          upload-release-assets: false
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+      - name: Keyless-sign the Android package and evidence set
+        shell: bash
+        env:
+          APK: ${{ steps.android.outputs.apk }}
+          AAB: ${{ steps.android.outputs.aab }}
+          APK_SBOM: ${{ steps.android.outputs.apk-sbom }}
+          AAB_SBOM: ${{ steps.android.outputs.aab-sbom }}
+          EVIDENCE: ${{ steps.android.outputs.evidence }}
+        run: |
+          set -euo pipefail
+          for subject in "$APK" "$APK.sha256" "$APK_SBOM" "$AAB" "$AAB.sha256" "$AAB_SBOM" "$EVIDENCE"; do
+            test -s "$subject"
+            cosign sign-blob --yes --bundle "$subject.sigstore.json" "$subject"
+          done
+      - name: Publish GitHub Android APK provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: ${{ steps.android.outputs.apk }}
+      - name: Publish GitHub Android APK SBOM attestation
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: ${{ steps.android.outputs.apk }}
+          sbom-path: ${{ steps.android.outputs.apk-sbom }}
+      - name: Publish GitHub Android AAB provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: ${{ steps.android.outputs.aab }}
+      - name: Publish GitHub Android AAB SBOM attestation
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: ${{ steps.android.outputs.aab }}
+          sbom-path: ${{ steps.android.outputs.aab-sbom }}
+      - name: Attest the Android release evidence
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: ${{ steps.android.outputs.evidence }}
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: android-release
+          path: release-android/*
+          if-no-files-found: error
+
   client-packages:
     name: Client package (${{ matrix.platform }}-${{ matrix.arch }})
     if: needs.metadata.outputs.stable != 'true'
@@ -515,7 +773,7 @@ jobs:
   rc-assets:
     name: Assemble RC assets and digest manifest
     if: needs.metadata.outputs.stable != 'true'
-    needs: [metadata, images, agent-evidence, client-packages]
+    needs: [metadata, images, agent-evidence, android-package, client-packages]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -532,6 +790,10 @@ jobs:
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: windows-release
+          path: release
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: android-release
           path: release
       - name: Verify complete matrices and write manifests
         shell: bash
@@ -585,6 +847,39 @@ jobs:
             .install == "passed" and .uninstalled == true and
             (.agent_version | startswith("Home Tunnel Agent " + $version)) and
             .signature_trust == "untrusted-self-signed"' release/windows-exe-smoke.json >/dev/null
+          android_apk="release/HomeTunnel-Android-$BASE_VERSION-arm64-v8a.apk"
+          android_aab="release/HomeTunnel-Android-$BASE_VERSION.aab"
+          for subject in "$android_apk" "$android_aab"; do
+            test -s "$subject"
+            test -s "$subject.sha256"
+            test -s "$subject.spdx.json"
+            test -s "$subject.sigstore.json"
+            test -s "$subject.sha256.sigstore.json"
+            test -s "$subject.spdx.json.sigstore.json"
+            (cd release && sha256sum -c "$(basename "$subject").sha256")
+          done
+          test -s release/android-release-evidence.json
+          test -s release/android-release-evidence.json.sigstore.json
+          android_apk_sha=$(sha256sum "$android_apk" | awk '{print $1}')
+          android_aab_sha=$(sha256sum "$android_aab" | awk '{print $1}')
+          android_apk_agent_sha=$(unzip -p "$android_apk" lib/arm64-v8a/libhometunnel_agent.so | sha256sum | awk '{print $1}')
+          android_aab_agent_sha=$(unzip -p "$android_aab" base/lib/arm64-v8a/libhometunnel_agent.so | sha256sum | awk '{print $1}')
+          test "$android_apk_agent_sha" = "$android_aab_agent_sha"
+          android_version_code=$(sed -n 's/^HOME_TUNNEL_VERSION_CODE=//p' android-client/gradle.properties)
+          android_cert=$(tr -d '[:space:]:' < android-client/release-signing-cert.sha256 | tr 'A-F' 'a-f')
+          jq -e --arg version "$BASE_VERSION" --argjson version_code "$android_version_code" --arg apk_sha "$android_apk_sha" \
+            --arg aab_sha "$android_aab_sha" --arg agent_sha "$android_apk_agent_sha" \
+            --arg cert "$android_cert" --arg revision "$GITHUB_SHA" '
+            .status == "passed" and .release_channel == "experimental" and
+            .platform == "android" and .application_id == "io.github.zhanry.hometunnel" and
+            .version_name == $version and .version_code == $version_code and .min_sdk == 26 and
+            .target_sdk >= 35 and .abis == ["arm64-v8a"] and
+            .apk_sha256 == $apk_sha and .aab_sha256 == $aab_sha and
+            .agent_sha256 == $agent_sha and
+            .signing_certificate_sha256 == $cert and .repository_revision == $revision and
+            (.validations | index("embedded_agent_hash")) and
+            .physical_arm64_install == "not_run_in_github_actions"' \
+            release/android-release-evidence.json >/dev/null
           test "$(jq '.images | length' release/image-digests.json)" -eq 2
           jq -e '.images["control-center"].digest | test("^sha256:[0-9a-f]{64}$")' release/image-digests.json >/dev/null
           jq -e '.images["traffic-gateway"].digest | test("^sha256:[0-9a-f]{64}$")' release/image-digests.json >/dev/null
@@ -639,7 +934,12 @@ jobs:
           set -euo pipefail
           (
             cd release
-            find . -maxdepth 1 -type f ! -name '*.sigstore.json' ! -name 'SHA256SUMS.txt' -printf '%f\0' |
+            # Seal every already-produced asset, including the individual
+            # Sigstore bundles. Only the aggregate manifest and its bundle are
+            # necessarily created after this list, avoiding a circular hash.
+            find . -maxdepth 1 -type f \
+              ! -name 'SHA256SUMS.txt' \
+              ! -name 'SHA256SUMS.txt.sigstore.json' -printf '%f\0' |
               sort -z | xargs -0 shasum -a 256 > SHA256SUMS.txt
             shasum -a 256 -c SHA256SUMS.txt
           )
@@ -675,14 +975,26 @@ jobs:
           make_latest: false
           generate_release_notes: true
           body: |
-            Before enabling TCP/UDP port tunnels, back up SQLite (this release
-            migrates through schema 008), upgrade the control center, FRPS,
-            and every managed client, then select exactly one of the TCP, UDP,
-            or combined L4 Compose overlays and mirror its range in the host
-            firewall. Raw TCP/UDP bypass Caddy and the Traffic Gateway, so
-            gateway Basic Auth, IP allowlists, rate limits, metering, and
-            monthly quotas do not apply. RTSP-over-TCP uses a TCP mapping;
-            dynamic RTP/RTCP UDP ports require explicit fixed mappings.
+            Android 8.0+ `arm64-v8a` is introduced as Experimental software.
+            Sideload `HomeTunnel-Android-${{ needs.metadata.outputs.base-version }}-arm64-v8a.apk`
+            only after verifying `SHA256SUMS.txt`, the persistent signing
+            certificate fingerprint, and the attached Sigstore evidence. The
+            AAB is a non-installable audit/upload artifact and is not declared
+            Play-ready. Android foreground-service notification and OEM battery
+            restrictions can affect background tunnel reliability. This first
+            Android client advertises HTTP support only and never starts assigned
+            TCP/UDP records.
+
+            Android 8.0+ `arm64-v8a` 首版为 Experimental。普通用户应核验
+            SHA-256、长期签名证书指纹与 Sigstore 证据后侧载 APK；AAB 不能
+            直接安装，也不代表已满足 Google Play 发布要求。前台服务通知、
+            省电策略与 OEM 后台限制可能影响隧道常驻可靠性。
+
+            Back up SQLite and upgrade the control center, FRPS, and managed
+            clients together. Raw TCP/UDP bypass Caddy and the Traffic Gateway,
+            so gateway authentication, allowlists, limits, metering, and quotas
+            do not apply. The matching Stable tag must promote the exact
+            `${{ needs.metadata.outputs.rc-version }}` commit and asset set.
 
             Windows x64 EXE is Experimental and uses an ephemeral self-signed
             certificate. Windows can show an unknown-publisher or SmartScreen
@@ -710,6 +1022,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: "17"
       - uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
       - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
@@ -726,9 +1042,25 @@ jobs:
           BASE_VERSION: ${{ needs.metadata.outputs.base-version }}
         run: |
           set -euo pipefail
+          export LC_ALL=C
           mkdir release
           gh release download "$RC_TAG" --dir release
-          (cd release && shasum -a 256 -c SHA256SUMS.txt)
+          (
+            cd release
+            shasum -a 256 -c SHA256SUMS.txt
+            expected_assets=$(mktemp)
+            actual_assets=$(mktemp)
+            trap 'rm -f "$expected_assets" "$actual_assets"' EXIT
+            {
+              sed -E 's/^[0-9a-f]{64} [ *]//' SHA256SUMS.txt
+              printf '%s\n' SHA256SUMS.txt SHA256SUMS.txt.sigstore.json
+            } | sort > "$expected_assets"
+            find . -maxdepth 1 -type f -printf '%f\n' | sort > "$actual_assets"
+            diff -u "$expected_assets" "$actual_assets" || {
+              echo 'RC Release contains an asset outside the signed aggregate manifest.' >&2
+              exit 1
+            }
+          )
           cosign verify-blob --bundle release/SHA256SUMS.txt.sigstore.json \
             --certificate-identity-regexp "^https://github.com/$GITHUB_REPOSITORY/\\.github/workflows/release-images\\.yml@refs/tags/$RC_TAG$" \
             --certificate-oidc-issuer https://token.actions.githubusercontent.com release/SHA256SUMS.txt
@@ -781,7 +1113,80 @@ jobs:
           jq -e --arg version "$BASE_VERSION" --arg sha "$windows_sha" '
             .status == "passed" and .version == $version and .installer_sha256 == $sha and
             .install == "passed" and .uninstalled == true' release/windows-exe-smoke.json >/dev/null
-          for evidence in e2e-smoke.json backup.json restore.json release-smoke.json windows-exe-smoke.json; do
+          android_apk="release/HomeTunnel-Android-$BASE_VERSION-arm64-v8a.apk"
+          android_aab="release/HomeTunnel-Android-$BASE_VERSION.aab"
+          for subject in "$android_apk" "$android_aab"; do
+            test -s "$subject" && test -s "$subject.sha256" && test -s "$subject.spdx.json"
+            test -s "$subject.sigstore.json" && test -s "$subject.sha256.sigstore.json"
+            test -s "$subject.spdx.json.sigstore.json"
+            (cd release && sha256sum -c "$(basename "$subject").sha256")
+            for signed_subject in "$subject" "$subject.sha256" "$subject.spdx.json"; do
+              cosign verify-blob --bundle "$signed_subject.sigstore.json" \
+                --certificate-identity-regexp "^https://github.com/$GITHUB_REPOSITORY/\\.github/workflows/release-images\\.yml@refs/tags/$RC_TAG$" \
+                --certificate-oidc-issuer https://token.actions.githubusercontent.com "$signed_subject"
+            done
+          done
+          test -s release/android-release-evidence.json
+          test -s release/android-release-evidence.json.sigstore.json
+          cosign verify-blob --bundle release/android-release-evidence.json.sigstore.json \
+            --certificate-identity-regexp "^https://github.com/$GITHUB_REPOSITORY/\\.github/workflows/release-images\\.yml@refs/tags/$RC_TAG$" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com release/android-release-evidence.json
+
+          expected_android_code=$(sed -n 's/^HOME_TUNNEL_VERSION_CODE=//p' android-client/gradle.properties)
+          expected_android_cert=$(tr -d '[:space:]:' < android-client/release-signing-cert.sha256 | tr 'A-F' 'a-f')
+          [[ "$expected_android_code" =~ ^[1-9][0-9]*$ ]]
+          [[ "$expected_android_cert" =~ ^[0-9a-f]{64}$ ]]
+          sdk_root=${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}
+          apksigner=$(find "$sdk_root/build-tools" -type f -name apksigner | sort -V | tail -n 1)
+          apkanalyzer=$(command -v apkanalyzer || find "$sdk_root/cmdline-tools" -type f -path '*/bin/apkanalyzer' | sort -V | tail -n 1)
+          test -x "$apksigner" && test -x "$apkanalyzer"
+          android_apk_signature=$($apksigner verify --verbose --print-certs "$android_apk")
+          grep -Fq 'Verified using v2 scheme (APK Signature Scheme v2): true' <<< "$android_apk_signature"
+          android_apk_cert=$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' <<< "$android_apk_signature" | tr -d '[:space:]:' | tr 'A-F' 'a-f')
+          test "$android_apk_cert" = "$expected_android_cert"
+          test "$($apkanalyzer manifest application-id "$android_apk")" = io.github.zhanry.hometunnel
+          test "$($apkanalyzer manifest version-name "$android_apk")" = "$BASE_VERSION"
+          test "$($apkanalyzer manifest version-code "$android_apk")" = "$expected_android_code"
+          test "$($apkanalyzer manifest min-sdk "$android_apk")" -eq 26
+          test "$($apkanalyzer manifest target-sdk "$android_apk")" -ge 35
+          test "$(unzip -Z1 "$android_apk" | sed -n 's#^lib/\([^/]*\)/.*#\1#p' | sort -u)" = arm64-v8a
+          unzip -Z1 "$android_apk" | grep -Fxq lib/arm64-v8a/libhometunnel_agent.so
+          promoted_apk_agent_sha=$(unzip -p "$android_apk" lib/arm64-v8a/libhometunnel_agent.so | sha256sum | awk '{print $1}')
+
+          bundletool="$RUNNER_TEMP/bundletool-all-1.18.3.jar"
+          curl --fail --location --proto '=https' --tlsv1.2 \
+            https://github.com/google/bundletool/releases/download/1.18.3/bundletool-all-1.18.3.jar \
+            --output "$bundletool"
+          echo 'a099cfa1543f55593bc2ed16a70a7c67fe54b1747bb7301f37fdfd6d91028e29  '"$bundletool" | sha256sum -c -
+          java -jar "$bundletool" validate --bundle="$android_aab"
+          android_aab_signature=$(jarsigner -verify -verbose -certs "$android_aab" 2>&1)
+          grep -Fq 'jar verified.' <<< "$android_aab_signature"
+          android_aab_cert=$(keytool -printcert -jarfile "$android_aab" | sed -n 's/^[[:space:]]*SHA256: //p' | tr -d '[:space:]:' | tr 'A-F' 'a-f')
+          test "$android_aab_cert" = "$expected_android_cert"
+          test "$(java -jar "$bundletool" dump manifest --bundle="$android_aab" --xpath=/manifest/@package)" = io.github.zhanry.hometunnel
+          test "$(java -jar "$bundletool" dump manifest --bundle="$android_aab" --xpath=/manifest/@android:versionName)" = "$BASE_VERSION"
+          test "$(java -jar "$bundletool" dump manifest --bundle="$android_aab" --xpath=/manifest/@android:versionCode)" = "$expected_android_code"
+          test "$(unzip -Z1 "$android_aab" | sed -n 's#^base/lib/\([^/]*\)/.*#\1#p' | sort -u)" = arm64-v8a
+          unzip -Z1 "$android_aab" | grep -Fxq base/lib/arm64-v8a/libhometunnel_agent.so
+          promoted_aab_agent_sha=$(unzip -p "$android_aab" base/lib/arm64-v8a/libhometunnel_agent.so | sha256sum | awk '{print $1}')
+          test "$promoted_apk_agent_sha" = "$promoted_aab_agent_sha"
+          android_apk_sha=$(sha256sum "$android_apk" | awk '{print $1}')
+          android_aab_sha=$(sha256sum "$android_aab" | awk '{print $1}')
+          jq -e --arg version "$BASE_VERSION" --argjson version_code "$expected_android_code" \
+            --arg apk_sha "$android_apk_sha" --arg aab_sha "$android_aab_sha" \
+            --arg agent_sha "$promoted_apk_agent_sha" \
+            --arg cert "$expected_android_cert" --arg revision "$GITHUB_SHA" '
+            .status == "passed" and .release_channel == "experimental" and
+            .platform == "android" and .application_id == "io.github.zhanry.hometunnel" and
+            .version_name == $version and .version_code == $version_code and .min_sdk == 26 and
+            .target_sdk >= 35 and .abis == ["arm64-v8a"] and
+            .apk_sha256 == $apk_sha and .aab_sha256 == $aab_sha and
+            .agent_sha256 == $agent_sha and
+            .signing_certificate_sha256 == $cert and .repository_revision == $revision and
+            (.validations | index("embedded_agent_hash")) and
+            .physical_arm64_install == "not_run_in_github_actions"' \
+            release/android-release-evidence.json >/dev/null
+          for evidence in e2e-smoke.json backup.json restore.json release-smoke.json windows-exe-smoke.json android-release-evidence.json; do
             test -s "release/$evidence"
           done
           jq -e '.status == "passed" and (.tests | index("authenticated_api")) and
@@ -842,14 +1247,27 @@ jobs:
           make_latest: false
           generate_release_notes: true
           body: |
-            Before enabling TCP/UDP port tunnels, back up SQLite (this release
-            migrates through schema 008), upgrade the control center, FRPS,
-            and every managed client, then select exactly one of the TCP, UDP,
-            or combined L4 Compose overlays and mirror its range in the host
-            firewall. Raw TCP/UDP bypass Caddy and the Traffic Gateway, so
-            gateway Basic Auth, IP allowlists, rate limits, metering, and
-            monthly quotas do not apply. RTSP-over-TCP uses a TCP mapping;
-            dynamic RTP/RTCP UDP ports require explicit fixed mappings.
+            Android 8.0+ `arm64-v8a` is introduced as Experimental software.
+            Sideload `HomeTunnel-Android-${{ needs.metadata.outputs.base-version }}-arm64-v8a.apk`
+            only after verifying `SHA256SUMS.txt`, the persistent signing
+            certificate fingerprint, and the attached Sigstore evidence. The
+            AAB is a non-installable audit/upload artifact and is not declared
+            Play-ready. Android foreground-service notification and OEM battery
+            restrictions can affect background tunnel reliability. This first
+            Android client advertises HTTP support only and never starts assigned
+            TCP/UDP records.
+
+            Android 8.0+ `arm64-v8a` 首版为 Experimental。普通用户应核验
+            SHA-256、长期签名证书指纹与 Sigstore 证据后侧载 APK；AAB 不能
+            直接安装，也不代表已满足 Google Play 发布要求。前台服务通知、
+            省电策略与 OEM 后台限制可能影响隧道常驻可靠性。
+
+            Back up SQLite and upgrade the control center, FRPS, and managed
+            clients together. Raw TCP/UDP bypass Caddy and the Traffic Gateway,
+            so gateway authentication, allowlists, limits, metering, and quotas
+            do not apply. This Stable release promotes the exact
+            `${{ needs.metadata.outputs.rc-version }}` commit and asset set
+            without rebuilding or re-signing Android packages.
 
             Windows x64 EXE is Experimental and uses an ephemeral self-signed
             certificate. Windows can show an unknown-publisher or SmartScreen
@@ -919,7 +1337,7 @@ jobs:
         run: gh release delete "$TAG" --yes || true
   release-gate:
     name: Release Gate
-    needs: [metadata, images, agent-evidence, client-packages, rc-assets, release-smoke, rc-release, stable-release]
+    needs: [metadata, images, agent-evidence, android-package, client-packages, rc-assets, release-smoke, rc-release, stable-release]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     steps:
@@ -929,6 +1347,7 @@ jobs:
           STABLE: ${{ needs.metadata.outputs.stable }}
           IMAGES_RESULT: ${{ needs.images.result }}
           AGENT_EVIDENCE_RESULT: ${{ needs.agent-evidence.result }}
+          ANDROID_PACKAGE_RESULT: ${{ needs.android-package.result }}
           PACKAGES_RESULT: ${{ needs.client-packages.result }}
           ASSETS_RESULT: ${{ needs.rc-assets.result }}
           SMOKE_RESULT: ${{ needs.release-smoke.result }}
@@ -940,6 +1359,7 @@ jobs:
           if [ "$STABLE" = true ]; then
             test "$IMAGES_RESULT" = skipped
             test "$AGENT_EVIDENCE_RESULT" = skipped
+            test "$ANDROID_PACKAGE_RESULT" = skipped
             test "$PACKAGES_RESULT" = skipped
             test "$ASSETS_RESULT" = skipped
             test "$SMOKE_RESULT" = skipped
@@ -948,6 +1368,7 @@ jobs:
           else
             test "$IMAGES_RESULT" = success
             test "$AGENT_EVIDENCE_RESULT" = success
+            test "$ANDROID_PACKAGE_RESULT" = success
             test "$PACKAGES_RESULT" = success
             test "$ASSETS_RESULT" = success
             test "$SMOKE_RESULT" = success

@@ -1,6 +1,6 @@
 # Security policy
 
-Home Tunnel exposes services from a private network to the public Internet. Treat every deployment as security-sensitive and keep the control center, gateway, FRPS, Caddy and Windows client on supported versions.
+Home Tunnel exposes services from a private network to the public Internet. Treat every deployment as security-sensitive and keep the control center, gateway, FRPS, Caddy, and every managed client on supported versions.
 
 ## Supported versions
 
@@ -10,8 +10,8 @@ versions. Older builds should be upgraded before reporting a problem.
 
 | Version | Supported |
 | --- | --- |
-| 3.1.x | Yes |
-| 3.1.0 RC builds | Prerelease testing only |
+| 3.2.x | Yes |
+| 3.2.0 RC builds | Prerelease testing only |
 | Earlier versions | No |
 
 ## Reporting a vulnerability
@@ -44,6 +44,15 @@ The maintainers will acknowledge a complete report as soon as practical, validat
 - Treat the current Windows EXE as self-signed Experimental software. Verify its
   Release SHA-256 and Sigstore evidence; the ephemeral Authenticode certificate
   is not a substitute for publisher trust.
+- Treat the Android 8.0+ `arm64-v8a` APK as Experimental software. Verify its
+  Release SHA-256, Sigstore evidence, application ID
+  `io.github.zhanry.hometunnel`, and persistent signing-certificate SHA-256.
+  Never install a build signed by an unexpected certificate. The AAB is not
+  directly installable and is not a statement of Google Play readiness.
+- Android foreground-service notifications, battery optimization, and OEM
+  background limits can interrupt long-running tunnels. Keep the notification
+  enabled, review device-specific restrictions, and do not treat Experimental
+  background operation as an availability guarantee.
 - Review logs before sharing them; Home Tunnel attempts to redact secrets, but diagnostics can still reveal hostnames and network topology.
 
 See [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md) for trust boundaries and operational assumptions.

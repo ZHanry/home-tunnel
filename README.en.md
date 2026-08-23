@@ -9,7 +9,7 @@ Home Tunnel is a self-hosted tunneling platform for personal and family services
 
 ![The real Home Tunnel management dashboard showing connections, traffic, and component health](docs/site/assets/admin-dashboard.jpg)
 
-> `v3.1.0` is promoted from the same commit and immutable artifact set as `v3.1.0-rc.2`. Linux server `amd64`/`arm64` and the Linux client are Stable. macOS headless is Beta. The Windows x64 EXE is self-signed Experimental software and displays an unknown-publisher warning.
+> `v3.2.0` is promoted from the same commit and immutable artifact set as `v3.2.0-rc.1`. The Linux server/client are Stable, macOS headless is Beta, and the Windows x64 plus Android 8.0+ `arm64-v8a` clients are Experimental.
 
 ## Quick Start
 
@@ -39,10 +39,22 @@ Read the one-time password from `deploy/secrets/bootstrap_admin_password`, open 
 | Headless client | Linux `amd64` / `arm64` | Stable | systemd, realtime configuration, and safety polling |
 | Headless client | macOS `amd64` / `arm64` | Beta | launchd package; broader real-hardware coverage is pending |
 | Desktop client | Windows 10/11 x64 | Experimental | Release provides a self-signed EXE and update manifest; Windows warns about the unknown publisher |
+| Mobile client | Android 8.0+ `arm64-v8a` | Experimental | Sideloadable GitHub APK; the AAB is not directly installable or a Play-readiness claim |
 
-The Windows EXE is built with the same RC artifact set later promoted unchanged to Stable and includes SHA-256, an SPDX SBOM, Sigstore bundles, and GitHub provenance. Self-signing proves only artifact-set consistency, not a trusted publisher identity. Trusted distribution still requires a public Authenticode certificate and protected signing environment.
+Windows and Android packages are built in the same RC asset set later promoted unchanged to Stable, with SHA-256, SPDX SBOMs, Sigstore bundles, and GitHub provenance. Windows self-signing proves artifact consistency rather than publisher trust. Android updates require the fixed application ID and persistent release certificate to remain unchanged.
 
-[Download the latest Windows x64 EXE](https://github.com/ZHanry/home-tunnel/releases/latest/download/HomeTunnel-Setup-3.1.0-x64.exe), verify its published SHA-256, and expect an unknown-publisher or SmartScreen prompt.
+[Download the latest Windows x64 EXE](https://github.com/ZHanry/home-tunnel/releases/latest/download/HomeTunnel-Setup-3.2.0-x64.exe), verify its published SHA-256, and expect an unknown-publisher or SmartScreen prompt.
+
+Android 8.0+ `arm64-v8a` users can sideload
+`HomeTunnel-Android-3.2.0-arm64-v8a.apk` from the latest GitHub Release after
+verifying `SHA256SUMS.txt`, the APK signing-certificate SHA-256, and Sigstore
+evidence. Its application ID is `io.github.zhanry.hometunnel`. The attached AAB
+cannot be installed directly and does not claim Google Play readiness. Foreground
+service notifications, battery optimization, and OEM background restrictions can
+affect long-running tunnels; this first Android release remains Experimental,
+advertises HTTP support only, and does not start assigned TCP/UDP records.
+See the [Android client guide](android-client/README.md) for build, permission,
+foreground-service, and diagnostics details.
 
 ## Why not raw FRP?
 
@@ -59,7 +71,7 @@ The Windows EXE is built with the same RC artifact set later promoted unchanged 
 Remote browser ─HTTPS→ Caddy ─→ Traffic Gateway ─→ FRPS ═managed tunnel═→ home device
 Remote TCP/UDP client ─assigned public port→ FRPS ═managed tunnel═→ fixed home TCP/UDP port
 Administrator  ─HTTPS→ Caddy ─→ Control Center ─→ SQLite
-Windows/Linux/macOS clients ─REST + WebSocket→ Control Center
+Windows/Linux/macOS/Android clients ─REST + WebSocket→ Control Center
 ```
 
 Control traffic and application traffic are separated. See [Architecture](docs/ARCHITECTURE.md) and the [Security Model](docs/SECURITY_MODEL.md). The project intentionally provides no public dynamic demo. Screenshots are generated from the current UI Preview and production frontend using local fixture domains and data.
@@ -88,14 +100,14 @@ TCP and UDP are disabled by default. Only an administrator can assign an exact p
 
 - Complete WebSocket messages are capped at 64 KiB, with explicit fragment and buffered-chunk limits. Tests cover overload, authentication failure, abrupt disconnect, resource reclamation, and reconnect.
 - CI audits production dependencies at Moderate severity and runs TypeScript, Go, .NET, Compose, contract, and documentation checks.
-- CodeQL explicitly analyzes JavaScript/TypeScript, Go, and C#. Secret Scanning and Push Protection should remain enabled.
-- Stable releases must use one commit and one verified artifact set with checksums, SBOMs, provenance, and signature evidence. The Windows EXE must also pass install, version, self-signature consistency, and uninstall checks.
+- CodeQL explicitly analyzes JavaScript/TypeScript, Go, C#, and Android Java/Kotlin. Secret Scanning and Push Protection should remain enabled.
+- Stable releases must use one commit and one verified artifact set with checksums, SBOMs, provenance, and signature evidence. Windows additionally passes installer checks; Android APK/AAB assets must pass package, version, ABI, and persistent-certificate verification.
 
 Never put vulnerability details, domains, IP addresses, tokens, passwords, or private log content in a public Issue. Use [GitHub private vulnerability reporting](https://github.com/ZHanry/home-tunnel/security/advisories/new) and read [SECURITY.md](SECURITY.md).
 
 ## Development
 
-The repository baseline is Node.js 24 LTS, Go 1.26, and .NET 10. See [CONTRIBUTING.md](CONTRIBUTING.md) for complete commands and [Release process](docs/RELEASING.md) for artifact rules.
+The repository baseline is Node.js 24 LTS, Go 1.26, .NET 10, and JDK 17 with the Android SDK. See [CONTRIBUTING.md](CONTRIBUTING.md) for complete commands and [Release process](docs/RELEASING.md) for artifact rules.
 
 ```powershell
 Set-Location control-center

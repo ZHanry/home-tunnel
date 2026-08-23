@@ -58,7 +58,7 @@ const deviceLoginLimiter = new FixedWindowLimiter(20, 60_000);
 const refreshLimiter = new FixedWindowLimiter(30, 60_000);
 const passwordChangeLimiter = new FixedWindowLimiter(5, 10 * 60_000);
 const dummyHashPromise = hashPassword("Dummy timing password 2026!");
-const clientTypeSchema = z.enum(["web", "windows", "linux"]);
+const clientTypeSchema = z.enum(["web", "windows", "linux", "android"]);
 
 function publicUser(user: UserRow) {
   return {
@@ -107,7 +107,7 @@ router.post(
     }
     if (user.status !== "active") throw new HttpError(423, "USER_DISABLED", "账号已禁用");
     if (body.client_type === "web" && user.role !== "admin") {
-      throw new HttpError(403, "FORBIDDEN", "普通用户只能使用 Windows 或 Linux 客户端");
+      throw new HttpError(403, "FORBIDDEN", "普通用户只能使用 Windows、Linux 或 Android 客户端");
     }
     if (
       user.password_state === "must_change" &&

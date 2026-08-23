@@ -723,7 +723,7 @@ try {
                 raise RuntimeError("Landing page does not point to the Linux quick start")
             windows_download = (
                 'href="https://github.com/ZHanry/home-tunnel/releases/latest/download/'
-                'HomeTunnel-Setup-3.1.0-x64.exe"'
+                'HomeTunnel-Setup-3.2.0-x64.exe"'
             )
             if windows_download not in landing_page or 'id="hero-download"' not in landing_page:
                 raise RuntimeError("Landing page does not expose the Windows x64 EXE")
