@@ -24,7 +24,7 @@ The maintainers will acknowledge a complete report as soon as practical, validat
 
 ## Deployment responsibilities
 
-- Replace every value marked `CHANGE_ME` before starting a public deployment.
+- Replace every example host, domain, and address in `.env` before starting a public deployment. Control-plane keys are generated under `deploy/secrets/` and must not be copied from examples.
 - Never commit `.env`, `secrets/`, signing keys, deployment handoff files or administrator credentials.
 - Use a unique administrator password and rotate any credential that may have entered Git history or a shared artifact.
 - Restrict TCP port 7000 to the clients that need it where practical, and keep ports 80/443 behind a maintained Caddy instance.

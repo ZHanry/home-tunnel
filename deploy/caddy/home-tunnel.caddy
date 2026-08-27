@@ -4,7 +4,12 @@ console.tunnel.example.com {
         on_demand
     }
     encode zstd gzip
-    reverse_proxy home-tunnel-control-center:8080
+    handle /internal* {
+        respond 404
+    }
+    handle {
+        reverse_proxy home-tunnel-control-center:8080
+    }
 }
 
 *.tunnel.example.com {

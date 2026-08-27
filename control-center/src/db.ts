@@ -347,14 +347,8 @@ export async function bootstrapAdmin(): Promise<void> {
   await transaction(async (client) => {
     await client.query(
       `INSERT INTO users(id,username,display_name,password_hash,password_state,temporary_password_expires_at,role)
-       VALUES(?,?,?,?,'must_change',home_tunnel_add_seconds(home_tunnel_now(),?),'admin')`,
-      [
-        userId,
-        config.bootstrapAdminUsername,
-        "系统管理员",
-        passwordHash,
-        config.temporaryPasswordSeconds,
-      ],
+       VALUES(?,?,?,?,'must_change',NULL,'admin')`,
+      [userId, config.bootstrapAdminUsername, "系统管理员", passwordHash],
     );
     await client.query(
       `INSERT INTO traffic_policies(id,scope_type,scope_id,bandwidth_limit_bps)

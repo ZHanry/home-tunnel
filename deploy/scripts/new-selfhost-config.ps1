@@ -127,15 +127,8 @@ HOME_TUNNEL_PUBLIC_BASE_URL=https://$ConsoleHost
 HOME_TUNNEL_FRPS_PUBLIC_HOST=$FrpsPublicHost
 HOME_TUNNEL_FRPS_BIND_ADDRESS=0.0.0.0
 HOME_TUNNEL_FRPS_PORT=7000
-HOME_TUNNEL_TCP_BIND_ADDRESS=0.0.0.0
-HOME_TUNNEL_TCP_PORT_START=10000
-HOME_TUNNEL_TCP_PORT_END=10099
-HOME_TUNNEL_UDP_BIND_ADDRESS=0.0.0.0
-HOME_TUNNEL_UDP_PORT_START=10000
-HOME_TUNNEL_UDP_PORT_END=10099
-HOME_TUNNEL_L4_BIND_ADDRESS=0.0.0.0
-HOME_TUNNEL_L4_PORT_START=10000
-HOME_TUNNEL_L4_PORT_END=10099
+# Raw TCP/UDP overlays fail closed until you set an explicit narrow range.
+# Example: HOME_TUNNEL_TCP_PORT_START=10554 HOME_TUNNEL_TCP_PORT_END=10554
 HOME_TUNNEL_ACME_EMAIL=$AcmeEmail
 HOME_TUNNEL_BOOTSTRAP_ADMIN_USERNAME=admin
 "@
@@ -146,4 +139,5 @@ HOME_TUNNEL_BOOTSTRAP_ADMIN_USERNAME=admin
     Write-Output "Created the untracked secret files below $secretRoot"
     Write-Output "Bootstrap username: admin"
     Write-Output "Read deploy/secrets/bootstrap_admin_password locally for the one-time password."
+    Write-Output "The bootstrap password stays valid until you sign in and change it."
 }

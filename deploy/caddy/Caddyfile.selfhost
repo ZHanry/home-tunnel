@@ -10,7 +10,14 @@
 # independent of control-center availability.
 {$HOME_TUNNEL_CONSOLE_HOST} {
     encode zstd gzip
-    reverse_proxy control-center:8080
+    # Internal control-plane routes belong on the Docker network only.
+    # Caddy's on-demand TLS ask already uses http://control-center:8080.
+    handle /internal* {
+        respond 404
+    }
+    handle {
+        reverse_proxy control-center:8080
+    }
 }
 
 *.{$HOME_TUNNEL_TUNNEL_DOMAIN} {

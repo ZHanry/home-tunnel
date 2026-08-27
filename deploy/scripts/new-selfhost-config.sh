@@ -83,15 +83,8 @@ HOME_TUNNEL_PUBLIC_BASE_URL=https://$console_host
 HOME_TUNNEL_FRPS_PUBLIC_HOST=$frps_public_host
 HOME_TUNNEL_FRPS_BIND_ADDRESS=0.0.0.0
 HOME_TUNNEL_FRPS_PORT=7000
-HOME_TUNNEL_TCP_BIND_ADDRESS=0.0.0.0
-HOME_TUNNEL_TCP_PORT_START=10000
-HOME_TUNNEL_TCP_PORT_END=10099
-HOME_TUNNEL_UDP_BIND_ADDRESS=0.0.0.0
-HOME_TUNNEL_UDP_PORT_START=10000
-HOME_TUNNEL_UDP_PORT_END=10099
-HOME_TUNNEL_L4_BIND_ADDRESS=0.0.0.0
-HOME_TUNNEL_L4_PORT_START=10000
-HOME_TUNNEL_L4_PORT_END=10099
+# Raw TCP/UDP overlays fail closed until you set an explicit narrow range.
+# Example: HOME_TUNNEL_TCP_PORT_START=10554 HOME_TUNNEL_TCP_PORT_END=10554
 HOME_TUNNEL_ACME_EMAIL=$acme_email
 HOME_TUNNEL_BOOTSTRAP_ADMIN_USERNAME=admin
 EOF
@@ -99,3 +92,4 @@ chmod 0600 "$environment_path"
 
 echo "Created $environment_path and the secret files below $secret_root"
 echo "Read deploy/secrets/bootstrap_admin_password locally for the one-time password."
+echo "The bootstrap password stays valid until you sign in and change it."
