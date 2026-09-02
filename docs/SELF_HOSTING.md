@@ -66,13 +66,15 @@ Read the one-time administrator password locally:
 cat deploy/secrets/bootstrap_admin_password
 ```
 
-Open `https://console.tunnel.example.com/admin`, sign in as `admin`, and change the password immediately. Do not paste the password into an issue, log or shell history.
+Open `https://console.tunnel.example.com/admin`, sign in as `admin`, and change the password immediately. The bootstrap password does not expire until that first successful login and password change; after rotation there is no portable reset helper, so keep the new password somewhere safe. Do not paste either password into an issue, log or shell history.
 
 ## Optional general TCP and fixed-port UDP
 
-The base `compose.yaml` does not publish raw application ports. Choose only one
-of these overrides after deciding which protocol and narrow port range you
-need:
+The base `compose.yaml` does not publish raw application ports. Overlay files
+do not default to a 100-port public range: `HOME_TUNNEL_*_PORT_START` and
+`HOME_TUNNEL_*_PORT_END` must be set explicitly or `docker compose config`
+fails. Unset bind addresses default to `127.0.0.1`. Choose only one of these
+overrides after deciding which protocol and narrow port range you need:
 
 | Override | Enables | Matching `.env` settings |
 | --- | --- | --- |

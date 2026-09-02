@@ -34,7 +34,9 @@ Each script downloads the pinned FRP source archive, verifies its SHA-256, build
 
 ## Install and enroll (Linux)
 
-On the target Linux machine:
+On the target Linux machine, download the archive from GitHub Release `v3.2.0`.
+The tarball is still named `3.2.0-rc.3` because Stable promotes the RC assets
+without rebuilding:
 
 ```sh
 tar -xzf home-tunnel-linux-3.2.0-rc.3-amd64.tar.gz

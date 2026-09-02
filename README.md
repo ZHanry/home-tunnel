@@ -60,7 +60,10 @@ Home Tunnel 是面向个人与家庭服务的自托管内网穿透平台，用�
 | 图形客户端 | Windows 10/11 x64 | Experimental | Release 提供自签名 EXE 与更新清单；Windows 会提示未知发布者 |
 | 移动客户端 | Android 8.0+ `arm64-v8a` | Experimental | GitHub Release 侧载 APK；AAB 不可直接安装，也不代表 Play-ready |
 
-Windows EXE、Android APK/AAB 与其他平台资产来自同一个 RC 构建并随 Stable 原样提升，包含 SHA-256、SPDX SBOM、Sigstore 和 GitHub provenance。Windows 自签名只能证明同一资产集内的完整性，不能建立可信发布者身份；Android 使用必须长期保留的固定发布证书，升级前必须保持 application ID 与证书一致。
+Windows EXE、Android APK/AAB 与其他平台资产来自同一个 RC 构建并随 Stable 原样提升，包含 SHA-256、SPDX SBOM、Sigstore 和 GitHub provenance。
+
+GitHub Release 标签是 `v3.2.0`。Stable 不重建产物，因此 Linux/macOS 压缩包和 compose 镜像标签仍为 `3.2.0-rc.3`；Windows/Android 安装包文件名已是 `3.2.0`。下载 Linux/macOS 客户端时请使用带 `3.2.0-rc.3` 的文件名，并核对其 SHA-256。
+Windows 自签名只能证明同一资产集内的完整性，不能建立可信发布者身份；Android 使用必须长期保留的固定发布证书，升级前必须保持 application ID 与证书一致。
 
 ## 为什么不是“裸 FRP”
 

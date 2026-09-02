@@ -4,18 +4,20 @@
 # docker compose -f compose.yaml -f deploy/compose.udp.yaml up -d
 # ARM64 deploy profile (from deploy/):
 # docker compose -f compose.yaml -f compose.udp.yaml up -d
+# 必须在 .env 里显式设置 HOME_TUNNEL_UDP_PORT_START/END；未设置会失败。
+# 未指定绑定地址时默认 127.0.0.1，避免无意把端口打到 0.0.0.0。
 services:
   control-center:
     environment:
       UDP_TUNNEL_ENABLED: "true"
-      UDP_PORT_START: "${HOME_TUNNEL_UDP_PORT_START:-10000}"
-      UDP_PORT_END: "${HOME_TUNNEL_UDP_PORT_END:-10099}"
+      UDP_PORT_START: "${HOME_TUNNEL_UDP_PORT_START:?HOME_TUNNEL_UDP_PORT_START_required}"
+      UDP_PORT_END: "${HOME_TUNNEL_UDP_PORT_END:?HOME_TUNNEL_UDP_PORT_END_required}"
 
   frps:
     environment:
       PUBLIC_FRPS_PORT: "${HOME_TUNNEL_FRPS_PORT:-7000}"
       UDP_TUNNEL_ENABLED: "true"
-      UDP_PORT_START: "${HOME_TUNNEL_UDP_PORT_START:-10000}"
-      UDP_PORT_END: "${HOME_TUNNEL_UDP_PORT_END:-10099}"
+      UDP_PORT_START: "${HOME_TUNNEL_UDP_PORT_START:?HOME_TUNNEL_UDP_PORT_START_required}"
+      UDP_PORT_END: "${HOME_TUNNEL_UDP_PORT_END:?HOME_TUNNEL_UDP_PORT_END_required}"
     ports:
-      - "${HOME_TUNNEL_UDP_BIND_ADDRESS:-0.0.0.0}:${HOME_TUNNEL_UDP_PORT_START:-10000}-${HOME_TUNNEL_UDP_PORT_END:-10099}:${HOME_TUNNEL_UDP_PORT_START:-10000}-${HOME_TUNNEL_UDP_PORT_END:-10099}/udp"
+      - "${HOME_TUNNEL_UDP_BIND_ADDRESS:-127.0.0.1}:${HOME_TUNNEL_UDP_PORT_START:?HOME_TUNNEL_UDP_PORT_START_required}-${HOME_TUNNEL_UDP_PORT_END:?HOME_TUNNEL_UDP_PORT_END_required}:${HOME_TUNNEL_UDP_PORT_START:?HOME_TUNNEL_UDP_PORT_START_required}-${HOME_TUNNEL_UDP_PORT_END:?HOME_TUNNEL_UDP_PORT_END_required}/udp"

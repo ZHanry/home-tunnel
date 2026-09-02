@@ -452,13 +452,40 @@ jobs:
             -WhatIf
       - run: docker compose config --quiet
       - run: docker compose -f compose.yaml -f compose.build.yaml config --quiet
+      - name: Overlay without an explicit port range must fail closed
+        run: |
+          set -euo pipefail
+          if docker compose -f compose.yaml -f deploy/compose.tcp.yaml config --quiet; then
+            echo "tcp overlay must require HOME_TUNNEL_TCP_PORT_START" >&2
+            exit 1
+          fi
       - name: Validate TCP and UDP overlays
+        env:
+          HOME_TUNNEL_TCP_BIND_ADDRESS: "127.0.0.1"
+          HOME_TUNNEL_TCP_PORT_START: "10554"
+          HOME_TUNNEL_TCP_PORT_END: "10554"
+          HOME_TUNNEL_UDP_BIND_ADDRESS: "127.0.0.1"
+          HOME_TUNNEL_UDP_PORT_START: "10554"
+          HOME_TUNNEL_UDP_PORT_END: "10554"
+          HOME_TUNNEL_L4_BIND_ADDRESS: "127.0.0.1"
+          HOME_TUNNEL_L4_PORT_START: "10554"
+          HOME_TUNNEL_L4_PORT_END: "10554"
         run: |
           docker compose -f compose.yaml -f deploy/compose.tcp.yaml config --quiet
           docker compose -f compose.yaml -f deploy/compose.udp.yaml config --quiet
           docker compose -f compose.yaml -f deploy/compose.l4.yaml config --quiet
           ./tests/test-frps-entrypoint.sh
       - name: Validate deploy Compose file
+        env:
+          HOME_TUNNEL_TCP_BIND_ADDRESS: "127.0.0.1"
+          HOME_TUNNEL_TCP_PORT_START: "10554"
+          HOME_TUNNEL_TCP_PORT_END: "10554"
+          HOME_TUNNEL_UDP_BIND_ADDRESS: "127.0.0.1"
+          HOME_TUNNEL_UDP_PORT_START: "10554"
+          HOME_TUNNEL_UDP_PORT_END: "10554"
+          HOME_TUNNEL_L4_BIND_ADDRESS: "127.0.0.1"
+          HOME_TUNNEL_L4_PORT_START: "10554"
+          HOME_TUNNEL_L4_PORT_END: "10554"
         run: |
           docker network inspect home-tunnel-edge >/dev/null 2>&1 || docker network create home-tunnel-edge
           docker compose -f deploy/compose.yaml --env-file .env config --quiet

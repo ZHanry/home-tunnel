@@ -29,7 +29,7 @@ docker compose up -d
 docker compose ps
 ```
 
-Read the one-time password from `deploy/secrets/bootstrap_admin_password`, open `https://console.tunnel.example.com/admin`, and change it immediately. See the [complete self-hosting guide](docs/SELF_HOSTING.md) for DNS, firewall, backup, rollback, and client instructions. Never use example domains, addresses, or `CHANGE_ME` values in a public deployment.
+Read the one-time password from `deploy/secrets/bootstrap_admin_password`, open `https://console.tunnel.example.com/admin`, and change it immediately. See the [complete self-hosting guide](docs/SELF_HOSTING.md) for DNS, firewall, backup, rollback, and client instructions. Never use example domains or addresses in a public deployment.
 
 ## Support matrix
 
@@ -41,7 +41,10 @@ Read the one-time password from `deploy/secrets/bootstrap_admin_password`, open 
 | Desktop client | Windows 10/11 x64 | Experimental | Release provides a self-signed EXE and update manifest; Windows warns about the unknown publisher |
 | Mobile client | Android 8.0+ `arm64-v8a` | Experimental | Sideloadable GitHub APK; the AAB is not directly installable or a Play-readiness claim |
 
-Windows and Android packages are built in the same RC asset set later promoted unchanged to Stable, with SHA-256, SPDX SBOMs, Sigstore bundles, and GitHub provenance. Windows self-signing proves artifact consistency rather than publisher trust. Android updates require the fixed application ID and persistent release certificate to remain unchanged.
+Windows and Android packages are built in the same RC asset set later promoted unchanged to Stable, with SHA-256, SPDX SBOMs, Sigstore bundles, and GitHub provenance.
+
+The GitHub Release tag is `v3.2.0`. Stable does not rebuild artifacts, so Linux/macOS tarballs and Compose image tags remain `3.2.0-rc.3`, while Windows/Android installer filenames already use `3.2.0`. When installing the Linux or macOS client, download the `3.2.0-rc.3` archive and verify its SHA-256.
+ Windows self-signing proves artifact consistency rather than publisher trust. Android updates require the fixed application ID and persistent release certificate to remain unchanged.
 
 [Download the latest Windows x64 EXE](https://github.com/ZHanry/home-tunnel/releases/latest/download/HomeTunnel-Setup-3.2.0-x64.exe), verify its published SHA-256, and expect an unknown-publisher or SmartScreen prompt.
 
