@@ -74,9 +74,9 @@ test("public landing page stays available while Windows release metadata is abse
       /id="hero-download"[^>]*HomeTunnel-Setup-3\.2\.0-x64\.exe/,
     );
     assert.match(landing.body.toString("utf8"), /home-tunnel-client status/);
-    assert.match(landing.body.toString("utf8"), /app\.js\?v=3\.2\.0-modules1/);
+    assert.match(landing.body.toString("utf8"), /app\.js\?v=3\.2\.0-user-console/);
     assert.match(landing.body.toString("utf8"), /type="module"/);
-    assert.match(landing.body.toString("utf8"), /v2\.css\?v=3\.2\.0-ui5/);
+    assert.match(landing.body.toString("utf8"), /v2\.css\?v=3\.2\.0-user-console/);
     assert.match(landing.body.toString("utf8"), /theme\.js\?v=3\.2\.0-locale/);
     assert.match(landing.body.toString("utf8"), /data-locale-toggle/);
     assert.doesNotMatch(landing.body.toString("utf8"), /实时同步正常|系统健康|受管请求路径/);
@@ -98,7 +98,7 @@ test("public landing page stays available while Windows release metadata is abse
     assert.equal(publicConfigValue.frps_port, 7000);
     assert.equal(publicConfigValue.frps_tls_certificate_pem, frpsCertificatePem);
 
-    const stylesheet = await request(origin + "/v2.css?v=3.2.0-ui5");
+    const stylesheet = await request(origin + "/v2.css?v=3.2.0-user-console");
     assert.equal(stylesheet.status, 200);
     assert.equal(stylesheet.headers["cache-control"], "public, max-age=31536000, immutable");
 
@@ -106,7 +106,7 @@ test("public landing page stays available while Windows release metadata is abse
     assert.equal(themeScript.status, 200);
     assert.match(themeScript.body.toString("utf8"), /ht_locale/);
 
-    const applicationScript = await request(origin + "/app.js?v=3.2.0-modules1");
+    const applicationScript = await request(origin + "/app.js?v=3.2.0-user-console");
     assert.equal(applicationScript.status, 200);
     assert.match(
       applicationScript.body.toString("utf8"),
@@ -114,7 +114,7 @@ test("public landing page stays available while Windows release metadata is abse
     );
     assert.match(
       applicationScript.body.toString("utf8"),
-      /\.\/modules\/locale\.js\?v=3\.2\.0-modules1/,
+      /\.\/modules\/locale\.js\?v=3\.2\.0-user-console/,
     );
     assert.match(
       applicationScript.body.toString("utf8"),
