@@ -401,6 +401,7 @@ code, pre { font-family: var(--mono); font-size: 0.9em; }
   cursor: pointer;
   transition: all 0.15s ease;
 }
+.nav-item[hidden] { display: none !important; }
 .nav-item svg { width: 20px; height: 20px; color: #94a3b8; transition: color 0.15s ease; }
 .nav-item:hover { color: #ffffff; background: var(--bg-slate); }
 .nav-item:hover svg { color: var(--cyber-blue); }

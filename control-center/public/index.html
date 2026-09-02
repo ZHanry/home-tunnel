@@ -8,7 +8,7 @@
     <meta name="description" content="Home Tunnel 受管发布 Web、通用 TCP 与固定端口 UDP 服务。">
     <title>Home Tunnel — 随时安全访问家里的服务</title>
     <script src="/theme.js?v=3.2.0-locale"></script>
-    <link rel="stylesheet" href="/v2.css?v=3.2.0-ui5">
+    <link rel="stylesheet" href="/v2.css?v=3.2.0-user-console">
   </head>
   <body>
     <a id="skip-link" class="skip-link" href="#landing-content">跳到主要内容</a>
@@ -33,7 +33,7 @@
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 22v-3.9c.04-1-.35-1.77-.9-2.32 3-.34 6.15-1.47 6.15-6.66A5.2 5.2 0 0 0 18.87 5.5 4.84 4.84 0 0 0 18.74 2S17.65 1.65 15 3.35a13.4 13.4 0 0 0-6 0C6.35 1.65 5.26 2 5.26 2a4.84 4.84 0 0 0-.13 3.5 5.2 5.2 0 0 0-1.38 3.62c0 5.18 3.15 6.32 6.15 6.66-.48.48-.83 1.1-.9 1.9-.8.36-2.82.98-4.07-1.16 0 0-.74-1.34-2.15-1.44 0 0-1.37-.02-.1.85 0 0 .92.43 1.56 2.04 0 0 .82 2.5 4.72 1.65V22"/></svg>
               <span class="marketing-github-label">GitHub 仓库</span>
             </a>
-            <a class="button button-secondary marketing-login" href="/admin">登录后台</a>
+            <a class="button button-secondary marketing-login" href="/admin">登录控制台</a>
           </div>
         </nav>
       </header>
@@ -91,8 +91,8 @@
 
         <section class="quick-steps" aria-label="开始使用 Home Tunnel">
           <article><span>1</span><div><h2>安装受管客户端</h2><p>Windows 使用图形界面，Linux/macOS 作为系统服务运行。</p></div></article>
-          <article><span>2</span><div><h2>创建连接</h2><p>填写本地目标；端口隧道由管理员分配精确公网端口。</p></div></article>
-          <article><span>3</span><div><h2>云端管理</h2><p>统一查看设备、状态和访问策略。</p></div></article>
+          <article><span>2</span><div><h2>创建连接</h2><p>普通用户在网页控制台自助开通 HTTP；端口隧道由管理员分配精确公网端口。</p></div></article>
+          <article><span>3</span><div><h2>按账号管理</h2><p>每人只看见自己的设备与隧道。管理员管用户、配额和公网端口。</p></div></article>
         </section>
 
         <section id="platforms" class="platform-section" aria-labelledby="platform-title">
@@ -137,7 +137,7 @@
         </a>
         <div class="auth-card-heading">
           <h1 id="auth-title">登录控制中心</h1>
-          <p>使用管理员账号继续。</p>
+          <p>使用管理员或普通用户账号继续。</p>
         </div>
 
         <form id="login-form" class="form-stack" novalidate>
@@ -189,10 +189,10 @@
         <p class="sidebar-label">工作区</p>
         <nav class="nav-list">
           <button class="nav-item active" data-view="dashboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h6V4H4v9Zm10 7h6v-9h-6v9ZM4 20h6v-3H4v3Zm10-13h6V4h-6v3Z"/></svg><span>系统总览</span></button>
-          <button class="nav-item" data-view="users"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m7-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm13 10v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg><span>用户管理</span></button>
+          <button class="nav-item" data-view="users" data-admin-only><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m7-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm13 10v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg><span>用户管理</span></button>
           <button class="nav-item" data-view="devices"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 2h14a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm3 17h8M9 5h6"/></svg><span>设备管理</span></button>
           <button class="nav-item" data-view="connections"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7m2.2 5.8a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg><span>连接管理</span></button>
-          <button class="nav-item" data-view="audit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span>审计事件</span></button>
+          <button class="nav-item" data-view="audit" data-admin-only><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span>审计事件</span></button>
         </nav>
         <div class="sidebar-session"><span class="status-dot status-ok"></span><div><strong>安全会话</strong><small>权限已验证</small></div></div>
         <div class="sidebar-footer">
@@ -233,6 +233,6 @@
     </dialog>
 
     <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
-    <script src="/app.js?v=3.2.0-modules1" type="module"></script>
+    <script src="/app.js?v=3.2.0-user-console" type="module"></script>
   </body>
 </html>

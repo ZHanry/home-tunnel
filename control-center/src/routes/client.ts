@@ -158,6 +158,41 @@ router.post(
 );
 
 router.get(
+  "/client/devices",
+  asyncHandler(async (request, response) => {
+    const actor = requirePasswordNormal(request);
+    const rows = await query<{
+      id: string;
+      user_id: string;
+      name: string;
+      status: string;
+      config_version: string;
+      applied_config_version: string;
+      client_version: string | null;
+      agent_version: string | null;
+      last_seen_at: Date | null;
+      lease_expires_at: Date | null;
+      created_at: Date;
+    }>(
+      `SELECT id,user_id,name,status,config_version,applied_config_version,client_version,agent_version,
+              last_seen_at,lease_expires_at,created_at
+         FROM devices WHERE user_id=? AND revoked_at IS NULL
+         ORDER BY last_seen_at DESC NULLS LAST, created_at DESC LIMIT 200`,
+      [actor.userId],
+    );
+    response.json({
+      items: rows.map((row) => ({
+        ...row,
+        username: actor.username,
+        config_version: Number(row.config_version),
+        applied_config_version: Number(row.applied_config_version),
+        online: row.last_seen_at ? Date.now() - row.last_seen_at.getTime() < 90_000 : false,
+      })),
+    });
+  }),
+);
+
+router.get(
   "/client/connections",
   asyncHandler(async (request, response) => {
     const actor = requirePasswordNormal(request);

@@ -68,6 +68,8 @@ cat deploy/secrets/bootstrap_admin_password
 
 Open `https://console.tunnel.example.com/admin`, sign in as `admin`, and change the password immediately. The bootstrap password does not expire until that first successful login and password change; after rotation there is no portable reset helper, so keep the new password somewhere safe. Do not paste either password into an issue, log or shell history.
 
+Create standard user accounts from the Users view and give each person their one-time password. Those users sign in at the same `/admin` URL, see only their own devices and tunnels, and can create HTTP/HTTPS connections themselves. TCP/UDP public ports stay administrator-assigned.
+
 ## Optional general TCP and fixed-port UDP
 
 The base `compose.yaml` does not publish raw application ports. Overlay files

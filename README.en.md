@@ -67,13 +67,22 @@ foreground-service, and diagnostics details.
 - The HTTP/HTTPS path provides IP allowlists, Basic Auth, hierarchical rate limits, traffic aggregation, and monthly quotas.
 - Audit events, component health, verified backups, restore, and rollback tools support operations.
 - SQLite and internal services expose no host ports by default; containers use read-only filesystems and minimal capabilities.
+- Standard users who sign in to the web console only see their own devices, tunnels, and traffic. Administrators keep users, quotas, and TCP/UDP public ports.
+
+## How a standard user creates a connection
+
+1. An administrator creates the account and delivers the one-time password.
+2. The user installs the Linux, Windows, or Android client at home and signs in with the same account so the device can register.
+3. The user opens `https://console.tunnel.example.com/admin` and signs in with that account. Administrator privileges are not required.
+4. In Connections, pick a registered device, enter the local target and subdomain, and create an HTTP/HTTPS tunnel.
+5. TCP/UDP still need an administrator to assign an exact public port, and never appear in another tenant's workspace.
 
 ## Architecture
 
 ```text
 Remote browser ─HTTPS→ Caddy ─→ Traffic Gateway ─→ FRPS ═managed tunnel═→ home device
 Remote TCP/UDP client ─assigned public port→ FRPS ═managed tunnel═→ fixed home TCP/UDP port
-Administrator  ─HTTPS→ Caddy ─→ Control Center ─→ SQLite
+Administrator / user  ─HTTPS→ Caddy ─→ Control Center ─→ SQLite
 Windows/Linux/macOS/Android clients ─REST + WebSocket→ Control Center
 ```
 
