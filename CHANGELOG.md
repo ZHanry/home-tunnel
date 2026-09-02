@@ -2,6 +2,25 @@
 
 All notable changes to Home Tunnel are documented in this file. The project follows [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- Standard users can sign in to the web console, list their own devices, and
+  create HTTP/HTTPS tunnels without administrator privileges.
+- Added `GET /api/v1/client/devices` so the web workspace can bind a tunnel to
+  a device the current user already registered.
+
+### Changed
+
+- Web login no longer rejects `role=user`. User, audit, and TCP/UDP port
+  assignment remain administrator-only; client APIs stay scoped by `user_id`.
+
+### Security
+
+- Documented that the web console is tenant-scoped: ordinary users cannot reach
+  administrator routes or another user's devices and connections.
+
 ## [3.2.0] - 2026-08-23
 
 ### Added

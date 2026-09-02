@@ -106,9 +106,6 @@ router.post(
       throw new HttpError(401, "AUTH_INVALID", "用户名或密码错误");
     }
     if (user.status !== "active") throw new HttpError(423, "USER_DISABLED", "账号已禁用");
-    if (body.client_type === "web" && user.role !== "admin") {
-      throw new HttpError(403, "FORBIDDEN", "普通用户只能使用 Windows、Linux 或 Android 客户端");
-    }
     if (
       user.password_state === "must_change" &&
       user.temporary_password_expires_at &&

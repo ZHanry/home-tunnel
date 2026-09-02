@@ -201,8 +201,23 @@ export async function runIntegrationSuite(): Promise<void> {
       password: userNextPassword,
       client_type: "web",
     });
-    assert.equal(ordinaryWebLogin.status, 403);
-    assert.equal(ordinaryWebLogin.payload.error_code, "FORBIDDEN");
+    assert.equal(ordinaryWebLogin.status, 200);
+    assert.equal(ordinaryWebLogin.payload.user.role, "user");
+    const cookieHeader = String(ordinaryWebLogin.headers.get("set-cookie") ?? "");
+    assert.match(cookieHeader, /ht_access=/);
+    const access = /ht_access=([^;]+)/.exec(cookieHeader)?.[1];
+    assert.ok(access);
+    const cookie = `ht_access=${decodeURIComponent(access)}`;
+    const scopedDevices = await call("GET", "/api/v1/client/devices", undefined, undefined, {
+      cookie,
+    });
+    assert.equal(scopedDevices.status, 200);
+    assert.equal(Array.isArray(scopedDevices.payload.items), true);
+    const forbiddenAdmin = await call("GET", "/api/v1/admin/users", undefined, undefined, {
+      cookie,
+    });
+    assert.equal(forbiddenAdmin.status, 403);
+    assert.equal(forbiddenAdmin.payload.error_code, "FORBIDDEN");
     const registered = await call(
       "POST",
       "/api/v1/devices/register",

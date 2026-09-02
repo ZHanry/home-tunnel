@@ -73,13 +73,22 @@ Windows 自签名只能证明同一资产集内的完整性，不能建立可信
 - **Web 访问与流量控制**：HTTP/HTTPS 路径提供 IP 允许集、Basic Auth、分层限速、流量聚合和月度配额。
 - **可审计运维**：审计事件、组件健康、备份验证、恢复与回滚工具。
 - **默认隔离**：SQLite、控制中心和网关不直接发布主机端口；容器使用只读文件系统和最小能力集。
+- **按用户隔离**：普通用户登录网页控制台后只能看到自己的设备、隧道和流量；管理员单独管用户、配额和 TCP/UDP 公网端口。
+
+## 普通用户如何创建连接
+
+1. 管理员在控制台创建普通账号，并把一次性密码交给本人。
+2. 用户在家里的机器上安装 Linux / Windows / Android 客户端，用同一账号登录完成设备注册。
+3. 用户打开 `https://console.tunnel.example.com/admin`，用自己的账号登录网页控制台（不再需要管理员权限）。
+4. 在「连接」里选已注册设备，填写本地地址和子域，即可自助开通 HTTP/HTTPS。
+5. TCP/UDP 仍由管理员分配精确公网端口，不会出现在别人的工作区里。
 
 ## 工作方式
 
 ```text
 远程浏览器 ─HTTPS→ Caddy ─→ 流量网关 ─→ FRPS ═受管隧道═→ 家中 Windows/Linux/macOS/Android 主机
 远程 TCP/UDP 客户端 ─已分配公网端口→ FRPS ═受管隧道═→ 家中固定 TCP/UDP 端口
-管理员     ─HTTPS→ Caddy ─→ 控制中心 ─→ SQLite
+管理员 / 普通用户 ─HTTPS→ Caddy ─→ 控制中心 ─→ SQLite
 Windows/Linux/macOS/Android 客户端 ─REST + WebSocket→ 控制中心
 ```
 
