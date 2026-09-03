@@ -123,7 +123,7 @@ jobs:
       - name: Build macOS release archives
         run: |
           set -euo pipefail
-          version=$(sed -n 's/^const Version = "\([^"]*\)"$/\1/p' linux-client/internal/model/model.go)
+          version=$(sed -n 's/^HOME_TUNNEL_VERSION=//p' .env.example)
           for architecture in amd64 arm64; do
             VERSION="$version" ARCH="$architecture" ./linux-client/packaging/macos/build-release.sh
           done
@@ -356,6 +356,18 @@ jobs:
               tar -tzf "$archive" | grep -Fx "$prefix/lib/home-tunnel-agent"
             done
           done
+      - name: Upload Linux release archives
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: home-tunnel-linux-release
+          path: outputs/linux/*
+          if-no-files-found: error
+      - name: Upload macOS release archives
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: home-tunnel-macos-release-from-linux
+          path: outputs/macos/*
+          if-no-files-found: error
       - name: Check FRP dependency consistency
         run: |
           set -euo pipefail
