@@ -24,8 +24,6 @@
     <string name="install_client_first">请先在家里的电脑上安装客户端并登录。</string>
     <string name="copied_address">已复制公网地址</string>
     <string name="device">设备</string>
-    <string name="start_tunnel">启动隧道</string>
-    <string name="stop_tunnel">停止隧道</string>
     <string name="sync_now">立即同步</string>
     <string name="add_connection">新建连接</string>
     <string name="edit_connection">编辑连接</string>

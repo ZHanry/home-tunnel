@@ -24,8 +24,6 @@
     <string name="install_client_first">Install the desktop client at home and sign in first.</string>
     <string name="copied_address">Public address copied</string>
     <string name="device">Device</string>
-    <string name="start_tunnel">Start tunnel</string>
-    <string name="stop_tunnel">Stop tunnel</string>
     <string name="sync_now">Sync now</string>
     <string name="add_connection">Add connection</string>
     <string name="edit_connection">Edit connection</string>

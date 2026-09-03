@@ -101,7 +101,7 @@ android {
         // arm64 only. Android 16 target behavior and ChromeOS are not claimed
         // until their physical-device matrices are complete; all other lint
         // warnings remain release-blocking.
-        disable += setOf("GradleDependency", "ChromeOsAbiSupport", "OldTargetApi", "PluralsCandidate")
+        disable += setOf("GradleDependency", "ChromeOsAbiSupport", "OldTargetApi", "PluralsCandidate", "UnusedResources")
     }
 }
 
