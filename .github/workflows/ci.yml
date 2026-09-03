@@ -120,6 +120,19 @@ jobs:
       - name: Build native macOS GUI
         working-directory: linux-client
         run: CGO_ENABLED=1 go build ./cmd/home-tunnel-gui ./cmd/home-tunnel-client
+      - name: Build macOS release archives
+        run: |
+          set -euo pipefail
+          version=$(sed -n 's/^const Version = "\([^"]*\)"$/\1/p' linux-client/internal/model/model.go)
+          for architecture in amd64 arm64; do
+            VERSION="$version" ARCH="$architecture" ./linux-client/packaging/macos/build-release.sh
+          done
+      - name: Upload macOS release archive
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: home-tunnel-macos-release
+          path: outputs/macos/*
+          if-no-files-found: error
 
   windows-agent:
     name: Windows agent official baseline

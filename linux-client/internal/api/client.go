@@ -297,11 +297,11 @@ func (client *Client) DeleteConnection(ctx context.Context, id string, version i
 }
 
 type SubdomainAvailability struct {
-	Name         string   `json:"name"`
-	Available    bool     `json:"available"`
-	Reason       string   `json:"reason"`
-	Message      string   `json:"message"`
-	Suggestions  []string `json:"suggestions"`
+	Name        string   `json:"name"`
+	Available   bool     `json:"available"`
+	Reason      string   `json:"reason"`
+	Message     string   `json:"message"`
+	Suggestions []string `json:"suggestions"`
 }
 
 func (client *Client) SubdomainAvailability(ctx context.Context, name string) (SubdomainAvailability, error) {
