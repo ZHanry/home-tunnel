@@ -1,4 +1,4 @@
-import { api, refreshSession } from "./modules/api.js?v=3.2.0-modules1";
+import { api, refreshSession } from "./modules/api.js?v=4.0.0-modules1";
 import {
   componentLabel,
   configState,
@@ -7,10 +7,10 @@ import {
   formatBytes,
   formatDate,
   statusBadge,
-} from "./modules/format.js?v=3.2.0-modules1";
-import { localeTag, updateDocumentMetadata } from "./modules/locale.js?v=3.2.0-user-console";
-import { connectRealtime, disconnectRealtime } from "./modules/realtime.js?v=3.2.0-modules1";
-import { state } from "./modules/state.js?v=3.2.0-modules1";
+} from "./modules/format.js?v=4.0.0-modules1";
+import { localeTag, updateDocumentMetadata } from "./modules/locale.js?v=4.0.0-user-console";
+import { connectRealtime, disconnectRealtime } from "./modules/realtime.js?v=4.0.0-modules1";
+import { state } from "./modules/state.js?v=4.0.0-modules1";
 
 const landingScreen = document.querySelector("#landing-screen");
 const authScreen = document.querySelector("#auth-screen");
@@ -56,7 +56,7 @@ function applyRoleChrome() {
     item.hidden = !isAdmin();
   });
   const brand = document.querySelector(".sidebar-brand .brand-copy small");
-  if (brand) brand.textContent = isAdmin() ? "控制中心 v3.2.0" : "我的工作区";
+  if (brand) brand.textContent = isAdmin() ? "控制中心 v4.0.0" : "我的工作区";
   const sessionCopy = document.querySelector(".sidebar-session small");
   if (sessionCopy) sessionCopy.textContent = isAdmin() ? "权限已验证" : "仅显示你的资源";
 }

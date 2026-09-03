@@ -1,4 +1,4 @@
-import { state } from "./state.js?v=3.2.0-modules1";
+import { state } from "./state.js?v=4.0.0-modules1";
 
 const appShell = document.querySelector("#app-shell");
 
@@ -18,8 +18,8 @@ const zhToEn = {
   "选择客户端平台": "Choose a client platform",
   "Windows 图形客户端": "Windows desktop client",
   "桌面图形客户端": "Desktop GUI client",
-  "Home Tunnel 3.2.0 Windows 图形客户端预览": "Home Tunnel 3.2.0 Windows desktop client preview",
-  "Home Tunnel 3.2.0 桌面图形客户端预览": "Home Tunnel 3.2.0 desktop GUI preview",
+  "Home Tunnel 4.0.0 Windows 图形客户端预览": "Home Tunnel 4.0.0 Windows desktop client preview",
+  "Home Tunnel 4.0.0 桌面图形客户端预览": "Home Tunnel 4.0.0 desktop GUI preview",
   "Linux 客户端快速开始": "Linux client quick start",
   "Windows x64 EXE": "Windows x64 EXE",
   "Windows EXE 为自签名 Experimental；安装时会提示未知发布者，请先核对 Release SHA-256。": "The Windows EXE is self-signed Experimental software. Expect an unknown-publisher warning and verify the Release SHA-256 first.",
@@ -88,7 +88,7 @@ const zhToEn = {
   "保存新密码": "Save new password",
   "返回产品首页": "Back to product home",
   "主导航": "Main navigation",
-  "控制中心 v3.2.0": "Control Center v3.2.0",
+  "控制中心 v4.0.0": "Control Center v4.0.0",
   "工作区": "Workspace",
   "系统总览": "Overview",
   "用户管理": "Users",

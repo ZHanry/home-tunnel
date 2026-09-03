@@ -68,13 +68,13 @@ test("public landing page stays available while Windows release metadata is abse
     assert.match(landing.body.toString("utf8"), /Windows 下载 Setup 安装包/);
     assert.match(
       landing.body.toString("utf8"),
-      /id="hero-download"[^>]*HomeTunnel-Windows-3\.2\.0-x64\.zip/,
+      /id="hero-download"[^>]*HomeTunnel-Setup-4\.0\.0-x64\.exe/,
     );
     assert.match(landing.body.toString("utf8"), /home-tunnel-client status/);
-    assert.match(landing.body.toString("utf8"), /app\.js\?v=3\.2\.0-user-console/);
+    assert.match(landing.body.toString("utf8"), /app\.js\?v=4\.0\.0-user-console/);
     assert.match(landing.body.toString("utf8"), /type="module"/);
-    assert.match(landing.body.toString("utf8"), /v2\.css\?v=3\.2\.0-user-console/);
-    assert.match(landing.body.toString("utf8"), /theme\.js\?v=3\.2\.0-locale/);
+    assert.match(landing.body.toString("utf8"), /v2\.css\?v=4\.0\.0-user-console/);
+    assert.match(landing.body.toString("utf8"), /theme\.js\?v=4\.0\.0-locale/);
     assert.match(landing.body.toString("utf8"), /data-locale-toggle/);
     assert.doesNotMatch(landing.body.toString("utf8"), /实时同步正常|系统健康|受管请求路径/);
     assert.match(landing.body.toString("utf8"), /id="page-actions"/);
