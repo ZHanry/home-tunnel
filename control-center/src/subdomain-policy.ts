@@ -6,8 +6,11 @@ import { normalizeSubdomain, normalizeUsername, validateSubdomain } from "./secu
 export type PrefixPolicy = "off" | "suggest" | "enforce";
 
 export function parsePrefixPolicy(value: string | null | undefined): PrefixPolicy {
-  const normalized = String(value ?? "").trim().toLowerCase();
-  if (normalized === "off" || normalized === "suggest" || normalized === "enforce") return normalized;
+  const normalized = String(value ?? "")
+    .trim()
+    .toLowerCase();
+  if (normalized === "off" || normalized === "suggest" || normalized === "enforce")
+    return normalized;
   return config.subdomainPrefixPolicy;
 }
 
@@ -49,13 +52,7 @@ export function suggestionCandidates(desired: string, username: string): string[
       .replace(/^-+|-+$/g, "")
       .slice(0, 40) || "app";
   const user = normalizeUsername(username) || "user";
-  return [
-    `${user}-${base}`,
-    `${base}-2`,
-    `${base}-3`,
-    `my-${base}`,
-    `${user}-${base}-2`,
-  ]
+  return [`${user}-${base}`, `${base}-2`, `${base}-3`, `my-${base}`, `${user}-${base}-2`]
     .map((value) => value.slice(0, 63).replace(/-+$/g, ""))
     .filter((value, index, all) => value !== base && all.indexOf(value) === index);
 }
@@ -102,7 +99,10 @@ export async function checkSubdomainAvailability(
       available: false,
       reason: invalid?.includes("保留") ? "reserved" : "invalid",
       message: invalid ?? "请输入子域",
-      suggestions: await availableSuggestions(client, suggestionCandidates(name || "app", options.username)),
+      suggestions: await availableSuggestions(
+        client,
+        suggestionCandidates(name || "app", options.username),
+      ),
     };
   }
   try {
@@ -150,7 +150,10 @@ export async function checkSubdomainAvailability(
   };
 }
 
-async function availableSuggestions(client: DatabaseClient, candidates: string[]): Promise<string[]> {
+async function availableSuggestions(
+  client: DatabaseClient,
+  candidates: string[],
+): Promise<string[]> {
   const unique = [...new Set(candidates.filter((item) => !validateSubdomain(item)))];
   if (!unique.length) return [];
   const occupied = await client.query<{ subdomain: string }>(

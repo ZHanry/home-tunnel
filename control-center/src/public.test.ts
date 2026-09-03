@@ -65,10 +65,7 @@ test("public landing page stays available while Windows release metadata is abse
     assert.equal(landing.headers["cache-control"], "no-cache");
     assert.match(landing.body.toString("utf8"), /桌面图形客户端/);
     assert.match(landing.body.toString("utf8"), /Linux \/ macOS 无界面服务/);
-    assert.match(
-      landing.body.toString("utf8"),
-      /Windows、macOS、Linux 共用同一套图形客户端/,
-    );
+    assert.match(landing.body.toString("utf8"), /Windows、macOS、Linux 共用同一套图形客户端/);
     assert.match(
       landing.body.toString("utf8"),
       /id="hero-download"[^>]*HomeTunnel-Windows-3\.2\.0-x64\.zip/,

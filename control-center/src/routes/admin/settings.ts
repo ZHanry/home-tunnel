@@ -26,10 +26,7 @@ router.patch(
   "/settings",
   asyncHandler(async (request, response) => {
     const actor = adminGuard(request);
-    const body = parseBody(
-      z.object({ subdomain_prefix_policy: policySchema }),
-      request.body,
-    );
+    const body = parseBody(z.object({ subdomain_prefix_policy: policySchema }), request.body);
     const policy = parsePrefixPolicy(body.subdomain_prefix_policy);
     await transaction(async (client) => {
       const before = await getPrefixPolicy(client);
