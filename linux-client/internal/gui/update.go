@@ -53,7 +53,7 @@ func fetchLatestRelease(request *http.Request) (githubRelease, error) {
 func packageAsset(release githubRelease) (name, url, checksumURL string) {
 	latest := strings.TrimPrefix(release.TagName, "v")
 	want := map[string]string{
-		"windows": "HomeTunnel-Windows-" + latest + "-x64.zip",
+		"windows": "HomeTunnel-Setup-" + latest + "-x64.exe",
 		"linux":   "home-tunnel-linux-" + latest + "-" + runtime.GOARCH + ".tar.gz",
 		"darwin":  "home-tunnel-macos-" + latest + "-" + runtime.GOARCH + ".tar.gz",
 	}[runtime.GOOS]

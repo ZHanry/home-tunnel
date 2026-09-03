@@ -95,15 +95,15 @@ test("public landing page stays available while Windows release metadata is abse
     assert.equal(publicConfigValue.frps_port, 7000);
     assert.equal(publicConfigValue.frps_tls_certificate_pem, frpsCertificatePem);
 
-    const stylesheet = await request(origin + "/v2.css?v=3.2.0-user-console");
+    const stylesheet = await request(origin + "/v2.css?v=4.0.0-user-console");
     assert.equal(stylesheet.status, 200);
     assert.equal(stylesheet.headers["cache-control"], "public, max-age=31536000, immutable");
 
-    const themeScript = await request(origin + "/theme.js?v=3.2.0-locale");
+    const themeScript = await request(origin + "/theme.js?v=4.0.0-locale");
     assert.equal(themeScript.status, 200);
     assert.match(themeScript.body.toString("utf8"), /ht_locale/);
 
-    const applicationScript = await request(origin + "/app.js?v=3.2.0-user-console");
+    const applicationScript = await request(origin + "/app.js?v=4.0.0-user-console");
     assert.equal(applicationScript.status, 200);
     assert.match(
       applicationScript.body.toString("utf8"),
@@ -133,7 +133,7 @@ test("public landing page stays available while Windows release metadata is abse
     assert.match(applicationScript.body.toString("utf8"), /UDP（固定端口）/);
     assert.doesNotMatch(applicationScript.body.toString("utf8"), /data-action="revoke-device"/);
 
-    const localeModule = await request(origin + "/modules/locale.js?v=3.2.0-modules1");
+    const localeModule = await request(origin + "/modules/locale.js?v=4.0.0-modules1");
     assert.equal(localeModule.status, 200);
     assert.match(localeModule.body.toString("utf8"), /const zhToEn =/);
     assert.match(localeModule.body.toString("utf8"), /Switch to English/);
@@ -145,7 +145,7 @@ test("public landing page stays available while Windows release metadata is abse
     assert.match(localeModule.body.toString("utf8"), /record\.type === "characterData"/);
     assert.equal(localeModule.headers["cache-control"], "public, max-age=31536000, immutable");
 
-    const realtimeModule = await request(origin + "/modules/realtime.js?v=3.2.0-modules1");
+    const realtimeModule = await request(origin + "/modules/realtime.js?v=4.0.0-modules1");
     assert.equal(realtimeModule.status, 200);
     assert.match(realtimeModule.body.toString("utf8"), /config\.version\.changed/);
     assert.match(realtimeModule.body.toString("utf8"), /export function disconnectRealtime/);

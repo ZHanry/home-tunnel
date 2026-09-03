@@ -52,11 +52,11 @@ falls back to the debug key or creates an ephemeral release identity.
 
 ## Release assets and signing identity
 
-Public 3.2.0 assets are named:
+Public 4.0.0 assets are named:
 
 ```text
-HomeTunnel-Android-3.2.0-arm64-v8a.apk
-HomeTunnel-Android-3.2.0.aab
+HomeTunnel-Android-4.0.0-arm64-v8a.apk
+HomeTunnel-Android-4.0.0.aab
 ```
 
 The APK is the GitHub Releases side-load artifact. The AAB is an audit/store
@@ -74,7 +74,7 @@ It is also recorded in `release-signing-cert.sha256`. Before installing a
 GitHub APK, compare the certificate reported by Android Build Tools:
 
 ```sh
-apksigner verify --verbose --print-certs HomeTunnel-Android-3.2.0-arm64-v8a.apk
+apksigner verify --verbose --print-certs HomeTunnel-Android-4.0.0-arm64-v8a.apk
 ```
 
 The `Signer #1 certificate SHA-256 digest` must match the value above. Also

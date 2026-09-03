@@ -2,7 +2,7 @@
 
 Release artifacts are built once from a protected RC tag and uploaded by `.github/workflows/release-images.yml`; they are never committed to the source tree. The workflow accepts stable `vX.Y.Z` and release-candidate `vX.Y.Z-rc.N` tags only, requires the tagged commit to already be on `main`, and rejects version drift. RC tags are the only build path: they create signed/attested multi-architecture images, four Linux/macOS packages, one Windows x64 GUI zip (`HomeTunnel-Windows-*-x64.zip`), one Android 8.0+ `arm64-v8a` Experimental APK, one non-installable Android AAB, a machine-readable image-digest manifest, and release-smoke evidence without moving image `latest`. A stable tag must resolve to the same commit as an already published matching RC. It downloads and verifies that prerelease, then promotes the exact signed image digests and identical assets without rebuilding or re-signing. Manual dispatch cannot publish or promote a release.
 
-> **v3.2 rule:** `v3.2.0-rc.3` is the accepted build path. `v3.2.0`
+> **v3.2 rule:** `v4.0.0` is the accepted build path. `v4.0.0`
 > must reuse its exact commit, image digests, and complete asset set.
 
 ## Version update
@@ -27,7 +27,7 @@ regenerating and verifying that binary.
 Update `CHANGELOG.md` and verify that dependency pins and third-party notices still match the embedded FRP version.
 
 The Android application ID is `io.github.zhanry.hometunnel`. Its first release
-uses `versionName=3.2.0` and `versionCode=3002000`, calculated as
+uses `versionName=4.0.0` and `versionCode=4000000`, calculated as
 `major*1,000,000 + minor*1,000 + patch`. The version name intentionally omits
 the RC suffix because Stable promotes the exact accepted RC binary. Never reuse
 a version code after an AAB has been uploaded to a store.

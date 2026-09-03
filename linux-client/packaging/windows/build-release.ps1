@@ -1,6 +1,6 @@
 # Builds the unified Windows x64 desktop package: home-tunnel-gui.exe + Agent.
 param(
-    [string]$Version = "3.2.0",
+    [string]$Version = "4.0.0",
     [string]$WindRes = "",
     [string]$OutputDir = ""
 )
@@ -48,28 +48,33 @@ finally {
     Pop-Location
 }
 Copy-Item -LiteralPath $agentSource -Destination $agent -Force
+$icon = Join-Path $workspace "windows-agent\assets\HomeTunnel.ico"
+Copy-Item -LiteralPath $icon -Destination (Join-Path $OutputDir "HomeTunnel.ico") -Force
 
-$zipName = "HomeTunnel-Windows-$Version-x64.zip"
-$zip = Join-Path $OutputDir $zipName
-if (Test-Path -LiteralPath $zip) { Remove-Item -LiteralPath $zip -Force }
-Compress-Archive -Path $gui, $agent -DestinationPath $zip -Force
-$sha = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+$payloadDir = Join-Path $clientDir "cmd\home-tunnel-setup\payload"
+New-Item -ItemType Directory -Force -Path $payloadDir | Out-Null
+Copy-Item -LiteralPath $gui, $agent, $icon -Destination $payloadDir -Force
+$setupName = "HomeTunnel-Setup-$Version-x64.exe"
+$setup = Join-Path $OutputDir $setupName
+if (Test-Path -LiteralPath $setup) { Remove-Item -LiteralPath $setup -Force }
+Push-Location $clientDir
+try {
+    go build -trimpath `
+        -ldflags "-s -w -H windowsgui -buildid= -X main.version=$Version" `
+        -o $setup ./cmd/home-tunnel-setup
+}
+finally {
+    Pop-Location
+}
+if (-not (Test-Path -LiteralPath $setup)) {
+    throw "failed to produce $setup"
+}
+$sha = (Get-FileHash -LiteralPath $setup -Algorithm SHA256).Hash.ToLowerInvariant()
 [IO.File]::WriteAllText(
-    "$zip.sha256",
-    "$sha  $zipName" + [char]10,
+    "$setup.sha256",
+    "$sha  $setupName" + [char]10,
     [Text.UTF8Encoding]::new($false)
 )
-$manifest = [ordered]@{
-    version = $Version
-    platform = "windows"
-    architecture = "x64"
-    file_name = $zipName
-    size_bytes = (Get-Item -LiteralPath $zip).Length
-    sha256 = $sha
-    released_at = [DateTime]::UtcNow.ToString("o")
-    download_url = "https://github.com/ZHanry/home-tunnel/releases/latest/download/$zipName"
-}
-($manifest | ConvertTo-Json) + "`n" | Set-Content -LiteralPath (Join-Path $OutputDir "latest.json") -Encoding utf8
-Write-Host "ZIP=$zip"
-Write-Host "ZIP_SHA256=$sha"
+Write-Host "SETUP=$setup"
+Write-Host "SETUP_SHA256=$sha"
 Write-Host "AGENT_SHA256=$agentSha"

@@ -1,4 +1,4 @@
-Home Tunnel Agent 3.2.0
+Home Tunnel Agent 4.0.0
 
 This product includes software developed by the frp project
 (https://github.com/fatedier/frp), version 0.70.1, commit

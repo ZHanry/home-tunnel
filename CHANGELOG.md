@@ -2,7 +2,7 @@
 
 All notable changes to Home Tunnel are documented in this file. The project follows [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [4.0.0] - 2026-09-03
 
 ### Added
 
@@ -18,7 +18,7 @@ All notable changes to Home Tunnel are documented in this file. The project foll
 - `home-tunnel-gui` uses per-user state on Windows/macOS/Linux desktops and
   can open the web console from the local UI.
 - Windows, macOS, and Linux desktops now use the same `home-tunnel-gui`
-  client. Windows ships as `HomeTunnel-Windows-*-x64.zip`. The WPF client has
+  client. Windows ships as `HomeTunnel-Setup-*-x64.exe`. The WPF client has
   been removed; Agent builds live in `windows-agent/`.
 - The GUI signs out of the control center, stops the local Agent, and can
   check GitHub Releases for a newer version.

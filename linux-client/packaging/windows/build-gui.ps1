@@ -2,7 +2,7 @@
 # Requires Go 1.26+. Prefer packaging/windows/build-release.ps1 for the zip.
 
 param(
-    [string]$Version = "3.2.0",
+    [string]$Version = "4.0.0",
     [string]$OutputDir = ""
 )
 

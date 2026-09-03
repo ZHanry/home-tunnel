@@ -9,7 +9,7 @@ Home Tunnel is a self-hosted tunneling platform for personal and family services
 
 ![The real Home Tunnel management dashboard showing connections, traffic, and component health](docs/site/assets/admin-dashboard.jpg)
 
-> `v3.2.0` is promoted from the same commit and immutable artifact set as `v3.2.0-rc.3`. The Linux server and headless client are Stable, macOS headless is Beta, Windows/macOS/Linux share `home-tunnel-gui`, and the Android 8.0+ `arm64-v8a` management app is Experimental.
+> `v4.0.0` is the unified windowed desktop client release. The Linux server and headless client are Stable, macOS headless is Beta, Windows ships `HomeTunnel-Setup-4.0.0-x64.exe`, and the Android 8.0+ `arm64-v8a` management app is Experimental.
 
 ## Quick Start
 
@@ -38,15 +38,12 @@ Read the one-time password from `deploy/secrets/bootstrap_admin_password`, open 
 | Server | Linux `amd64` / `arm64` | Stable | Containers and source builds; stable releases require both architectures |
 | Headless client | Linux `amd64` / `arm64` | Stable | systemd, realtime configuration, and safety polling |
 | Headless client | macOS `amd64` / `arm64` | Beta | launchd package; broader real-hardware coverage is pending |
-| Graphical client | Windows / macOS / Linux | Unified | The same `home-tunnel-gui`; Windows ships as `HomeTunnel-Windows-*-x64.zip` |
+| Graphical client | Windows / macOS / Linux | Unified | The same `home-tunnel-gui`; Windows ships as `HomeTunnel-Setup-*-x64.exe` |
 | Mobile client | Android 8.0+ `arm64-v8a` | Experimental | Sideloadable GitHub APK; the AAB is not directly installable or a Play-readiness claim |
 
-Windows and Android packages are built in the same RC asset set later promoted unchanged to Stable, with SHA-256, SPDX SBOMs, Sigstore bundles, and GitHub provenance.
+The GitHub Release tag is `v4.0.0`. Windows installs with `HomeTunnel-Setup-4.0.0-x64.exe`. Linux/macOS tarballs are `home-tunnel-linux-4.0.0-*.tar.gz` and `home-tunnel-macos-4.0.0-*.tar.gz`. Verify SHA-256 after download. Android updates require the fixed application ID and persistent release certificate.
 
-The GitHub Release tag is `v3.2.0`. Stable does not rebuild artifacts, so Linux/macOS tarballs and Compose image tags remain `3.2.0-rc.3`, while Windows/Android installer filenames already use `3.2.0`. When installing the Linux or macOS client, download the `3.2.0-rc.3` archive and verify its SHA-256.
- Verify the Windows zip SHA-256 from the same GitHub Release before extracting it. Android updates require the fixed application ID and persistent release certificate to remain unchanged.
-
-[Download the Windows GUI zip](https://github.com/ZHanry/home-tunnel/releases/latest/download/HomeTunnel-Windows-3.2.0-x64.zip) and run `home-tunnel-gui.exe` next to `home-tunnel-agent.exe`. Windows, macOS, and Linux share this graphical client.
+[Download the Windows installer](https://github.com/ZHanry/home-tunnel/releases/latest/download/HomeTunnel-Setup-4.0.0-x64.exe). Windows, macOS, and Linux share the graphical client.
 
 The Android app is a management client: sign in to list home devices, copy
 public URLs, and edit HTTP tunnels. It does not run a tunnel Agent on the phone.

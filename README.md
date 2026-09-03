@@ -15,7 +15,7 @@ Home Tunnel 是面向个人与家庭服务的自托管内网穿透平台，用�
 
 ![Home Tunnel 真实管理后台，显示连接、流量和组件健康状态](docs/site/assets/admin-dashboard.jpg)
 
-> `v3.2.0` 由 `v3.2.0-rc.3` 的同一提交和同一套不可变资产提升。服务端 Linux `amd64`/`arm64` 与 Linux 无界面客户端为 Stable；macOS headless 为 Beta；Windows / macOS / Linux 共用 `home-tunnel-gui`；Android 8.0+ `arm64-v8a` 管理 App 为 Experimental。
+> `v4.0.0` 统一三端窗口客户端 `home-tunnel-gui`。服务端 Linux `amd64`/`arm64` 与 Linux 无界面客户端为 Stable；macOS headless 为 Beta；Windows 提供 Setup EXE；Android 8.0+ `arm64-v8a` 管理 App 为 Experimental。
 
 ## 三步启动
 
@@ -57,13 +57,11 @@ Home Tunnel 是面向个人与家庭服务的自托管内网穿透平台，用�
 | 服务端 | Linux `amd64` / `arm64` | Stable | 容器与源码构建；稳定版要求完整双架构矩阵 |
 | Headless 客户端 | Linux `amd64` / `arm64` | Stable | systemd 服务，实时配置与安全轮询 |
 | Headless 客户端 | macOS `amd64` / `arm64` | Beta | launchd 包；仍需扩大真实硬件验证 |
-| 图形客户端 | Windows / macOS / Linux | 统一 | 同一套 `home-tunnel-gui`；Windows 提供 zip |
+| 图形客户端 | Windows / macOS / Linux | 统一 | 同一套 `home-tunnel-gui`；Windows 提供 `HomeTunnel-Setup-*-x64.exe` |
 | 移动客户端 | Android 8.0+ `arm64-v8a` | Experimental | GitHub Release 侧载 APK；AAB 不可直接安装，也不代表 Play-ready |
 
-Windows zip、Android APK/AAB 与其他平台资产来自同一个 RC 构建并随 Stable 原样提升，包含 SHA-256、SPDX SBOM、Sigstore 和 GitHub provenance。
-
-GitHub Release 标签是 `v3.2.0`。Stable 不重建产物，因此 Linux/macOS 压缩包和 compose 镜像标签仍为 `3.2.0-rc.3`；Windows/Android 安装包文件名已是 `3.2.0`。下载 Linux/macOS 客户端时请使用带 `3.2.0-rc.3` 的文件名，并核对其 SHA-256。
-Windows zip 请核对 Release 的 SHA-256 后再解压运行；Android 使用必须长期保留的固定发布证书，升级前必须保持 application ID 与证书一致。
+GitHub Release 标签是 `v4.0.0`。Windows 安装包是 `HomeTunnel-Setup-4.0.0-x64.exe`；Linux/macOS 使用 `home-tunnel-linux-4.0.0-*.tar.gz` / `home-tunnel-macos-4.0.0-*.tar.gz`。下载后请核对 SHA-256。
+Android 使用必须长期保留的固定发布证书，升级前必须保持 application ID 与证书一致。
 
 ## 为什么不是“裸 FRP”
 
@@ -118,7 +116,7 @@ TCP 与 UDP 默认关闭，只能由管理员在允许范围内分配精确公�
 
 ### 桌面图形客户端（Windows / macOS / Linux）
 
-三端共用 `home-tunnel-gui`：登录后管理本机隧道，改动同步到服务端。Windows 从 Release 下载 `HomeTunnel-Windows-3.2.0-x64.zip`，解压后运行 `home-tunnel-gui.exe`（同目录需有 `home-tunnel-agent.exe`）。Linux/macOS 发行包同时包含 GUI 与 CLI。说明见 [linux-client/README.md](linux-client/README.md)。
+三端共用 `home-tunnel-gui`：登录后管理本机隧道，改动同步到服务端。Windows 从 Release 下载并运行 `HomeTunnel-Setup-4.0.0-x64.exe`。Linux/macOS 发行包同时包含 GUI 与 CLI。说明见 [linux-client/README.md](linux-client/README.md)。
 
 ```powershell
 .\linux-client\packaging\windows\build-release.ps1

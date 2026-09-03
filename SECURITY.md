@@ -11,7 +11,7 @@ versions. Older builds should be upgraded before reporting a problem.
 | Version | Supported |
 | --- | --- |
 | 3.2.x | Yes |
-| 3.2.0 RC builds | Prerelease testing only |
+| 4.0.0 RC builds | Prerelease testing only |
 | Earlier versions | No |
 
 ## Reporting a vulnerability

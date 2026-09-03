@@ -16,7 +16,7 @@ import (
 )
 
 func TestParseChecksum(t *testing.T) {
-	got := parseChecksum("abc123  HomeTunnel-Windows-3.2.0-x64.zip\n", "HomeTunnel-Windows-3.2.0-x64.zip")
+	got := parseChecksum("abc123  HomeTunnel-Setup-4.0.0-x64.exe\n", "HomeTunnel-Setup-4.0.0-x64.exe")
 	if got != "abc123" {
 		t.Fatalf("got %q", got)
 	}
@@ -32,15 +32,15 @@ func TestPackageAssetMatchesCurrentOS(t *testing.T) {
 			Name string `json:"name"`
 			URL  string `json:"browser_download_url"`
 		}{
-			{Name: "HomeTunnel-Windows-3.2.1-x64.zip", URL: "https://example.com/win.zip"},
-			{Name: "HomeTunnel-Windows-3.2.1-x64.zip.sha256", URL: "https://example.com/win.sha256"},
+			{Name: "HomeTunnel-Setup-3.2.1-x64.exe", URL: "https://example.com/win.zip"},
+			{Name: "HomeTunnel-Setup-3.2.1-x64.exe.sha256", URL: "https://example.com/win.sha256"},
 			{Name: "home-tunnel-linux-3.2.1-amd64.tar.gz", URL: "https://example.com/linux.tgz"},
 			{Name: "home-tunnel-macos-3.2.1-arm64.tar.gz", URL: "https://example.com/mac.tgz"},
 		},
 	}
 	name, url, checksum := packageAsset(release)
 	if runtime.GOOS == "windows" {
-		if name != "HomeTunnel-Windows-3.2.1-x64.zip" || url == "" || checksum == "" {
+		if name != "HomeTunnel-Setup-3.2.1-x64.exe" || url == "" || checksum == "" {
 			t.Fatalf("windows asset %q %q %q", name, url, checksum)
 		}
 	}
@@ -51,7 +51,7 @@ func TestUpdateCheckUsesReleaseAsset(t *testing.T) {
 		"tag_name": "v9.9.9",
 		"html_url": "https://github.com/ZHanry/home-tunnel/releases/tag/v9.9.9",
 		"assets": []map[string]string{
-			{"name": "HomeTunnel-Windows-9.9.9-x64.zip", "browser_download_url": "https://example.com/app.zip"},
+			{"name": "HomeTunnel-Setup-9.9.9-x64.exe", "browser_download_url": "https://example.com/app.zip"},
 			{"name": "home-tunnel-linux-9.9.9-" + runtime.GOARCH + ".tar.gz", "browser_download_url": "https://example.com/app.tgz"},
 			{"name": "home-tunnel-macos-9.9.9-" + runtime.GOARCH + ".tar.gz", "browser_download_url": "https://example.com/app-mac.tgz"},
 		},
@@ -65,7 +65,7 @@ func TestUpdateCheckUsesReleaseAsset(t *testing.T) {
 	githubLatestRelease = upstream.URL
 	t.Cleanup(func() { githubLatestRelease = previous })
 
-	server := New(Options{AgentVersion: "3.2.0", StatePath: filepath.Join(t.TempDir(), "state.json")})
+	server := New(Options{AgentVersion: "4.0.0", StatePath: filepath.Join(t.TempDir(), "state.json")})
 	rec := httptest.NewRecorder()
 	server.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/local/update", nil))
 	if rec.Code != http.StatusOK {
@@ -87,7 +87,7 @@ func TestDownloadUpdateVerifiesSHA256(t *testing.T) {
 	var assetName string
 	switch runtime.GOOS {
 	case "windows":
-		assetName = "HomeTunnel-Windows-9.9.9-x64.zip"
+		assetName = "HomeTunnel-Setup-9.9.9-x64.exe"
 	case "linux":
 		assetName = "home-tunnel-linux-9.9.9-" + runtime.GOARCH + ".tar.gz"
 	case "darwin":
@@ -167,7 +167,7 @@ func TestDownloadUpdateRejectsBadChecksum(t *testing.T) {
 	var assetName string
 	switch runtime.GOOS {
 	case "windows":
-		assetName = "HomeTunnel-Windows-9.9.9-x64.zip"
+		assetName = "HomeTunnel-Setup-9.9.9-x64.exe"
 	case "linux":
 		assetName = "home-tunnel-linux-9.9.9-" + runtime.GOARCH + ".tar.gz"
 	case "darwin":

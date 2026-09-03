@@ -35,7 +35,7 @@ globalThis.MutationObserver = class {
 
 const [{ api }, { state }] = await Promise.all([
   import("../public/modules/api.js"),
-  import("../public/modules/state.js?v=3.2.0-modules1"),
+  import("../public/modules/state.js?v=4.0.0-modules1"),
 ]);
 
 function jsonResponse(status, body) {
