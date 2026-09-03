@@ -23,7 +23,7 @@ const zhToEn = {
   "Linux 客户端快速开始": "Linux client quick start",
   "Windows x64 EXE": "Windows x64 EXE",
   "Windows EXE 为自签名 Experimental；安装时会提示未知发布者，请先核对 Release SHA-256。": "The Windows EXE is self-signed Experimental software. Expect an unknown-publisher warning and verify the Release SHA-256 first.",
-  "Windows、macOS、Linux 共用同一套图形客户端；解压后运行 home-tunnel-gui。NAS 继续使用无界面服务。": "Windows, macOS, and Linux share one graphical client. Unzip and run home-tunnel-gui. NAS hosts keep using the headless service.",
+  "Windows 下载 Setup 安装包；macOS / Linux 使用同一套图形客户端。NAS 继续使用无界面服务。": "Download the Windows Setup installer; macOS and Linux share the same graphical client. NAS hosts keep using the headless service.",
   "Windows x64 图形客户端": "Windows x64 GUI client",
   "家里的电脑用同一套图形客户端；NAS 和无桌面主机用 Linux CLI 服务。": "Use the same graphical client on home computers; NAS and headless hosts use the Linux CLI service.",
   "图形客户端与无界面服务都只接受控制中心签发的 HTTP/HTTPS、自定义域名与管理员精确授权的 TCP/UDP 端口。端口隧道默认关闭并绕过 HTTP 网关；应用必须自行认证加密，并在防火墙限源限速。不提供通用 FRP 命令行。": "Both the GUI and the headless service accept only control-center-issued HTTP/HTTPS and custom-domain configurations plus exact administrator-authorized TCP/UDP ports. Raw-port tunnels are off by default and bypass the HTTP gateway; applications must authenticate and encrypt, with firewall source/rate limits. There is no general-purpose FRP CLI.",
