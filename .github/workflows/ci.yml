@@ -485,7 +485,9 @@ jobs:
         shell: pwsh
         run: |
           $paths = @(
-            'android-client/scripts/build-agent.ps1',
+            'linux-client/packaging/windows/build-gui.ps1',
+            'linux-client/packaging/windows/build-release.ps1',
+            'windows-agent/build-agent.ps1',
             'deploy/build-ui-release.ps1',
             'deploy/build-release.ps1',
             'deploy/deploy-ui.ps1'
