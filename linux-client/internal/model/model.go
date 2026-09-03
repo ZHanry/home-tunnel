@@ -43,6 +43,13 @@ type DeviceRegistration struct {
 	ConfigVersion    int64  `json:"config_version"`
 }
 
+type Device struct {
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	Status string `json:"status"`
+	Online bool   `json:"online"`
+}
+
 type Connection struct {
 	ID               string   `json:"id"`
 	DeviceID         string   `json:"device_id"`

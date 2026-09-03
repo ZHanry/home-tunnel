@@ -10,11 +10,37 @@ All notable changes to Home Tunnel are documented in this file. The project foll
   create HTTP/HTTPS tunnels without administrator privileges.
 - Added `GET /api/v1/client/devices` so the web workspace can bind a tunnel to
   a device the current user already registered.
+- Added `GET /api/v1/client/subdomains/availability` with conflict suggestions
+  and an optional `{username}-` prefix policy (`off` / `suggest` / `enforce`).
+- Added Linux/macOS graphical client (`home-tunnel-gui`) and CLI
+  `connection ls|add|set|delete`. Release archives now include the GUI
+  binary; Linux also installs a `.desktop` launcher.
+- `home-tunnel-gui` uses per-user state on Windows/macOS/Linux desktops and
+  can open the web console from the local UI.
+- Windows, macOS, and Linux desktops now use the same `home-tunnel-gui`
+  client. Windows ships as `HomeTunnel-Windows-*-x64.zip`. The WPF client has
+  been removed; Agent builds live in `windows-agent/`.
+- The GUI signs out of the control center, stops the local Agent, and can
+  check GitHub Releases for a newer version.
+- Android is a remote management app (`client_type=mobile`) and no longer starts
+  a local tunnel Agent.
+- `home-tunnel-gui` is a native window on Windows, macOS, and Linux, with a
+  system tray on all three. Closing the window hides to the tray; it no longer
+  opens a system browser. The UI still has connection editing, confirmations,
+  clickable subdomain suggestions, light/dark theme, Chinese/English, and a
+  SHA-256 verified update download.
+- Signing out waits for the Agent supervisor to stop before deleting `runtime/`.
+- Android Agent sources and NDK build scripts were removed; CI no longer
+  treats the phone as a tunnel endpoint.
 
 ### Changed
 
 - Web login no longer rejects `role=user`. User, audit, and TCP/UDP port
   assignment remain administrator-only; client APIs stay scoped by `user_id`.
+- A deployment has a single administrator. Creating or promoting additional
+  admins is rejected. The self-hosted console opens on login instead of the
+  marketing landing page.
+- Login accepts `macos` and `mobile` client types.
 
 ### Security
 

@@ -41,18 +41,17 @@ The maintainers will acknowledge a complete report as soon as practical, validat
 - Do not attempt to use Home Tunnel for raw IP, ICMP, broadcast, multicast,
   STCP, XTCP, SUDP, visitor configurations, or arbitrary FRP plugins; those
   surfaces are intentionally rejected by the managed Agent.
-- Treat the current Windows EXE as self-signed Experimental software. Verify its
-  Release SHA-256 and Sigstore evidence; the ephemeral Authenticode certificate
-  is not a substitute for publisher trust.
+- Treat the Windows zip (`HomeTunnel-Windows-*-x64.zip`) as unsigned
+  redistributable software. Verify its Release SHA-256 and Sigstore evidence
+  before extracting `home-tunnel-gui.exe`.
 - Treat the Android 8.0+ `arm64-v8a` APK as Experimental software. Verify its
   Release SHA-256, Sigstore evidence, application ID
   `io.github.zhanry.hometunnel`, and persistent signing-certificate SHA-256.
   Never install a build signed by an unexpected certificate. The AAB is not
   directly installable and is not a statement of Google Play readiness.
-- Android foreground-service notifications, battery optimization, and OEM
-  background limits can interrupt long-running tunnels. Keep the notification
-  enabled, review device-specific restrictions, and do not treat Experimental
-  background operation as an availability guarantee.
+- The Android app is a remote management client and does not run a tunnel
+  Agent. Treat it as Experimental software for sign-in and connection editing
+  only.
 - Review logs before sharing them; Home Tunnel attempts to redact secrets, but diagnostics can still reveal hostnames and network topology.
 
 See [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md) for trust boundaries and operational assumptions.

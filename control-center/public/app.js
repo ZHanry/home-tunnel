@@ -38,6 +38,7 @@ const viewMeta = {
   devices: ["设备管理", "设备信任"],
   connections: ["连接管理", "受管隧道"],
   audit: ["审计事件", "操作轨迹"],
+  settings: ["系统设置", "部署策略"],
 };
 
 const userViewMeta = {
@@ -61,7 +62,7 @@ function applyRoleChrome() {
 }
 
 function resolveView(view) {
-  if (!isAdmin() && (view === "users" || view === "audit")) return "dashboard";
+  if (!isAdmin() && (view === "users" || view === "audit" || view === "settings")) return "dashboard";
   return viewMeta[view] ? view : "dashboard";
 }
 
@@ -110,6 +111,9 @@ async function loadPublicConfig() {
     const value = await response.json();
     if (typeof value.tunnel_domain !== "string" || !/^[a-z0-9.-]{1,253}$/.test(value.tunnel_domain)) return;
     state.tunnelDomain = value.tunnel_domain;
+    state.prefixPolicy = value.subdomain_prefix_policy === "off" || value.subdomain_prefix_policy === "enforce"
+      ? value.subdomain_prefix_policy
+      : "suggest";
     document.querySelectorAll("[data-example-subdomain]").forEach((node) => {
       node.textContent = `https://${node.dataset.exampleSubdomain}.${state.tunnelDomain}`;
     });
@@ -212,10 +216,11 @@ function loadingView(view) {
 function renderPageActions(view) {
   const actions = {
     dashboard: `<button class="button button-secondary" data-action="refresh-view">刷新数据</button>`,
-    users: `<button class="button button-primary" data-action="create-user">创建用户</button>`,
+    users: `<button class="button button-primary" data-action="create-user">创建普通用户</button>`,
     devices: `<button class="button button-secondary" data-action="refresh-view">刷新状态</button>`,
     connections: `<button class="button button-primary" data-action="create-connection">创建连接</button>`,
     audit: `<button class="button button-secondary" data-action="refresh-view">刷新事件</button>`,
+    settings: `<button class="button button-secondary" data-action="refresh-view">刷新设置</button>`,
   };
   pageActions.innerHTML = actions[view] ?? "";
 }
@@ -236,6 +241,7 @@ async function renderView(view) {
     if (view === "devices") await renderDevices(renderId);
     if (view === "connections") await renderConnections(renderId);
     if (view === "audit") await renderAudit(renderId);
+    if (view === "settings") await renderSettings(renderId);
     if (renderId !== state.renderId) return;
     viewContent.setAttribute("aria-busy", "false");
     document.querySelector("#main-content").focus({ preventScroll: true });
@@ -274,7 +280,7 @@ async function renderDashboard(renderId) {
               <p>实时连接状态与 24 小时数据流转</p>
             </div>
           </div>
-          <span class="status-badge ok">网关正常运行</span>
+          <span class="status-badge ${health.status === "healthy" ? "ok" : health.status === "unhealthy" ? "error" : "warn"}">${health.status === "healthy" ? "系统运行正常" : health.status === "unhealthy" ? "系统异常" : "系统需要处理"}</span>
         </div>
         <div class="pulse-core-metrics">
           <div class="pulse-metric-item">
@@ -341,8 +347,23 @@ async function renderDashboard(renderId) {
     </section>`;
 }
 
-function emptyState(title, detail) {
-  return `<div class="empty-state"><span class="empty-state-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM8 9h8M8 13h5"/></svg></span><strong>${escapeHtml(title)}</strong><span>${escapeHtml(detail)}</span></div>`;
+function emptyState(title, detail, action, actionLabel) {
+  const button = action
+    ? `<button class="button button-primary" data-action="${escapeHtml(action)}">${escapeHtml(actionLabel ?? "继续")}</button>`
+    : "";
+  return `<div class="empty-state"><span class="empty-state-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM8 9h8M8 13h5"/></svg></span><strong>${escapeHtml(title)}</strong><span>${escapeHtml(detail)}</span>${button}</div>`;
+}
+
+function publicAddress(connection) {
+  return connection.public_url || connection.public_endpoint || `${connection.subdomain}.${state.tunnelDomain}`;
+}
+
+function copyableAddress(connection) {
+  const address = publicAddress(connection);
+  const href = connection.public_url
+    ? `<a class="cell-secondary mono" href="${escapeHtml(connection.public_url)}" target="_blank" rel="noopener">${escapeHtml(connection.public_url)}</a>`
+    : `<span class="cell-secondary mono">${escapeHtml(address)}</span>`;
+  return `<div class="connection-card-url">${href}<button class="icon-button copy-button" type="button" data-copy="${escapeHtml(address)}" aria-label="复制公网地址">复制</button></div>`;
 }
 
 function annotateOwnedConnections(connections, devices) {
@@ -407,7 +428,7 @@ async function renderUserDashboard(renderId) {
         </div>
       </section>
     </div>
-    <section class="stats-strip-grid" aria-label="我的资源">
+    <section class="stats-strip-grid stats-strip-grid-2" aria-label="我的资源">
       <article class="stat-strip-item">
         <span class="stat-strip-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 2h14a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm3 17h8"/></svg></span>
         <div class="stat-strip-info">
@@ -430,7 +451,7 @@ async function renderUserDashboard(renderId) {
           <span class="panel-subtle">从右上角创建 HTTP 隧道；设备需先在家里注册</span>
         </div>
       </div>
-      ${ranked.length ? `<table class="data-table"><thead><tr><th>连接</th><th>设备</th><th>上传</th><th>下载</th><th>请求</th></tr></thead><tbody>${ranked.slice(0, 6).map((item) => `<tr><td data-label="连接"><span class="cell-primary">${escapeHtml(item.name)}</span><span class="cell-secondary mono">${escapeHtml(item.public_url ?? item.public_endpoint ?? item.subdomain)}</span></td><td data-label="设备">${escapeHtml(item.device_name)}</td><td data-label="上传" class="mono">${formatBytes(item.upload_bytes)}</td><td data-label="下载" class="mono">${formatBytes(item.download_bytes)}</td><td data-label="请求" class="mono">${item.requests.toLocaleString(localeTag())}</td></tr>`).join("")}</tbody></table>` : emptyState("还没有隧道", "从右上角创建一条 HTTP 连接。设备需要先在家里注册。")}
+      ${ranked.length ? `<table class="data-table"><thead><tr><th>连接</th><th>设备</th><th>上传</th><th>下载</th><th>请求</th></tr></thead><tbody>${ranked.slice(0, 6).map((item) => `<tr><td data-label="连接"><span class="cell-primary">${escapeHtml(item.name)}</span>${copyableAddress(item)}</td><td data-label="设备">${escapeHtml(item.device_name)}</td><td data-label="上传" class="mono">${formatBytes(item.upload_bytes)}</td><td data-label="下载" class="mono">${formatBytes(item.download_bytes)}</td><td data-label="请求" class="mono">${item.requests.toLocaleString(localeTag())}</td></tr>`).join("")}</tbody></table>` : emptyState("还没有隧道", "先在家里的电脑上安装客户端并登录，然后在这里创建 HTTP 连接。", "create-connection", "创建连接")}
     </section>`;
 }
 
@@ -443,7 +464,7 @@ async function renderUsers(renderId = state.renderId) {
   if (renderId !== state.renderId) return;
   state.users = data.items;
   viewContent.innerHTML = `
-    <section class="panel table-panel">${state.users.length ? `<table class="data-table"><thead><tr><th>用户</th><th>角色</th><th>状态</th><th>设备 / 连接</th><th>账号上限</th><th>本月流量</th><th><span class="visually-hidden">操作</span></th></tr></thead><tbody>${state.users.map((user) => `<tr><td data-label="用户"><span class="cell-primary">${escapeHtml(user.display_name)}</span><span class="cell-secondary mono">${escapeHtml(user.username)}</span></td><td data-label="角色">${user.role === "admin" ? "管理员" : "普通用户"}</td><td data-label="状态">${statusBadge(user.status)} ${user.password_state === "must_change" ? statusBadge("must_change") : ""} ${user.quota_suspended ? statusBadge("quota_suspended") : ""}</td><td data-label="设备 / 连接" class="mono">${user.device_count} / ${user.connection_count}</td><td data-label="账号上限" class="mono">${formatBps(user.bandwidth_limit_bps)}</td><td data-label="本月流量" class="mono">${formatBytes(user.month_to_date_bytes)}${user.monthly_quota_bytes ? ` / ${formatBytes(user.monthly_quota_bytes)}` : ""}</td><td class="actions-cell" data-label="操作"><div class="actions"><button class="button button-quiet button-small" data-action="user-policy" data-id="${user.id}">限速</button><button class="button button-quiet button-small" data-action="reset-password" data-id="${user.id}">重置密码</button><button class="button ${user.status === "active" ? "button-danger" : "button-secondary"} button-small" data-action="toggle-user" data-id="${user.id}" data-status="${user.status}">${user.status === "active" ? "禁用" : "恢复"}</button></div></td></tr>`).join("")}</tbody></table>` : emptyState("还没有用户", "创建首个普通用户并将一次性临时密码安全交付给本人。")}</section>`;
+    <section class="panel table-panel">${state.users.length ? `<table class="data-table"><thead><tr><th>用户</th><th>角色</th><th>状态</th><th>设备 / 连接</th><th>账号上限</th><th>本月流量</th><th><span class="visually-hidden">操作</span></th></tr></thead><tbody>${state.users.map((user) => `<tr><td data-label="用户"><span class="cell-primary">${escapeHtml(user.display_name)}</span><span class="cell-secondary mono">${escapeHtml(user.username)}</span></td><td data-label="角色">${user.role === "admin" ? "管理员" : "普通用户"}</td><td data-label="状态">${statusBadge(user.status)} ${user.password_state === "must_change" ? statusBadge("must_change") : ""} ${user.quota_suspended ? statusBadge("quota_suspended") : ""}</td><td data-label="设备 / 连接" class="mono">${user.device_count} / ${user.connection_count}</td><td data-label="账号上限" class="mono">${formatBps(user.bandwidth_limit_bps)}</td><td data-label="本月流量" class="mono">${formatBytes(user.month_to_date_bytes)}${user.monthly_quota_bytes ? ` / ${formatBytes(user.monthly_quota_bytes)}` : ""}</td><td class="actions-cell" data-label="操作"><div class="actions"><button class="button button-quiet button-small" data-action="user-policy" data-id="${user.id}">限速</button><button class="button button-quiet button-small" data-action="reset-password" data-id="${user.id}">重置密码</button><button class="button ${user.status === "active" ? "button-danger" : "button-secondary"} button-small" data-action="toggle-user" data-id="${user.id}" data-status="${user.status}">${user.status === "active" ? "禁用" : "恢复"}</button></div></td></tr>`).join("")}</tbody></table>` : emptyState("还没有用户", "创建首个普通用户，并把一次性临时密码安全交给本人。", "create-user", "创建普通用户")}</section>`;
 }
 
 async function renderDevices(renderId = state.renderId) {
@@ -455,7 +476,7 @@ async function renderDevices(renderId = state.renderId) {
       ? `<td class="actions-cell" data-label="操作"><div class="actions"><button class="button button-danger button-small" data-action="delete-device" data-id="${device.id}" data-name="${escapeHtml(device.name)}" aria-label="删除设备 ${escapeHtml(device.name)}">删除</button></div></td>`
       : `<td class="actions-cell" data-label="操作"><span class="cell-secondary">由客户端保活</span></td>`;
   viewContent.innerHTML = `
-    <section class="panel table-panel">${state.devices.length ? `<table class="data-table"><thead><tr><th>设备</th><th>用户</th><th>状态</th><th>配置</th><th class="hide-tablet">最后在线</th><th class="hide-tablet">租约到期</th><th><span class="visually-hidden">操作</span></th></tr></thead><tbody>${state.devices.map((device) => `<tr><td data-label="设备"><span class="cell-primary">${escapeHtml(device.name)}</span><span class="cell-secondary mono">${escapeHtml(device.id.slice(0, 8))} · 客户端 ${escapeHtml(device.client_version ?? "未知")} · Agent ${escapeHtml(device.agent_version ?? "未知")}</span></td><td data-label="用户">${escapeHtml(device.username ?? state.me.username)}</td><td data-label="状态">${statusBadge(device.status === "active" && device.online ? "active" : device.status === "active" ? "Offline" : device.status)}</td><td data-label="配置">${configState(device)}</td><td data-label="最后在线" class="hide-tablet">${formatDate(device.last_seen_at)}</td><td data-label="租约到期" class="hide-tablet">${formatDate(device.lease_expires_at)}</td>${deleteCell(device)}</tr>`).join("")}</tbody></table>` : emptyState("还没有注册设备", isAdmin() ? "用户可通过 Windows 图形客户端或 Linux/macOS 无界面服务完成设备注册。" : "在家里的机器上安装客户端并使用当前账号登录，设备会出现在这里。")}</section>`;
+    <section class="panel table-panel">${state.devices.length ? `<table class="data-table"><thead><tr><th>设备</th><th>用户</th><th>状态</th><th>配置</th><th class="hide-tablet">最后在线</th><th class="hide-tablet">租约到期</th><th><span class="visually-hidden">操作</span></th></tr></thead><tbody>${state.devices.map((device) => `<tr><td data-label="设备"><span class="cell-primary">${escapeHtml(device.name)}</span><span class="cell-secondary mono">${escapeHtml(device.id.slice(0, 8))} · 客户端 ${escapeHtml(device.client_version ?? "未知")} · Agent ${escapeHtml(device.agent_version ?? "未知")}</span></td><td data-label="用户">${escapeHtml(device.username ?? state.me.username)}</td><td data-label="状态">${statusBadge(device.status === "active" && device.online ? "active" : device.status === "active" ? "Offline" : device.status)}</td><td data-label="配置">${configState(device)}</td><td data-label="最后在线" class="hide-tablet">${formatDate(device.last_seen_at)}</td><td data-label="租约到期" class="hide-tablet">${formatDate(device.lease_expires_at)}</td>${deleteCell(device)}</tr>`).join("")}</tbody></table>` : emptyState("还没有注册设备", isAdmin() ? "请用户在家里的 Windows / macOS / Linux 电脑上安装图形客户端并登录。" : "在家里的电脑上安装客户端，用当前账号登录后设备会出现在这里。")}</section>`;
 }
 
 // 访问控制徽章：只依据 access_basic_auth_enabled / access_ip_allowlist 展示
@@ -479,7 +500,26 @@ async function renderConnections(renderId = state.renderId) {
   state.connections = annotateOwnedConnections(data.items, state.devices);
   updateTransportTunnelState(data);
   viewContent.innerHTML = `
-    <section class="panel table-panel">${state.connections.length ? `<table class="data-table"><thead><tr><th>连接</th><th>归属</th><th>状态</th><th>访问控制</th><th>本地目标</th><th>连接上限</th><th>版本</th><th><span class="visually-hidden">操作</span></th></tr></thead><tbody>${state.connections.map(renderConnectionRow).join("")}</tbody></table>` : emptyState("还没有连接", isAdmin() ? "为已注册设备创建 HTTP/HTTPS 连接，或由管理员开启通用 TCP / UDP 端口隧道。" : "为已注册设备创建 HTTP/HTTPS 连接。TCP/UDP 端口仍由管理员分配。")}</section>`;
+    <section class="panel table-panel">${state.connections.length
+      ? isAdmin()
+        ? `<table class="data-table"><thead><tr><th>连接</th><th>归属</th><th>状态</th><th>访问控制</th><th>本地目标</th><th>连接上限</th><th>版本</th><th><span class="visually-hidden">操作</span></th></tr></thead><tbody>${state.connections.map(renderConnectionRow).join("")}</tbody></table>`
+        : `<div class="connection-card-list">${state.connections.map(renderConnectionCard).join("")}</div>`
+      : emptyState("还没有连接", isAdmin() ? "先确认用户已在家里注册设备，再创建 HTTP 连接或分配 TCP/UDP 端口。" : "先在家里的电脑上安装客户端并登录，再创建 HTTP 连接。", "create-connection", "创建连接")}</section>`;
+}
+
+function renderConnectionCard(connection) {
+  return `<article class="connection-card">
+    <div>
+      <span class="cell-primary">${escapeHtml(connection.name)} ${isRawProxy(connection.proxy_type) ? `<span class="status-badge warn">${escapeHtml(connection.proxy_type.toUpperCase())}</span>` : ""}</span>
+      ${copyableAddress(connection)}
+      <span class="cell-secondary">${escapeHtml(connection.device_name)} · ${escapeHtml(connection.local_scheme)}://${escapeHtml(connection.local_host)}:${connection.local_port}</span>
+    </div>
+    <div class="actions">${statusBadge(connection.enabled ? connection.state : "disabled")}
+      ${connection.proxy_type === "http" ? `<button class="button button-quiet button-small" data-action="custom-domains" data-id="${connection.id}">域名</button>` : ""}
+      <button class="button button-quiet button-small" data-action="edit-connection" data-id="${connection.id}">编辑</button>
+      <button class="button button-danger button-small" data-action="delete-connection" data-id="${connection.id}">删除</button>
+    </div>
+  </article>`;
 }
 
 function renderConnectionRow(connection) {
@@ -488,10 +528,32 @@ function renderConnectionRow(connection) {
   const badge = raw
     ? `<span class="status-badge warn">${escapeHtml(connection.proxy_type.toUpperCase())}</span>`
     : "";
-  const publicAddress = connection.public_url
-    ? `<a class="cell-secondary mono" href="${escapeHtml(connection.public_url)}" target="_blank" rel="noopener">${escapeHtml(connection.public_url)}</a>`
-    : `<span class="cell-secondary mono">${escapeHtml(connection.proxy_type)}://${escapeHtml(connection.public_endpoint ?? "")}</span>`;
-  return `<tr><td data-label="连接"><span class="cell-primary">${escapeHtml(connection.name)} ${badge}</span>${publicAddress}${(connection.custom_domains ?? []).map((domain) => `<a class="cell-secondary mono" href="https://${escapeHtml(domain)}" target="_blank" rel="noopener">https://${escapeHtml(domain)}</a>`).join("")}</td><td data-label="归属"><span class="cell-primary">${escapeHtml(connection.username)}</span><span class="cell-secondary">${escapeHtml(connection.device_name)}</span></td><td data-label="状态">${statusBadge(connection.enabled ? connection.state : "disabled")}</td><td data-label="访问控制">${raw ? '<span class="cell-secondary">FRP 租约 · 主机防火墙</span>' : accessBadges(connection)}</td><td data-label="本地目标" class="mono">${escapeHtml(transport)}://${escapeHtml(connection.local_host)}:${connection.local_port}</td><td data-label="连接上限" class="mono">${raw ? "—" : formatBps(connection.bandwidth_limit_bps)}</td><td data-label="版本" class="mono">v${connection.version} / a${connection.applied_version}</td><td class="actions-cell"><div class="actions">${connection.proxy_type === "http" ? `<button class="button button-quiet button-small" data-action="custom-domains" data-id="${connection.id}">域名</button>` : ""}<button class="button button-quiet button-small" data-action="edit-connection" data-id="${connection.id}">编辑</button><button class="button button-danger button-small" data-action="delete-connection" data-id="${connection.id}">删除</button></div></td></tr>`;
+  return `<tr><td data-label="连接"><span class="cell-primary">${escapeHtml(connection.name)} ${badge}</span>${copyableAddress(connection)}${(connection.custom_domains ?? []).map((domain) => `<div class="connection-card-url"><a class="cell-secondary mono" href="https://${escapeHtml(domain)}" target="_blank" rel="noopener">https://${escapeHtml(domain)}</a><button class="icon-button copy-button" type="button" data-copy="https://${escapeHtml(domain)}" aria-label="复制自定义域名">复制</button></div>`).join("")}</td><td data-label="归属"><span class="cell-primary">${escapeHtml(connection.username)}</span><span class="cell-secondary">${escapeHtml(connection.device_name)}</span></td><td data-label="状态">${statusBadge(connection.enabled ? connection.state : "disabled")}</td><td data-label="访问控制">${raw ? '<span class="cell-secondary">FRP 租约 · 主机防火墙</span>' : accessBadges(connection)}</td><td data-label="本地目标" class="mono">${escapeHtml(transport)}://${escapeHtml(connection.local_host)}:${connection.local_port}</td><td data-label="连接上限" class="mono">${raw ? "—" : formatBps(connection.bandwidth_limit_bps)}</td><td data-label="版本" class="mono">v${connection.version} / a${connection.applied_version}</td><td class="actions-cell"><div class="actions">${connection.proxy_type === "http" ? `<button class="button button-quiet button-small" data-action="custom-domains" data-id="${connection.id}">域名</button>` : ""}<button class="button button-quiet button-small" data-action="edit-connection" data-id="${connection.id}">编辑</button><button class="button button-danger button-small" data-action="delete-connection" data-id="${connection.id}">删除</button></div></td></tr>`;
+}
+
+async function renderSettings(renderId = state.renderId) {
+  if (!isAdmin()) {
+    await renderView("dashboard");
+    return;
+  }
+  const data = await api("/api/v1/admin/settings");
+  if (renderId !== state.renderId) return;
+  const policy = data.subdomain_prefix_policy ?? "suggest";
+  viewContent.innerHTML = `
+    <section class="panel">
+      <div class="panel-header"><div><h3>子域命名策略</h3><span class="panel-subtle">默认建议带用户名前缀，避免多人抢同一个短名。强制后新建 HTTP 子域必须以用户名开头。</span></div></div>
+      <form id="settings-form" class="form-stack" style="padding:20px">
+        <div class="field">
+          <label for="prefix-policy">新建子域</label>
+          <select id="prefix-policy" name="subdomain_prefix_policy">
+            <option value="off" ${policy === "off" ? "selected" : ""}>不干预，先到先得</option>
+            <option value="suggest" ${policy === "suggest" ? "selected" : ""}>建议使用用户名前缀（默认）</option>
+            <option value="enforce" ${policy === "enforce" ? "selected" : ""}>强制 {用户名}-{名称}</option>
+          </select>
+        </div>
+        <button class="button button-primary" type="submit">保存设置</button>
+      </form>
+    </section>`;
 }
 
 async function renderAudit(renderId = state.renderId) {
@@ -594,7 +656,8 @@ async function openCreateUser() {
     title: "创建用户",
     eyebrow: "身份管理",
     body: `<div class="form-grid">${field("username", "用户名", "", { helper: "小写字母、数字、点、下划线或连字符" })}${field("display_name", "显示名称")}
-      <div class="field"><label for="modal-role">角色</label><select id="modal-role" name="role"><option value="user">普通用户</option><option value="admin">管理员</option></select></div>
+      <input type="hidden" name="role" value="user">
+      <p class="helper">一套部署只有一名管理员；此处只能创建普通用户。</p>
       ${field("bandwidth_mbps", "账号带宽上限 (Mbps)", "", { type: "number", required: false, min: 0.1, helper: "留空表示不限速" })}</div>`,
     submitLabel: "创建并生成临时密码",
     onSubmit: async (form) => {
@@ -695,7 +758,8 @@ async function openCreateConnection() {
     const payload = await api("/api/v1/client/devices");
     state.devices = payload.items.filter((item) => item.status === "active");
     if (!state.devices.length) {
-      toast("请先在家里的机器上安装客户端并登录同一账号", "error");
+      toast("请先在家里的电脑上安装客户端并登录同一账号", "error");
+      await navigateTo("devices");
       return;
     }
     const deviceOptions = state.devices
@@ -704,7 +768,7 @@ async function openCreateConnection() {
     openModal({
       title: "创建 HTTP 隧道",
       eyebrow: "我的连接",
-      body: `<div class="form-grid"><div class="field"><label for="modal-device_id">设备</label><select id="modal-device_id" name="device_id">${deviceOptions}</select></div>${field("name", "连接名称")}${field("subdomain", "公网子域", "", { helper: `公网地址为 子域.${state.tunnelDomain}` })}<input name="proxy_type" type="hidden" value="http"><div class="field" id="modal-local-scheme-field"><label for="modal-local_scheme">本地协议</label><select id="modal-local_scheme" name="local_scheme"><option value="http">http</option><option value="https">https</option></select></div>${field("local_host", "本地地址", "127.0.0.1")}${field("local_port", "本地端口", "8080", { type: "number", min: 1, max: 65535 })}<div id="modal-http-options" class="field full"><div class="form-grid">${accessFormFields()}</div></div><div class="field full"><label><input name="enabled" type="checkbox" checked> 创建后立即启用</label><p class="helper">普通用户只能自助创建 HTTP/HTTPS。TCP/UDP 由管理员分配精确公网端口。</p></div></div>`,
+      body: `<div class="form-grid"><div class="field"><label for="modal-device_id">设备</label><select id="modal-device_id" name="device_id">${deviceOptions}</select></div>${field("name", "连接名称")}${field("subdomain", "公网子域", `${state.me?.username ?? "user"}-app`, { helper: `公网地址为 子域.${state.tunnelDomain}。被占用时会给出可用建议。` })}<input name="proxy_type" type="hidden" value="http"><div class="field" id="modal-local-scheme-field"><label for="modal-local_scheme">本地协议</label><select id="modal-local_scheme" name="local_scheme"><option value="http">http</option><option value="https">https</option></select></div>${field("local_host", "本地地址", "127.0.0.1")}${field("local_port", "本地端口", "8080", { type: "number", min: 1, max: 65535 })}<div id="modal-http-options" class="field full"><div class="form-grid">${accessFormFields()}</div></div><div class="field full"><label><input name="enabled" type="checkbox" checked> 创建后立即启用</label><p class="helper">普通用户只能自助创建 HTTP/HTTPS。TCP/UDP 由管理员分配精确公网端口。</p></div></div>`,
       submitLabel: "创建连接",
       onSubmit: async (form) => {
         const access = collectAccessPatch(form);
@@ -728,6 +792,7 @@ async function openCreateConnection() {
       },
     });
     bindAccessModeToggle();
+    bindSubdomainAvailability();
     return;
   }
   if (!state.users.length) state.users = (await api("/api/v1/admin/users")).items;
@@ -760,6 +825,7 @@ async function openCreateConnection() {
   });
   bindAccessModeToggle();
   bindProxyTypeToggle();
+  bindSubdomainAvailability();
   const userSelect = modalBody.querySelector("#modal-user_id");
   const deviceSelect = modalBody.querySelector("#modal-device_id");
   const filterDevices = () => {
@@ -772,6 +838,47 @@ async function openCreateConnection() {
   const firstDeviceUser = state.devices[0]?.user_id;
   if (firstDeviceUser) userSelect.value = firstDeviceUser;
   filterDevices();
+}
+
+function bindSubdomainAvailability() {
+  const input = modalBody.querySelector("#modal-subdomain");
+  const helper = input?.parentElement?.querySelector(".helper");
+  if (!input) return;
+  const box = document.createElement("div");
+  box.className = "subdomain-suggestions";
+  input.parentElement.append(box);
+  let timer = 0;
+  const refresh = async () => {
+    const name = input.value.trim();
+    if (!name) {
+      box.replaceChildren();
+      return;
+    }
+    try {
+      const result = await api(`/api/v1/client/subdomains/availability?name=${encodeURIComponent(name)}`);
+      if (helper) helper.textContent = result.message;
+      input.setAttribute("aria-invalid", result.available ? "false" : "true");
+      box.replaceChildren(
+        ...result.suggestions.map((item) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "button button-quiet button-small";
+          button.textContent = item;
+          button.addEventListener("click", () => {
+            input.value = item;
+            void refresh();
+          });
+          return button;
+        }),
+      );
+    } catch {
+      /* availability is advisory */
+    }
+  };
+  input.addEventListener("input", () => {
+    window.clearTimeout(timer);
+    timer = window.setTimeout(() => void refresh(), 200);
+  });
 }
 
 function bindProxyTypeToggle() {
@@ -867,6 +974,7 @@ function openEditConnection(connectionId) {
       },
     });
     bindAccessModeToggle();
+    bindSubdomainAvailability();
     return;
   }
   const raw = isRawProxy(connection.proxy_type);
@@ -893,6 +1001,7 @@ function openEditConnection(connectionId) {
   });
   bindAccessModeToggle();
   bindProxyTypeToggle();
+  bindSubdomainAvailability();
 }
 
 async function openCustomDomains(connectionId) {
@@ -983,7 +1092,29 @@ appShell.addEventListener("click", async (event) => {
   }
 });
 
+viewContent.addEventListener("click", async (event) => {
+  const copy = event.target.closest("[data-copy]");
+  if (!copy) return;
+  try {
+    await navigator.clipboard.writeText(copy.dataset.copy);
+    toast("已复制公网地址");
+  } catch {
+    toast("无法写入剪贴板，请手动选择地址", "error");
+  }
+});
+
 viewContent.addEventListener("submit", async (event) => {
+  if (event.target.id === "settings-form") {
+    event.preventDefault();
+    const form = new FormData(event.target);
+    await api("/api/v1/admin/settings", {
+      method: "PATCH",
+      body: JSON.stringify({ subdomain_prefix_policy: form.get("subdomain_prefix_policy") }),
+    });
+    toast("部署设置已保存");
+    await renderSettings();
+    return;
+  }
   if (event.target.id !== "audit-filter-form") return;
   event.preventDefault();
   const form = new FormData(event.target);
@@ -1086,6 +1217,11 @@ passwordForm.addEventListener("submit", async (event) => {
   const errorNode = document.querySelector("#password-error");
   errorNode.textContent = "";
   const form = new FormData(passwordForm);
+  if (form.get("new_password") !== form.get("confirm_password")) {
+    document.querySelector("#password-error").textContent = "两次输入的新密码不一致";
+    document.querySelector("#new-password").setAttribute("aria-invalid", "true");
+    return;
+  }
   const button = passwordForm.querySelector("button[type=submit]");
   button.disabled = true;
   button.setAttribute("aria-busy", "true");
@@ -1112,22 +1248,18 @@ passwordForm.addEventListener("input", () => {
   document.querySelector("#password-error").textContent = "";
 });
 
-document.querySelector("#logout-button").addEventListener("click", async () => {
-  try { await api("/api/v1/auth/logout", { method: "POST", body: "{}" }, false); } catch {}
-  disconnectRealtime();
-  showLogin("已安全退出");
+document.querySelector("#logout-button").addEventListener("click", () => {
+  confirmAction("退出登录", "退出后需要重新输入账号密码。未保存的对话框内容会丢失。", "确认退出", async () => {
+    try { await api("/api/v1/auth/logout", { method: "POST", body: "{}" }, false); } catch {}
+    modal.close("done");
+    disconnectRealtime();
+    showLogin("已安全退出");
+  });
 });
 
 (async () => {
   await loadPublicConfig();
-  if (!location.pathname.startsWith("/admin")) {
-    document.body.classList.remove("auth-active");
-    landingScreen.classList.remove("hidden");
-    authScreen.classList.add("hidden");
-    appShell.classList.add("hidden");
-    skipLink.href = "#landing-content";
-    return;
-  }
+  landingScreen.classList.add("hidden");
   try {
     await refreshSession();
     await showApp();

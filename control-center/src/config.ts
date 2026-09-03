@@ -117,6 +117,12 @@ function frpsTlsCertificatePem(): string | null {
   return value;
 }
 
+function subdomainPrefixPolicy(): "off" | "suggest" | "enforce" {
+  const raw = (process.env.SUBDOMAIN_PREFIX_POLICY ?? "suggest").trim().toLowerCase();
+  if (raw === "off" || raw === "suggest" || raw === "enforce") return raw;
+  throw new Error("SUBDOMAIN_PREFIX_POLICY must be off, suggest, or enforce");
+}
+
 function tunnelDomain(): string {
   const value = process.env.TUNNEL_DOMAIN?.trim().toLowerCase();
   if (!value) {
@@ -227,6 +233,7 @@ export const config = {
   publicBaseUrl: publicBaseUrl(),
   downloadsDirectory: process.env.DOWNLOADS_DIRECTORY ?? "/app/downloads",
   tunnelDomain: tunnelDomain(),
+  subdomainPrefixPolicy: subdomainPrefixPolicy(),
   publicFrpsHost: publicFrpsHost(),
   publicFrpsPort: publicFrpsPortValue,
   frpsTlsCertificatePem: frpsTlsCertificatePem(),

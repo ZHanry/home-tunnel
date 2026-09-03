@@ -1,6 +1,6 @@
 # Release process
 
-Release artifacts are built once from a protected RC tag and uploaded by `.github/workflows/release-images.yml`; they are never committed to the source tree. The workflow accepts stable `vX.Y.Z` and release-candidate `vX.Y.Z-rc.N` tags only, requires the tagged commit to already be on `main`, and rejects version drift. RC tags are the only build path: they create signed/attested multi-architecture images, four Linux/macOS packages, one Windows x64 Experimental EXE, one Android 8.0+ `arm64-v8a` Experimental APK, one non-installable Android AAB, a machine-readable image-digest manifest, and release-smoke evidence without moving image `latest`. A stable tag must resolve to the same commit as an already published matching RC. It downloads and verifies that prerelease, then promotes the exact signed image digests and identical assets without rebuilding or re-signing. Manual dispatch cannot publish or promote a release.
+Release artifacts are built once from a protected RC tag and uploaded by `.github/workflows/release-images.yml`; they are never committed to the source tree. The workflow accepts stable `vX.Y.Z` and release-candidate `vX.Y.Z-rc.N` tags only, requires the tagged commit to already be on `main`, and rejects version drift. RC tags are the only build path: they create signed/attested multi-architecture images, four Linux/macOS packages, one Windows x64 GUI zip (`HomeTunnel-Windows-*-x64.zip`), one Android 8.0+ `arm64-v8a` Experimental APK, one non-installable Android AAB, a machine-readable image-digest manifest, and release-smoke evidence without moving image `latest`. A stable tag must resolve to the same commit as an already published matching RC. It downloads and verifies that prerelease, then promotes the exact signed image digests and identical assets without rebuilding or re-signing. Manual dispatch cannot publish or promote a release.
 
 > **v3.2 rule:** `v3.2.0-rc.3` is the accepted build path. `v3.2.0`
 > must reuse its exact commit, image digests, and complete asset set.
@@ -12,7 +12,6 @@ Use one semantic version across:
 - `control-center/package.json`
 - `traffic-gateway/package.json`
 - `control-center/src/version.ts`
-- `windows-client/HomeTunnel.Client.csproj`
 - `linux-client/internal/model/model.go`
 - `linux-client/packaging/build-release.sh`
 - `android-client/gradle.properties` (`HOME_TUNNEL_VERSION_NAME` and the
@@ -58,12 +57,9 @@ pnpm test
 pnpm run test:coverage
 
 Set-Location ..
-dotnet test .\windows-client-tests\HomeTunnel.Client.Tests.csproj -c Release
 docker compose config --quiet
 
 Set-Location .\android-client
-$env:ANDROID_AGENT_ABIS = "arm64-v8a,x86_64"
-.\scripts\build-agent.ps1
 .\gradlew.bat --no-daemon test lint assembleDebug
 ```
 
@@ -82,12 +78,11 @@ ARCH=amd64 ./linux-client/packaging/build-release.sh
 ARCH=arm64 ./linux-client/packaging/build-release.sh
 ```
 
-The Windows x64 EXE is Experimental and uses an ephemeral self-signed
-Authenticode certificate because no trusted signing secret is configured. The
-release job must run Defender scanning, silent install, embedded Agent identity,
-signature-consistency, and uninstall checks, then publish the EXE, update
-manifest, checksum, SPDX SBOM, Sigstore bundles, and GitHub attestations. Release
-notes and user-facing docs must warn that Windows will show an unknown publisher.
+The Windows x64 graphical client is `HomeTunnel-Windows-*-x64.zip` containing
+`home-tunnel-gui.exe` and `home-tunnel-agent.exe`. The release job must publish
+the zip, checksum, SPDX SBOM, Sigstore bundles, and GitHub attestations. Release
+notes should tell users to verify SHA-256, extract the zip, and keep both
+executables in the same directory.
 
 The Android APK/AAB are Experimental but must use one persistent release key.
 The protected `android-release` environment supplies only
@@ -104,7 +99,7 @@ and `jarsigner`, and compare both signer fingerprints with
 
 1. Confirm the protected `main` commit passed `Quality Gate` and all CodeQL jobs, then tag that exact commit as `vMAJOR.MINOR.PATCH-rc.N`. After owner acceptance, create `vMAJOR.MINOR.PATCH` on that same commit. The RC tag, Stable tag, and published RC Release target must resolve to one SHA.
 2. The RC workflow stages a draft only after the complete artifact matrix and release smoke succeed, then publishes it as a prerelease without touching `latest`. The Stable workflow downloads that published RC, verifies aggregate and digest-manifest Sigstore bundles, checks all assets/evidence, stages the identical set, promotes the signed image digests to the stable version and `latest`, and publishes the Stable Release. It never invokes a build action. A promotion or publication failure restores the prior `latest` pointers.
-3. Every release contains Linux `amd64`/`arm64` Stable packages, macOS `amd64`/`arm64` headless Beta packages, the Windows x64 Experimental EXE, and the Android 8.0+ `arm64-v8a` Experimental APK plus non-installable AAB. Each package has a checksum, SPDX JSON SBOM, keyless Sigstore bundle, and GitHub artifact attestation. Android additionally publishes signed machine-readable evidence binding its application ID, version name/code, min/target SDK, ABI, APK/AAB hashes, embedded Agent hash, repository revision, and persistent certificate fingerprint. `SHA256SUMS.txt` and `image-digests.json` are separately signed and attested. Images carry BuildKit provenance/SBOM attestations, a GitHub attestation, and a keyless Cosign signature over their immutable digest. The manifest also embeds the independently signed FRPS dependency record. Release smoke covers authenticated bootstrap/admin/user APIs, HTTP and HTTPS backends, SSE, WebSocket, unknown-host denial, live policy revocation, component health, migration `008`, non-root UIDs, and encrypted backup/restore verification. Its managed L4 path additionally creates TCP `11000`, UDP `11001`, and RTSP-over-TCP `11002` connections; verifies binary TCP and UDP echoes plus RTSP interleaved media through the issued Agent configuration; disables the echo connections while HTTPS and RTSP remain available; requires TCP failure plus UDP timeout; then deletes the device and requires FRPS `Ping` authorization to deny complete RTSP application traffic within the heartbeat window. The local Compose smoke separately validates the FRPS allow-port range and both protocol bindings. A missing platform or evidence file fails the release.
+3. Every release contains Linux `amd64`/`arm64` Stable packages, macOS `amd64`/`arm64` headless Beta packages, the Windows x64 GUI zip, and the Android 8.0+ `arm64-v8a` Experimental APK plus non-installable AAB. Each package has a checksum, SPDX JSON SBOM, keyless Sigstore bundle, and GitHub artifact attestation. Android additionally publishes signed machine-readable evidence binding its application ID, version name/code, min/target SDK, ABI, APK/AAB hashes, repository revision, and persistent certificate fingerprint. `SHA256SUMS.txt` and `image-digests.json` are separately signed and attested. Images carry BuildKit provenance/SBOM attestations, a GitHub attestation, and a keyless Cosign signature over their immutable digest. The manifest also embeds the independently signed FRPS dependency record. Release smoke covers authenticated bootstrap/admin/user APIs, HTTP and HTTPS backends, SSE, WebSocket, unknown-host denial, live policy revocation, component health, migration `008`, non-root UIDs, and encrypted backup/restore verification. Its managed L4 path additionally creates TCP `11000`, UDP `11001`, and RTSP-over-TCP `11002` connections; verifies binary TCP and UDP echoes plus RTSP interleaved media through the issued Agent configuration; disables the echo connections while HTTPS and RTSP remain available; requires TCP failure plus UDP timeout; then deletes the device and requires FRPS `Ping` authorization to deny complete RTSP application traffic within the heartbeat window. The local Compose smoke separately validates the FRPS allow-port range and both protocol bindings. A missing platform or evidence file fails the release.
 4. Never upload `.env`, secret files, administrator handoff files, keystores,
    private certificates, signing passwords, or deployment audit material
    containing infrastructure details.

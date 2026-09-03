@@ -8,7 +8,7 @@ This guide describes the portable root-level `compose.yaml`. The scripts under `
 - An `amd64` or `arm64` CPU, at least 1 GiB RAM (with swap on small hosts) and 2 GiB free disk space
 - A public IPv4 or IPv6 address reachable on TCP 80, 443 and 7000; UDP 443 is optional for HTTP/3. Optional raw TCP/UDP tunnels also require their explicitly configured port ranges.
 - A domain you control
-- An `amd64`/`arm64` Linux machine for the Stable headless systemd client; Windows x64 EXE and Android 8.0+ `arm64-v8a` APK are Experimental, while macOS headless is Beta
+- A home computer for the shared graphical client (`home-tunnel-gui` on Windows, macOS, or Linux), or an `amd64`/`arm64` Linux machine for the headless systemd client. Android is a management app only.
 
 Create DNS records before starting:
 
@@ -153,26 +153,22 @@ and rates before exposing it.
 
 ### Windows
 
-Download `HomeTunnel-Setup-3.2.0-x64.exe` from the latest GitHub Release and
-verify its published SHA-256 before installation. The Windows x64 package is
-Experimental and self-signed, so Windows can show an unknown-publisher or
-SmartScreen warning. On first launch, enter the control-center root address,
+Download `HomeTunnel-Windows-3.2.0-x64.zip` from the latest GitHub Release and
+verify its published SHA-256 before running `home-tunnel-gui.exe`. It is a
+windowed client with a tray icon; closing the window hides it to the tray.
+On first launch, enter the control-center root address,
 for example `https://console.tunnel.example.com`, and sign in with a user
 created by the administrator. The client retrieves the public FRPS host, port,
 and tunnel suffix from that same HTTPS origin.
 
-To build the generic installer yourself, use Windows with .NET 10 LTS, Inno Setup 6, Windows SDK signing tools and `windres`:
+To build the Windows GUI zip yourself:
 
 ```powershell
-.\windows-client\packaging\build-exe.ps1 `
-  -AppId "{{11111111-2222-3333-4444-555555555555}}"
+.\linux-client\packaging\windows\build-release.ps1
 ```
 
-Use a new App ID for your fork so it does not overwrite a different Home Tunnel distribution. The development script creates a temporary self-signed Authenticode certificate. Do not describe it as a trusted publisher signature; trusted distribution requires a public code-signing certificate and a protected signing workflow.
-
-`latest.json` is a Windows-only update manifest promoted unchanged from the
-verified RC asset set. A missing manifest safely degrades to “updates
-unavailable” without affecting tunnels.
+The zip contains `home-tunnel-gui.exe` and `home-tunnel-agent.exe`. Put them in
+the same folder and run the GUI.
 
 ### Android
 

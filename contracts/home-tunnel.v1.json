@@ -19,7 +19,9 @@
         "web",
         "windows",
         "linux",
-        "android"
+        "macos",
+        "android",
+        "mobile"
       ]
     },
     "client_sync": {

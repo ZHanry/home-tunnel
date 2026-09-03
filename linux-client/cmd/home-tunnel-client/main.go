@@ -15,6 +15,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/ZHanry/home-tunnel/linux-client/internal/api"
 	"github.com/ZHanry/home-tunnel/linux-client/internal/app"
 	"github.com/ZHanry/home-tunnel/linux-client/internal/model"
 	statepkg "github.com/ZHanry/home-tunnel/linux-client/internal/state"
@@ -48,6 +49,8 @@ func execute(arguments []string) error {
 		return run(arguments[1:])
 	case "status":
 		return status(arguments[1:])
+	case "connection":
+		return connectionCommand(arguments[1:])
 	case "help", "--help", "-h":
 		printUsage(os.Stdout)
 		return nil
@@ -116,6 +119,201 @@ func run(arguments []string) error {
 		return nil
 	}
 	return err
+}
+
+func connectionCommand(arguments []string) error {
+	if len(arguments) == 0 {
+		return errors.New("connection requires ls, add, set, or delete")
+	}
+	switch arguments[0] {
+	case "ls", "list":
+		return connectionList(arguments[1:])
+	case "add":
+		return connectionAdd(arguments[1:])
+	case "set":
+		return connectionSet(arguments[1:])
+	case "delete", "rm":
+		return connectionDelete(arguments[1:])
+	default:
+		return errors.New("connection requires ls, add, set, or delete")
+	}
+}
+
+func enrolledAPI(statePath string) (*api.Client, model.State, error) {
+	state, err := (statepkg.Store{Path: statePath}).Load()
+	if err != nil {
+		return nil, state, err
+	}
+	if !state.Enrolled() {
+		return nil, state, errors.New("this machine is not enrolled; run home-tunnel-client enroll first")
+	}
+	client, err := api.New(state.Profile.APIBaseURL, nil)
+	if err != nil {
+		return nil, state, err
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	if _, err := client.DeviceLogin(ctx, state.DeviceID, state.DeviceCredential); err != nil {
+		return nil, state, err
+	}
+	return client, state, nil
+}
+
+func connectionList(arguments []string) error {
+	flags := flag.NewFlagSet("connection ls", flag.ContinueOnError)
+	flags.SetOutput(io.Discard)
+	statePath := flags.String("state", defaultStatePath(), "state file")
+	jsonOutput := flags.Bool("json", false, "print JSON")
+	if err := flags.Parse(arguments); err != nil || flags.NArg() != 0 {
+		return errors.New("invalid connection ls arguments")
+	}
+	client, _, err := enrolledAPI(*statePath)
+	if err != nil {
+		return err
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	items, err := client.ListConnections(ctx)
+	if err != nil {
+		return err
+	}
+	if *jsonOutput {
+		encoder := json.NewEncoder(os.Stdout)
+		encoder.SetIndent("", "  ")
+		return encoder.Encode(items)
+	}
+	if len(items) == 0 {
+		fmt.Println("No connections.")
+		return nil
+	}
+	for _, item := range items {
+		target := item.PublicURL
+		if target == "" {
+			target = item.PublicEndpoint
+		}
+		fmt.Printf("%s  %s  %s  %s\n", item.ID, item.Name, target, item.State)
+	}
+	return nil
+}
+
+func connectionAdd(arguments []string) error {
+	flags := flag.NewFlagSet("connection add", flag.ContinueOnError)
+	flags.SetOutput(io.Discard)
+	statePath := flags.String("state", defaultStatePath(), "state file")
+	name := flags.String("name", "", "connection name")
+	subdomain := flags.String("subdomain", "", "public subdomain")
+	host := flags.String("local-host", "127.0.0.1", "local host")
+	port := flags.Int("local-port", 0, "local port")
+	scheme := flags.String("scheme", "http", "local scheme")
+	disabled := flags.Bool("disabled", false, "create without enabling")
+	if err := flags.Parse(arguments); err != nil || flags.NArg() != 0 {
+		return errors.New("invalid connection add arguments")
+	}
+	if strings.TrimSpace(*name) == "" || strings.TrimSpace(*subdomain) == "" || *port < 1 || *port > 65535 {
+		return errors.New("connection add requires --name, --subdomain and --local-port")
+	}
+	client, state, err := enrolledAPI(*statePath)
+	if err != nil {
+		return err
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	availability, err := client.SubdomainAvailability(ctx, *subdomain)
+	if err != nil {
+		return err
+	}
+	if !availability.Available {
+		if len(availability.Suggestions) > 0 {
+			return fmt.Errorf("%s; suggestions: %s", availability.Message, strings.Join(availability.Suggestions, ", "))
+		}
+		return errors.New(availability.Message)
+	}
+	created, err := client.CreateHTTPConnection(ctx, state.DeviceID, *name, *subdomain, *scheme, *host, *port, !*disabled)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Created %s (%s)\n", created.Name, created.PublicURL)
+	return nil
+}
+
+func connectionSet(arguments []string) error {
+	flags := flag.NewFlagSet("connection set", flag.ContinueOnError)
+	flags.SetOutput(io.Discard)
+	statePath := flags.String("state", defaultStatePath(), "state file")
+	id := flags.String("id", "", "connection id")
+	enabled := flags.String("enabled", "", "true or false")
+	if err := flags.Parse(arguments); err != nil || flags.NArg() != 0 {
+		return errors.New("invalid connection set arguments")
+	}
+	if strings.TrimSpace(*id) == "" || (*enabled != "true" && *enabled != "false") {
+		return errors.New("connection set requires --id and --enabled=true|false")
+	}
+	client, _, err := enrolledAPI(*statePath)
+	if err != nil {
+		return err
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	items, err := client.ListConnections(ctx)
+	if err != nil {
+		return err
+	}
+	var current *model.Connection
+	for index := range items {
+		if items[index].ID == *id {
+			current = &items[index]
+			break
+		}
+	}
+	if current == nil {
+		return errors.New("connection not found")
+	}
+	updated, err := client.UpdateConnection(ctx, current.ID, current.Version, map[string]any{
+		"enabled": *enabled == "true",
+	})
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Updated %s enabled=%t\n", updated.Name, updated.Enabled)
+	return nil
+}
+
+func connectionDelete(arguments []string) error {
+	flags := flag.NewFlagSet("connection delete", flag.ContinueOnError)
+	flags.SetOutput(io.Discard)
+	statePath := flags.String("state", defaultStatePath(), "state file")
+	id := flags.String("id", "", "connection id")
+	if err := flags.Parse(arguments); err != nil || flags.NArg() != 0 {
+		return errors.New("invalid connection delete arguments")
+	}
+	if strings.TrimSpace(*id) == "" {
+		return errors.New("connection delete requires --id")
+	}
+	client, _, err := enrolledAPI(*statePath)
+	if err != nil {
+		return err
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	items, err := client.ListConnections(ctx)
+	if err != nil {
+		return err
+	}
+	var current *model.Connection
+	for index := range items {
+		if items[index].ID == *id {
+			current = &items[index]
+			break
+		}
+	}
+	if current == nil {
+		return errors.New("connection not found")
+	}
+	if err := client.DeleteConnection(ctx, current.ID, current.Version); err != nil {
+		return err
+	}
+	fmt.Printf("Deleted %s\n", current.Name)
+	return nil
 }
 
 func status(arguments []string) error {
@@ -210,8 +408,9 @@ func printUsage(writer io.Writer) {
 	fmt.Fprintln(writer, productName())
 	fmt.Fprintln(writer, "")
 	fmt.Fprintln(writer, "Commands:")
-	fmt.Fprintln(writer, "  enroll  Discover a server and register this device")
-	fmt.Fprintln(writer, "  run     Run the synchronization and Agent supervisor loop")
-	fmt.Fprintln(writer, "  status  Show local service state without printing credentials")
-	fmt.Fprintln(writer, "  version Show client and managed Agent versions")
+	fmt.Fprintln(writer, "  enroll      Discover a server and register this device")
+	fmt.Fprintln(writer, "  run         Run the synchronization and Agent supervisor loop")
+	fmt.Fprintln(writer, "  status      Show local service state without printing credentials")
+	fmt.Fprintln(writer, "  connection  ls | add | set | delete")
+	fmt.Fprintln(writer, "  version     Show client and managed Agent versions")
 }

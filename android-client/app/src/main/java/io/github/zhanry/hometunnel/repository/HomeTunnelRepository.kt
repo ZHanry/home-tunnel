@@ -1,7 +1,6 @@
 package io.github.zhanry.hometunnel.repository
 
 import android.content.Context
-import android.os.Build
 import io.github.zhanry.hometunnel.model.AgentState
 import io.github.zhanry.hometunnel.model.ApiException
 import io.github.zhanry.hometunnel.model.PersistedState
@@ -15,7 +14,6 @@ import io.github.zhanry.hometunnel.network.HomeTunnelApi
 import io.github.zhanry.hometunnel.network.ServerDiscovery
 import io.github.zhanry.hometunnel.storage.SecureStateStore
 import io.github.zhanry.hometunnel.storage.StateUnavailableException
-import io.github.zhanry.hometunnel.storage.installationFingerprint
 import java.time.Instant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -34,6 +32,7 @@ data class AppUiState(
     val screen: AppScreen = AppScreen.LOADING,
     val persisted: PersistedState = PersistedState(),
     val connections: List<TunnelConnection> = emptyList(),
+    val devices: List<io.github.zhanry.hometunnel.model.ManagedDevice> = emptyList(),
     val busy: Boolean = false,
     val error: String? = null,
 )
@@ -64,11 +63,11 @@ class HomeTunnelRepository(
                 return@launch
             }
             _uiState.value = AppUiState(
-                screen = if (state.enrolled) AppScreen.HOME else AppScreen.LOGIN,
+                screen = if (state.signedIn) AppScreen.HOME else AppScreen.LOGIN,
                 persisted = state,
                 connections = state.cachedConnections,
             )
-            if (state.enrolled) refreshConnections(silent = true)
+            if (state.signedIn) refreshConnections(silent = true)
         }
     }
 
@@ -88,7 +87,7 @@ class HomeTunnelRepository(
                         error = null,
                     )
                 } else {
-                    registerAndEnter(profile, session)
+                    enterManagement(profile, session)
                 }
             } catch (error: Throwable) {
                 setFailure(error)
@@ -106,7 +105,7 @@ class HomeTunnelRepository(
                 val session = activeApi.login(pending.username, newPassword)
                 if (session.passwordChangeRequired) error("Server still requires a password change")
                 pendingLogin = null
-                registerAndEnter(pending.profile, session)
+                enterManagement(pending.profile, session)
             } catch (error: Throwable) {
                 setFailure(error)
             }
@@ -124,9 +123,10 @@ class HomeTunnelRepository(
         if (!silent) setBusy(true)
         try {
             val state = _uiState.value.persisted
-            val activeApi = ensureDeviceApi(state)
-            val items = activeApi.listConnections().filter { it.deviceId == state.deviceId }
-            _uiState.value = _uiState.value.copy(connections = items, busy = false, error = null)
+            val activeApi = ensureSignedInApi(state)
+            val devices = activeApi.listDevices()
+            val items = activeApi.listConnections()
+            _uiState.value = _uiState.value.copy(connections = items, devices = devices, busy = false, error = null)
         } catch (error: Throwable) {
             if (!silent) setFailure(error)
         }
@@ -138,14 +138,14 @@ class HomeTunnelRepository(
             try {
                 require(value.kind != ProxyKind.UNKNOWN) { "Unknown connection types are read-only" }
                 val state = _uiState.value.persisted
-                val activeApi = ensureDeviceApi(state)
+                val activeApi = ensureSignedInApi(state)
                 if (isNew) {
                     require(value.kind == ProxyKind.HTTP) { "Only HTTP connections can be created by a client" }
-                    activeApi.createHttpConnection(requireNotNull(state.deviceId), value)
+                    activeApi.createHttpConnection(value.deviceId, value)
                 } else {
                     activeApi.updateConnection(value)
                 }
-                val items = activeApi.listConnections().filter { it.deviceId == state.deviceId }
+                val items = activeApi.listConnections()
                 _uiState.value = _uiState.value.copy(connections = items, busy = false, error = null)
             } catch (error: Throwable) {
                 setFailure(error)
@@ -159,9 +159,9 @@ class HomeTunnelRepository(
             try {
                 require(value.kind != ProxyKind.UNKNOWN) { "Unknown connection types are read-only" }
                 val state = _uiState.value.persisted
-                val activeApi = ensureDeviceApi(state)
+                val activeApi = ensureSignedInApi(state)
                 activeApi.deleteConnection(value)
-                val items = activeApi.listConnections().filter { it.deviceId == state.deviceId }
+                val items = activeApi.listConnections()
                 _uiState.value = _uiState.value.copy(connections = items, busy = false, error = null)
             } catch (error: Throwable) {
                 setFailure(error)
@@ -173,7 +173,7 @@ class HomeTunnelRepository(
 
     suspend fun synchronize(reportLease: Boolean, forceFull: Boolean = false): SyncBundle {
         val current = store.load()
-        val activeApi = ensureDeviceApi(current)
+        val activeApi = ensureSignedInApi(current)
         val response = activeApi.sync(current, reportLease, forceFull)
         val merged = SyncMerger.merge(current, response)
         store.save(merged)
@@ -183,19 +183,19 @@ class HomeTunnelRepository(
 
     suspend fun heartbeat() {
         val current = store.load()
-        ensureDeviceApi(current).heartbeat(current)
+        ensureSignedInApi(current).heartbeat(current)
     }
 
     suspend fun configurationEvents(): Flow<Unit> {
         val current = store.load()
-        return ensureDeviceApi(current).configurationEvents(requireNotNull(current.deviceId))
+        return ensureSignedInApi(current).configurationEvents(requireNotNull(current.deviceId))
     }
 
     suspend fun reauthenticateDevice() {
         val current = store.load()
         api?.clearSession()
         api = null
-        ensureDeviceApi(current)
+        ensureSignedInApi(current)
     }
 
     suspend fun markServiceState(
@@ -235,7 +235,12 @@ class HomeTunnelRepository(
     }
 
     suspend fun clearLocalState() {
-        val cleared = store.clear()
+        val previous = store.load()
+        val cleared = store.clear().copy(
+            lastServerUrl = previous.profile?.publicBaseUrl ?: previous.lastServerUrl,
+            username = previous.username,
+        )
+        store.save(cleared)
         api?.clearSession()
         api = null
         pendingLogin = null
@@ -249,7 +254,7 @@ class HomeTunnelRepository(
             var serverRevokedOrAlreadyInvalid = false
             try {
                 val state = store.load()
-                if (state.enrolled) ensureDeviceApi(state).logout()
+                if (state.signedIn) ensureSignedInApi(state).logout()
                 serverRevokedOrAlreadyInvalid = true
             } catch (error: ApiException) {
                 if (error.errorCode in setOf("DEVICE_REVOKED", "USER_DISABLED", "AUTH_INVALID")) {
@@ -295,48 +300,45 @@ class HomeTunnelRepository(
         }
     }
 
-    private suspend fun registerAndEnter(profile: ServerProfile, session: SessionResponse) {
+    private suspend fun enterManagement(profile: ServerProfile, session: SessionResponse) {
         val current = store.load()
-        val activeApi = requireNotNull(api)
-        val registration = activeApi.registerDevice(
-            name = Build.MODEL.take(120).ifBlank { "Android" },
-            installId = current.installId,
-            fingerprintHash = installationFingerprint(current.installId),
-        )
-        // /devices/register atomically binds this existing session to the new
-        // device. Keep it instead of creating a redundant second device session.
-        val enrolled = current.copy(
+        val signedIn = current.copy(
             profile = profile,
-            deviceId = registration.deviceId,
-            deviceCredential = registration.deviceCredential,
+            lastServerUrl = profile.publicBaseUrl,
             userDisplayName = session.user.displayName,
             username = session.user.username,
-            lastConfigVersion = 0,
-            syncCapabilityVersion = 0,
-            appliedConfigVersion = 0,
+            accessToken = session.accessToken,
+            refreshToken = session.refreshToken,
+            accessExpiresAt = session.accessExpiresAt,
             cachedConnections = emptyList(),
-            leaseExpiresAt = null,
             agentState = AgentState.OFFLINE,
-            agentMessage = "Registered; tunnel is stopped",
+            agentMessage = "Management session",
             desiredRunning = false,
         )
-        store.save(enrolled)
-        _uiState.value = AppUiState(screen = AppScreen.HOME, persisted = enrolled, busy = false)
+        store.save(signedIn)
+        _uiState.value = AppUiState(screen = AppScreen.HOME, persisted = signedIn, busy = false)
         refreshConnections(silent = true)
     }
 
-    private suspend fun ensureDeviceApi(state: PersistedState): HomeTunnelApi {
-        require(state.enrolled) { "This Android device is not enrolled" }
+    private suspend fun ensureSignedInApi(state: PersistedState): HomeTunnelApi {
+        require(state.signedIn) { "Not signed in" }
         api?.let { existing ->
             try {
-                // The active API can refresh its in-memory session on demand.
                 if (existingSessionAvailable(existing)) return existing
             } catch (_: Throwable) {
                 existing.clearSession()
             }
         }
         val created = HomeTunnelApi(requireNotNull(state.profile))
-        created.deviceLogin(requireNotNull(state.deviceId), requireNotNull(state.deviceCredential))
+        if (!state.refreshToken.isNullOrBlank() && !state.accessToken.isNullOrBlank()) {
+            created.restoreSession(
+                state.accessToken,
+                state.refreshToken,
+                state.accessExpiresAt ?: java.time.Instant.now().plusSeconds(120).toString(),
+            )
+        } else {
+            created.deviceLogin(requireNotNull(state.deviceId), requireNotNull(state.deviceCredential))
+        }
         api = created
         return created
     }
@@ -345,7 +347,7 @@ class HomeTunnelRepository(
 
     private fun publishPersisted(value: PersistedState) {
         _uiState.value = _uiState.value.copy(
-            screen = if (value.enrolled) AppScreen.HOME else AppScreen.LOGIN,
+            screen = if (value.signedIn) AppScreen.HOME else AppScreen.LOGIN,
             persisted = value,
             connections = value.cachedConnections,
             busy = false,

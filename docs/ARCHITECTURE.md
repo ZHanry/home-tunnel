@@ -22,11 +22,10 @@ flowchart LR
 
 - `control-center/`: authentication, administration, device registration, leases, policy state, optional release display metadata and the web UI.
 - `traffic-gateway/`: validates managed and DNS-verified custom HTTP hosts, enforces policy and rate limits, proxies streams and reports traffic samples.
-- `windows-client/`: Experimental WPF client distributed as a self-signed x64
-  EXE for server selection, account login, device state, connection
-  configuration, GitHub-hosted updates, and diagnostics.
-- `linux-client/`: headless Go control process for enrollment, device authentication, WebSocket sync with polling fallback, lease renewal, heartbeat, Agent supervision, Linux systemd packaging and Beta macOS launchd packaging.
-- `android-client/`: Experimental native Android 8.0+ client. Kotlin/Compose owns enrollment, state, foreground-service lifecycle, notifications, and persistence; an embedded `arm64-v8a` native Agent accepts only server-issued managed configuration. The first release advertises HTTP support only and does not start assigned TCP/UDP records. GitHub Releases provide a sideloadable APK and a non-installable AAB audit/upload artifact.
+- `linux-client/`: shared Go client. `home-tunnel-gui` is the desktop UI for
+  Windows, macOS, and Linux. `home-tunnel-client` is the CLI and systemd/launchd
+  supervisor. Windows ships as `HomeTunnel-Windows-*-x64.zip`.
+- `android-client/`: native Android management app. It signs in with `client_type=mobile`, lists the current user's devices and connections, and does not run a local tunnel Agent.
 - `windows-agent/`: shared capability-restricted FRP Agent source. Windows, Linux, macOS, and Android builds require generated configuration to match the server profile selected during client enrollment.
 - `deploy/frps/`: FRPS image and authorization-plugin configuration.
 - `compose.yaml`: portable deployment using prebuilt multi-architecture images, SQLite and Caddy; `compose.build.yaml` opts into local source builds. `deploy/compose.tcp.yaml`, `deploy/compose.udp.yaml`, and `deploy/compose.l4.yaml` explicitly enable and publish TCP, UDP, or both using protocol-specific or shared ranges.
@@ -35,7 +34,7 @@ flowchart LR
 ## Control flow
 
 1. An administrator creates a user, device and connection policy. A user can bind a custom HTTP domain after both DNS TXT ownership and CNAME target checks; only an administrator can create a TCP/UDP connection and assign its exact public port.
-2. The Windows, Linux, macOS, or Android client authenticates, registers the device,
+2. The Windows, Linux, or macOS desktop client authenticates, registers the device,
    declares its supported proxy types, and receives a short-lived signed lease
    plus its allowed HTTP/custom-domain/TCP/UDP connections. A legacy client
    that omits `supported_proxy_types` receives any UDP record as

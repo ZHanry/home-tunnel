@@ -1,8 +1,8 @@
 # FRP 0.70.1 compatibility and promotion record
 
 Status: **approved for the supported release scope**. Production is pinned to
-the reviewed `0.70.1-r2` FRPS image. The Windows EXE is distributed only as a
-self-signed Experimental asset; it is not a trusted-publisher build.
+the reviewed `0.70.1-r2` FRPS image. The Windows desktop client is distributed
+as `HomeTunnel-Windows-*-x64.zip` with `home-tunnel-gui.exe`.
 
 Review completed: 2026-08-21
 
@@ -31,14 +31,12 @@ provenance, GitHub attestation and keyless Cosign evidence.
 
 The restricted Agent is independently versioned `3.2.0`. Its source build is
 reproduced from the same pinned FRP tree. Release automation bundles it into
-the Experimental Windows EXE and publishes checksums, an SPDX SBOM, signed
+the Windows GUI zip and publishes checksums, an SPDX SBOM, signed
 provenance, and GitHub attestations. No MSIX package is published.
 
-The absence of a trusted Authenticode certificate and clean Windows 10 and
-Windows 11 upgrade VM evidence means Windows x64 remains Experimental. The
-GitHub-hosted runner verifies build, Defender scan, silent install, embedded
-Agent identity, signature consistency, and uninstall. Those checks do not
-create trusted publisher identity or promote Windows to Stable.
+Windows ships the same `home-tunnel-gui` as macOS and Linux, packaged as a zip
+rather than a signed installer. The GitHub-hosted runner verifies the GUI and
+embedded Agent build. A trusted Authenticode installer remains out of scope.
 
 ## Compatibility evidence
 
@@ -53,7 +51,7 @@ create trusted publisher identity or promote Windows to Stable.
 | Managed L4 release smoke | Reproducible gate added | `tests/run-release-smoke.sh` drives the issued configuration through the managed Agent and verifies a 128 KiB+ binary TCP echo, a 1 KiB+ UDP datagram echo, RTSP-over-TCP `OPTIONS`/`SETUP`/`PLAY` with channel-0 interleaved media, raw disable while HTTPS remains available, and actual FRPS Ping revocation denying complete RTSP traffic within the heartbeat window. Static/helper checks pass locally; the complete Docker path runs with the RC images and package. |
 | L4 Compose exposure | Pass | `tests/run-compose-smoke.ps1` applies `deploy/compose.l4.yaml`, checks migration `008`, the generated FRPS allow-port range, and both TCP and UDP host bindings. |
 | FRPS dependency supply chain | Pass | Protected run 32460680110 produced and verified the signed, attested `amd64`/`arm64` digest recorded above. |
-| Windows EXE build/install/uninstall | Pass in release workflow | GitHub-hosted Windows runner verifies the self-signed package; trusted certificate and clean OS upgrade coverage remain future gates. |
+| Windows GUI zip build | Pass in release workflow | GitHub-hosted Windows runner builds `home-tunnel-gui.exe` and the managed Agent into `HomeTunnel-Windows-*-x64.zip`. |
 
 ## Required source adaptations
 

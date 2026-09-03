@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -66,7 +67,7 @@ func Discover(ctx context.Context, address string, transport *http.Client) (mode
 		return profile, err
 	}
 	request.Header.Set("Accept", "application/json")
-	request.Header.Set("User-Agent", "HomeTunnel-Linux/"+model.Version)
+	request.Header.Set("User-Agent", userAgent())
 	response, err := transport.Do(request)
 	if err != nil {
 		return profile, fmt.Errorf("discover server: %w", err)
@@ -145,7 +146,29 @@ func New(baseURL string, transport *http.Client) (*Client, error) {
 			},
 		}
 	}
-	return &Client{baseURL: parsed, http: transport, userAgent: "HomeTunnel-Linux/" + model.Version}, nil
+	return &Client{baseURL: parsed, http: transport, userAgent: userAgent()}, nil
+}
+
+func clientType() string {
+	switch runtime.GOOS {
+	case "windows":
+		return "windows"
+	case "darwin":
+		return "macos"
+	default:
+		return "linux"
+	}
+}
+
+func userAgent() string {
+	switch runtime.GOOS {
+	case "windows":
+		return "HomeTunnel-Windows/" + model.Version
+	case "darwin":
+		return "HomeTunnel-macOS/" + model.Version
+	default:
+		return "HomeTunnel-Linux/" + model.Version
+	}
 }
 
 func (client *Client) Login(ctx context.Context, username, password string) (model.Session, error) {
@@ -153,7 +176,7 @@ func (client *Client) Login(ctx context.Context, username, password string) (mod
 	defer client.mu.Unlock()
 	var session model.Session
 	err := client.publicJSON(ctx, http.MethodPost, "auth/login", map[string]any{
-		"username": username, "password": password, "client_type": "linux",
+		"username": username, "password": password, "client_type": clientType(),
 	}, &session)
 	if err == nil {
 		client.setSession(session.AccessToken, session.RefreshToken, session.AccessExpiresAt)
@@ -172,6 +195,16 @@ func (client *Client) DeviceLogin(ctx context.Context, deviceID, credential stri
 		client.setSession(session.AccessToken, session.RefreshToken, session.AccessExpiresAt)
 	}
 	return session, err
+}
+
+func (client *Client) Logout(ctx context.Context) error {
+	client.mu.Lock()
+	defer client.mu.Unlock()
+	err := client.authJSON(ctx, http.MethodPost, "auth/logout", map[string]any{}, nil)
+	if err == nil {
+		client.setSession("", "", time.Time{})
+	}
+	return err
 }
 
 func (client *Client) ChangePassword(ctx context.Context, current, next string) error {
@@ -210,6 +243,74 @@ func (client *Client) Sync(ctx context.Context, deviceID string, lastVersion int
 		"supported_proxy_types": []string{"http", "tcp", "udp"},
 	}, &response)
 	return response, err
+}
+
+type itemList[T any] struct {
+	Items []T `json:"items"`
+}
+
+func (client *Client) ListDevices(ctx context.Context) ([]model.Device, error) {
+	client.mu.Lock()
+	defer client.mu.Unlock()
+	var payload itemList[model.Device]
+	err := client.authJSON(ctx, http.MethodGet, "client/devices", nil, &payload)
+	return payload.Items, err
+}
+
+func (client *Client) ListConnections(ctx context.Context) ([]model.Connection, error) {
+	client.mu.Lock()
+	defer client.mu.Unlock()
+	var payload itemList[model.Connection]
+	err := client.authJSON(ctx, http.MethodGet, "client/connections", nil, &payload)
+	return payload.Items, err
+}
+
+func (client *Client) CreateHTTPConnection(ctx context.Context, deviceID, name, subdomain, scheme, host string, port int, enabled bool) (model.Connection, error) {
+	client.mu.Lock()
+	defer client.mu.Unlock()
+	var created model.Connection
+	err := client.authJSON(ctx, http.MethodPost, "client/connections", map[string]any{
+		"device_id": deviceID, "name": name, "subdomain": subdomain, "proxy_type": "http",
+		"local_scheme": scheme, "local_host": host, "local_port": port, "enabled": enabled,
+	}, &created)
+	return created, err
+}
+
+func (client *Client) UpdateConnection(ctx context.Context, id string, version int64, patch map[string]any) (model.Connection, error) {
+	client.mu.Lock()
+	defer client.mu.Unlock()
+	if patch == nil {
+		patch = map[string]any{}
+	}
+	patch["expected_version"] = version
+	var updated model.Connection
+	err := client.authJSON(ctx, http.MethodPatch, "client/connections/"+id, patch, &updated)
+	return updated, err
+}
+
+func (client *Client) DeleteConnection(ctx context.Context, id string, version int64) error {
+	client.mu.Lock()
+	defer client.mu.Unlock()
+	return client.authJSON(ctx, http.MethodDelete, "client/connections/"+id, map[string]any{
+		"expected_version": version,
+	}, nil)
+}
+
+type SubdomainAvailability struct {
+	Name         string   `json:"name"`
+	Available    bool     `json:"available"`
+	Reason       string   `json:"reason"`
+	Message      string   `json:"message"`
+	Suggestions  []string `json:"suggestions"`
+}
+
+func (client *Client) SubdomainAvailability(ctx context.Context, name string) (SubdomainAvailability, error) {
+	client.mu.Lock()
+	defer client.mu.Unlock()
+	var result SubdomainAvailability
+	path := "client/subdomains/availability?name=" + url.QueryEscape(name)
+	err := client.authJSON(ctx, http.MethodGet, path, nil, &result)
+	return result, err
 }
 
 func (client *Client) Heartbeat(ctx context.Context, state model.State, agentVersion string) error {
@@ -291,7 +392,7 @@ func (client *Client) refreshSession(ctx context.Context) error {
 		AccessExpiresAt time.Time `json:"access_expires_at"`
 	}
 	if err := client.publicJSON(ctx, http.MethodPost, "auth/refresh", map[string]any{
-		"refresh_token": client.refresh, "client_type": "linux",
+		"refresh_token": client.refresh, "client_type": clientType(),
 	}, &response); err != nil {
 		return err
 	}
@@ -313,7 +414,11 @@ func (client *Client) sendJSON(ctx context.Context, method, path string, body, t
 		}
 		payload = bytes.NewReader(data)
 	}
-	endpoint := client.baseURL.ResolveReference(&url.URL{Path: path})
+	reference, err := url.Parse(path)
+	if err != nil {
+		return 0, err
+	}
+	endpoint := client.baseURL.ResolveReference(reference)
 	request, err := http.NewRequestWithContext(ctx, method, endpoint.String(), payload)
 	if err != nil {
 		return 0, err

@@ -1,6 +1,10 @@
 # Home Tunnel Linux/macOS Client
 
-This directory contains the headless client for Linux and macOS. It uses two processes:
+This directory is the Home Tunnel desktop and NAS client. Windows, macOS, and
+Linux desktops all run `home-tunnel-gui`. Headless NAS hosts keep using
+`home-tunnel-client` as a systemd/launchd service.
+
+It uses two processes:
 
 - `home-tunnel-client` owns control-center authentication, device registration, configuration sync, lease renewal, heartbeat reporting, state persistence, and process supervision.
 - `home-tunnel-agent` is built from the same restricted FRP 0.70.1 source and
@@ -63,6 +67,38 @@ sudo home-tunnel-enroll
 `install.sh` creates the hidden `_hometunnel` service account, installs the binaries to `/usr/local/bin` and `/usr/local/lib/home-tunnel/`, places the `com.hometunnel.client` LaunchDaemon in `/Library/LaunchDaemons/`, and creates the mode-`0700` state directory `/usr/local/var/lib/home-tunnel` plus the log directory `/usr/local/var/log/home-tunnel`. It intentionally does not load the daemon: `home-tunnel-enroll` bootstraps it once a device credential exists, mirroring the Linux flow. Use `sudo ./install.sh --upgrade` to replace binaries (a previously loaded daemon is reloaded) and `sudo ./install.sh --uninstall` to unload the daemon and remove the binaries while keeping the state directory and service account.
 
 The device credential is stored in `/usr/local/var/lib/home-tunnel/state.json`, owned by `_hometunnel` with mode `0600`. The state and Agent paths can be overridden with the `--state`/`--agent` flags or the `HOME_TUNNEL_STATE_PATH`/`HOME_TUNNEL_AGENT_PATH` environment variables on both platforms.
+
+## Graphical client (Linux / macOS / Windows desktop)
+
+The shared GUI is `home-tunnel-gui`, a native window on Windows (WebView2),
+Linux (GTK + WebKitGTK) and macOS (WKWebView), plus a system tray on all three.
+Closing the window hides it to the tray; tunnels keep running until you quit
+from the tray or the window. A second launch restores the existing window.
+Linux/macOS GUI builds need CGO and the desktop WebKit libraries. Release
+tarballs ship this binary; `install.sh` puts it on `PATH` as `home-tunnel-gui`.
+
+Linux GUI build needs GTK 3 and WebKitGTK 4.1 (or 4.0 with `-tags webkit2gtk4.0`). macOS GUI needs CGO and the system WebKit framework.
+
+```sh
+# Linux
+sudo apt install libgtk-3-dev libwebkit2gtk-4.1-dev
+CGO_ENABLED=1 go build ./cmd/home-tunnel-gui
+
+# macOS
+CGO_ENABLED=1 go build ./cmd/home-tunnel-gui
+
+# Windows x64 (WebView2, no CGO)
+#   powershell ./linux-client/packaging/windows/build-gui.ps1
+```
+
+Headless connection commands:
+
+```sh
+home-tunnel-client connection ls
+home-tunnel-client connection add --name nas --subdomain alice-nas --local-port 5001
+home-tunnel-client connection set --id <id> --enabled=false
+home-tunnel-client connection delete --id <id>
+```
 
 ## Operations (Linux)
 

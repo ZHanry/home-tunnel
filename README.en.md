@@ -9,7 +9,7 @@ Home Tunnel is a self-hosted tunneling platform for personal and family services
 
 ![The real Home Tunnel management dashboard showing connections, traffic, and component health](docs/site/assets/admin-dashboard.jpg)
 
-> `v3.2.0` is promoted from the same commit and immutable artifact set as `v3.2.0-rc.3`. The Linux server/client are Stable, macOS headless is Beta, and the Windows x64 plus Android 8.0+ `arm64-v8a` clients are Experimental.
+> `v3.2.0` is promoted from the same commit and immutable artifact set as `v3.2.0-rc.3`. The Linux server and headless client are Stable, macOS headless is Beta, Windows/macOS/Linux share `home-tunnel-gui`, and the Android 8.0+ `arm64-v8a` management app is Experimental.
 
 ## Quick Start
 
@@ -38,26 +38,19 @@ Read the one-time password from `deploy/secrets/bootstrap_admin_password`, open 
 | Server | Linux `amd64` / `arm64` | Stable | Containers and source builds; stable releases require both architectures |
 | Headless client | Linux `amd64` / `arm64` | Stable | systemd, realtime configuration, and safety polling |
 | Headless client | macOS `amd64` / `arm64` | Beta | launchd package; broader real-hardware coverage is pending |
-| Desktop client | Windows 10/11 x64 | Experimental | Release provides a self-signed EXE and update manifest; Windows warns about the unknown publisher |
+| Graphical client | Windows / macOS / Linux | Unified | The same `home-tunnel-gui`; Windows ships as `HomeTunnel-Windows-*-x64.zip` |
 | Mobile client | Android 8.0+ `arm64-v8a` | Experimental | Sideloadable GitHub APK; the AAB is not directly installable or a Play-readiness claim |
 
 Windows and Android packages are built in the same RC asset set later promoted unchanged to Stable, with SHA-256, SPDX SBOMs, Sigstore bundles, and GitHub provenance.
 
 The GitHub Release tag is `v3.2.0`. Stable does not rebuild artifacts, so Linux/macOS tarballs and Compose image tags remain `3.2.0-rc.3`, while Windows/Android installer filenames already use `3.2.0`. When installing the Linux or macOS client, download the `3.2.0-rc.3` archive and verify its SHA-256.
- Windows self-signing proves artifact consistency rather than publisher trust. Android updates require the fixed application ID and persistent release certificate to remain unchanged.
+ Verify the Windows zip SHA-256 from the same GitHub Release before extracting it. Android updates require the fixed application ID and persistent release certificate to remain unchanged.
 
-[Download the latest Windows x64 EXE](https://github.com/ZHanry/home-tunnel/releases/latest/download/HomeTunnel-Setup-3.2.0-x64.exe), verify its published SHA-256, and expect an unknown-publisher or SmartScreen prompt.
+[Download the Windows GUI zip](https://github.com/ZHanry/home-tunnel/releases/latest/download/HomeTunnel-Windows-3.2.0-x64.zip) and run `home-tunnel-gui.exe` next to `home-tunnel-agent.exe`. Windows, macOS, and Linux share this graphical client.
 
-Android 8.0+ `arm64-v8a` users can sideload
-`HomeTunnel-Android-3.2.0-arm64-v8a.apk` from the latest GitHub Release after
-verifying `SHA256SUMS.txt`, the APK signing-certificate SHA-256, and Sigstore
-evidence. Its application ID is `io.github.zhanry.hometunnel`. The attached AAB
-cannot be installed directly and does not claim Google Play readiness. Foreground
-service notifications, battery optimization, and OEM background restrictions can
-affect long-running tunnels; this first Android release remains Experimental,
-advertises HTTP support only, and does not start assigned TCP/UDP records.
-See the [Android client guide](android-client/README.md) for build, permission,
-foreground-service, and diagnostics details.
+The Android app is a management client: sign in to list home devices, copy
+public URLs, and edit HTTP tunnels. It does not run a tunnel Agent on the phone.
+See the [Android client guide](android-client/README.md).
 
 ## Why not raw FRP?
 
@@ -72,15 +65,15 @@ foreground-service, and diagnostics details.
 ## How a standard user creates a connection
 
 1. An administrator creates the account and delivers the one-time password.
-2. The user installs the Linux, Windows, or Android client at home and signs in with the same account so the device can register.
-3. The user opens `https://console.tunnel.example.com/admin` and signs in with that account. Administrator privileges are not required.
+2. The user installs the Windows, macOS, or Linux client at home and signs in so the device can register. Android is only for remote management.
+3. The user opens the console origin and signs in with that account. Administrator privileges are not required.
 4. In Connections, pick a registered device, enter the local target and subdomain, and create an HTTP/HTTPS tunnel.
 5. TCP/UDP still need an administrator to assign an exact public port, and never appear in another tenant's workspace.
 
 ## Architecture
 
 ```text
-Remote browser ─HTTPS→ Caddy ─→ Traffic Gateway ─→ FRPS ═managed tunnel═→ home device
+Remote browser ─HTTPS→ Caddy ─→ Traffic Gateway ─→ FRPS ═managed tunnel═→ home Windows/Linux/macOS device
 Remote TCP/UDP client ─assigned public port→ FRPS ═managed tunnel═→ fixed home TCP/UDP port
 Administrator / user  ─HTTPS→ Caddy ─→ Control Center ─→ SQLite
 Windows/Linux/macOS/Android clients ─REST + WebSocket→ Control Center
@@ -112,14 +105,14 @@ TCP and UDP are disabled by default. Only an administrator can assign an exact p
 
 - Complete WebSocket messages are capped at 64 KiB, with explicit fragment and buffered-chunk limits. Tests cover overload, authentication failure, abrupt disconnect, resource reclamation, and reconnect.
 - CI audits production dependencies at Moderate severity and runs TypeScript, Go, .NET, Compose, contract, and documentation checks.
-- CodeQL explicitly analyzes JavaScript/TypeScript, Go, C#, and Android Java/Kotlin. Secret Scanning and Push Protection should remain enabled.
+- CodeQL explicitly analyzes JavaScript/TypeScript, Go, and Android Java/Kotlin. Secret Scanning and Push Protection should remain enabled.
 - Stable releases must use one commit and one verified artifact set with checksums, SBOMs, provenance, and signature evidence. Windows additionally passes installer checks; Android APK/AAB assets must pass package, version, ABI, and persistent-certificate verification.
 
 Never put vulnerability details, domains, IP addresses, tokens, passwords, or private log content in a public Issue. Use [GitHub private vulnerability reporting](https://github.com/ZHanry/home-tunnel/security/advisories/new) and read [SECURITY.md](SECURITY.md).
 
 ## Development
 
-The repository baseline is Node.js 24 LTS, Go 1.26, .NET 10, and JDK 17 with the Android SDK. See [CONTRIBUTING.md](CONTRIBUTING.md) for complete commands and [Release process](docs/RELEASING.md) for artifact rules.
+The repository baseline is Node.js 24 LTS, Go 1.26, and JDK 17 with the Android SDK. See [CONTRIBUTING.md](CONTRIBUTING.md) for complete commands and [Release process](docs/RELEASING.md) for artifact rules.
 
 ```powershell
 Set-Location control-center
@@ -134,8 +127,6 @@ pnpm run check
 pnpm run build
 pnpm test
 
-Set-Location ..
-dotnet test .\windows-client-tests\HomeTunnel.Client.Tests.csproj -c Release
 ```
 
 ```sh
@@ -143,6 +134,7 @@ cd linux-client
 go test -race ./...
 go vet ./...
 go build ./cmd/home-tunnel-client
+CGO_ENABLED=1 go build ./cmd/home-tunnel-gui
 ```
 
 Focused pull requests with tests and an explicit security rationale are easiest to review. Report a real deployment outcome through the [deployment feedback form](https://github.com/ZHanry/home-tunnel/issues/new?template=deployment_feedback.yml); you never need to disclose a domain, IP address, or credential.

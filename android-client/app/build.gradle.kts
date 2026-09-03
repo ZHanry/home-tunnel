@@ -1,5 +1,3 @@
-import org.gradle.api.tasks.Sync
-
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -9,14 +7,6 @@ plugins {
 
 val versionNameValue = providers.gradleProperty("HOME_TUNNEL_VERSION_NAME").get()
 val versionCodeValue = providers.gradleProperty("HOME_TUNNEL_VERSION_CODE").get().toInt()
-val packagedAbis = providers.environmentVariable("ANDROID_AGENT_ABIS").orNull
-    ?.split(',')
-    ?.map(String::trim)
-    ?.filter(String::isNotEmpty)
-    ?: listOf("arm64-v8a", "x86_64")
-require(packagedAbis.isNotEmpty() && packagedAbis.all { it in setOf("arm64-v8a", "x86_64") }) {
-    "ANDROID_AGENT_ABIS must contain only arm64-v8a and/or x86_64"
-}
 
 fun signingValue(environmentName: String, propertyName: String): String? =
     providers.environmentVariable(environmentName).orNull
@@ -46,7 +36,6 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         resourceConfigurations += listOf("en", "zh-rCN")
-        ndk.abiFilters += packagedAbis
     }
 
     if (completeReleaseSigning) {
@@ -94,10 +83,6 @@ android {
     kotlinOptions.jvmTarget = "17"
 
     packaging {
-        jniLibs {
-            useLegacyPackaging = true
-            keepDebugSymbols += "**/libhometunnel_agent.so"
-        }
         resources.excludes += setOf(
             "/META-INF/{AL2.0,LGPL2.1}",
             "META-INF/DEPENDENCIES",
@@ -119,15 +104,6 @@ android {
         disable += setOf("GradleDependency", "ChromeOsAbiSupport", "OldTargetApi")
     }
 }
-
-val generatedThirdPartyAssets = layout.buildDirectory.dir("generated/homeTunnelAssets")
-val syncThirdPartyNotices by tasks.registering(Sync::class) {
-    from(rootProject.file("../windows-agent/FRP-LICENSE.txt"))
-    from(rootProject.file("../windows-agent/THIRD-PARTY-NOTICES.txt"))
-    into(generatedThirdPartyAssets)
-}
-android.sourceSets.getByName("main").assets.srcDir(generatedThirdPartyAssets)
-tasks.named("preBuild").configure { dependsOn(syncThirdPartyNotices) }
 
 dependencies {
     val composeBom = platform("androidx.compose:compose-bom:2024.12.01")

@@ -435,10 +435,14 @@ func markConnections(state *model.State, connectionState, errorCode string) {
 func DefaultDeviceName() string {
 	name, err := os.Hostname()
 	if err != nil || strings.TrimSpace(name) == "" {
-		if runtime.GOOS == "darwin" {
+		switch runtime.GOOS {
+		case "darwin":
 			return "macOS device"
+		case "windows":
+			return "Windows device"
+		default:
+			return "Linux device"
 		}
-		return "Linux device"
 	}
 	return name
 }

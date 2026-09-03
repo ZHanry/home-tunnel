@@ -76,7 +76,7 @@ import sys
 metadata_path, version = sys.argv[1:]
 with open(metadata_path, encoding="utf-8") as handle:
     release = json.load(handle)
-expected_name = f"HomeTunnel-Setup-{version}-x64.exe"
+expected_name = f"HomeTunnel-Windows-{version}-x64.zip"
 checks = {
     "version": version,
     "platform": "windows",
@@ -121,6 +121,6 @@ cmp "$probe_before" "$probe_after" >/dev/null || { echo "Existing domain regress
 }
 
 # Installers are hosted by GitHub Releases; keep only the small metadata document on the server.
-find "$downloads" -maxdepth 1 -type f -name 'HomeTunnel-Setup-*-x64.exe' -delete
+find "$downloads" -maxdepth 1 -type f -name 'HomeTunnel-Windows-*-x64.zip' -delete
 updated=0
 printf 'CLIENT_RELEASE_METADATA_UPDATED version=%s sha256=%s\n' "$version" "$expected_metadata_sha"

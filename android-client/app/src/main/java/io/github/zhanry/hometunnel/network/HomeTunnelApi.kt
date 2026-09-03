@@ -9,6 +9,7 @@ import io.github.zhanry.hometunnel.model.PersistedState
 import io.github.zhanry.hometunnel.model.RefreshResponse
 import io.github.zhanry.hometunnel.model.ServerProfile
 import io.github.zhanry.hometunnel.model.SessionResponse
+import io.github.zhanry.hometunnel.model.UserInfo
 import io.github.zhanry.hometunnel.model.SyncResponse
 import io.github.zhanry.hometunnel.model.TunnelConnection
 import java.io.ByteArrayOutputStream
@@ -76,7 +77,7 @@ class HomeTunnelApi(
             buildJsonObject {
                 put("username", username)
                 put("password", password)
-                put("client_type", "android")
+                put("client_type", "mobile")
             },
         )
         sessionManager.install(response)
@@ -121,6 +122,21 @@ class HomeTunnelApi(
             put("client_version", BuildConfig.VERSION_NAME)
         },
     )
+
+    fun restoreSession(accessToken: String, refreshToken: String, accessExpiresAt: String) {
+        sessionManager.install(
+            SessionResponse(
+                user = UserInfo("", "", "", "user", "normal"),
+                accessToken = accessToken,
+                refreshToken = refreshToken,
+                accessExpiresAt = accessExpiresAt,
+                refreshExpiresAt = accessExpiresAt,
+            ),
+        )
+    }
+
+    suspend fun listDevices(): List<io.github.zhanry.hometunnel.model.ManagedDevice> =
+        authenticatedJson<io.github.zhanry.hometunnel.model.DeviceListResponse>("GET", "client/devices").items
 
     suspend fun listConnections(): List<TunnelConnection> =
         authenticatedJson<ConnectionListResponse>("GET", "client/connections").items

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Home Tunnel
+Comment=Managed home tunnels
+Exec=home-tunnel-gui
+Terminal=false
+Categories=Network;
+StartupNotify=true

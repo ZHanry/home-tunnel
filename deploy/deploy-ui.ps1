@@ -187,7 +187,7 @@ new_gateway_id="$(docker image inspect -f "{{.Id}}" "__GATEWAY_IMAGE_TAG__")"
 [ "$(docker image inspect -f "{{index .Config.Labels \"org.opencontainers.image.version\"}}" "__IMAGE_TAG__")" = "__VERSION__" ]
 [ "$(docker image inspect -f "{{index .Config.Labels \"org.opencontainers.image.version\"}}" "__GATEWAY_IMAGE_TAG__")" = "__VERSION__" ]
 ! docker ps -a --format "{{.Names}}" | grep -qx home-tunnel-postgres
-! find /opt/home-tunnel/downloads -maxdepth 1 -type f -name "HomeTunnel-Setup-*-x64.exe" | grep -q .
+! find /opt/home-tunnel/downloads -maxdepth 1 -type f -name "HomeTunnel-Windows-*-x64.zip" | grep -q .
 [ ! -e /opt/home-tunnel/compose.yaml.new ]
 ! docker image ls --format "{{.Repository}}:{{.Tag}}" | grep -q "^home-tunnel/control-center:rollback-ui-"
 ! docker image ls --format "{{.Repository}}:{{.Tag}}" | grep -q "^home-tunnel/traffic-gateway:rollback-ui-"

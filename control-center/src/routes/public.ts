@@ -15,11 +15,11 @@ type ReleaseMetadata = {
 };
 
 const versionPattern = /^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/;
-const fileNamePattern = /^HomeTunnel-Setup-\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?-x64\.exe$/;
+const fileNamePattern = /^HomeTunnel-Windows-\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?-x64\.zip$/;
 const githubRepositoryUrl = "https://github.com/ZHanry/home-tunnel";
 
 function unavailable(): HttpError {
-  return new HttpError(404, "RELEASE_UNAVAILABLE", "Windows 安装包暂不可用");
+  return new HttpError(404, "RELEASE_UNAVAILABLE", "Windows 图形客户端暂不可用");
 }
 
 async function latestRelease(): Promise<ReleaseMetadata> {
@@ -33,7 +33,7 @@ async function latestRelease(): Promise<ReleaseMetadata> {
       parsed.architecture !== "x64" ||
       typeof parsed.file_name !== "string" ||
       !fileNamePattern.test(parsed.file_name) ||
-      parsed.file_name !== `HomeTunnel-Setup-${parsed.version}-x64.exe` ||
+      parsed.file_name !== `HomeTunnel-Windows-${parsed.version}-x64.zip` ||
       !Number.isSafeInteger(parsed.size_bytes) ||
       (parsed.size_bytes ?? 0) <= 0 ||
       typeof parsed.sha256 !== "string" ||
@@ -70,6 +70,7 @@ publicRouter.get("/config", (_request, response) => {
   response.json({
     public_base_url: config.publicBaseUrl,
     tunnel_domain: config.tunnelDomain,
+    subdomain_prefix_policy: config.subdomainPrefixPolicy,
     frps_host: config.publicFrpsHost,
     frps_port: config.publicFrpsPort,
     // 未配置 FRPS 证书时该字段不出现，旧客户端与旧部署行为不变。
@@ -124,7 +125,7 @@ async function sendRelease(
 }
 
 downloadRouter.get(
-  "/HomeTunnel-Setup-x64.exe",
+  "/HomeTunnel-Windows-x64.zip",
   asyncHandler(async (_request, response) =>
     sendRelease(response, await cachedLatestRelease(), true),
   ),

@@ -80,6 +80,7 @@ export async function runIntegrationSuite(): Promise<void> {
     const publicConfig = await call("GET", "/api/v1/public/config");
     assert.equal(publicConfig.status, 200);
     assert.ok(!("frps_tls_certificate_pem" in publicConfig.payload));
+    assert.equal(publicConfig.payload.subdomain_prefix_policy, "suggest");
 
     const consoleTls = await call("GET", "/internal/tls/allow?domain=console.tunnel.example.com");
     assert.equal(consoleTls.status, 204);
@@ -123,6 +124,18 @@ export async function runIntegrationSuite(): Promise<void> {
     assert.equal(adminLogin.status, 200);
     adminToken = adminLogin.payload.access_token;
     adminRefresh = adminLogin.payload.refresh_token;
+
+    const rejectedAdmin = await call(
+      "POST",
+      "/api/v1/admin/users",
+      { username: `admin-${suffix}`, display_name: "Second Admin", role: "admin" },
+      adminToken,
+    );
+    assert.equal(rejectedAdmin.status, 400);
+
+    const settings = await call("GET", "/api/v1/admin/settings", undefined, adminToken);
+    assert.equal(settings.status, 200);
+    assert.equal(settings.payload.subdomain_prefix_policy, "suggest");
 
     const createdUser = await call(
       "POST",
@@ -195,6 +208,30 @@ export async function runIntegrationSuite(): Promise<void> {
     assert.equal(typeof androidRefresh.payload.refresh_token, "string");
     assert.equal(androidRefresh.headers.get("set-cookie"), null);
     const userToken = androidRefresh.payload.access_token as string;
+    const mobileLogin = await call("POST", "/api/v1/auth/login", {
+      username: `user-${suffix}`,
+      password: userNextPassword,
+      client_type: "mobile",
+    });
+    assert.equal(mobileLogin.status, 200);
+    assert.equal(typeof mobileLogin.payload.access_token, "string");
+    const availability = await call(
+      "GET",
+      "/api/v1/client/subdomains/availability?name=console",
+      undefined,
+      userToken,
+    );
+    assert.equal(availability.status, 200);
+    assert.equal(availability.payload.available, false);
+    assert.equal(availability.payload.reason, "reserved");
+    const freeName = await call(
+      "GET",
+      `/api/v1/client/subdomains/availability?name=nas-${suffix.slice(0, 6)}`,
+      undefined,
+      userToken,
+    );
+    assert.equal(freeName.status, 200);
+    assert.equal(freeName.payload.available, true);
 
     const ordinaryWebLogin = await call("POST", "/api/v1/auth/login", {
       username: `user-${suffix}`,

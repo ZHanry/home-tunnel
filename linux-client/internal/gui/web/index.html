@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Home Tunnel</title>
+  <script>
+    (function () {
+      var theme = "light";
+      try {
+        var stored = localStorage.getItem("ht_theme");
+        if (stored === "dark" || stored === "light") theme = stored;
+        else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) theme = "dark";
+      } catch (e) {}
+      document.documentElement.dataset.theme = theme;
+      document.documentElement.style.colorScheme = theme;
+      var locale = "zh-CN";
+      try {
+        var storedLocale = localStorage.getItem("ht_locale");
+        if (storedLocale === "en" || storedLocale === "zh-CN") locale = storedLocale;
+      } catch (e) {}
+      document.documentElement.lang = locale;
+    })();
+  </script>
+  <style>
+    :root {
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif;
+      --bg: #f8fafc; --fg: #334155; --muted: #64748b; --card: #fff;
+      --line: #e2e8f0; --input: #fff; --accent: #0284c7; --danger: #b91c1c;
+      --danger-bg: #fef2f2; --secondary: #e2e8f0; --secondary-fg: #0f172a;
+    }
+    html[data-theme="dark"] {
+      --bg: #0f172a; --fg: #e2e8f0; --muted: #94a3b8; --card: #1e293b;
+      --line: #334155; --input: #1e293b; --accent: #38bdf8; --danger: #fca5a5;
+      --danger-bg: #451a1a; --secondary: #334155; --secondary-fg: #f8fafc;
+    }
+    html, body { margin: 0; background: var(--bg); color: var(--fg); }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 640px; margin: 0 auto; padding: 20px 16px 0; }
+    header h1 { margin: 0; font-size: 22px; }
+    .toolbar { display: flex; gap: 8px; }
+    main { max-width: 640px; margin: 0 auto; padding: 8px 16px 48px; }
+    .muted { color: var(--muted); font-size: 14px; }
+    label { display: block; margin: 12px 0 6px; font-weight: 600; font-size: 13px; }
+    input, select { width: 100%; box-sizing: border-box; min-height: 40px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; font: inherit; background: var(--input); color: var(--fg); }
+    button { min-height: 40px; border: 0; border-radius: 8px; background: var(--accent); color: #fff; font-weight: 600; cursor: pointer; padding: 8px 14px; }
+    button.secondary { background: var(--secondary); color: var(--secondary-fg); }
+    button.danger { background: var(--danger-bg); color: var(--danger); }
+    button.chip { min-height: 28px; padding: 4px 8px; font-size: 12px; }
+    button.icon { min-height: 36px; min-width: 36px; padding: 6px 10px; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .card { margin-top: 12px; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
+    .url { color: var(--accent); font-family: ui-monospace, Consolas, monospace; cursor: pointer; word-break: break-all; }
+    .error { color: var(--danger); min-height: 20px; }
+    .hidden { display: none; }
+    .actions { margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; }
+    #suggestions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    a { color: var(--accent); }
+    .check { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 14px; }
+    .check input { width: auto; min-height: 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Home Tunnel</h1>
+    <div class="toolbar">
+      <button class="secondary icon" id="locale-toggle" type="button">EN</button>
+      <button class="secondary icon" id="theme-toggle" type="button" aria-label="theme">◐</button>
+    </div>
+  </header>
+  <main>
+    <section id="login">
+      <p class="muted" data-i18n="loginLead"></p>
+      <label data-i18n="server"></label><input id="server" placeholder="https://console.example.com">
+      <label data-i18n="username"></label><input id="username">
+      <label data-i18n="password"></label><input id="password" type="password">
+      <label data-i18n="newPassword"></label><input id="new-password" type="password">
+      <p class="error" id="login-error"></p>
+      <div class="row">
+        <button id="login-button" data-i18n="login"></button>
+        <button class="secondary" id="quit-login" data-i18n="quitApp"></button>
+      </div>
+    </section>
+    <section id="home" class="hidden">
+      <p class="muted" id="status"></p>
+      <p class="muted" id="update"></p>
+      <div class="row">
+        <button id="refresh" data-i18n="sync"></button>
+        <button class="secondary" id="add" data-i18n="add"></button>
+        <button class="secondary" id="console" data-i18n="console"></button>
+        <button class="danger" id="logout" data-i18n="logout"></button>
+        <button class="secondary" id="quit-home" data-i18n="quitApp"></button>
+      </div>
+      <div id="connections"></div>
+    </section>
+    <section id="editor" class="hidden">
+      <h1 id="editor-title"></h1>
+      <input id="edit-id" type="hidden">
+      <label data-i18n="name"></label><input id="name">
+      <label data-i18n="subdomain"></label><input id="subdomain">
+      <p class="muted" id="availability"></p>
+      <div id="suggestions"></div>
+      <label data-i18n="scheme"></label>
+      <select id="scheme"><option value="http">http</option><option value="https">https</option></select>
+      <label data-i18n="host"></label><input id="host" value="127.0.0.1">
+      <label data-i18n="port"></label><input id="port" value="8080">
+      <label class="check"><input id="enabled" type="checkbox" checked><span data-i18n="enabled"></span></label>
+      <p class="error" id="edit-error"></p>
+      <div class="row">
+        <button id="save" data-i18n="save"></button>
+        <button class="secondary" id="cancel" data-i18n="cancel"></button>
+      </div>
+    </section>
+  </main>
+  <script>
+    const strings = {
+      "zh-CN": {
+        loginLead: "这是 Windows、macOS 和 Linux 共用的窗口客户端。关闭窗口会缩到托盘，隧道继续跑；要结束请用托盘或下面的「退出程序」。",
+        server: "服务器地址", username: "用户名", password: "密码", newPassword: "首次改密（可选）",
+        login: "登录并注册本机", quitApp: "退出程序", sync: "立即同步", add: "新建连接",
+        console: "打开控制台", logout: "退出账号", name: "名称", subdomain: "公网子域",
+        scheme: "本地协议", host: "本地主机", port: "本地端口", enabled: "启用这条连接",
+        save: "保存", cancel: "取消", createTitle: "新建 HTTP 连接", editTitle: "编辑 ",
+        empty: "还没有连接。点「新建连接」发布家里的 HTTP 服务。", pause: "暂停", enable: "启用",
+        remove: "删除", edit: "编辑", copied: "已复制公网地址", connecting: "正在连接…",
+        confirmDelete: "确定删除这条连接？公网地址会立即失效。",
+        confirmLogout: "退出账号会停止本机隧道，并清除这台电脑上的设备登录状态。",
+        confirmQuit: "退出程序会停止本机隧道，但保留已保存的登录状态。下次打开窗口会自动重连。",
+        updatePrefix: "有新版本 ", updateCurrent: "（当前 ", updateSuffix: "）。",
+        download: "下载到「下载」文件夹并校验", openRelease: "打开 Release", downloading: "正在下载…"
+      },
+      en: {
+        loginLead: "This is the same windowed client for Windows, macOS, and Linux. Closing the window hides it to the tray; tunnels keep running. Use the tray or Quit to stop.",
+        server: "Server URL", username: "Username", password: "Password", newPassword: "First-time password change (optional)",
+        login: "Sign in and register this PC", quitApp: "Quit", sync: "Sync now", add: "New connection",
+        console: "Open console", logout: "Sign out", name: "Name", subdomain: "Public subdomain",
+        scheme: "Local scheme", host: "Local host", port: "Local port", enabled: "Enable this connection",
+        save: "Save", cancel: "Cancel", createTitle: "New HTTP connection", editTitle: "Edit ",
+        empty: "No connections yet. Use New connection to publish a local HTTP service.", pause: "Pause", enable: "Enable",
+        remove: "Delete", edit: "Edit", copied: "Public address copied", connecting: "Connecting…",
+        confirmDelete: "Delete this connection? The public address will stop working immediately.",
+        confirmLogout: "Signing out stops local tunnels and clears this computer's device login.",
+        confirmQuit: "Quit stops local tunnels but keeps the saved login. The next window launch will reconnect.",
+        updatePrefix: "Version ", updateCurrent: " is available (current ", updateSuffix: ").",
+        download: "Download to Downloads and verify SHA-256", openRelease: "Open Release", downloading: "Downloading…"
+      }
+    };
+    const $ = (id) => document.getElementById(id);
+    let locale = document.documentElement.lang === "en" ? "en" : "zh-CN";
+    const t = (key) => (strings[locale] && strings[locale][key]) || strings["zh-CN"][key] || key;
+    function applyLocale() {
+      document.documentElement.lang = locale;
+      document.querySelectorAll("[data-i18n]").forEach((node) => { node.textContent = t(node.dataset.i18n); });
+      $("locale-toggle").textContent = locale === "en" ? "中" : "EN";
+      try { localStorage.setItem("ht_locale", locale); } catch (e) {}
+    }
+    function applyTheme(theme) {
+      document.documentElement.dataset.theme = theme;
+      document.documentElement.style.colorScheme = theme;
+      $("theme-toggle").textContent = theme === "dark" ? "☀" : "◐";
+      try { localStorage.setItem("ht_theme", theme); } catch (e) {}
+    }
+    applyLocale();
+    applyTheme(document.documentElement.dataset.theme || "light");
+    $("locale-toggle").onclick = () => { locale = locale === "en" ? "zh-CN" : "en"; applyLocale(); };
+    $("theme-toggle").onclick = () => applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+    $("server").value = localStorage.getItem("ht_server") || "";
+    $("username").value = localStorage.getItem("ht_username") || "";
+    async function api(path, options = {}) {
+      const response = await fetch(path, { headers: { "content-type": "application/json", ...(options.headers || {}) }, ...options });
+      const text = await response.text();
+      const data = text ? JSON.parse(text) : null;
+      if (!response.ok) throw new Error(data?.message || text || response.statusText);
+      return data;
+    }
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
+    }
+    let consoleUrl = "";
+    let connections = [];
+    function resetEditor() {
+      $("edit-id").value = "";
+      $("editor-title").textContent = t("createTitle");
+      $("name").value = "";
+      $("subdomain").value = "";
+      $("scheme").value = "http";
+      $("host").value = "127.0.0.1";
+      $("port").value = "8080";
+      $("enabled").checked = true;
+      $("availability").textContent = "";
+      $("suggestions").replaceChildren();
+      $("edit-error").textContent = "";
+    }
+    function fillEditor(item) {
+      $("edit-id").value = item.id;
+      $("editor-title").textContent = t("editTitle") + (item.name || "");
+      $("name").value = item.name || "";
+      $("subdomain").value = item.subdomain || "";
+      $("scheme").value = item.local_scheme || "http";
+      $("host").value = item.local_host || "127.0.0.1";
+      $("port").value = String(item.local_port || 8080);
+      $("enabled").checked = item.enabled !== false;
+      $("edit-error").textContent = "";
+      $("subdomain").dispatchEvent(new Event("input"));
+    }
+    async function quitApp() {
+      if (!confirm(t("confirmQuit"))) return;
+      await api("/local/quit", { method: "POST" });
+      document.body.innerHTML = "<main><p class='muted'>" + escapeHtml(t("quitApp")) + "</p></main>";
+    }
+    async function showHome() {
+      $("login").classList.add("hidden");
+      $("editor").classList.add("hidden");
+      $("home").classList.remove("hidden");
+      const state = await api("/local/state");
+      consoleUrl = state.console_url || "";
+      $("status").textContent = `${state.agent_state || "—"} · ${state.agent_message || t("connecting")}`;
+      $("update").replaceChildren();
+      try {
+        const update = await api("/local/update");
+        if (update.newer) {
+          $("update").append(t("updatePrefix") + update.latest + t("updateCurrent") + update.current + t("updateSuffix") + " ");
+          if (update.download_url) {
+            const download = document.createElement("button");
+            download.className = "chip";
+            download.textContent = t("download");
+            download.onclick = async () => {
+              download.disabled = true;
+              download.textContent = t("downloading");
+              try {
+                const result = await api("/local/update/download", { method: "POST" });
+                $("update").textContent = result.hint || result.path;
+              } catch (error) {
+                $("update").textContent = error.message;
+              }
+            };
+            $("update").append(download);
+          }
+          if (update.url) {
+            const link = document.createElement("a");
+            link.href = update.url;
+            link.target = "_blank";
+            link.rel = "noreferrer";
+            link.textContent = " " + t("openRelease");
+            $("update").append(link);
+          }
+        }
+      } catch { /* ignore */ }
+      connections = state.connections || [];
+      if (!connections.length) {
+        $("connections").innerHTML = `<p class="muted">${escapeHtml(t("empty"))}</p>`;
+      } else {
+        $("connections").innerHTML = connections.map((item) => {
+          const publicUrl = item.public_url || item.public_endpoint || "";
+          return `<article class="card"><strong>${escapeHtml(item.name)}</strong><div class="url" data-copy="${escapeHtml(publicUrl)}">${escapeHtml(publicUrl || item.subdomain)}</div><small>${escapeHtml(item.local_scheme)}://${escapeHtml(item.local_host)}:${escapeHtml(item.local_port)} · ${escapeHtml(item.state)}</small><div class="actions"><button class="secondary" data-edit="${escapeHtml(item.id)}">${escapeHtml(t("edit"))}</button><button class="secondary" data-toggle="${escapeHtml(item.id)}" data-enabled="${item.enabled}">${escapeHtml(item.enabled ? t("pause") : t("enable"))}</button><button class="danger" data-delete="${escapeHtml(item.id)}">${escapeHtml(t("remove"))}</button></div></article>`;
+        }).join("");
+      }
+      document.querySelectorAll("[data-copy]").forEach((node) => node.addEventListener("click", async () => {
+        if (!node.dataset.copy) return;
+        await navigator.clipboard.writeText(node.dataset.copy);
+        $("status").textContent = t("copied");
+      }));
+      document.querySelectorAll("[data-edit]").forEach((node) => node.addEventListener("click", () => {
+        const item = connections.find((value) => value.id === node.dataset.edit);
+        if (!item) return;
+        fillEditor(item);
+        $("home").classList.add("hidden");
+        $("editor").classList.remove("hidden");
+      }));
+      document.querySelectorAll("[data-delete]").forEach((node) => node.addEventListener("click", async () => {
+        if (!confirm(t("confirmDelete"))) return;
+        await api("/local/connections/" + node.dataset.delete, { method: "DELETE" });
+        await showHome();
+      }));
+      document.querySelectorAll("[data-toggle]").forEach((node) => node.addEventListener("click", async () => {
+        await api("/local/connections/" + node.dataset.toggle, { method: "PATCH", body: JSON.stringify({ enabled: node.dataset.enabled !== "true" }) });
+        await showHome();
+      }));
+    }
+    $("login-button").onclick = async () => {
+      $("login-error").textContent = "";
+      try {
+        localStorage.setItem("ht_server", $("server").value);
+        localStorage.setItem("ht_username", $("username").value);
+        await api("/local/login", { method: "POST", body: JSON.stringify({ server: $("server").value, username: $("username").value, password: $("password").value, new_password: $("new-password").value }) });
+        await showHome();
+      } catch (error) { $("login-error").textContent = error.message; }
+    };
+    $("refresh").onclick = () => showHome().catch((error) => { $("status").textContent = error.message; });
+    $("console").onclick = () => { if (consoleUrl) window.open(consoleUrl, "_blank"); };
+    $("logout").onclick = async () => {
+      if (!confirm(t("confirmLogout"))) return;
+      await api("/local/logout", { method: "POST" });
+      location.reload();
+    };
+    $("quit-login").onclick = quitApp;
+    $("quit-home").onclick = quitApp;
+    $("add").onclick = () => { resetEditor(); $("home").classList.add("hidden"); $("editor").classList.remove("hidden"); };
+    $("cancel").onclick = () => showHome();
+    $("subdomain").addEventListener("input", async () => {
+      const name = $("subdomain").value.trim();
+      if (!name) return;
+      try {
+        const result = await api("/local/subdomain?name=" + encodeURIComponent(name));
+        $("availability").textContent = result.message || "";
+        $("suggestions").replaceChildren(...(result.suggestions || []).map((item) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "secondary chip";
+          button.textContent = item;
+          button.onclick = () => { $("subdomain").value = item; $("subdomain").dispatchEvent(new Event("input")); };
+          return button;
+        }));
+      } catch { /* ignore */ }
+    });
+    $("save").onclick = async () => {
+      $("edit-error").textContent = "";
+      const payload = { name: $("name").value, subdomain: $("subdomain").value, local_host: $("host").value, local_port: Number($("port").value), local_scheme: $("scheme").value, enabled: $("enabled").checked };
+      try {
+        const id = $("edit-id").value;
+        if (id) await api("/local/connections/" + id, { method: "PATCH", body: JSON.stringify(payload) });
+        else await api("/local/connections", { method: "POST", body: JSON.stringify(payload) });
+        await showHome();
+      } catch (error) { $("edit-error").textContent = error.message; }
+    };
+    api("/local/state").then((state) => { if (state.enrolled) showHome(); }).catch(() => {});
+  </script>
+</body>
+</html>

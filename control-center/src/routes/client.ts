@@ -35,6 +35,7 @@ import {
 import { opaqueToken, signLease, tokenHash } from "../security.js";
 import { parseBody } from "../validation.js";
 import { clientConnectionSelect, customDomainsByConnection } from "../connection-query.js";
+import { checkSubdomainAvailability } from "../subdomain-policy.js";
 
 const router = Router();
 
@@ -154,6 +155,22 @@ router.post(
       await audit(client, request, "DeviceCredentialRotated", "Device", actor.deviceId, null, null);
     });
     response.json({ device_id: actor.deviceId, device_credential: credential });
+  }),
+);
+
+router.get(
+  "/client/subdomains/availability",
+  asyncHandler(async (request, response) => {
+    const actor = requirePasswordNormal(request);
+    const name = String(request.query.name ?? "").trim();
+    const result = await transaction(async (client) =>
+      checkSubdomainAvailability(client, name, {
+        username: actor.username,
+        isAdmin: actor.role === "admin",
+        userId: actor.userId,
+      }),
+    );
+    response.json(result);
   }),
 );
 

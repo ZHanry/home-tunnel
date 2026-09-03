@@ -63,15 +63,15 @@ test("public landing page stays available while Windows release metadata is abse
     const landing = await request(origin + "/", { cookie: "ht_access=revoked-session" });
     assert.equal(landing.status, 200);
     assert.equal(landing.headers["cache-control"], "no-cache");
-    assert.match(landing.body.toString("utf8"), /Windows 图形客户端/);
+    assert.match(landing.body.toString("utf8"), /桌面图形客户端/);
     assert.match(landing.body.toString("utf8"), /Linux \/ macOS 无界面服务/);
     assert.match(
       landing.body.toString("utf8"),
-      /Windows EXE 为自签名 Experimental；安装时会提示未知发布者/,
+      /Windows、macOS、Linux 共用同一套图形客户端/,
     );
     assert.match(
       landing.body.toString("utf8"),
-      /id="hero-download"[^>]*HomeTunnel-Setup-3\.2\.0-x64\.exe/,
+      /id="hero-download"[^>]*HomeTunnel-Windows-3\.2\.0-x64\.zip/,
     );
     assert.match(landing.body.toString("utf8"), /home-tunnel-client status/);
     assert.match(landing.body.toString("utf8"), /app\.js\?v=3\.2\.0-user-console/);
@@ -130,7 +130,7 @@ test("public landing page stays available while Windows release metadata is abse
     assert.match(applicationScript.body.toString("utf8"), /api\/v1\/admin\/system\/health/);
     assert.match(
       applicationScript.body.toString("utf8"),
-      /Windows 图形客户端或 Linux\/macOS 无界面服务/,
+      /请用户在家里的 Windows \/ macOS \/ Linux 电脑上安装图形客户端并登录/,
     );
     assert.match(applicationScript.body.toString("utf8"), /TCP（RTSP \/ SSH \/ RDP \/ 数据库等）/);
     assert.match(applicationScript.body.toString("utf8"), /UDP（固定端口）/);
@@ -159,8 +159,8 @@ test("public landing page stays available while Windows release metadata is abse
 
     for (const path of [
       "/api/v1/public/releases/latest",
-      "/downloads/HomeTunnel-Setup-x64.exe",
-      "/downloads/HomeTunnel-Setup-9.9.9-x64.exe",
+      "/downloads/HomeTunnel-Windows-x64.zip",
+      "/downloads/HomeTunnel-Windows-9.9.9-x64.zip",
     ]) {
       const unavailable = await request(origin + path, { cookie: "ht_access=revoked-session" });
       assert.equal(unavailable.status, 404);

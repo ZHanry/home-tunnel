@@ -58,7 +58,7 @@ const deviceLoginLimiter = new FixedWindowLimiter(20, 60_000);
 const refreshLimiter = new FixedWindowLimiter(30, 60_000);
 const passwordChangeLimiter = new FixedWindowLimiter(5, 10 * 60_000);
 const dummyHashPromise = hashPassword("Dummy timing password 2026!");
-const clientTypeSchema = z.enum(["web", "windows", "linux", "android"]);
+const clientTypeSchema = z.enum(["web", "windows", "linux", "macos", "android", "mobile"]);
 
 function publicUser(user: UserRow) {
   return {

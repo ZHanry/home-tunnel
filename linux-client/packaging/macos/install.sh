@@ -31,6 +31,7 @@ fi
 label=com.hometunnel.client
 service_user=_hometunnel
 client_target=/usr/local/bin/home-tunnel-client
+gui_target=/usr/local/bin/home-tunnel-gui
 agent_target=/usr/local/lib/home-tunnel/home-tunnel-agent
 plist_target="/Library/LaunchDaemons/$label.plist"
 enroll_target=/usr/local/sbin/home-tunnel-enroll
@@ -45,7 +46,7 @@ if [[ "$mode" == "uninstall" ]]; then
   if service_loaded; then
     launchctl bootout "system/$label"
   fi
-  rm -f -- "$client_target" "$agent_target" "$plist_target" "$enroll_target"
+  rm -f -- "$client_target" "$gui_target" "$agent_target" "$plist_target" "$enroll_target"
   echo "Home Tunnel macOS client uninstalled."
   echo "Kept: $state_dir (holds the device credential) and the $service_user account."
   echo "After revoking the device in the control center, remove them with:"
@@ -57,14 +58,15 @@ fi
 
 root_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 client_source="$root_dir/bin/home-tunnel-client"
+gui_source="$root_dir/bin/home-tunnel-gui"
 agent_source="$root_dir/lib/home-tunnel-agent"
 plist_source="$root_dir/Library/LaunchDaemons/$label.plist"
 enroll_source="$root_dir/libexec/home-tunnel-enroll"
-for required in "$client_source" "$agent_source" "$plist_source" "$enroll_source"; do
+for required in "$client_source" "$gui_source" "$agent_source" "$plist_source" "$enroll_source"; do
   [[ -f "$required" ]] || { echo "missing package file: $required" >&2; exit 1; }
 done
 
-if [[ -e "$client_target" || -e "$agent_target" || -e "$plist_target" || -e "$enroll_target" ]] && [[ "$mode" != "upgrade" ]]; then
+if [[ -e "$client_target" || -e "$gui_target" || -e "$agent_target" || -e "$plist_target" || -e "$enroll_target" ]] && [[ "$mode" != "upgrade" ]]; then
   echo "Home Tunnel macOS client is already installed; use --upgrade to replace binaries" >&2
   exit 1
 fi
@@ -77,7 +79,7 @@ if service_loaded; then
 fi
 rollback() {
   if ! $committed; then
-    for target in "$client_target" "$agent_target" "$plist_target" "$enroll_target"; do
+    for target in "$client_target" "$gui_target" "$agent_target" "$plist_target" "$enroll_target"; do
       name=$(printf '%s' "$target" | tr '/' '_')
       if [[ -f "$backup_dir/$name" ]]; then
         cp -p -- "$backup_dir/$name" "$target"
@@ -92,7 +94,7 @@ rollback() {
   rm -rf -- "$backup_dir"
 }
 trap rollback EXIT INT TERM
-for target in "$client_target" "$agent_target" "$plist_target" "$enroll_target"; do
+for target in "$client_target" "$gui_target" "$agent_target" "$plist_target" "$enroll_target"; do
   if [[ -f "$target" ]]; then
     cp -p -- "$target" "$backup_dir/$(printf '%s' "$target" | tr '/' '_')"
   fi
@@ -150,6 +152,7 @@ install -d -o "$service_user" -g "$service_user" -m 0700 "$state_dir"
 # the log directory must be writable by the service user.
 install -d -o "$service_user" -g "$service_user" -m 0755 "$log_dir"
 install -m 0755 "$client_source" "$client_target"
+install -m 0755 "$gui_source" "$gui_target"
 install -m 0755 "$agent_source" "$agent_target"
 install -m 0755 "$enroll_source" "$enroll_target"
 # launchd only accepts daemon plists owned by root and not group/world

@@ -34,10 +34,14 @@ func defaultAgentPath() string {
 
 // productName labels the version output and the usage banner.
 func productName() string {
-	if runtime.GOOS == "darwin" {
+	switch runtime.GOOS {
+	case "darwin":
 		return "Home Tunnel macOS Client"
+	case "windows":
+		return "Home Tunnel Windows Client"
+	default:
+		return "Home Tunnel Linux Client"
 	}
-	return "Home Tunnel Linux Client"
 }
 
 // serviceStartHint tells the operator how to start the background service

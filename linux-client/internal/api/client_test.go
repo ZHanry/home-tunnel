@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"runtime"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -124,8 +125,15 @@ func TestLinuxLoginAndRefreshPayloads(t *testing.T) {
 	if _, err := client.Sync(context.Background(), "device", 1, nil); err != nil {
 		t.Fatal(err)
 	}
-	if loginType != "linux" || refreshType != "linux" {
-		t.Fatalf("client types: login=%q refresh=%q", loginType, refreshType)
+	wantType := "linux"
+	switch runtime.GOOS {
+	case "windows":
+		wantType = "windows"
+	case "darwin":
+		wantType = "macos"
+	}
+	if loginType != wantType || refreshType != wantType {
+		t.Fatalf("client types: login=%q refresh=%q want %q", loginType, refreshType, wantType)
 	}
 	if protectedCalls.Load() != 1 {
 		t.Fatalf("protected calls = %d, want 1", protectedCalls.Load())

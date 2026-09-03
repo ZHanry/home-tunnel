@@ -92,11 +92,11 @@
     </section>
 
     <section id="quick-start" aria-labelledby="quick-title">
-      <div class="section-head"><p class="eyebrow">Quick Start</p><h2 id="quick-title">三步启动自己的 Home Tunnel。</h2><p>部署需要一台公网 Linux 主机、一个域名，以及能够访问家庭服务的 Linux 客户端。请先阅读自托管指南并替换全部示例值。</p></div>
+      <div class="section-head"><p class="eyebrow">Quick Start</p><h2 id="quick-title">三步启动自己的 Home Tunnel。</h2><p>部署需要一台公网 Linux 主机、一个域名，以及一台能访问家庭服务的电脑。桌面三端共用 <code>home-tunnel-gui</code>；NAS 继续用无界面客户端。请先阅读自托管指南并替换全部示例值。</p></div>
       <div class="grid-3">
         <article class="card"><span class="number">1</span><h3>准备 DNS 与防火墙</h3><p>将控制台与隧道域名指向服务器，开放 TCP 80、443、7000。</p></article>
         <article class="card"><span class="number">2</span><h3>生成配置并启动</h3><p>使用仓库脚本生成本地密钥与 Compose 配置，再启动四个服务。</p></article>
-        <article class="card"><span class="number">3</span><h3>注册设备与连接</h3><p>修改初始管理员密码，创建用户，从 Linux 客户端注册家庭设备。</p></article>
+        <article class="card"><span class="number">3</span><h3>注册设备与连接</h3><p>修改初始管理员密码，创建用户，在家里的电脑上运行 <code>home-tunnel-gui</code> 登录。</p></article>
       </div>
       <pre class="code-block" aria-label="Home Tunnel 快速开始命令"><code>git clone https://github.com/ZHanry/home-tunnel.git
 cd home-tunnel
@@ -114,7 +114,7 @@ docker compose ps</code></pre>
     </section>
 
     <section id="support" aria-labelledby="support-title">
-      <div class="section-head"><p class="eyebrow">公开支持矩阵</p><h2 id="support-title">稳定性声明以实际 Release 产物为准。</h2><p><code>v3.2.0</code> 从 <code>v3.2.0-rc.3</code> 的同一提交与同一套不可变资产提升。“Stable”只用于完整验证的平台；Windows x64 与 Android 8.0+ arm64 客户端明确标为 Experimental。</p></div>
+      <div class="section-head"><p class="eyebrow">公开支持矩阵</p><h2 id="support-title">稳定性声明以实际 Release 产物为准。</h2><p><code>v3.2.0</code> 从 <code>v3.2.0-rc.3</code> 的同一提交与同一套不可变资产提升。桌面三端共用 <code>home-tunnel-gui</code>；Android 管理 App 仍为 Experimental。</p></div>
       <div class="support-wrap">
         <table>
           <thead><tr><th>组件</th><th>平台</th><th>状态</th><th>分发与限制</th></tr></thead>
@@ -122,8 +122,8 @@ docker compose ps</code></pre>
             <tr><td>服务端</td><td>Linux amd64 / arm64</td><td><span class="status stable">Stable</span></td><td>容器与源码构建；稳定版要求完整双架构矩阵。</td></tr>
             <tr><td>Headless 客户端</td><td>Linux amd64 / arm64</td><td><span class="status stable">Stable</span></td><td>systemd 服务，支持实时配置和安全轮询。</td></tr>
             <tr><td>Headless 客户端</td><td>macOS amd64 / arm64</td><td><span class="status beta">Beta</span></td><td>launchd 包；需完成包结构和升级验证。</td></tr>
-            <tr><td>图形客户端</td><td>Windows 10 / 11 x64</td><td><span class="status experimental">Experimental</span></td><td>Release 提供自签名 EXE、校验和、SBOM 与来源证明；Windows 会提示未知发布者。</td></tr>
-            <tr><td>移动客户端</td><td>Android 8.0+ arm64-v8a</td><td><span class="status experimental">Experimental</span></td><td>GitHub Release 提供长期证书签名的侧载 APK；AAB 不可直装，也不表示 Play-ready。前台服务与 OEM 省电限制可能影响后台可靠性。</td></tr>
+            <tr><td>图形客户端</td><td>Windows / macOS / Linux</td><td><span class="status stable">统一</span></td><td>同一套 <code>home-tunnel-gui</code>；Windows 为 zip。</td></tr>
+            <tr><td>移动客户端</td><td>Android 8.0+ arm64-v8a</td><td><span class="status experimental">Experimental</span></td><td>远程管理 App，不在手机上跑隧道。</td></tr>
           </tbody>
         </table>
       </div>
@@ -149,7 +149,7 @@ docker compose ps</code></pre>
         <details><summary>它与直接使用 FRP 有什么不同？</summary><p>Home Tunnel 在 FRP 之上增加用户、设备、连接、短期租约、访问控制、限速、采样与审计，并限制 Agent 只能执行控制中心签发的配置。</p></details>
         <details><summary>如何穿透 RTSP 或 RTP/RTCP？</summary><p>RTSP 不是独立类型：将公网 10554/TCP 映射到摄像头本地 554，并使用 <code>ffplay -rtsp_transport tcp rtsp://PUBLIC_HOST:10554/path</code>。原生 RTP/RTCP UDP 必须固定媒体端口并逐条映射；动态端口不保证可用。</p></details>
         <details><summary>可以公开访问我的真实控制台吗？</summary><p>不建议把管理控制台作为公开演示站。Pages 仅展示本地夹具生成的静态截图，不连接任何真实部署。</p></details>
-        <details><summary>Windows EXE 为什么提示未知发布者？</summary><p>当前 EXE 使用临时自签名证书并作为 Experimental 资产发布。请核对 Release 的 SHA-256 与 Sigstore 证据；可信发布者提示仍需要公开 Authenticode 证书和受保护签名环境。</p></details>
+        <details><summary>Windows 客户端怎么安装？</summary><p>从 GitHub Release 下载 <code>HomeTunnel-Windows-*-x64.zip</code>，核对 SHA-256 后解压，与 <code>home-tunnel-agent.exe</code> 放在同一目录并运行 <code>home-tunnel-gui.exe</code>。这是窗口程序，关闭窗口会缩到托盘；请用托盘或「退出程序」结束。</p></details>
         <details><summary>会收集家庭服务地址或凭据吗？</summary><p>不会。Pages 只接收聚合访问与点击事件；部署反馈也明确禁止提交域名、IP、令牌或凭据。</p></details>
       </div>
     </section>

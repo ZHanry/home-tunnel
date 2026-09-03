@@ -366,7 +366,7 @@ func TestUnlistedProxyFieldRejected(t *testing.T) {
 }
 
 // clientRenderedConfig 逐行复刻两个客户端 RenderConfig 的输出形态（
-// windows-client\Services\FrpcSupervisor.cs 与 linux-client\internal\agent\
+// linux-client\internal\agent\
 // supervisor.go 生成完全一致的 TOML）：HTTP 直连与 HTTPS 插件后端各一条，
 // caPath 非空时追加 trustedCaFile/serverName 两行。
 func clientRenderedConfig(caPath string) string {

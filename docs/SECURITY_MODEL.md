@@ -22,7 +22,7 @@ Home Tunnel is intended for personal and small trusted-user deployments. It redu
 - **FRPS/gateway → control center:** service calls use generated high-entropy keys and are not published as host ports.
 - **Control center → SQLite:** the single database file is stored in a private Docker volume with mode `0600`; WAL and foreign-key checks are enabled, and no database network listener exists.
 - **Client local state:** the Windows device credential uses Windows Credential Manager. Linux uses a dedicated system account and a mode-`0600` state file under `/var/lib/home-tunnel`; macOS Beta uses the launchd service state directory documented by its package. Enrollment passwords and access/refresh tokens are not persisted.
-- **Web console tenancy:** `role=user` sessions sign in at the same console origin as administrators. Client APIs are scoped by the verified session `user_id`; `/api/v1/admin/*` remains 403. A user cannot list, bind, or mutate another tenant's devices or connections.
+- **Web console tenancy:** a deployment has a single administrator. `role=user` sessions sign in at the same console origin. Client APIs are scoped by the verified session `user_id`; `/api/v1/admin/*` remains 403. A user cannot list, bind, or mutate another tenant's devices or connections. Subdomain occupancy is global; availability suggestions do not reveal the occupying username except to the administrator.
 
 ## Agent restrictions
 

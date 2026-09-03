@@ -5,6 +5,7 @@ export const state = {
   devices: [],
   connections: [],
   tunnelDomain: "tunnel.example.com",
+  prefixPolicy: "suggest",
   transportTunnels: {
     tcp: { enabled: false, port_start: 10000, port_end: 10099 },
     udp: { enabled: false, port_start: 10000, port_end: 10099 },

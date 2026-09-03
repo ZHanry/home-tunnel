@@ -2,10 +2,6 @@
 
 package io.github.zhanry.hometunnel.ui
 
-import android.Manifest
-import android.os.Build
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -46,11 +42,11 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.PlayArrow
+
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Stop
+
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
@@ -63,7 +59,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FilledTonalButton
+
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -117,26 +113,14 @@ import io.github.zhanry.hometunnel.model.TunnelConnection
 import io.github.zhanry.hometunnel.repository.AppScreen
 import io.github.zhanry.hometunnel.repository.AppUiState
 import io.github.zhanry.hometunnel.repository.HomeTunnelRepository
-import io.github.zhanry.hometunnel.service.TunnelService
 import kotlinx.coroutines.launch
 
 @Composable
 fun HomeTunnelApp(
     repository: HomeTunnelRepository,
-    notificationPermissionRequired: Boolean,
 ) {
     val state by repository.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
     val snackbar = remember { SnackbarHostState() }
-    var pendingTunnelStart by remember { mutableStateOf(false) }
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission(),
-    ) {
-        if (pendingTunnelStart) {
-            pendingTunnelStart = false
-            TunnelService.start(context)
-        }
-    }
 
     LaunchedEffect(state.error) {
         state.error?.let {
@@ -167,16 +151,6 @@ fun HomeTunnelApp(
                     state = state,
                     repository = repository,
                     snackbar = snackbar,
-                    startTunnel = {
-                        if (notificationPermissionRequired && Build.VERSION.SDK_INT >= 33) {
-                            pendingTunnelStart = true
-                            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                        } else {
-                            TunnelService.start(context)
-                        }
-                    },
-                    stopTunnel = { TunnelService.stop(context) },
-                    syncTunnel = { TunnelService.sync(context) },
                 )
             }
         }
@@ -200,8 +174,8 @@ private fun LoadingScreen() {
 
 @Composable
 private fun LoginScreen(state: AppUiState, repository: HomeTunnelRepository) {
-    var server by rememberSaveable { mutableStateOf("") }
-    var username by rememberSaveable { mutableStateOf("") }
+    var server by rememberSaveable { mutableStateOf(state.persisted.lastServerUrl ?: state.persisted.profile?.publicBaseUrl.orEmpty()) }
+    var username by rememberSaveable { mutableStateOf(state.persisted.username.orEmpty()) }
     // Passwords deliberately use remember, not rememberSaveable: they must not
     // enter the Activity saved-state bundle or survive process recreation.
     var password by remember { mutableStateOf("") }
@@ -372,14 +346,12 @@ private fun HomeScreen(
     state: AppUiState,
     repository: HomeTunnelRepository,
     snackbar: SnackbarHostState,
-    startTunnel: () -> Unit,
-    stopTunnel: () -> Unit,
-    syncTunnel: () -> Unit,
 ) {
     var editor by remember { mutableStateOf<ConnectionEdit?>(null) }
     var settings by remember { mutableStateOf(false) }
     var deleteTarget by remember { mutableStateOf<TunnelConnection?>(null) }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
@@ -394,7 +366,14 @@ private fun HomeScreen(
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = { editor = ConnectionEdit(newHttpConnection(state), true) },
+                onClick = {
+                    val deviceId = state.devices.firstOrNull { it.status == "active" }?.id
+                    if (deviceId == null) {
+                        scope.launch { snackbar.showSnackbar(context.getString(R.string.install_client_first)) }
+                    } else {
+                        editor = ConnectionEdit(newHttpConnection(state, deviceId), true)
+                    }
+                },
                 icon = { Icon(Icons.Default.Add, contentDescription = null) },
                 text = { Text(stringResource(R.string.add_connection)) },
             )
@@ -419,7 +398,7 @@ private fun HomeScreen(
                 )
             }
             item {
-                TunnelStatusCard(state, startTunnel, stopTunnel, syncTunnel)
+                ManagementStatusCard(state)
             }
             if (state.connections.isEmpty()) {
                 item { EmptyConnectionsCard() }
@@ -428,6 +407,11 @@ private fun HomeScreen(
                     ConnectionCard(
                         connection = connection,
                         onEdit = { editor = ConnectionEdit(connection, false) },
+                        onCopy = { url ->
+                            val clipboard = context.getSystemService(android.content.ClipboardManager::class.java)
+                            clipboard.setPrimaryClip(android.content.ClipData.newPlainText("url", url))
+                            scope.launch { snackbar.showSnackbar(context.getString(R.string.copied_address)) }
+                        },
                     )
                 }
             }
@@ -437,12 +421,13 @@ private fun HomeScreen(
     editor?.let { edit ->
         ConnectionEditor(
             edit = edit,
+            devices = state.devices,
+            username = state.persisted.username.orEmpty(),
             busy = state.busy,
             onDismiss = { editor = null },
             onSave = { value ->
                 repository.saveConnection(value, edit.isNew)
                 editor = null
-                if (state.persisted.desiredRunning) syncTunnel()
             },
             onDelete = if (edit.isNew || edit.value.kind == ProxyKind.UNKNOWN) null else {
                 { deleteTarget = edit.value }
@@ -470,68 +455,26 @@ private fun HomeScreen(
             onDismiss = { settings = false },
             onLogout = {
                 settings = false
-                repository.logout(stopTunnel)
+                repository.logout { }
             },
         )
     }
 }
 
 @Composable
-private fun TunnelStatusCard(
-    state: AppUiState,
-    startTunnel: () -> Unit,
-    stopTunnel: () -> Unit,
-    syncTunnel: () -> Unit,
-) {
-    val status = state.persisted.agentState
-    val (label, color) = when (status) {
-        AgentState.ONLINE -> stringResource(R.string.status_online) to MaterialTheme.colorScheme.primary
-        AgentState.STARTING -> stringResource(R.string.status_starting) to MaterialTheme.colorScheme.tertiary
-        AgentState.DEGRADED -> stringResource(R.string.status_degraded) to MaterialTheme.colorScheme.tertiary
-        AgentState.ERROR -> stringResource(R.string.status_error) to MaterialTheme.colorScheme.error
-        AgentState.EXPIRED -> stringResource(R.string.status_expired) to MaterialTheme.colorScheme.error
-        AgentState.REVOKED -> stringResource(R.string.status_revoked) to MaterialTheme.colorScheme.error
-        AgentState.OFFLINE -> stringResource(R.string.status_offline) to MaterialTheme.colorScheme.onSurfaceVariant
-    }
+private fun ManagementStatusCard(state: AppUiState) {
+    val online = state.devices.count { it.online }
     Card(
-        modifier = Modifier.fillMaxWidth().semantics {
-            liveRegion = LiveRegionMode.Polite
-            contentDescription = "$label. ${state.persisted.agentMessage}"
-        },
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.68f)),
     ) {
-        Column(Modifier.padding(22.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(12.dp).clip(CircleShape).background(color))
-                Spacer(Modifier.width(10.dp))
-                Text(label, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            }
+        Column(Modifier.padding(22.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(stringResource(R.string.management_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Text(
-                state.persisted.agentMessage.ifBlank {
-                    if (status == AgentState.OFFLINE) stringResource(R.string.status_stopped_by_user)
-                    else stringResource(R.string.status_waiting)
-                },
+                stringResource(R.string.management_detail, online, state.devices.size, state.connections.size),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (state.persisted.desiredRunning) {
-                    Button(onClick = stopTunnel, modifier = Modifier.weight(1f)) {
-                        Icon(Icons.Default.Stop, contentDescription = null)
-                        Spacer(Modifier.width(8.dp))
-                        Text(stringResource(R.string.stop_tunnel))
-                    }
-                } else {
-                    Button(onClick = startTunnel, modifier = Modifier.weight(1f)) {
-                        Icon(Icons.Default.PlayArrow, contentDescription = null)
-                        Spacer(Modifier.width(8.dp))
-                        Text(stringResource(R.string.start_tunnel))
-                    }
-                }
-                FilledTonalButton(onClick = syncTunnel, enabled = state.persisted.desiredRunning) {
-                    Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.sync_now))
-                }
-            }
         }
     }
 }
@@ -552,7 +495,8 @@ private fun EmptyConnectionsCard() {
 }
 
 @Composable
-private fun ConnectionCard(connection: TunnelConnection, onEdit: () -> Unit) {
+private fun ConnectionCard(connection: TunnelConnection, onEdit: () -> Unit, onCopy: (String) -> Unit) {
+    val status = localizedConnectionState(connection)
     OutlinedCard(onClick = onEdit, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp)) {
         Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
@@ -563,24 +507,36 @@ private fun ConnectionCard(connection: TunnelConnection, onEdit: () -> Unit) {
             }
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(connection.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    AssistChip(onClick = onEdit, label = { Text(connection.proxyType.uppercase()) })
-                }
+                Text(connection.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(
                     connection.publicDisplayEndpoint.ifBlank { "${connection.localHost}:${connection.localPort}" },
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.primary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 4.dp),
                 )
                 Text(
-                    if (connection.enabled) connection.state else stringResource(R.string.status_offline),
+                    status,
                     style = MaterialTheme.typography.labelMedium,
                     color = if (connection.enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
                 )
             }
-            Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit_connection))
+            IconButton(onClick = { onCopy(connection.publicDisplayEndpoint.ifBlank { connection.subdomain }) }) {
+                Icon(Icons.Default.Language, contentDescription = stringResource(R.string.copied_address))
+            }
         }
+    }
+}
+
+@Composable
+private fun localizedConnectionState(connection: TunnelConnection): String {
+    if (!connection.enabled) return stringResource(R.string.status_offline)
+    return when (connection.state.lowercase()) {
+        "online" -> stringResource(R.string.status_online)
+        "applying" -> stringResource(R.string.status_syncing)
+        "waiting", "pending" -> stringResource(R.string.status_waiting)
+        "error" -> stringResource(R.string.status_error)
+        else -> connection.state
     }
 }
 
@@ -589,13 +545,18 @@ private data class ConnectionEdit(val value: TunnelConnection, val isNew: Boolea
 @Composable
 private fun ConnectionEditor(
     edit: ConnectionEdit,
+    devices: List<io.github.zhanry.hometunnel.model.ManagedDevice>,
+    username: String,
     busy: Boolean,
     onDismiss: () -> Unit,
     onSave: (TunnelConnection) -> Unit,
     onDelete: (() -> Unit)?,
 ) {
     var name by rememberSaveable(edit.value.id) { mutableStateOf(edit.value.name) }
-    var subdomain by rememberSaveable(edit.value.id) { mutableStateOf(edit.value.subdomain) }
+    var deviceId by rememberSaveable(edit.value.id) { mutableStateOf(edit.value.deviceId) }
+    var subdomain by rememberSaveable(edit.value.id) {
+        mutableStateOf(edit.value.subdomain.ifBlank { if (username.isBlank()) "" else "$username-app" })
+    }
     var scheme by rememberSaveable(edit.value.id) { mutableStateOf(edit.value.localScheme) }
     var host by rememberSaveable(edit.value.id) { mutableStateOf(edit.value.localHost) }
     var port by rememberSaveable(edit.value.id) { mutableStateOf(edit.value.localPort.takeIf { it > 0 }?.toString().orEmpty()) }
@@ -604,7 +565,7 @@ private fun ConnectionEditor(
     val unknown = edit.value.kind == ProxyKind.UNKNOWN
     val validSubdomain = Regex("^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$").matches(subdomain)
     val parsedPort = port.toIntOrNull()
-    val canSave = !unknown && name.isNotBlank() && validSubdomain && host.isNotBlank() && parsedPort in 1..65535
+    val canSave = !unknown && name.isNotBlank() && validSubdomain && host.isNotBlank() && parsedPort in 1..65535 && deviceId.isNotBlank()
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(if (edit.isNew) stringResource(R.string.add_connection) else stringResource(R.string.edit_connection)) },
@@ -615,6 +576,18 @@ private fun ConnectionEditor(
             ) {
                 if (raw) WarningCard(stringResource(R.string.raw_mvp_warning, edit.value.proxyType.uppercase()))
                 if (unknown) WarningCard(stringResource(R.string.unknown_type_warning))
+                if (edit.isNew) {
+                    Text(stringResource(R.string.device), fontWeight = FontWeight.SemiBold)
+                    devices.forEach { device ->
+                        AssistChip(
+                            onClick = { deviceId = device.id },
+                            label = { Text(if (device.online) "${device.name} · 在线" else device.name) },
+                            leadingIcon = {
+                                if (deviceId == device.id) Icon(Icons.Default.Security, contentDescription = null, modifier = Modifier.size(18.dp))
+                            },
+                        )
+                    }
+                }
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -676,6 +649,7 @@ private fun ConnectionEditor(
             Button(
                 onClick = {
                     onSave(edit.value.copy(
+                        deviceId = deviceId,
                         name = name.trim(),
                         subdomain = subdomain.trim(),
                         localScheme = if (raw) edit.value.localScheme else scheme,
@@ -719,7 +693,7 @@ private fun SettingsSheet(state: AppUiState, onDismiss: () -> Unit, onLogout: ()
             HorizontalDivider()
             ListItem(
                 headlineContent = { Text(stringResource(R.string.language)) },
-                supportingContent = { Text(stringResource(R.string.theme_system)) },
+                supportingContent = { Text(stringResource(R.string.language_system)) },
                 leadingContent = { Icon(Icons.Default.Language, contentDescription = null) },
                 trailingContent = { LanguageMenu(compact = false) },
             )
@@ -809,9 +783,9 @@ private fun BrandMark() {
     }
 }
 
-private fun newHttpConnection(state: AppUiState): TunnelConnection = TunnelConnection(
+private fun newHttpConnection(state: AppUiState, deviceId: String): TunnelConnection = TunnelConnection(
     id = "",
-    deviceId = state.persisted.deviceId.orEmpty(),
+    deviceId = deviceId,
     name = "",
     subdomain = "",
     proxyType = "http",

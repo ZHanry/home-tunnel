@@ -289,7 +289,7 @@ chmod 0600 "$evidence_tmp"
 mv "$evidence_tmp" "$root/evidence/ui-update-$(date -u +%Y%m%dT%H%M%SZ).txt"
 
 # Official installers live on GitHub; remove any legacy server-side copies after all checks pass.
-find "$downloads" -maxdepth 1 -type f -name 'HomeTunnel-Setup-*-x64.exe' -delete
+find "$downloads" -maxdepth 1 -type f -name 'HomeTunnel-Windows-*-x64.zip' -delete
 rollback_ready=0
 docker image rm "$rollback_tag" >/dev/null 2>&1 || true
 rollback_tag=""

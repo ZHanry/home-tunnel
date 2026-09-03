@@ -11,7 +11,7 @@
     "preview": "node scripts/preview.mjs",
     "preview:ui": "node scripts/ui-preview.mjs",
     "start": "node dist/server.js",
-    "test": "node --test dist/security.test.js dist/db.test.js dist/backup.test.js dist/notifications.test.js dist/quota.test.js dist/public.test.js dist/realtime.test.js dist/contracts.test.js dist/migrations.test.js && node --test scripts/api-module.test.mjs && node scripts/run-integration.mjs",
+    "test": "node --test dist/security.test.js dist/db.test.js dist/backup.test.js dist/notifications.test.js dist/quota.test.js dist/public.test.js dist/realtime.test.js dist/contracts.test.js dist/migrations.test.js dist/subdomain-policy.test.js && node --test scripts/api-module.test.mjs && node scripts/run-integration.mjs",
     "test:public-modules": "node --test scripts/api-module.test.mjs",
     "test:public": "node --test dist/public.test.js",
     "test:integration": "node scripts/run-integration.mjs",

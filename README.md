@@ -15,7 +15,7 @@ Home Tunnel 是面向个人与家庭服务的自托管内网穿透平台，用�
 
 ![Home Tunnel 真实管理后台，显示连接、流量和组件健康状态](docs/site/assets/admin-dashboard.jpg)
 
-> `v3.2.0` 由 `v3.2.0-rc.3` 的同一提交和同一套不可变资产提升。服务端 Linux `amd64`/`arm64` 与 Linux 客户端为 Stable；macOS headless 为 Beta；Windows x64 EXE 与 Android 8.0+ `arm64-v8a` 客户端为 Experimental。
+> `v3.2.0` 由 `v3.2.0-rc.3` 的同一提交和同一套不可变资产提升。服务端 Linux `amd64`/`arm64` 与 Linux 无界面客户端为 Stable；macOS headless 为 Beta；Windows / macOS / Linux 共用 `home-tunnel-gui`；Android 8.0+ `arm64-v8a` 管理 App 为 Experimental。
 
 ## 三步启动
 
@@ -57,13 +57,13 @@ Home Tunnel 是面向个人与家庭服务的自托管内网穿透平台，用�
 | 服务端 | Linux `amd64` / `arm64` | Stable | 容器与源码构建；稳定版要求完整双架构矩阵 |
 | Headless 客户端 | Linux `amd64` / `arm64` | Stable | systemd 服务，实时配置与安全轮询 |
 | Headless 客户端 | macOS `amd64` / `arm64` | Beta | launchd 包；仍需扩大真实硬件验证 |
-| 图形客户端 | Windows 10/11 x64 | Experimental | Release 提供自签名 EXE 与更新清单；Windows 会提示未知发布者 |
+| 图形客户端 | Windows / macOS / Linux | 统一 | 同一套 `home-tunnel-gui`；Windows 提供 zip |
 | 移动客户端 | Android 8.0+ `arm64-v8a` | Experimental | GitHub Release 侧载 APK；AAB 不可直接安装，也不代表 Play-ready |
 
-Windows EXE、Android APK/AAB 与其他平台资产来自同一个 RC 构建并随 Stable 原样提升，包含 SHA-256、SPDX SBOM、Sigstore 和 GitHub provenance。
+Windows zip、Android APK/AAB 与其他平台资产来自同一个 RC 构建并随 Stable 原样提升，包含 SHA-256、SPDX SBOM、Sigstore 和 GitHub provenance。
 
 GitHub Release 标签是 `v3.2.0`。Stable 不重建产物，因此 Linux/macOS 压缩包和 compose 镜像标签仍为 `3.2.0-rc.3`；Windows/Android 安装包文件名已是 `3.2.0`。下载 Linux/macOS 客户端时请使用带 `3.2.0-rc.3` 的文件名，并核对其 SHA-256。
-Windows 自签名只能证明同一资产集内的完整性，不能建立可信发布者身份；Android 使用必须长期保留的固定发布证书，升级前必须保持 application ID 与证书一致。
+Windows zip 请核对 Release 的 SHA-256 后再解压运行；Android 使用必须长期保留的固定发布证书，升级前必须保持 application ID 与证书一致。
 
 ## 为什么不是“裸 FRP”
 
@@ -78,7 +78,7 @@ Windows 自签名只能证明同一资产集内的完整性，不能建立可信
 ## 普通用户如何创建连接
 
 1. 管理员在控制台创建普通账号，并把一次性密码交给本人。
-2. 用户在家里的机器上安装 Linux / Windows / Android 客户端，用同一账号登录完成设备注册。
+2. 用户在家里的电脑上运行 `home-tunnel-gui`（Windows / macOS / Linux），用同一账号登录完成设备注册。Android 只用来远程管理，不在手机上跑隧道。
 3. 用户打开 `https://console.tunnel.example.com/admin`，用自己的账号登录网页控制台（不再需要管理员权限）。
 4. 在「连接」里选已注册设备，填写本地地址和子域，即可自助开通 HTTP/HTTPS。
 5. TCP/UDP 仍由管理员分配精确公网端口，不会出现在别人的工作区里。
@@ -86,7 +86,7 @@ Windows 自签名只能证明同一资产集内的完整性，不能建立可信
 ## 工作方式
 
 ```text
-远程浏览器 ─HTTPS→ Caddy ─→ 流量网关 ─→ FRPS ═受管隧道═→ 家中 Windows/Linux/macOS/Android 主机
+远程浏览器 ─HTTPS→ Caddy ─→ 流量网关 ─→ FRPS ═受管隧道═→ 家中 Windows/Linux/macOS 主机
 远程 TCP/UDP 客户端 ─已分配公网端口→ FRPS ═受管隧道═→ 家中固定 TCP/UDP 端口
 管理员 / 普通用户 ─HTTPS→ Caddy ─→ 控制中心 ─→ SQLite
 Windows/Linux/macOS/Android 客户端 ─REST + WebSocket→ 控制中心
@@ -116,39 +116,28 @@ TCP 与 UDP 默认关闭，只能由管理员在允许范围内分配精确公�
 
 ## 客户端
 
-### Linux / macOS
+### 桌面图形客户端（Windows / macOS / Linux）
 
-Linux Stable 客户端以 systemd 服务运行；macOS Beta 客户端以 launchd 服务运行。两者通过 WebSocket 接收实时配置通知并保留三分钟安全轮询。构建、安装与注册说明见 [linux-client/README.md](linux-client/README.md)。
-
-### Windows x64（Experimental EXE）
-
-从 [最新 Release 下载 Windows x64 EXE](https://github.com/ZHanry/home-tunnel/releases/latest/download/HomeTunnel-Setup-3.2.0-x64.exe)。客户端支持图形化登录、连接管理、系统托盘、自动启动和诊断导出。安装前请核对 Release 中的 SHA-256；自签名版本会触发未知发布者或 SmartScreen 提示。
-
-也可以在 Windows 上自行构建：
+三端共用 `home-tunnel-gui`：登录后管理本机隧道，改动同步到服务端。Windows 从 Release 下载 `HomeTunnel-Windows-3.2.0-x64.zip`，解压后运行 `home-tunnel-gui.exe`（同目录需有 `home-tunnel-agent.exe`）。Linux/macOS 发行包同时包含 GUI 与 CLI。说明见 [linux-client/README.md](linux-client/README.md)。
 
 ```powershell
-.\windows-client\packaging\build-exe.ps1 `
-  -AppId "{{11111111-2222-3333-4444-555555555555}}"
+.\linux-client\packaging\windows\build-release.ps1
 ```
 
-开发打包脚本生成的自签名证书不能替代可信发布者签名；分叉仓库不得把它描述为受信任签名。
+### Linux / macOS 无界面服务
 
-### Android 8.0+ arm64（Experimental）
+NAS 和无桌面主机继续用 `home-tunnel-client` + systemd/launchd。安装后执行 `sudo home-tunnel-enroll`。
 
-从最新 GitHub Release 下载 `HomeTunnel-Android-3.2.0-arm64-v8a.apk`，核对
-`SHA256SUMS.txt`、APK 签名证书 SHA-256 与 Sigstore 证据后侧载。应用 ID
-为 `io.github.zhanry.hometunnel`。同一 Release 的 AAB 仅供审计或未来商店
-上传，不能直接安装，也不表示已满足 Google Play 要求。Android 前台服务
-通知、省电策略和 OEM 后台限制可能影响长期隧道可靠性；首版因此保持
-Experimental，并且只声明 HTTP 支持，不会启动已分配的 TCP/UDP 记录。
-构建与使用限制见 [Android 客户端说明](android-client/README.md)。
+### Android 管理 App
+
+Android 应用用于远程管理账号：查看家里的设备与隧道、复制公网地址、开关 HTTP 连接。它不再在手机上运行隧道 Agent。家里的 Windows / macOS / Linux 客户端才是隧道端。构建说明见 [Android 客户端说明](android-client/README.md)。
 
 ## 安全证据
 
 - 控制中心 WebSocket 完整消息上限为 64 KiB，并限制碎片数和缓冲分块；回归覆盖超限、鉴权失败、异常断连、资源回收与重连。
-- CI 对生产依赖执行 Moderate 以上审计，并运行 TypeScript、Go、.NET、Compose、契约与文档检查。
-- CodeQL 显式分析 JavaScript/TypeScript、Go、C# 与 Android Java/Kotlin；Secret Scanning 与 Push Protection 应始终保持启用。
-- Stable 发布要求同一提交和同一套已验证产物，包含哈希、SBOM、provenance 与签名证据；Windows EXE 还必须通过安装、版本、自签名一致性和卸载验证，Android APK/AAB 必须通过包名、版本、ABI 与长期证书一致性验证。
+- CI 对生产依赖执行 Moderate 以上审计，并运行 TypeScript、Go、Compose、契约与文档检查。
+- CodeQL 显式分析 JavaScript/TypeScript、Go 与 Android Java/Kotlin；Secret Scanning 与 Push Protection 应始终保持启用。
+- Stable 发布要求同一提交和同一套已验证产物，包含哈希、SBOM、provenance 与签名证据。
 
 不要在公开 Issue 中提交漏洞细节、域名、IP、令牌、密码或日志中的私密信息。请使用 [GitHub 私密漏洞报告](https://github.com/ZHanry/home-tunnel/security/advisories/new)；详细政策见 [SECURITY.md](SECURITY.md)。
 
@@ -158,8 +147,8 @@ Experimental，并且只声明 HTTP 支持，不会启动已分配的 TCP/UDP �
 | --- | --- |
 | `control-center/` | REST/WebSocket API、管理后台、FRPS 授权插件 |
 | `traffic-gateway/` | Host 授权、反向代理、访问控制、限速与采样 |
-| `windows-client/` | Windows WPF 源码与本地打包脚本 |
-| `linux-client/` | Linux/macOS headless 客户端及 systemd/launchd 包 |
+| `linux-client/` | 共享 Go 客户端：图形界面、CLI、systemd/launchd 与 Windows 打包 |
+| `windows-agent/` | 受管 Agent 源码与 Windows 构建脚本 |
 | `android-client/` | Android 8.0+ 原生客户端、嵌入式 Agent 与 Gradle 构建 |
 | `windows-agent/` | 能力受限的 FRP Agent 源码与第三方许可 |
 | `contracts/` | 跨组件保留字、配置与协议契约夹具 |
@@ -169,7 +158,7 @@ Experimental，并且只声明 HTTP 支持，不会启动已分配的 TCP/UDP �
 
 ## 本地验证
 
-要求 Node.js 24 LTS、pnpm、Go 1.26、.NET 10 SDK、JDK 17、Android SDK/NDK、Docker Compose，以及重建 Windows Agent 时使用的 `windres`。实际命令以 [CONTRIBUTING.md](CONTRIBUTING.md) 和 CI 为准。
+要求 Node.js 24 LTS、pnpm、Go 1.26、JDK 17、Android SDK/NDK、Docker Compose，以及重建 Agent 时使用的 `windres`。实际命令以 [CONTRIBUTING.md](CONTRIBUTING.md) 和 CI 为准。
 
 ```powershell
 Set-Location control-center
@@ -184,8 +173,6 @@ pnpm run check
 pnpm run build
 pnpm test
 
-Set-Location ..
-dotnet test .\windows-client-tests\HomeTunnel.Client.Tests.csproj -c Release
 ```
 
 ```sh
@@ -193,6 +180,7 @@ cd linux-client
 go test -race ./...
 go vet ./...
 go build ./cmd/home-tunnel-client
+CGO_ENABLED=1 go build ./cmd/home-tunnel-gui
 ```
 
 ## 贡献与反馈

@@ -35,14 +35,7 @@ pnpm test
 pnpm run test:coverage
 ```
 
-Verify the Windows client logic on Windows:
-
-```powershell
-dotnet format .\windows-client-tests\HomeTunnel.Client.Tests.csproj --verify-no-changes --no-restore
-dotnet test .\windows-client-tests\HomeTunnel.Client.Tests.csproj -c Release
-```
-
-Verify the headless Linux client:
+Verify the shared desktop client:
 
 ```sh
 cd linux-client
@@ -51,14 +44,19 @@ go vet ./...
 go test -race ./...
 staticcheck ./...
 govulncheck ./...
-go build ./cmd/home-tunnel-client
+go build ./cmd/home-tunnel-client ./cmd/home-tunnel-gui
+```
+
+Windows zip:
+
+```powershell
+.\linux-client\packaging\windows\build-release.ps1
 ```
 
 Verify the Android client without a release signing key:
 
 ```sh
 cd android-client
-ANDROID_AGENT_ABIS=arm64-v8a,x86_64 ./scripts/build-agent.sh
 ./gradlew --no-daemon test lint assembleDebug
 cd ..
 test -z "$(git ls-files -- '*.apk' '*.aab' '*.aar' '*.jks' '*.keystore' '*.so')"

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { config } from "./config.js";
 import { HttpError } from "./http.js";
 import { hashBasicPassword, normalizeSubdomain, parseCidr, validateSubdomain } from "./security.js";
+import { assertSubdomainPolicy } from "./subdomain-policy.js";
 
 // Basic Auth 用户名：1..64，禁止控制字符；同时禁止冒号（Basic 凭据以首个
 // 冒号分隔 user:pass，含冒号的用户名无法无歧义还原）。
@@ -259,6 +260,7 @@ export async function createConnection(
     throw new HttpError(404, "OWNERSHIP_MISMATCH", "设备不存在");
   }
   if (device.rows[0].status !== "active") throw new HttpError(423, "DEVICE_REVOKED", "设备已撤销");
+  await assertSubdomainPolicy(client, userId, subdomain);
   const remotePort = requestedRemotePort(input);
   validateProxySettings(input.proxy_type, remotePort, input.enabled);
   if (input.proxy_type !== "http") {
@@ -389,6 +391,9 @@ export async function updateConnection(
         subdomainError,
         { field_errors: { subdomain: subdomainError } },
       );
+    }
+    if (subdomain !== current.subdomain) {
+      await assertSubdomainPolicy(client, current.user_id, subdomain);
     }
     const currentProxyType = connectionTransport(current);
     const proxyType = patch.proxy_type ?? currentProxyType;

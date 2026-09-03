@@ -210,6 +210,17 @@ private fun JsonObject.intOrNull(name: String): Int? =
 data class ConnectionListResponse(val items: List<TunnelConnection>)
 
 @Serializable
+data class DeviceListResponse(val items: List<ManagedDevice> = emptyList())
+
+@Serializable
+data class ManagedDevice(
+    val id: String,
+    val name: String,
+    val status: String = "active",
+    val online: Boolean = false,
+)
+
+@Serializable
 data class LeaseInfo(
     val lease: String,
     @SerialName("expires_at") val expiresAt: String,
@@ -257,9 +268,16 @@ data class PersistedState(
     val agentState: AgentState = AgentState.OFFLINE,
     val agentMessage: String = "",
     val desiredRunning: Boolean = false,
+    val lastServerUrl: String? = null,
+    val accessToken: String? = null,
+    val refreshToken: String? = null,
+    val accessExpiresAt: String? = null,
 ) {
     val enrolled: Boolean
         get() = profile != null && !deviceId.isNullOrBlank() && !deviceCredential.isNullOrBlank()
+
+    val signedIn: Boolean
+        get() = profile != null && (!refreshToken.isNullOrBlank() || enrolled)
 
     val syncRequestConfigVersion: Long
         get() = if (syncCapabilityVersion < SYNC_CAPABILITY_VERSION) 0 else lastConfigVersion

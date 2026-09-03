@@ -97,7 +97,7 @@ router.post(
       z.object({
         username: z.string().trim().min(3).max(64),
         display_name: z.string().trim().min(1).max(120),
-        role: z.enum(["admin", "user"]).default("user"),
+        role: z.literal("user").optional(),
         bandwidth_limit_bps: nullableBandwidth.optional().default(null),
       }),
       request.body,
@@ -121,7 +121,7 @@ router.post(
           body.display_name,
           passwordHash,
           config.temporaryPasswordSeconds,
-          body.role,
+          "user",
         ],
       );
       await client.query(
@@ -131,7 +131,7 @@ router.post(
       await audit(client, request, "UserCreated", "User", userId, null, {
         username,
         display_name: body.display_name,
-        role: body.role,
+        role: "user",
         bandwidth_limit_bps: body.bandwidth_limit_bps,
         password_state: "must_change",
       });
@@ -177,6 +177,9 @@ router.patch(
       request.body,
     );
     const expectedVersion = parseExpectedVersion(request, body.expected_version);
+    if (body.role === "admin") {
+      throw new HttpError(409, "ADMIN_SINGLETON", "一套部署只能有一名管理员");
+    }
     if (actor.userId === userId && body.role === "user") {
       throw new HttpError(409, "STATE_CONFLICT", "不能降低当前登录管理员自己的角色");
     }
@@ -188,6 +191,9 @@ router.patch(
       );
       const before = beforeResult.rows[0];
       if (!before) throw new HttpError(404, "NOT_FOUND", "用户不存在");
+      if (before.role === "admin" && body.role === "user") {
+        throw new HttpError(409, "ADMIN_SINGLETON", "不能取消唯一管理员");
+      }
       if (Number(before.version) !== expectedVersion) {
         throw new HttpError(409, "VERSION_CONFLICT", "用户已被其他操作修改", {
           current_version: Number(before.version),
@@ -234,6 +240,9 @@ router.post(
       );
       const user = before.rows[0];
       if (!user) throw new HttpError(404, "NOT_FOUND", "用户不存在");
+      if (!enabled && user.role === "admin") {
+        throw new HttpError(409, "ADMIN_SINGLETON", "不能禁用唯一管理员");
+      }
       const updated = await client.query<UserSummary>(
         `UPDATE users SET status=?,token_version=token_version+1,version=version+1,updated_at=home_tunnel_now()
         WHERE id=? RETURNING *`,

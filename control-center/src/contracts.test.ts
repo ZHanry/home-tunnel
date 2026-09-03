@@ -50,7 +50,14 @@ test("raw public endpoints format DNS, IPv4, and IPv6 authorities", () => {
 });
 
 test("REST and WebSocket compatibility contract preserves the v1 surface", () => {
-  assert.deepEqual(contract.rest.auth.client_types, ["web", "windows", "linux", "android"]);
+  assert.deepEqual(contract.rest.auth.client_types, [
+    "web",
+    "windows",
+    "linux",
+    "macos",
+    "android",
+    "mobile",
+  ]);
   assert.equal(contract.rest.client_sync.path, "/api/v1/client/sync");
   assert.deepEqual(contract.rest.client_sync.request_fields, [
     "device_id",

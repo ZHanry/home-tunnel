@@ -48,7 +48,7 @@ hash_file() {
 downloads_dir="$workspace_dir/.downloads"
 output_dir="$workspace_dir/outputs/macos"
 frp_version=0.70.1
-agent_version=$(tr -d '\r' < "$workspace_dir/windows-client/build-agent.ps1" | sed -n 's/^\$agentVersion = "\([^"]*\)"$/\1/p')
+agent_version=$(tr -d '\r' < "$workspace_dir/windows-agent/build-agent.ps1" | sed -n 's/^\$agentVersion = "\([^"]*\)"$/\1/p')
 [[ "$agent_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "unable to read the independent Agent version" >&2; exit 1; }
 frp_commit=fa3bcca2b0c4753cd4f0e2ab189dd6a5a6a15708
 frp_archive="$downloads_dir/frp-$frp_commit.zip"
@@ -106,12 +106,20 @@ agent_hash=$(hash_file "$agent_output")
     go build -trimpath \
     -ldflags "-s -w -buildid= -X main.version=$version -X main.agentVersion=$agent_version -X main.expectedAgentSHA256=$agent_hash" \
     -o "$package_dir/bin/home-tunnel-client" ./cmd/home-tunnel-client
+  gui_cgo=0
+  if [[ "$(go env GOOS)" == "darwin" && "$architecture" == "$(go env GOARCH)" ]]; then
+    gui_cgo=1
+  fi
+  CGO_ENABLED="$gui_cgo" GOOS=darwin GOARCH="$architecture" GOFLAGS=-buildvcs=false \
+    go build -trimpath \
+    -ldflags "-s -w -buildid= -X main.version=$version -X main.agentVersion=$agent_version -X main.expectedAgentSHA256=$agent_hash" \
+    -o "$package_dir/bin/home-tunnel-gui" ./cmd/home-tunnel-gui
 )
 cp "$script_dir/com.hometunnel.client.plist" "$package_dir/Library/LaunchDaemons/"
 cp "$script_dir/home-tunnel-enroll" "$package_dir/libexec/"
 cp "$script_dir/install.sh" "$package_dir/install.sh"
 cp "$client_dir/README.md" "$package_dir/README.md"
-chmod 0755 "$package_dir/bin/home-tunnel-client" "$package_dir/lib/home-tunnel-agent" "$package_dir/libexec/home-tunnel-enroll" "$package_dir/install.sh"
+chmod 0755 "$package_dir/bin/home-tunnel-client" "$package_dir/bin/home-tunnel-gui" "$package_dir/lib/home-tunnel-agent" "$package_dir/libexec/home-tunnel-enroll" "$package_dir/install.sh"
 
 # The self-check can only execute the darwin binaries when this script itself
 # runs on macOS with the same architecture; cross-builds skip it.

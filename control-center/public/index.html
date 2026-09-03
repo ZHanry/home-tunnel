@@ -54,15 +54,15 @@
                 Linux 客户端快速开始
               </a>
               <a id="hero-download" class="button button-secondary button-large"
-                 href="https://github.com/ZHanry/home-tunnel/releases/latest/download/HomeTunnel-Setup-3.2.0-x64.exe">
-                Windows x64 EXE
+                 href="https://github.com/ZHanry/home-tunnel/releases/latest/download/HomeTunnel-Windows-3.2.0-x64.zip">
+                Windows x64 图形客户端
               </a>
             </div>
-            <p class="release-note">Windows EXE 为自签名 Experimental；安装时会提示未知发布者，请先核对 Release SHA-256。</p>
+            <p class="release-note">Windows、macOS、Linux 共用同一套图形客户端；解压后运行 home-tunnel-gui。NAS 继续使用无界面服务。</p>
           </div>
 
-          <div class="client-preview" aria-label="Home Tunnel 3.2.0 Windows 图形客户端预览">
-            <span class="preview-platform-label">Windows 图形客户端</span>
+          <div class="client-preview" aria-label="Home Tunnel 3.2.0 桌面图形客户端预览">
+            <span class="preview-platform-label">桌面图形客户端</span>
             <div class="client-preview-bar">
               <span class="client-preview-brand"><img src="/HomeTunnel.svg?v=3.2.0-0a30ec18d630" width="30" height="30" alt=""><strong>Home Tunnel</strong><small>v3.2.0</small></span>
               <span class="preview-more" aria-hidden="true"><i></i><i></i><i></i></span>
@@ -90,7 +90,7 @@
         </section>
 
         <section class="quick-steps" aria-label="开始使用 Home Tunnel">
-          <article><span>1</span><div><h2>安装受管客户端</h2><p>Windows 使用图形界面，Linux/macOS 作为系统服务运行。</p></div></article>
+          <article><span>1</span><div><h2>安装受管客户端</h2><p>家里的电脑用同一套图形客户端；NAS 和无桌面主机用 Linux CLI 服务。</p></div></article>
           <article><span>2</span><div><h2>创建连接</h2><p>普通用户在网页控制台自助开通 HTTP；端口隧道由管理员分配精确公网端口。</p></div></article>
           <article><span>3</span><div><h2>按账号管理</h2><p>每人只看见自己的设备与隧道。管理员管用户、配额和公网端口。</p></div></article>
         </section>
@@ -99,18 +99,18 @@
           <div class="platform-heading">
             <p class="eyebrow">同一套安全边界</p>
             <h2 id="platform-title">按设备选择运行方式</h2>
-            <p>两种客户端都只接受控制中心签发的 HTTP/HTTPS、自定义域名与管理员精确授权的 TCP/UDP 端口。端口隧道默认关闭并绕过 HTTP 网关；应用必须自行认证加密，并在防火墙限源限速。不提供通用 FRP 命令行。</p>
+            <p>图形客户端与无界面服务都只接受控制中心签发的 HTTP/HTTPS、自定义域名与管理员精确授权的 TCP/UDP 端口。端口隧道默认关闭并绕过 HTTP 网关；应用必须自行认证加密，并在防火墙限源限速。不提供通用 FRP 命令行。</p>
           </div>
           <div class="platform-grid">
             <article class="platform-card platform-card-windows">
-              <div class="platform-card-header"><span class="platform-icon">W</span><div><h3>Windows 图形客户端</h3><p>Windows 10 / 11 · x64</p></div><span class="status-badge neutral">自签名 / Experimental</span></div>
-              <ul><li>登录、连接管理与实时配置通知</li><li>系统托盘、开机启动与诊断</li><li>设备凭据写入 Windows Credential Manager</li></ul>
-              <a class="text-link" href="https://github.com/ZHanry/home-tunnel/releases/latest">下载并核对发布证据 <span aria-hidden="true">→</span></a>
+              <div class="platform-card-header"><span class="platform-icon">GUI</span><div><h3>桌面图形客户端</h3><p>Windows / macOS / Linux · 同一套 Go 程序</p></div><span class="status-badge neutral">home-tunnel-gui</span></div>
+              <ul><li>登录、连接管理、复制公网地址</li><li>改动同步到网页控制台</li><li>本机运行受管 Agent</li></ul>
+              <a class="text-link" href="https://github.com/ZHanry/home-tunnel/blob/main/linux-client/README.md">查看图形客户端说明 <span aria-hidden="true">→</span></a>
             </article>
             <article class="platform-card platform-card-linux">
               <div class="platform-card-header"><span class="platform-icon terminal">&gt;_</span><div><h3>Linux / macOS 无界面服务</h3><p>amd64 / arm64 · systemd / launchd</p></div><span class="status-badge neutral">Headless</span></div>
               <div class="terminal-block" aria-label="Linux / macOS 客户端安装摘要"><code>sudo ./install.sh<br>sudo home-tunnel-enroll<br>home-tunnel-client status</code></div>
-              <p class="platform-note">适合 NAS、家庭服务器和常开的 Linux/macOS 主机；支持实时配置通知，不含 GUI 与自动更新。</p>
+              <p class="platform-note">适合 NAS、家庭服务器和常开主机。图形界面请用同一包里的 home-tunnel-gui。</p>
               <a class="text-link" href="https://github.com/ZHanry/home-tunnel/blob/main/linux-client/README.md">查看安装与运维说明 <span aria-hidden="true">→</span></a>
             </article>
           </div>
@@ -119,7 +119,7 @@
 
       <footer class="marketing-footer">
         <p>© 2026 Home Tunnel</p>
-        <span>Linux Stable · macOS headless Beta · Windows x64 self-signed Experimental</span>
+        <span>同一套图形客户端 · Linux CLI/NAS 服务 · Android 远程管理</span>
       </footer>
     </div>
 
@@ -137,7 +137,7 @@
         </a>
         <div class="auth-card-heading">
           <h1 id="auth-title">登录控制中心</h1>
-          <p>使用管理员或普通用户账号继续。</p>
+          <p>使用本部署的管理员或普通用户账号继续。</p>
         </div>
 
         <form id="login-form" class="form-stack" novalidate>
@@ -156,6 +156,7 @@
             <p class="field-error" id="login-error" role="alert"></p>
           </div>
           <button class="button button-primary button-block" type="submit">登录控制中心</button>
+          <p class="auth-help">忘记密码请联系创建该账号的管理员，控制台不提供网上自助重置。</p>
         </form>
 
         <form id="password-form" class="form-stack hidden" novalidate>
@@ -171,6 +172,10 @@
             <label for="new-password">新密码</label>
             <input id="new-password" name="new_password" type="password" autocomplete="new-password" minlength="12" required aria-describedby="password-helper password-error">
             <p id="password-helper" class="helper">至少 12 个字符，且不能包含用户名。</p>
+          </div>
+          <div class="field">
+            <label for="confirm-password">确认新密码</label>
+            <input id="confirm-password" name="confirm_password" type="password" autocomplete="new-password" minlength="12" required>
           </div>
           <button class="button button-primary button-block" type="submit">保存新密码</button>
           <p class="field-error" id="password-error" role="alert"></p>
@@ -193,6 +198,7 @@
           <button class="nav-item" data-view="devices"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 2h14a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm3 17h8M9 5h6"/></svg><span>设备管理</span></button>
           <button class="nav-item" data-view="connections"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7m2.2 5.8a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg><span>连接管理</span></button>
           <button class="nav-item" data-view="audit" data-admin-only><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span>审计事件</span></button>
+          <button class="nav-item" data-view="settings" data-admin-only><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9c.3.6.9 1 1.5 1.1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg><span>系统设置</span></button>
         </nav>
         <div class="sidebar-session"><span class="status-dot status-ok"></span><div><strong>安全会话</strong><small>权限已验证</small></div></div>
         <div class="sidebar-footer">

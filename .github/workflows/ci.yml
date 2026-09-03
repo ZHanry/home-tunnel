@@ -72,38 +72,6 @@ jobs:
             android-client/**/*.gradle*
             android-client/gradle.properties
             android-client/gradle/wrapper/gradle-wrapper.properties
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        with:
-          go-version: 1.26.6
-          cache: false
-      - name: Select the pinned Android NDK for the x86_64 test Agent
-        shell: bash
-        run: |
-          set -euo pipefail
-          sdk_root=${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}
-          test -d "$sdk_root"
-          ndk="$sdk_root/ndk/27.2.12479018"
-          if [ ! -x "$ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android26-clang" ]; then
-            sdkmanager_bin=$(command -v sdkmanager || find "$sdk_root/cmdline-tools" -type f -path '*/bin/sdkmanager' | sort -V | tail -n 1)
-            test -x "$sdkmanager_bin"
-            "$sdkmanager_bin" 'ndk;27.2.12479018'
-          fi
-          test -x "$ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android26-clang"
-          {
-            echo "ANDROID_NDK_HOME=$ndk"
-            echo "ANDROID_NDK_ROOT=$ndk"
-            echo "ANDROID_NDK_VERSION=27.2.12479018"
-          } >> "$GITHUB_ENV"
-      - name: Build embedded Android Agent test ABIs
-        working-directory: android-client
-        env:
-          ANDROID_AGENT_ABIS: arm64-v8a,x86_64
-        run: ./scripts/build-agent.sh
-      - name: Verify embedded Agent outputs
-        run: |
-          set -euo pipefail
-          test -s android-client/app/src/main/jniLibs/arm64-v8a/libhometunnel_agent.so
-          test -s android-client/app/src/main/jniLibs/x86_64/libhometunnel_agent.so
       - name: Test, lint, and assemble the unsigned debug client
         working-directory: android-client
         run: ./gradlew --no-daemon test lint assembleDebug
@@ -120,25 +88,38 @@ jobs:
           git diff --exit-code
 
   windows-client:
-    name: Windows client
+    name: Desktop GUI client
     runs-on: windows-latest
-    env:
-      HOME_TUNNEL_SKIP_AGENT_TESTS: "1"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          dotnet-version: 10.0.400
-      - name: Restore .NET dependencies
-        run: dotnet restore .\windows-client-tests\HomeTunnel.Client.Tests.csproj --locked-mode
-      - name: Audit .NET dependencies
-        run: dotnet list .\windows-client-tests\HomeTunnel.Client.Tests.csproj package --vulnerable --include-transitive --no-restore
-      - name: Verify C# formatting and analyzers
-        run: dotnet format .\windows-client-tests\HomeTunnel.Client.Tests.csproj --verify-no-changes --no-restore --severity warn
-      - name: Build Windows client with analyzers
-        run: dotnet build .\windows-client-tests\HomeTunnel.Client.Tests.csproj -c Release --no-restore -warnaserror
-      - name: Run xUnit tests
-        run: dotnet test .\windows-client-tests\HomeTunnel.Client.Tests.csproj -c Release --no-build
+          go-version: 1.26.6
+          cache-dependency-path: linux-client/go.mod
+      - name: Test shared Go client
+        working-directory: linux-client
+        run: go test ./...
+      - name: Build unified desktop GUI
+        working-directory: linux-client
+        run: |
+          go build ./cmd/home-tunnel-client
+          go build -ldflags "-H windowsgui" ./cmd/home-tunnel-gui
+
+  macos-gui:
+    name: macOS graphical client
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: 1.26.6
+          cache-dependency-path: linux-client/go.mod
+      - name: Test shared Go client
+        working-directory: linux-client
+        run: go test ./...
+      - name: Build native macOS GUI
+        working-directory: linux-client
+        run: CGO_ENABLED=1 go build ./cmd/home-tunnel-gui ./cmd/home-tunnel-client
 
   windows-agent:
     name: Windows agent official baseline
@@ -172,12 +153,11 @@ jobs:
       - name: Build official agent baseline
         shell: pwsh
         run: |
-          $lines = & .\windows-client\build-agent.ps1 -WindRes $env:HOME_TUNNEL_WINDRES
+          $lines = & .\windows-agent\build-agent.ps1 -WindRes $env:HOME_TUNNEL_WINDRES
           $lines | Write-Output
           $sha = ($lines | Where-Object { $_ -like 'AGENT_SHA256=*' } | Select-Object -First 1) -replace '^AGENT_SHA256=', ''
           if ($sha -notmatch '^[0-9a-f]{64}$') { throw 'AGENT_SHA256 line missing from build-agent.ps1 output' }
-          [xml]$project = Get-Content -LiteralPath .\windows-client\HomeTunnel.Client.csproj
-          $expectedSha = ($project.Project.PropertyGroup.AgentExpectedSha256 | Where-Object { $_ } | Select-Object -First 1).InnerText
+          $expectedSha = (Get-Content -Raw -LiteralPath .\windows-agent\expected-sha256.txt).Trim()
           if ($sha -ne $expectedSha) { throw "Agent baseline hash mismatch: built=$sha expected=$expectedSha" }
           $lines | Where-Object { $_ -match '^(AGENT_VERSION|FRP_VERSION|FRP_COMMIT|AGENT_SHA256)=' } |
             Set-Content -LiteralPath agent-baseline.txt
@@ -185,7 +165,7 @@ jobs:
           '' >> $env:GITHUB_STEP_SUMMARY
           "``AGENT_SHA256=$sha``" >> $env:GITHUB_STEP_SUMMARY
           '' >> $env:GITHUB_STEP_SUMMARY
-          '该哈希已与 windows-client/HomeTunnel.Client.csproj 的 AgentExpectedSha256 核验一致。' >> $env:GITHUB_STEP_SUMMARY
+          '该哈希已与 windows-agent/expected-sha256.txt 核验一致。' >> $env:GITHUB_STEP_SUMMARY
       # 复用脚本刚下载的同一工具链与 FRP 树，按受管布局跑 Agent 校验逻辑
       # 的 gofmt/vet/test，保证 CI 每次验证白名单校验逻辑本身。
       - name: Run Agent Go and vulnerability checks inside the pinned FRP tree
@@ -225,7 +205,7 @@ jobs:
         with:
           name: home-tunnel-agent-baseline
           path: |
-            windows-client/assets/HomeTunnel.Agent.exe
+            windows-agent/assets/HomeTunnel.Agent.exe
             agent-baseline.txt
           if-no-files-found: error
 
@@ -246,6 +226,10 @@ jobs:
         run: |
           mapfile -d '' go_files < <(find linux-client -type f -name '*.go' -print0)
           test -z "$(gofmt -l windows-agent/main.go windows-agent/main_test.go "${go_files[@]}")"
+      - name: Install desktop GUI libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev pkg-config gcc
       - name: Test Linux client
         working-directory: linux-client
         run: go test -race ./...
@@ -261,10 +245,12 @@ jobs:
       - name: Build Linux client controller
         working-directory: linux-client
         run: CGO_ENABLED=0 go build ./cmd/home-tunnel-client
+      - name: Build Linux graphical client
+        working-directory: linux-client
+        run: CGO_ENABLED=1 go build ./cmd/home-tunnel-gui
       - name: Check release packaging scripts
         run: |
           bash -n \
-            android-client/scripts/build-agent.sh \
             linux-client/packaging/build-release.sh \
             linux-client/packaging/install.sh \
             linux-client/packaging/home-tunnel-enroll \
@@ -274,7 +260,6 @@ jobs:
       - name: Check executable release entrypoints
         run: |
           test -x linux-client/packaging/build-release.sh
-          test -x android-client/scripts/build-agent.sh
           test -x linux-client/packaging/macos/build-release.sh
           test -x deploy/scripts/backup.sh
           test -x deploy/scripts/verify-backup.sh
@@ -282,7 +267,6 @@ jobs:
       - name: Shellcheck shell scripts
         run: |
           shellcheck --severity=warning \
-            android-client/scripts/build-agent.sh \
             linux-client/packaging/*.sh \
             linux-client/packaging/home-tunnel-enroll \
             linux-client/packaging/macos/*.sh \
@@ -307,29 +291,21 @@ jobs:
           control_center_version=$(node -p "require('./control-center/package.json').version")
           gateway_version=$(node -p "require('./traffic-gateway/package.json').version")
           app_version=$(sed -n 's/^export const APP_VERSION = "\([^"]*\)";$/\1/p' control-center/src/version.ts)
-          windows_project_version=$(sed -n 's/.*<Version>\([^<]*\)<\/Version>.*/\1/p' windows-client/HomeTunnel.Client.csproj)
-          windows_manifest_version=$(sed -n 's/.*assemblyIdentity version="\([0-9.]*\)".*/\1/p' windows-client/app.manifest | sed 's/\.0$//')
-          windows_appx_version=$(sed -n 's/.*Identity .* Version="\([0-9.]*\)".*/\1/p' windows-client/packaging/AppxManifest.xml | sed 's/\.0$//')
-          windows_inno_version=$(sed -n 's/.*MyAppVersion "\([^"]*\)".*/\1/p' windows-client/packaging/HomeTunnel.iss | head -n 1)
-          windows_agent_version=$(tr -d '\r' < windows-client/build-agent.ps1 | sed -n 's/^\$agentVersion = "\([^"]*\)"$/\1/p')
+          windows_agent_version=$(tr -d '\r' < windows-agent/build-agent.ps1 | sed -n 's/^\$agentVersion = "\([^"]*\)"$/\1/p')
           windows_agent_resource_version=$(sed -n 's/.*VALUE "ProductVersion", "\([^"]*\)\\0".*/\1/p' windows-agent/HomeTunnel.Agent.rc)
-          windows_agent_reported_version=$(tr -d '\r' < windows-client/Services/FrpcSupervisor.cs | sed -n 's/^[[:space:]]*public const string Version = "\([^"]*\)";$/\1/p')
           android_version_name=$(sed -n 's/^HOME_TUNNEL_VERSION_NAME=//p' android-client/gradle.properties)
           android_version_code=$(sed -n 's/^HOME_TUNNEL_VERSION_CODE=//p' android-client/gradle.properties)
-          android_agent_version=$(sed -n 's/^agent_version=//p' android-client/scripts/build-agent.sh)
-          android_agent_ps_version=$(tr -d '\r' < android-client/scripts/build-agent.ps1 | sed -n 's/^\$agentVersion = "\([^"]*\)"$/\1/p')
           root_compose_versions=$(sed -n 's/.*{HOME_TUNNEL_VERSION:-\([^}]*\)}.*/\1/p' compose.yaml | sort -u)
           deploy_compose_versions=$(grep -oE 'home-tunnel/(control-center|traffic-gateway):[0-9][0-9A-Za-z.-]*' deploy/compose.yaml | sed 's/.*://; s/-arm64$//' | sort -u)
           test "$(grep -Ec 'home-tunnel/(control-center|traffic-gateway):[0-9][0-9A-Za-z.-]*-arm64$' deploy/compose.yaml)" = 2
           generated_config_versions=$(grep -h '^HOME_TUNNEL_VERSION=' deploy/scripts/new-selfhost-config.sh deploy/scripts/new-selfhost-config.ps1 | tr -d '\r' | sed 's/.*=//' | sort -u)
           public_versions=$(grep -hoE 'v=?[0-9]+\.[0-9]+\.[0-9]+' control-center/public/index.html control-center/public/modules/*.js | sed -E 's/^v=?//' | sort -u)
-          echo "model=$model_version env=$env_version release=$release_version control_center=$control_center_version gateway=$gateway_version app=$app_version windows_project=$windows_project_version windows_manifest=$windows_manifest_version windows_appx=$windows_appx_version windows_inno=$windows_inno_version windows_agent=$windows_agent_version windows_agent_resource=$windows_agent_resource_version windows_agent_reported=$windows_agent_reported_version android_name=$android_version_name android_code=$android_version_code android_agent=$android_agent_version android_agent_ps=$android_agent_ps_version root_compose=$root_compose_versions deploy_compose=$deploy_compose_versions generated_config=$generated_config_versions public=$public_versions"
-          test -n "$model_version" && test -n "$env_version" && test -n "$release_version" && test -n "$control_center_version" && test -n "$gateway_version" && test -n "$app_version" && test -n "$windows_project_version" && test -n "$windows_manifest_version" && test -n "$windows_appx_version" && test -n "$windows_inno_version" && test -n "$windows_agent_version" && test -n "$windows_agent_resource_version" && test -n "$windows_agent_reported_version"
+          echo "model=$model_version env=$env_version release=$release_version control_center=$control_center_version gateway=$gateway_version app=$app_version windows_agent=$windows_agent_version windows_agent_resource=$windows_agent_resource_version android_name=$android_version_name android_code=$android_version_code root_compose=$root_compose_versions deploy_compose=$deploy_compose_versions generated_config=$generated_config_versions public=$public_versions"
+          test -n "$model_version" && test -n "$env_version" && test -n "$release_version" && test -n "$control_center_version" && test -n "$gateway_version" && test -n "$app_version" && test -n "$windows_agent_version" && test -n "$windows_agent_resource_version"
           test -n "$android_version_name" && [[ "$android_version_code" =~ ^[1-9][0-9]*$ ]]
-          test -n "$android_agent_version" && test -n "$android_agent_ps_version"
           test -n "$root_compose_versions" && test -n "$deploy_compose_versions"
           test -n "$generated_config_versions" && test -n "$public_versions"
-          for candidate in "$release_version" "$control_center_version" "$gateway_version" "$app_version" "$windows_project_version" "$windows_manifest_version" "$windows_appx_version" "$windows_inno_version" "$android_version_name" "$android_agent_version" "$android_agent_ps_version" $public_versions; do
+          for candidate in "$release_version" "$control_center_version" "$gateway_version" "$app_version" "$windows_agent_version" "$android_version_name" $public_versions; do
             if [ "$candidate" != "$model_version" ]; then
               echo "version mismatch: expected $model_version, found $candidate" >&2
               exit 1
@@ -340,7 +316,6 @@ jobs:
             test "$candidate" = "$env_version" || { echo "deployment version mismatch: expected $env_version, found $candidate" >&2; exit 1; }
           done
           test "$windows_agent_resource_version" = "$windows_agent_version"
-          test "$windows_agent_reported_version" = "$windows_agent_version"
           [[ "$model_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]
           expected_android_code=$((10#${BASH_REMATCH[1]} * 1000000 + 10#${BASH_REMATCH[2]} * 1000 + 10#${BASH_REMATCH[3]}))
           test "$android_version_code" -eq "$expected_android_code" || {
@@ -364,6 +339,7 @@ jobs:
               checksum="outputs/$platform/$prefix.sha256"
               (cd "outputs/$platform" && sha256sum -c "$(basename "$checksum")")
               tar -tzf "$archive" | grep -Fx "$prefix/bin/home-tunnel-client"
+              tar -tzf "$archive" | grep -Fx "$prefix/bin/home-tunnel-gui"
               tar -tzf "$archive" | grep -Fx "$prefix/lib/home-tunnel-agent"
             done
           done
@@ -383,25 +359,15 @@ jobs:
           [[ "$frp_archive_sha256" =~ ^[0-9a-f]{64}$ ]]
           [[ "$frps_digest" =~ ^sha256:[0-9a-f]{64}$ ]]
           grep -Fq "frpVersion   = \"$frp_version\"" windows-agent/main.go
-          grep -Fq "\$frpVersion = \"$frp_version\"" windows-client/build-agent.ps1
-          grep -Fq "\$frpCommit = \"$frp_commit\"" windows-client/build-agent.ps1
-          grep -Fq "\$frpArchiveSha256 = \"$frp_archive_sha256\"" windows-client/build-agent.ps1
+          grep -Fq "\$frpVersion = \"$frp_version\"" windows-agent/build-agent.ps1
+          grep -Fq "\$frpCommit = \"$frp_commit\"" windows-agent/build-agent.ps1
+          grep -Fq "\$frpArchiveSha256 = \"$frp_archive_sha256\"" windows-agent/build-agent.ps1
           grep -Fq "frp_version=$frp_version" linux-client/packaging/build-release.sh
           grep -Fq "frp_version=$frp_version" linux-client/packaging/macos/build-release.sh
           grep -Fq "frp_commit=$frp_commit" linux-client/packaging/build-release.sh
           grep -Fq "frp_commit=$frp_commit" linux-client/packaging/macos/build-release.sh
           grep -Fq "frp_archive_sha256=$frp_archive_sha256" linux-client/packaging/build-release.sh
           grep -Fq "frp_archive_sha256=$frp_archive_sha256" linux-client/packaging/macos/build-release.sh
-          grep -Fq "frp_version=$frp_version" android-client/scripts/build-agent.sh
-          grep -Fq "frp_commit=$frp_commit" android-client/scripts/build-agent.sh
-          grep -Fq "frp_archive_sha256=$frp_archive_sha256" android-client/scripts/build-agent.sh
-          grep -Fq "\$frpVersion = \"$frp_version\"" android-client/scripts/build-agent.ps1
-          grep -Fq "\$frpCommit = \"$frp_commit\"" android-client/scripts/build-agent.ps1
-          grep -Fq "\$frpArchiveSha256 = \"$frp_archive_sha256\"" android-client/scripts/build-agent.ps1
-          grep -Fq 'go_version=1.26.6' android-client/scripts/build-agent.sh
-          grep -Fq 'ndk_version=27.2.12479018' android-client/scripts/build-agent.sh
-          grep -Fq '$goVersion = "1.26.6"' android-client/scripts/build-agent.ps1
-          grep -Fq '$ndkVersion = "27.2.12479018"' android-client/scripts/build-agent.ps1
           grep -Fq "ARG FRP_VERSION=$frp_tag" deploy/frps/Dockerfile
           grep -Fq "ARG FRP_COMMIT=$frp_commit" deploy/frps/Dockerfile
           grep -Fq "FRP_VERSION: $frp_tag" compose.build.yaml
@@ -411,10 +377,8 @@ jobs:
           grep -Fq "$frp_commit" .github/workflows/codeql.yml
           grep -Fq "$frp_archive_sha256" .github/workflows/codeql.yml
           grep -Fq "version $frp_version, commit" windows-agent/THIRD-PARTY-NOTICES.txt
-          expected_agent_sha=$(sed -n 's/.*<AgentExpectedSha256[^>]*>\([0-9a-f]*\)<\/AgentExpectedSha256>.*/\1/p' windows-client/HomeTunnel.Client.csproj)
-          development_agent_sha=$(sed -n 's/.*DevelopmentSha256 = "\([0-9a-f]*\)";.*/\1/p' windows-client/Services/FrpcSupervisor.cs)
+          expected_agent_sha=$(tr -d '\r\n' < windows-agent/expected-sha256.txt)
           [[ "$expected_agent_sha" =~ ^[0-9a-f]{64}$ ]]
-          test "$development_agent_sha" = "$expected_agent_sha"
       - name: Prepare non-production Compose inputs
         run: |
           cp .env.example .env
