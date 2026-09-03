@@ -107,15 +107,15 @@ test("public landing page stays available while Windows release metadata is abse
     assert.equal(applicationScript.status, 200);
     assert.match(
       applicationScript.body.toString("utf8"),
-      /\.\/modules\/api\.js\?v=3\.2\.0-modules1/,
+      /\.\/modules\/api\.js\?v=4\.0\.0-modules1/,
     );
     assert.match(
       applicationScript.body.toString("utf8"),
-      /\.\/modules\/locale\.js\?v=3\.2\.0-user-console/,
+      /\.\/modules\/locale\.js\?v=4\.0\.0-user-console/,
     );
     assert.match(
       applicationScript.body.toString("utf8"),
-      /\.\/modules\/realtime\.js\?v=3\.2\.0-modules1/,
+      /\.\/modules\/realtime\.js\?v=4\.0\.0-modules1/,
     );
     assert.match(applicationScript.body.toString("utf8"), /toLocaleString\(localeTag\(\)/);
     assert.equal(applicationScript.headers["cache-control"], "public, max-age=31536000, immutable");
