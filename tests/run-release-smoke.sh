@@ -147,9 +147,12 @@ for service in control-center frps traffic-gateway; do
   [[ "$(docker exec "$container" id -u)" == 10001 ]] || { echo "$container is not uid 10001" >&2; exit 1; }
 done
 
+expected_migration=$(find "$workspace/control-center/migrations" -maxdepth 1 -name '[0-9]*_*.sql' -printf '%f\n' | sort | tail -n 1 | cut -d_ -f1)
+[[ "$expected_migration" =~ ^[0-9]+$ ]] || { echo "No migration version found" >&2; exit 1; }
+expected_migration=$((10#$expected_migration))
 [[ "$(docker exec "$control_container" node --input-type=module -e \
-  "import {DatabaseSync} from 'node:sqlite';const d=new DatabaseSync(process.env.SQLITE_PATH,{readOnly:true});console.log(d.prepare('select max(version) v from schema_migrations').get().v);d.close()")" == 8 ]] || {
-  echo "Migration 008 was not applied" >&2
+  "import {DatabaseSync} from 'node:sqlite';const d=new DatabaseSync(process.env.SQLITE_PATH,{readOnly:true});console.log(d.prepare('select max(version) v from schema_migrations').get().v);d.close()")" == "$expected_migration" ]] || {
+  echo "The release database migration set was not fully applied" >&2
   exit 1
 }
 
