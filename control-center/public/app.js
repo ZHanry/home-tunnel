@@ -1,4 +1,4 @@
-import { createConnectionsView } from "./modules/connections.js?v=5.0.0-modules1";
+import { createConnectionsView } from "./modules/connections.js?v=5.0.0-modules2";
 import {
   formSnapshot,
   restoreSnapshot,
@@ -6,8 +6,8 @@ import {
   showFieldErrors,
   setBusy,
   changedFields,
-} from "./modules/forms.js?v=5.0.0-modules1";
-import { api, refreshSession } from "./modules/api.js?v=5.0.0-modules1";
+} from "./modules/forms.js?v=5.0.0-modules2";
+import { api, refreshSession } from "./modules/api.js?v=5.0.0-modules2";
 import {
   componentLabel,
   configState,
@@ -16,10 +16,10 @@ import {
   formatBytes,
   formatDate,
   statusBadge,
-} from "./modules/format.js?v=5.0.0-modules1";
-import { localeTag, updateDocumentMetadata } from "./modules/locale.js?v=5.0.0-modules1";
-import { connectRealtime, disconnectRealtime } from "./modules/realtime.js?v=5.0.0-modules1";
-import { state } from "./modules/state.js?v=5.0.0-modules1";
+} from "./modules/format.js?v=5.0.0-modules2";
+import { localeTag, updateDocumentMetadata } from "./modules/locale.js?v=5.0.0-modules2";
+import { connectRealtime, disconnectRealtime } from "./modules/realtime.js?v=5.0.0-modules2";
+import { state } from "./modules/state.js?v=5.0.0-modules2";
 
 const landingScreen = document.querySelector("#landing-screen");
 const authScreen = document.querySelector("#auth-screen");
@@ -725,7 +725,11 @@ function modalDirty() {
   return JSON.stringify(formSnapshot(modalForm, true)) !== modalBaseline;
 }
 function rememberDraft() {
-  if (modalDraftKey && modalDirty()) modalDrafts.set(modalDraftKey, formSnapshot(modalForm));
+  const baseline = new Map(JSON.parse(modalBaseline || "[]"));
+  const changes = formSnapshot(modalForm).filter(([name, value]) => baseline.get(name) !== value);
+  if (modalDraftKey && changes.length) modalDrafts.set(modalDraftKey, changes);
+  else modalDrafts.delete(modalDraftKey);
+  return changes.length > 0;
 }
 function requestModalClose() {
   if (modalSaving) {
@@ -733,21 +737,22 @@ function requestModalClose() {
     return;
   }
   if (modalDirty()) {
-    rememberDraft();
-    toast("已保留未提交的内容，重新打开可继续编辑");
+    const saved = rememberDraft();
+    toast(saved ? "已保留非敏感修改，重新打开可继续编辑；密码需重新填写" : "已关闭，密码不会保留");
   }
   modal.close("cancel");
 }
 
 function openModal({
   title,
+  draftId = title,
   eyebrow = "操作",
   body,
   submitLabel = "保存",
   danger = false,
   onSubmit,
 }) {
-  modalDraftKey = `${state.me?.id ?? ""}:${title}`;
+  modalDraftKey = `${state.me?.id ?? ""}:${draftId}`;
   modalSaving = false;
   delete modal.dataset.connectionId;
   delete modal.dataset.ownerId;
@@ -789,6 +794,12 @@ function openModal({
   }
   modalBaseline = JSON.stringify(formSnapshot(modalForm, true));
   const draft = modalDrafts.get(modalDraftKey);
+  const openedKey = modalDraftKey;
+  if (!draft)
+    queueMicrotask(() => {
+      if (modalDraftKey === openedKey)
+        modalBaseline = JSON.stringify(formSnapshot(modalForm, true));
+    });
   modal.dataset.restored = draft ? "true" : "false";
   if (draft) {
     restoreSnapshot(modalForm, draft);
@@ -833,6 +844,12 @@ function openModal({
                   (u) => u.id === modal.dataset.policyUserId,
                 );
             if (!latest) throw new Error("资源已不存在，请关闭并刷新列表");
+            if (modal.dataset.connectionId && latest.proxy_type !== previous.proxy_type) {
+              rememberDraft();
+              Object.assign(previous, latest);
+              openEditConnection(previous.id);
+              return;
+            }
             const changes = [
               "name",
               "local_host",
@@ -842,9 +859,36 @@ function openModal({
               "bandwidth_limit_bps",
               "monthly_quota_bytes",
             ].filter((key) => JSON.stringify(previous[key]) !== JSON.stringify(latest[key]));
+            const labels = {
+              name: "名称",
+              local_host: "本地地址",
+              local_port: "本地端口",
+              enabled: "启用状态",
+              subdomain: "公网子域",
+              bandwidth_limit_bps: "带宽",
+              monthly_quota_bytes: "月度配额",
+            };
+            const display = (key, value) =>
+              key === "bandwidth_limit_bps"
+                ? formatBps(value)
+                : key === "monthly_quota_bytes"
+                  ? value == null
+                    ? "不限额"
+                    : formatBytes(value)
+                  : key === "enabled"
+                    ? value
+                      ? "启用"
+                      : "暂停"
+                    : String(value ?? "—");
+            const details = changes
+              .map(
+                (key) =>
+                  `${labels[key]}：${display(key, previous[key])} → ${display(key, latest[key])}`,
+              )
+              .join("；");
             previous.version = latest.version;
             previous.policy_version = latest.policy_version;
-            modalError.textContent = `已读取最新版本。服务器变化字段：${changes.join("、") || "版本"}。你的输入仍保留；再次保存只提交你修改过的字段。`;
+            modalError.textContent = `已读取最新版本。${details || "版本已更新"}。你的修改仍保留；再次保存只提交这些修改，未修改字段保留服务器最新值。`;
           } catch (failure) {
             modalError.textContent = failure.message;
           }
@@ -994,6 +1038,7 @@ async function openUserPolicy(userId) {
   if (!user) return;
   openModal({
     title: `账号带宽与配额 · ${user.username}`,
+    draftId: `user-policy:${user.id}`,
     eyebrow: "带宽与配额策略",
     body: `<div class="notice"><strong>动态共享带宽池</strong><span>该用户全部活跃连接共享此上限；上传和下载共同消耗。</span></div>${field("bandwidth_mbps", "账号带宽上限 (Mbps)", user.bandwidth_limit_bps == null ? "" : user.bandwidth_limit_bps / 1_000_000, { type: "number", required: false, min: 0.1, helper: "留空表示不限速" })}<div class="notice"><strong>月度流量配额</strong><span>按自然月（UTC）统计上传+下载合计；达到配额后网关暂停该用户全部连接，次月自动恢复。本月已用 ${formatBytes(user.month_to_date_bytes)}${user.quota_suspended ? "（当前已因超额停用）" : ""}。</span></div>${field("monthly_quota_gib", "月度配额 (GiB)", user.monthly_quota_bytes == null ? "" : (user.monthly_quota_bytes / 1024 ** 3).toFixed(2), { type: "number", required: false, min: 0.1, helper: "留空表示不限配额" })}`,
     onSubmit: async (form) => {
@@ -1357,6 +1402,7 @@ function openEditConnection(connectionId) {
     const raw = isRawProxy(connection.proxy_type);
     openModal({
       title: `编辑连接 · ${connection.name}`,
+      draftId: `connection:${connection.id}`,
       eyebrow: "我的连接",
       body: `<div class="form-grid">${field("name", "连接名称", connection.name)}${raw ? "" : field("subdomain", "公网子域", connection.subdomain)}<div class="field ${raw ? "hidden" : ""}" id="modal-local-scheme-field"><label for="modal-local_scheme">本地协议</label><select id="modal-local_scheme" name="local_scheme" ${raw ? "disabled" : ""}><option value="http" ${connection.local_scheme === "http" ? "selected" : ""}>http</option><option value="https" ${connection.local_scheme === "https" ? "selected" : ""}>https</option></select></div>${field("local_host", "本地地址", connection.local_host)}${field("local_port", "本地端口", connection.local_port, { type: "number", min: 1, max: 65535 })}${raw ? "" : `<div id="modal-http-options" class="field full"><div class="form-grid">${accessFormFields(connection)}</div></div>`}<div class="field full"><label><input name="enabled" type="checkbox" ${connection.enabled ? "checked" : ""}> 启用连接</label><p class="helper">公网端口仍由管理员分配；你只能改自己的本地目标和访问控制。</p></div></div>`,
       onSubmit: async (form) => {
@@ -1394,6 +1440,7 @@ function openEditConnection(connectionId) {
   const settings = transportSettings(connection.proxy_type);
   openModal({
     title: `编辑连接 · ${connection.name}`,
+    draftId: `connection:${connection.id}`,
     eyebrow: "版本化更新",
     body: `<div class="form-grid">${field("name", "连接名称", connection.name)}${field("subdomain", "连接标识", connection.subdomain)}<div class="field"><label for="modal-proxy_type">隧道类型</label><select id="modal-proxy_type" name="proxy_type" data-original-proxy-type="${escapeHtml(connection.proxy_type)}" aria-describedby="modal-transport-policy-helper">${proxyTypeOptions(connection.proxy_type)}</select></div><div class="field ${raw ? "" : "hidden"}" id="modal-remote-port-field"><label for="modal-remote_port" id="modal-remote-port-label">${escapeHtml(connection.proxy_type.toUpperCase())} 公网端口</label><input id="modal-remote_port" name="remote_port" type="number" value="${escapeHtml(connection.remote_port ?? connection.tcp_remote_port ?? settings.port_start)}" data-original-port="${escapeHtml(connection.remote_port ?? connection.tcp_remote_port ?? "")}" min="${settings.port_start}" max="${settings.port_end}" aria-describedby="modal-remote-port-helper" ${raw ? "required" : "disabled"}><p class="helper" id="modal-remote-port-helper" aria-live="polite"></p></div><div class="field ${raw ? "hidden" : ""}" id="modal-local-scheme-field"><label for="modal-local_scheme">本地协议</label><select id="modal-local_scheme" name="local_scheme" ${raw ? "disabled" : ""}><option value="http" ${connection.local_scheme === "http" ? "selected" : ""}>http</option><option value="https" ${connection.local_scheme === "https" ? "selected" : ""}>https</option></select></div>${field("local_host", "本地地址", connection.local_host)}${field("local_port", "本地端口", connection.local_port, { type: "number", min: 1, max: 65535 })}<div id="modal-http-options" class="field full ${raw ? "hidden" : ""}"><div class="form-grid">${field("bandwidth_mbps", "连接上限 (Mbps)", connection.bandwidth_limit_bps == null ? "" : connection.bandwidth_limit_bps / 1_000_000, { type: "number", required: false, min: 0.1 })}${accessFormFields(connection)}</div></div><div class="field full"><label><input name="enabled" type="checkbox" ${connection.enabled ? "checked" : ""}> 启用连接</label><p class="helper" id="modal-transport-policy-helper">当前版本 v${connection.version}；全局关闭某种端口传输时，只允许停用既有连接或改回 HTTP。</p></div></div>`,
     onSubmit: async (form) => {
@@ -1454,6 +1501,7 @@ async function openCustomDomains(connectionId) {
     .join("");
   openModal({
     title: `自定义域名 · ${connection.name}`,
+    draftId: `custom-domains:${connection.id}`,
     eyebrow: "DNS 所有权验证",
     body: `<div class="notice"><strong>需要两条 DNS 记录</strong><span>先添加 TXT 所有权证明，再把域名 CNAME 到受管地址。验证成功后会自动申请证书并重配隧道。</span></div>${rows || '<p class="helper">尚未绑定自定义域名。</p>'}<div class="form-grid">${field("domain", "新增域名", "", { helper: "例如 nas.example.com" })}</div>`,
     submitLabel: "创建验证记录",

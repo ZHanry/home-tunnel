@@ -107,15 +107,15 @@ test("public landing page stays available while Windows release metadata is abse
     assert.equal(applicationScript.status, 200);
     assert.match(
       applicationScript.body.toString("utf8"),
-      /\.\/modules\/api\.js\?v=5\.0\.0-modules1/,
+      /\.\/modules\/api\.js\?v=5\.0\.0-modules2/,
     );
     assert.match(
       applicationScript.body.toString("utf8"),
-      /\.\/modules\/locale\.js\?v=5\.0\.0-modules1/,
+      /\.\/modules\/locale\.js\?v=5\.0\.0-modules2/,
     );
     assert.match(
       applicationScript.body.toString("utf8"),
-      /\.\/modules\/realtime\.js\?v=5\.0\.0-modules1/,
+      /\.\/modules\/realtime\.js\?v=5\.0\.0-modules2/,
     );
     assert.match(applicationScript.body.toString("utf8"), /toLocaleString\(localeTag\(\)/);
     assert.equal(applicationScript.headers["cache-control"], "public, max-age=31536000, immutable");
@@ -133,7 +133,7 @@ test("public landing page stays available while Windows release metadata is abse
     assert.match(applicationScript.body.toString("utf8"), /UDP（固定端口）/);
     assert.doesNotMatch(applicationScript.body.toString("utf8"), /data-action="revoke-device"/);
 
-    const localeModule = await request(origin + "/modules/locale.js?v=5.0.0-modules1");
+    const localeModule = await request(origin + "/modules/locale.js?v=5.0.0-modules2");
     assert.equal(localeModule.status, 200);
     assert.match(localeModule.body.toString("utf8"), /const zhToEn =/);
     assert.match(localeModule.body.toString("utf8"), /Switch to English/);
@@ -145,7 +145,7 @@ test("public landing page stays available while Windows release metadata is abse
     assert.match(localeModule.body.toString("utf8"), /record\.type === "characterData"/);
     assert.equal(localeModule.headers["cache-control"], "public, max-age=31536000, immutable");
 
-    const realtimeModule = await request(origin + "/modules/realtime.js?v=5.0.0-modules1");
+    const realtimeModule = await request(origin + "/modules/realtime.js?v=5.0.0-modules2");
     assert.equal(realtimeModule.status, 200);
     assert.match(realtimeModule.body.toString("utf8"), /config\.version\.changed/);
     assert.match(realtimeModule.body.toString("utf8"), /export function disconnectRealtime/);

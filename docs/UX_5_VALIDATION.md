@@ -16,7 +16,7 @@ This release addresses the UI and interaction audit against 4.0.0. The table map
 | F10 | Empty owner device selections clear and disable submission | Owner with no device fixture |
 | F11 | Responsive cards replace overflowing connection tables | 375, 768, 1024, 1280, 1440 widths |
 | F12 | Public home and console navigation have working destinations | Anonymous home and return link |
-| F13 | Protected fields are grouped; non-secret drafts and inline errors are retained | Draft reopening and invalid form response |
+| F13 | Protected fields are grouped; non-secret drafts and inline errors are retained | Resource-scoped changed-field drafts, same-name isolation and nested field errors |
 | F14 | Connection diagnostics explain device and application stages | Details and protocol fixtures |
 | F15 | Foreground refresh, reconnect and stale indicators | Browser events, platform lifecycle and local API |
 | F16 | Desktop forms support Enter, busy state and guided password change | Real desktop web resources in browser tests |

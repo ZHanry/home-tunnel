@@ -1,9 +1,12 @@
-import { state } from "./state.js?v=5.0.0-modules1";
+import { state } from "./state.js?v=5.0.0-modules2";
 
 const appShell = document.querySelector("#app-shell");
 
 const localeStorageKey = "ht_locale";
 const zhToEn = {
+  "已保留非敏感修改，重新打开可继续编辑；密码需重新填写":
+    "Non-sensitive edits are kept in this tab. Reopen to continue; enter passwords again.",
+  "已关闭，密码不会保留": "Closed. Passwords are not retained.",
   跳到主要内容: "Skip to main content",
   产品导航: "Product navigation",
   "Home Tunnel 首页": "Home Tunnel home",

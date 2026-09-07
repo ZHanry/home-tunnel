@@ -36,7 +36,8 @@ export function showFieldErrors(form, error) {
   };
   let first;
   for (const [field, message] of Object.entries(error.details?.field_errors ?? {})) {
-    const input = form.elements.namedItem(aliases[field] ?? field);
+    const fieldKey = field.replace(/\.\d+(?=\.|$)/g, "");
+    const input = form.elements.namedItem(aliases[fieldKey] ?? fieldKey);
     if (!input?.insertAdjacentElement) continue;
     const node = document.createElement("p");
     node.dataset.fieldError = "true";

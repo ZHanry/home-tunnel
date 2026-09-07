@@ -207,13 +207,15 @@
     $("console").onclick = () => { if (consoleUrl) window.open(consoleUrl, "_blank"); };
     $("logout").onclick = async () => {
       if (!confirm(t("confirmLogout"))) return;
-      await api("/local/logout", { method: "POST" });
-      location.reload();
+      await runAction($("logout"), async () => {
+        await api("/local/logout", { method: "POST" });
+        location.reload();
+      });
     };
     $("quit-login").onclick = () => runAction($("quit-login"), quitApp, "login-error");
     $("quit-home").onclick = () => runAction($("quit-home"), quitApp);
     $("add").onclick = () => { resetEditor(); $("home").classList.add("hidden"); $("editor").classList.remove("hidden"); };
-    $("cancel").onclick = () => showHome();
+    $("cancel").onclick = () => runAction($("cancel"), () => showHome());
     let availabilityRequest = 0, availabilityTimer;
     $("subdomain").addEventListener("input", () => {
       const requestId = ++availabilityRequest;

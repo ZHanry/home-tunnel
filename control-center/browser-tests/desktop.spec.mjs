@@ -63,3 +63,23 @@ test("required password change is revealed only after the server requests it", a
   await expect(page.locator("#password-change")).toBeVisible();
   await expect(page.locator("#new-password")).toBeFocused();
 });
+
+test("desktop logout failure remains visible and retryable", async ({ page }) => {
+  await page.route("**/local/state", (route) =>
+    route.fulfill({ json: { enrolled: true, agent_state: "Online", connections: [] } }),
+  );
+  await page.route("**/local/login", (route) => route.fulfill({ json: { ok: true } }));
+  await page.route("**/local/update", (route) => route.fulfill({ json: { newer: false } }));
+  await page.locator("#server").fill("https://console.example.com");
+  await page.locator("#username").fill("alice");
+  await page.locator("#password").fill("temporary-password");
+  await page.locator("#login-button").click();
+  await expect(page.locator("#home")).toBeVisible();
+  await page.route("**/local/logout", (route) =>
+    route.fulfill({ status: 500, json: { message: "退出失败，请重试" } }),
+  );
+  page.on("dialog", (dialog) => dialog.accept());
+  await page.locator("#logout").click();
+  await expect(page.locator("#status")).toContainText("退出失败");
+  await expect(page.locator("#logout")).toBeEnabled();
+});

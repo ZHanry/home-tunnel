@@ -25,6 +25,8 @@
 
 Verify the signed `SHA256SUMS.txt` and accompanying Sigstore evidence before installing. The Android APK keeps the project's persistent release certificate. Windows binaries do not carry a trusted Authenticode publisher certificate, so Windows may show an unknown-publisher prompt; the signed artifact manifest is a separate verification mechanism.
 
+If you installed an earlier 5.0 release candidate, install the final package again: candidates share the base application version, so a version-only updater may not prompt automatically.
+
 ## Upgrade
 
 1. Back up SQLite consistently and retain `.env`, deployment secrets, the FRPS TLS certificate, and any existing-Caddy override.

@@ -1,4 +1,4 @@
-import { state } from "./state.js?v=5.0.0-modules1";
+import { state } from "./state.js?v=5.0.0-modules2";
 
 const refreshEvents = new Set([
   "config.version.changed",

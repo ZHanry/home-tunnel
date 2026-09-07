@@ -267,3 +267,48 @@ test("server field errors are shown at the input and preserve the form", async (
   await expect(page.locator("#modal-local_port-error")).toContainText("端口无效");
   await expect(page.locator("#modal-name")).toHaveValue("家庭服务");
 });
+
+test("same-named connections have separate drafts and retain only the user's changes", async ({
+  page,
+  request,
+}) => {
+  const fixture = await (await request.get("/api/v1/admin/connections")).json();
+  fixture.items[1].name = fixture.items[0].name;
+  await page.route("**/api/v1/admin/connections?**", (route) => route.fulfill({ json: fixture }));
+  await ready(page);
+  await page.locator('[data-action="edit-connection"]').first().click();
+  await page.locator("#modal-name").fill("我正在修改的连接");
+  await page.keyboard.press("Escape");
+  await page.locator('[data-action="edit-connection"]').nth(1).click();
+  await expect(page.locator("#modal-name")).toHaveValue(fixture.items[1].name);
+  await page.keyboard.press("Escape");
+  fixture.items[0].local_port = 9001;
+  fixture.items[0].version++;
+  await page.locator("#sync-status").click();
+  await page.locator('[data-action="edit-connection"]').first().click();
+  await expect(page.locator("#modal-name")).toHaveValue("我正在修改的连接");
+  await expect(page.locator("#modal-local_port")).toHaveValue("9001");
+});
+
+test("nested IP errors reopen advanced settings and focus the relevant field", async ({ page }) => {
+  await ready(page, "/admin?role=user#connections");
+  await page.locator('[data-action="create-connection"]').click();
+  await page.locator("#modal-name").fill("家庭服务");
+  await page.locator(".advanced-options summary").click();
+  await page.locator("#modal-access_allowlist").fill("invalid-ip");
+  await page.locator(".advanced-options summary").click();
+  await page.route("**/api/v1/client/connections", async (route) => {
+    if (route.request().method() !== "POST") return route.continue();
+    await route.fulfill({
+      status: 400,
+      json: {
+        error_code: "VALIDATION_ERROR",
+        message: "请检查访问保护",
+        field_errors: { "access.ip_allowlist.0": "请输入有效的 IP 或 CIDR" },
+      },
+    });
+  });
+  await page.locator("#modal button[type=submit]").click();
+  await expect(page.locator("#modal-access_allowlist")).toBeFocused();
+  await expect(page.locator("#modal-access_allowlist-error")).toHaveText("请输入有效的 IP 或 CIDR");
+});
