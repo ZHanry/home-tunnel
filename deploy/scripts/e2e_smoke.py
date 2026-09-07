@@ -721,13 +721,15 @@ try {
             landing_page = landing_body.decode()
             if 'href="https://github.com/ZHanry/home-tunnel/blob/main/linux-client/README.md"' not in landing_page:
                 raise RuntimeError("Landing page does not point to the Linux quick start")
+            _, health_body = fetch(arguments.origin + "/healthz")
+            product_version = str(json.loads(health_body)["version"]).split("-rc.")[0]
             windows_download = (
                 'href="https://github.com/ZHanry/home-tunnel/releases/latest/download/'
-                'HomeTunnel-Windows-3.2.0-x64.zip"'
+                f'HomeTunnel-Setup-{product_version}-x64.exe"'
             )
             if windows_download not in landing_page or 'id="hero-download"' not in landing_page:
-                raise RuntimeError("Landing page does not expose the Windows GUI zip")
-            if "共用同一套图形客户端" not in landing_page:
+                raise RuntimeError("Landing page does not expose the matching Windows installer")
+            if "home-tunnel-gui" not in landing_page or "Windows / macOS / Linux" not in landing_page:
                 raise RuntimeError("Landing page does not describe the unified desktop client")
 
             original_admin_hash = str(sqlite_value("SELECT password_hash FROM users WHERE lower(username)='admin' AND role='admin' LIMIT 1") or "")

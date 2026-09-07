@@ -8,6 +8,12 @@ release_dir=${RELEASE_DIR:-$workspace/release}
 evidence_dir=${EVIDENCE_DIR:-$workspace/release-smoke-evidence}
 smoke_root="$workspace/tests/smoke"
 alpine_image=alpine:3.22@sha256:14358309a308569c32bdc37e2e0e9694be33a9d99e68afb0f5ff33cc1f695dce
+smoke_arch=${SMOKE_ARCH:-$(uname -m)}
+case "$smoke_arch" in
+  x86_64|amd64) smoke_arch=amd64 ;;
+  aarch64|arm64) smoke_arch=arm64 ;;
+  *) echo "Unsupported smoke architecture" >&2; exit 1 ;;
+esac
 compose=(docker compose -f "$compose_file")
 if command -v cygpath >/dev/null 2>&1 && [[ "$release_dir" =~ ^[A-Za-z]:[\\/] ]]; then
   release_dir=$(cygpath -u "$release_dir")
@@ -57,7 +63,7 @@ cleanup() {
     "${compose[@]}" down -v --remove-orphans >/dev/null 2>&1 || true
   fi
   if [[ -e "$smoke_root" ]]; then
-    MSYS_NO_PATHCONV=1 docker run --rm --platform linux/amd64 -v "$docker_smoke_root:/cleanup" "$alpine_image" sh -c 'rm -rf /cleanup/* /cleanup/.[!.]* /cleanup/..?*' >/dev/null 2>&1 || true
+    MSYS_NO_PATHCONV=1 docker run --rm --platform "linux/$smoke_arch" -v "$docker_smoke_root:/cleanup" "$alpine_image" sh -c 'rm -rf /cleanup/* /cleanup/.[!.]* /cleanup/..?*' >/dev/null 2>&1 || true
     rm -rf -- "$smoke_root" || true
   fi
 }
@@ -96,7 +102,7 @@ chmod 0755 \
   "$smoke_root/backup-root" \
   "$smoke_root/backup-root/status"
 chmod 0444 "$smoke_root/secrets/"*
-MSYS_NO_PATHCONV=1 docker run --rm --user 10001:10001 --platform linux/amd64 \
+MSYS_NO_PATHCONV=1 docker run --rm --user 10001:10001 --platform "linux/$smoke_arch" \
   -v "$docker_smoke_root/secrets:/secrets:ro" \
   -v "$docker_smoke_root/downloads:/downloads:ro" \
   -v "$docker_smoke_root/backup-root/status:/status:ro" \
@@ -156,11 +162,11 @@ expected_migration=$((10#$expected_migration))
   exit 1
 }
 
-package="$release_dir/home-tunnel-linux-${RC_VERSION%%-rc.*}-amd64.tar.gz"
-if [[ ! -s "$package" && -s "$release_dir/linux/home-tunnel-linux-${RC_VERSION%%-rc.*}-amd64.tar.gz" ]]; then
-  package="$release_dir/linux/home-tunnel-linux-${RC_VERSION%%-rc.*}-amd64.tar.gz"
+package="$release_dir/home-tunnel-linux-${RC_VERSION%%-rc.*}-$smoke_arch.tar.gz"
+if [[ ! -s "$package" && -s "$release_dir/linux/home-tunnel-linux-${RC_VERSION%%-rc.*}-$smoke_arch.tar.gz" ]]; then
+  package="$release_dir/linux/home-tunnel-linux-${RC_VERSION%%-rc.*}-$smoke_arch.tar.gz"
 fi
-[[ -s "$package" ]] || { echo "RC Linux amd64 package is missing" >&2; exit 1; }
+[[ -s "$package" ]] || { echo "RC Linux package for $smoke_arch is missing" >&2; exit 1; }
 mkdir -p "$smoke_root/client"
 tar_package="$package"
 tar_client_root="$smoke_root/client"
@@ -176,7 +182,7 @@ MSYS_NO_PATHCONV=1 docker run --rm --user 0:0 \
   -v "$docker_workspace/deploy/scripts:/scripts:ro" \
   -v "$docker_smoke_root:/smoke" \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  --platform linux/amd64 "$alpine_image" sh -eu -c '
+  --platform "linux/$smoke_arch" "$alpine_image" sh -eu -c '
     apk add --no-cache docker-cli gnupg python3 sqlite >/dev/null
     HOME_TUNNEL_ROOT=/smoke/backup-root HOME_TUNNEL_BACKUP_DIR=/smoke/backups /scripts/backup.sh
   ' > "$evidence_dir/backup.txt"
@@ -193,7 +199,7 @@ if [[ "$containerized_driver" == 1 ]]; then
     -v "$docker_smoke_root:/smoke" \
     -v "$docker_evidence_dir:/evidence" \
     -v /var/run/docker.sock:/var/run/docker.sock \
-    --platform linux/amd64 "$alpine_image" sh -eu -c '
+    --platform "linux/$smoke_arch" "$alpine_image" sh -eu -c '
       apk add --no-cache docker-cli openssl python3 >/dev/null
       exec python3 /scripts/e2e_smoke.py "$@"
     ' sh \
@@ -228,7 +234,7 @@ MSYS_NO_PATHCONV=1 docker run --rm --user 0:0 \
   -v "$docker_workspace/deploy/scripts:/scripts:ro" \
   -v "$docker_smoke_root:/smoke" \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  --platform linux/amd64 "$alpine_image" sh -eu -c '
+  --platform "linux/$smoke_arch" "$alpine_image" sh -eu -c '
     apk add --no-cache docker-cli gnupg python3 sqlite >/dev/null
     HOME_TUNNEL_ROOT=/smoke/backup-root HOME_TUNNEL_BACKUP_DIR=/smoke/backups /scripts/verify-backup.sh
   ' > "$evidence_dir/backup-restore.txt"
