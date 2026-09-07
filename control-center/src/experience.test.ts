@@ -1,8 +1,10 @@
+import { randomBytes } from "node:crypto";
 import assert from "node:assert/strict";
 import { once } from "node:events";
 import test from "node:test";
 
 test("5.0 owner-aware validation, partial policies and complete pagination", async (t) => {
+  const userPassword = `test-${randomBytes(24).toString("hex")}-Q8`;
   process.env.NODE_ENV = "test";
   process.env.SQLITE_PATH = ":memory:";
   process.env.INTERNAL_SERVICE_KEY = "11".repeat(32);
@@ -81,13 +83,13 @@ test("5.0 owner-aware validation, partial policies and complete pagination", asy
     await call(
       "POST",
       "/api/v1/auth/password/change",
-      { current_password: user.temporary_password, new_password: "Private-Experience-S9-safe" },
+      { current_password: user.temporary_password, new_password: userPassword },
       first.data.access_token,
     );
     const token = (
       await call("POST", "/api/v1/auth/login", {
         username: "lin",
-        password: "Private-Experience-S9-safe",
+        password: userPassword,
         client_type: "linux",
       })
     ).data.access_token;

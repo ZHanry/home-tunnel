@@ -221,3 +221,49 @@ test("standard user can access account limits and edit raw targets without error
   await page.locator('[data-view="account"]').click();
   await expect(page.locator("#view-content")).toContainText("月度配额");
 });
+
+test("custom domain removal requires confirmation and cancellation sends no write", async ({
+  page,
+}) => {
+  await ready(page);
+  await page.locator(".more-actions summary").first().click();
+  await page.locator('[data-action="custom-domains"]').first().click();
+  await page.locator("#modal-domain").fill("nas.example.net");
+  await page.locator("#modal button[type=submit]").click();
+  await expect(page.locator("[data-domain-delete]")).toHaveCount(1);
+  let deletes = 0;
+  await page.route("**/api/v1/admin/custom-domains/*", async (route) => {
+    if (route.request().method() === "DELETE") deletes++;
+    await route.continue();
+  });
+  await page.locator("[data-domain-delete]").click();
+  await expect(page.locator("[data-domain-delete]")).toHaveText("确认删除这个域名");
+  expect(deletes).toBe(0);
+  await page.locator("#modal-body").getByRole("button", { name: "取消", exact: true }).click();
+  expect(deletes).toBe(0);
+  await page.locator("[data-domain-delete]").click();
+  await page.locator("[data-domain-delete]").click();
+  await expect(page.locator("[data-domain-delete]")).toHaveCount(0);
+  expect(deletes).toBe(1);
+});
+
+test("server field errors are shown at the input and preserve the form", async ({ page }) => {
+  await ready(page, "/admin?role=user#connections");
+  await page.locator('[data-action="create-connection"]').click();
+  await page.locator("#modal-name").fill("家庭服务");
+  await page.route("**/api/v1/client/connections", async (route) => {
+    if (route.request().method() !== "POST") return route.continue();
+    await route.fulfill({
+      status: 400,
+      json: {
+        error_code: "VALIDATION_ERROR",
+        message: "请修改错误字段",
+        field_errors: { local_port: "端口无效，请检查目标服务" },
+      },
+    });
+  });
+  await page.locator("#modal button[type=submit]").click();
+  await expect(page.locator("#modal-local_port")).toHaveAttribute("aria-invalid", "true");
+  await expect(page.locator("#modal-local_port-error")).toContainText("端口无效");
+  await expect(page.locator("#modal-name")).toHaveValue("家庭服务");
+});

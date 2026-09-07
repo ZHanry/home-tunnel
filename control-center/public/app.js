@@ -215,6 +215,7 @@ function showLogin(message = "") {
   state.me = null;
   state.csrf = "";
   setPendingCurrentPassword(null);
+  document.querySelector("#login-password").value = "";
   disconnectRealtime();
   landingScreen.classList.add("hidden");
   appShell.classList.add("hidden");
@@ -1777,7 +1778,10 @@ document.querySelectorAll(".password-toggle").forEach((button) =>
 document.querySelector("#modal-close").addEventListener("click", requestModalClose);
 modal.addEventListener("close", () => {
   modalError.textContent = "";
-  if (!modal.open) modalForm.onsubmit = null;
+  if (!modal.open) {
+    modalForm.onsubmit = null;
+    modalBody.replaceChildren();
+  }
   if (state.pendingRefresh && !modal.open) void renderView(state.currentView, { background: true });
 });
 
@@ -1809,6 +1813,7 @@ loginForm.addEventListener("submit", async (event) => {
       false,
     );
     state.csrf = result.csrf_token;
+    document.querySelector("#login-password").value = "";
     if (result.password_change_required) {
       loginForm.classList.add("hidden");
       passwordForm.classList.remove("hidden");

@@ -34,3 +34,7 @@ This release addresses the UI and interaction audit against 4.0.0. The table map
 CI retains the service coverage gates, Go tests and analysis, Android tests/lint, CodeQL, secret scanning, static site checks and dependency review. RC builds publish immutable image digests and signed artifact manifests. Stable promotes the exact accepted RC. Android keeps its persistent signing certificate and does not embed a tunnel Agent. Windows packages are Go binaries; Sigstore evidence does not imply Windows Authenticode trust.
 
 Physical-device checks and production-path smoke are distinct: browser fixtures cannot prove a real tunnel or certify all device accessibility. Read the published release smoke and platform evidence for the exact tested scope.
+
+## Connection workspace
+
+![Home Tunnel 5.0 connection workspace with local fixture data](site/assets/admin-connections-v5.jpg)

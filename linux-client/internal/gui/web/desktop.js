@@ -193,6 +193,7 @@
         localStorage.setItem("ht_server", $("server").value);
         localStorage.setItem("ht_username", $("username").value);
         await api("/local/login", { method: "POST", body: JSON.stringify({ server: $("server").value, username: $("username").value, password: $("password").value, new_password: $("new-password").value }) });
+        $("password").value = ""; $("new-password").value = ""; $("confirm-password").value = "";
         await showHome();
       } catch (error) {
         if (/requires a password change|PASSWORD_CHANGE_REQUIRED/.test(error.message)) {

@@ -125,20 +125,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          check_runs=$(mktemp)
-          page=1
-          printf '[]' > "$check_runs"
-          while :; do
-            [ "$page" -le 100 ] || { echo 'Unexpectedly large check-run result set' >&2; exit 1; }
-            response=$(mktemp)
-            gh api -H 'Accept: application/vnd.github+json' -H 'X-GitHub-Api-Version: 2022-11-28' \
-              "/repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs?per_page=100&page=$page" > "$response"
-            count=$(jq '.check_runs | length' "$response")
-            jq -s '.[0] + .[1].check_runs' "$check_runs" "$response" > "$check_runs.next"
-            mv "$check_runs.next" "$check_runs"
-            [ "$count" -eq 100 ] || break
-            page=$((page + 1))
-          done
           required=(
             'Quality Gate'
             'Analyze (JavaScript and TypeScript)'
@@ -148,14 +134,35 @@ jobs:
             'Secret Scan'
             'Build and validate Pages'
           )
-          for name in "${required[@]}"; do
-            conclusion=$(jq -r --arg name "$name" \
-              '[.[] | select(.name == $name and .app.slug == "github-actions")] |
-               sort_by(.started_at, .id) | last | .conclusion // "missing"' "$check_runs")
-            [ "$conclusion" = success ] || {
-              echo "Latest GitHub Actions check for '$name' is not successful: $conclusion" >&2
-              exit 1
-            }
+          for attempt in $(seq 1 40); do
+            check_runs=$(mktemp)
+            page=1
+            printf '[]' > "$check_runs"
+            while :; do
+              [ "$page" -le 100 ] || { echo 'Unexpectedly large check-run result set' >&2; exit 1; }
+              response=$(mktemp)
+              gh api -H 'Accept: application/vnd.github+json' -H 'X-GitHub-Api-Version: 2022-11-28' \
+                "/repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs?per_page=100&page=$page" > "$response"
+              count=$(jq '.check_runs | length' "$response")
+              jq -s '.[0] + .[1].check_runs' "$check_runs" "$response" > "$check_runs.next"
+              mv "$check_runs.next" "$check_runs"
+              [ "$count" -eq 100 ] || break
+              page=$((page + 1))
+            done
+            waiting=0
+            for name in "${required[@]}"; do
+              conclusion=$(jq -r --arg name "$name" '[.[] | select(.name == $name and .app.slug == "github-actions")] | sort_by(.started_at, .id) | last | .conclusion // "pending"' "$check_runs")
+              case "$conclusion" in
+                success) ;;
+                pending) waiting=$((waiting + 1)) ;;
+                *) echo "Source check failed: $name ($conclusion)" >&2; exit 1 ;;
+              esac
+            done
+            rm -f "$check_runs"
+            if [ "$waiting" -eq 0 ]; then break; fi
+            if [ "$attempt" -eq 40 ]; then echo 'Source checks did not complete in time' >&2; exit 1; fi
+            echo "Waiting for $waiting source checks"
+            sleep 30
           done
 
   images:
@@ -918,31 +925,7 @@ jobs:
           prerelease: true
           make_latest: false
           generate_release_notes: true
-          body: |
-            Android 8.0+ `arm64-v8a` is introduced as Experimental software.
-            Sideload `HomeTunnel-Android-${{ needs.metadata.outputs.base-version }}-arm64-v8a.apk`
-            only after verifying `SHA256SUMS.txt`, the persistent signing
-            certificate fingerprint, and the attached Sigstore evidence. The
-            AAB is a non-installable audit/upload artifact and is not declared
-            Play-ready. Android foreground-service notification and OEM battery
-            restrictions can affect background tunnel reliability. This first
-            Android client advertises HTTP support only and never starts assigned
-            TCP/UDP records.
-
-            Android 8.0+ `arm64-v8a` 首版为 Experimental。普通用户应核验
-            SHA-256、长期签名证书指纹与 Sigstore 证据后侧载 APK；AAB 不能
-            直接安装，也不代表已满足 Google Play 发布要求。前台服务通知、
-            省电策略与 OEM 后台限制可能影响隧道常驻可靠性。
-
-            Back up SQLite and upgrade the control center, FRPS, and managed
-            clients together. Raw TCP/UDP bypass Caddy and the Traffic Gateway,
-            so gateway authentication, allowlists, limits, metering, and quotas
-            do not apply. The matching Stable tag must promote the exact
-            `${{ needs.metadata.outputs.rc-version }}` commit and asset set.
-
-            Windows x64 EXE is Experimental and uses an unsigned Go binary. Windows can show an unknown-publisher or SmartScreen
-            warning. Verify SHA256SUMS.txt and the attached Sigstore evidence.
-          fail_on_unmatched_files: true
+          body_path: docs/RELEASE_NOTES.md
           files: release/*
       - name: Publish prerelease without moving latest
         env:
@@ -1183,32 +1166,7 @@ jobs:
           prerelease: false
           make_latest: false
           generate_release_notes: true
-          body: |
-            Android 8.0+ `arm64-v8a` is introduced as Experimental software.
-            Sideload `HomeTunnel-Android-${{ needs.metadata.outputs.base-version }}-arm64-v8a.apk`
-            only after verifying `SHA256SUMS.txt`, the persistent signing
-            certificate fingerprint, and the attached Sigstore evidence. The
-            AAB is a non-installable audit/upload artifact and is not declared
-            Play-ready. Android foreground-service notification and OEM battery
-            restrictions can affect background tunnel reliability. This first
-            Android client advertises HTTP support only and never starts assigned
-            TCP/UDP records.
-
-            Android 8.0+ `arm64-v8a` 首版为 Experimental。普通用户应核验
-            SHA-256、长期签名证书指纹与 Sigstore 证据后侧载 APK；AAB 不能
-            直接安装，也不代表已满足 Google Play 发布要求。前台服务通知、
-            省电策略与 OEM 后台限制可能影响隧道常驻可靠性。
-
-            Back up SQLite and upgrade the control center, FRPS, and managed
-            clients together. Raw TCP/UDP bypass Caddy and the Traffic Gateway,
-            so gateway authentication, allowlists, limits, metering, and quotas
-            do not apply. This Stable release promotes the exact
-            `${{ needs.metadata.outputs.rc-version }}` commit and asset set
-            without rebuilding or re-signing Android packages.
-
-            Windows x64 EXE is Experimental and uses an unsigned Go binary. Windows can show an unknown-publisher or SmartScreen
-            warning. Verify SHA256SUMS.txt and the attached Sigstore evidence.
-          fail_on_unmatched_files: true
+          body_path: docs/RELEASE_NOTES.md
           files: release/*
       - id: promote
         name: Promote signed RC digests to Stable and latest
