@@ -78,3 +78,6 @@ release-smoke-evidence-*/
 tests/caddy-baseline.Caddyfile
 tests/frpc-http.toml
 tests/frpc-https.toml
+
+**/test-results/
+**/playwright-report/

@@ -1,7 +1,11 @@
-import { state } from "./state.js?v=4.0.0-modules1";
+import { state } from "./state.js?v=5.0.0-modules1";
 
 const refreshEvents = new Set([
   "config.version.changed",
+  "connection.command",
+  "access.policy.changed",
+  "quota.suspended",
+  "quota.restored",
   "subject.revoked",
   "runtime.state.changed",
   "traffic.speed.updated",
@@ -30,6 +34,13 @@ export function connectRealtime(onRefresh = refreshCurrentView) {
     return;
   }
   state.socket = socket;
+  socket.addEventListener("open", () => {
+    if (state.socket !== socket) return;
+    window.dispatchEvent(
+      new CustomEvent("realtime-status", { detail: "实时连接已恢复，正在同步…" }),
+    );
+    refreshCurrentView();
+  });
   socket.addEventListener("message", (event) => {
     if (state.socket !== socket) return;
     try {
@@ -43,6 +54,9 @@ export function connectRealtime(onRefresh = refreshCurrentView) {
   socket.addEventListener("close", () => {
     if (state.socket !== socket) return;
     state.socket = null;
+    window.dispatchEvent(
+      new CustomEvent("realtime-status", { detail: "实时连接中断，显示上次同步的数据；正在重连…" }),
+    );
     scheduleRealtimeReconnect();
   });
 }
@@ -56,3 +70,10 @@ export function disconnectRealtime() {
   state.socket = null;
   socket?.close();
 }
+
+window.setInterval(() => {
+  if (state.me && !document.hidden) refreshCurrentView();
+}, 30_000);
+document.addEventListener("visibilitychange", () => {
+  if (state.me && !document.hidden) refreshCurrentView();
+});

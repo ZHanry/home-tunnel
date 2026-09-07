@@ -6,7 +6,8 @@
   try {
     var stored = window.localStorage.getItem(storageKey);
     if (stored === "dark" || stored === "light") theme = stored;
-    else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) theme = "dark";
+    else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches)
+      theme = "dark";
   } catch {}
 
   document.documentElement.dataset.theme = theme;
@@ -18,4 +19,4 @@
     if (storedLocale === "en" || storedLocale === "zh-CN") locale = storedLocale;
   } catch {}
   document.documentElement.lang = locale;
-}());
+})();

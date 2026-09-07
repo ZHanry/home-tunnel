@@ -157,16 +157,16 @@ class HomeTunnelApi(
             },
         )
 
-    suspend fun updateConnection(value: TunnelConnection): TunnelConnection = authenticatedJson(
+    suspend fun updateConnection(value: TunnelConnection, baseline: TunnelConnection? = null): TunnelConnection = authenticatedJson(
         method = "PATCH",
         path = "client/connections/${value.id}",
         body = buildJsonObject {
-            put("name", value.name)
-            put("subdomain", value.subdomain)
-            put("local_scheme", value.localScheme)
-            put("local_host", value.localHost)
-            put("local_port", value.localPort)
-            put("enabled", value.enabled)
+            if (baseline == null || baseline.name != value.name) put("name", value.name)
+            if (baseline == null || baseline.subdomain != value.subdomain) put("subdomain", value.subdomain)
+            if (baseline == null || baseline.localScheme != value.localScheme) put("local_scheme", value.localScheme)
+            if (baseline == null || baseline.localHost != value.localHost) put("local_host", value.localHost)
+            if (baseline == null || baseline.localPort != value.localPort) put("local_port", value.localPort)
+            if (baseline == null || baseline.enabled != value.enabled) put("enabled", value.enabled)
             put("expected_version", value.version)
         },
         expectedVersion = value.version,

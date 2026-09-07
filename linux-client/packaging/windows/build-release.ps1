@@ -1,6 +1,6 @@
 # Builds the unified Windows x64 desktop package: home-tunnel-gui.exe + Agent.
 param(
-    [string]$Version = "4.0.0",
+    [string]$Version = "5.0.0",
     [string]$WindRes = "",
     [string]$OutputDir = ""
 )
@@ -78,3 +78,12 @@ $sha = (Get-FileHash -LiteralPath $setup -Algorithm SHA256).Hash.ToLowerInvarian
 Write-Host "SETUP=$setup"
 Write-Host "SETUP_SHA256=$sha"
 Write-Host "AGENT_SHA256=$agentSha"
+
+
+$zipName = "HomeTunnel-Windows-$Version-x64.zip"
+$zip = Join-Path $OutputDir $zipName
+Compress-Archive -LiteralPath $gui, $agent, (Join-Path $OutputDir "HomeTunnel.ico") -DestinationPath $zip -Force
+$zipSha = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+[IO.File]::WriteAllText("$zip.sha256", "$zipSha  $zipName" + [char]10, [Text.UTF8Encoding]::new($false))
+Write-Output "ZIP=$zip"
+Write-Output "ZIP_SHA256=$zipSha"

@@ -140,6 +140,7 @@ func (server *Server) state(writer http.ResponseWriter, request *http.Request) {
 		writeError(writer, http.StatusInternalServerError, err.Error())
 		return
 	}
+	stale := false
 	connections := state.CachedConnections
 	console := state.Profile.PublicBaseURL
 	if state.Enrolled() {
@@ -149,15 +150,21 @@ func (server *Server) state(writer http.ResponseWriter, request *http.Request) {
 			cancel()
 			if listErr == nil {
 				connections = items
+			} else {
+				stale = true
 			}
+		} else {
+			stale = true
 		}
 	}
 	writeJSON(writer, map[string]any{
-		"enrolled":      state.Enrolled(),
-		"agent_state":   state.AgentState,
-		"agent_message": state.AgentMessage,
-		"console_url":   console,
-		"connections":   connections,
+		"enrolled":       state.Enrolled(),
+		"stale":          stale,
+		"last_synced_at": state.UpdatedAt,
+		"agent_state":    state.AgentState,
+		"agent_message":  state.AgentMessage,
+		"console_url":    console,
+		"connections":    connections,
 	})
 }
 
@@ -272,12 +279,13 @@ func (server *Server) connectionItem(writer http.ResponseWriter, request *http.R
 		writer.WriteHeader(http.StatusNoContent)
 	case http.MethodPatch:
 		var body struct {
-			Name        *string `json:"name"`
-			Subdomain   *string `json:"subdomain"`
-			LocalHost   *string `json:"local_host"`
-			LocalPort   *int    `json:"local_port"`
-			LocalScheme *string `json:"local_scheme"`
-			Enabled     *bool   `json:"enabled"`
+			Name            *string `json:"name"`
+			Subdomain       *string `json:"subdomain"`
+			LocalHost       *string `json:"local_host"`
+			LocalPort       *int    `json:"local_port"`
+			LocalScheme     *string `json:"local_scheme"`
+			ExpectedVersion *int64  `json:"expected_version"`
+			Enabled         *bool   `json:"enabled"`
 		}
 		if err := readJSON(request, &body); err != nil {
 			writeError(writer, http.StatusBadRequest, err.Error())
@@ -302,7 +310,11 @@ func (server *Server) connectionItem(writer http.ResponseWriter, request *http.R
 		if body.Enabled != nil {
 			patch["enabled"] = *body.Enabled
 		}
-		updated, err := client.UpdateConnection(ctx, current.ID, current.Version, patch)
+		expectedVersion := current.Version
+		if body.ExpectedVersion != nil {
+			expectedVersion = *body.ExpectedVersion
+		}
+		updated, err := client.UpdateConnection(ctx, current.ID, expectedVersion, patch)
 		if err != nil {
 			writeError(writer, http.StatusBadRequest, err.Error())
 			return

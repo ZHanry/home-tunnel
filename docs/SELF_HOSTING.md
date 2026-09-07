@@ -153,7 +153,7 @@ and rates before exposing it.
 
 ### Windows
 
-Download `HomeTunnel-Setup-4.0.0-x64.exe` from the latest GitHub Release and
+Download `HomeTunnel-Setup-5.0.0-x64.exe` from the latest GitHub Release and
 verify its SHA-256 before installing. The installer puts the windowed client
 and Agent in your user directory and creates a Start Menu shortcut. Closing
 the window hides it to the tray.
@@ -168,12 +168,12 @@ To build the Windows installer yourself:
 .\linux-client\packaging\windows\build-release.ps1
 ```
 
-The output is `HomeTunnel-Setup-4.0.0-x64.exe`.
+The output is `HomeTunnel-Setup-5.0.0-x64.exe`.
 
 ### Android
 
 On an Android 8.0+ `arm64-v8a` device, download
-`HomeTunnel-Android-4.0.0-arm64-v8a.apk` from the latest GitHub Release. Verify
+`HomeTunnel-Android-5.0.0-arm64-v8a.apk` from the latest GitHub Release. Verify
 the adjacent SHA-256 or aggregate `SHA256SUMS.txt`, the Sigstore evidence, the
 application ID `io.github.zhanry.hometunnel`, and the published persistent
 signing-certificate SHA-256 before allowing the sideload. The AAB attached to
@@ -228,7 +228,7 @@ and FRPS first, then upgrade every Windows, Linux, and macOS client before
 enabling UDP. Updated clients declare
 `supported_proxy_types = ["http", "tcp", "udp"]`. A legacy client that omits
 `supported_proxy_types` receives a UDP record with `enabled=false` and must not
-start it. The Android 4.0.0 Experimental client intentionally advertises only
+start it. The Android 5.0.0 Experimental client intentionally advertises only
 `["http"]`; it may display assigned TCP/UDP records but must not start them. On
 first launch after upgrading, a current desktop/headless client requests one full
 sync before recording the new sync-capability marker, replacing any cached

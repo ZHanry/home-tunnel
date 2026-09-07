@@ -1,4 +1,4 @@
-import { localeTag } from "./locale.js?v=4.0.0-modules1";
+import { localeTag } from "./locale.js?v=5.0.0-modules1";
 
 export function escapeHtml(value) {
   return String(value ?? "")
@@ -41,35 +41,38 @@ export function statusBadge(status) {
       : ["offline", "disabled"].includes(normalized)
         ? "neutral"
         : "error";
-  const label = {
-    active: "启用",
-    disabled: "已禁用",
-    revoked: "已撤销",
-    healthy: "健康",
-    unhealthy: "异常",
-    degraded: "降级",
-    unknown: "待确认",
-    normal: "正常",
-    must_change: "待改密",
-    pending: "待应用",
-    applying: "应用中",
-    online: "在线",
-    offline: "离线",
-    quota_suspended: "配额停用",
-  }[normalized] ?? normalized;
+  const label =
+    {
+      active: "启用",
+      disabled: "已禁用",
+      revoked: "已撤销",
+      healthy: "健康",
+      unhealthy: "异常",
+      degraded: "降级",
+      unknown: "待确认",
+      normal: "正常",
+      must_change: "待改密",
+      pending: "待应用",
+      applying: "应用中",
+      online: "在线",
+      offline: "离线",
+      quota_suspended: "配额停用",
+    }[normalized] ?? normalized;
   return `<span class="status-badge ${tone}">${escapeHtml(label)}</span>`;
 }
 
 export function componentLabel(component) {
-  return {
-    "control-center": "控制中心",
-    sqlite: "SQLite",
-    outbox: "策略队列",
-    "traffic-gateway": "流量网关",
-    frps: "FRPS",
-    caddy: "Caddy",
-    backup: "备份",
-  }[component] ?? component;
+  return (
+    {
+      "control-center": "控制中心",
+      sqlite: "SQLite",
+      outbox: "策略队列",
+      "traffic-gateway": "流量网关",
+      frps: "FRPS",
+      caddy: "Caddy",
+      backup: "备份",
+    }[component] ?? component
+  );
 }
 
 export function configState(device) {

@@ -30,6 +30,7 @@ android {
     defaultConfig {
         applicationId = "io.github.zhanry.hometunnel"
         minSdk = 26
+        ndk { abiFilters += setOf("arm64-v8a") }
         targetSdk = 35
         versionCode = versionCodeValue
         versionName = versionNameValue

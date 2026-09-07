@@ -153,9 +153,9 @@ done
   exit 1
 }
 
-package="$release_dir/home-tunnel-linux-$RC_VERSION-amd64.tar.gz"
-if [[ ! -s "$package" && -s "$release_dir/linux/home-tunnel-linux-$RC_VERSION-amd64.tar.gz" ]]; then
-  package="$release_dir/linux/home-tunnel-linux-$RC_VERSION-amd64.tar.gz"
+package="$release_dir/home-tunnel-linux-${RC_VERSION%%-rc.*}-amd64.tar.gz"
+if [[ ! -s "$package" && -s "$release_dir/linux/home-tunnel-linux-${RC_VERSION%%-rc.*}-amd64.tar.gz" ]]; then
+  package="$release_dir/linux/home-tunnel-linux-${RC_VERSION%%-rc.*}-amd64.tar.gz"
 fi
 [[ -s "$package" ]] || { echo "RC Linux amd64 package is missing" >&2; exit 1; }
 mkdir -p "$smoke_root/client"

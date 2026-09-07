@@ -35,6 +35,8 @@ data class AppUiState(
     val devices: List<io.github.zhanry.hometunnel.model.ManagedDevice> = emptyList(),
     val busy: Boolean = false,
     val error: String? = null,
+    val lastSyncedAt: String? = null,
+    val stale: Boolean = false,
 )
 
 data class SyncBundle(val state: PersistedState, val response: SyncResponse)
@@ -120,19 +122,21 @@ class HomeTunnelRepository(
     }
 
     fun refreshConnections(silent: Boolean = false) = scope.launch {
+        if (_uiState.value.busy || !_uiState.value.persisted.signedIn) return@launch
         if (!silent) setBusy(true)
         try {
             val state = _uiState.value.persisted
             val activeApi = ensureSignedInApi(state)
             val devices = activeApi.listDevices()
             val items = activeApi.listConnections()
-            _uiState.value = _uiState.value.copy(connections = items, devices = devices, busy = false, error = null)
+            _uiState.value = _uiState.value.copy(connections = items, devices = devices, busy = false, error = null, lastSyncedAt = Instant.now().toString(), stale = false)
         } catch (error: Throwable) {
+            _uiState.value = _uiState.value.copy(stale = true)
             if (!silent) setFailure(error)
         }
     }
 
-    fun saveConnection(value: TunnelConnection, isNew: Boolean) = scope.launch {
+    fun saveConnection(value: TunnelConnection, isNew: Boolean, baseline: TunnelConnection? = null, onSuccess: () -> Unit = {}) = scope.launch {
         operationMutex.withLock {
             setBusy(true)
             try {
@@ -143,13 +147,33 @@ class HomeTunnelRepository(
                     require(value.kind == ProxyKind.HTTP) { "Only HTTP connections can be created by a client" }
                     activeApi.createHttpConnection(value.deviceId, value)
                 } else {
-                    activeApi.updateConnection(value)
+                    activeApi.updateConnection(value, baseline)
                 }
-                val items = activeApi.listConnections()
-                _uiState.value = _uiState.value.copy(connections = items, busy = false, error = null)
+                // A successful write must not be reported as failed when the follow-up read fails.
+                val optimistic = if (isNew) _uiState.value.connections else _uiState.value.connections.map { if (it.id == value.id) value else it }
+                _uiState.value = _uiState.value.copy(connections = optimistic, busy = false, error = null)
+                onSuccess()
+                try {
+                    val items = activeApi.listConnections()
+                    _uiState.value = _uiState.value.copy(connections = items, busy = false, error = null, lastSyncedAt = Instant.now().toString(), stale = false)
+                } catch (_: Throwable) {
+                    _uiState.value = _uiState.value.copy(stale = true, busy = false)
+                }
             } catch (error: Throwable) {
                 setFailure(error)
             }
+        }
+    }
+
+    fun loadConnectionVersion(id: String, onLoaded: (Long) -> Unit) = scope.launch {
+        operationMutex.withLock {
+            setBusy(true)
+            try {
+                val items = ensureSignedInApi(_uiState.value.persisted).listConnections()
+                val current = items.firstOrNull { it.id == id } ?: error("Connection no longer exists")
+                _uiState.value = _uiState.value.copy(connections = items, busy = false, error = null)
+                onLoaded(current.version)
+            } catch (error: Throwable) { setFailure(error) }
         }
     }
 

@@ -7,7 +7,7 @@ Thanks for helping improve Home Tunnel. Small, focused changes with tests and a 
 Requirements:
 
 - Node.js 24.19.0 LTS and pnpm 11
-- .NET 10 LTS SDK on Windows for the desktop client
+- Go 1.26.6 for the shared Windows/macOS/Linux desktop client
 - Docker with Compose for integration and container checks
 - Go 1.26.6 for the Linux client; `windres` is additionally required when rebuilding the managed Windows Agent
 - JDK 17 plus the Android SDK/NDK versions pinned by `android-client/` for the Experimental mobile client

@@ -87,6 +87,23 @@ jobs:
           fi
           git diff --exit-code
 
+  browser:
+    name: Browser interaction regression
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with:
+          node-version: 24.19.0
+      - name: Enable package manager
+        run: npm install -g pnpm@11.19.0
+      - run: pnpm install --frozen-lockfile
+        working-directory: control-center
+      - run: pnpm exec playwright install --with-deps chromium
+        working-directory: control-center
+      - run: pnpm run test:browser
+        working-directory: control-center
+
   windows-client:
     name: Desktop GUI client
     runs-on: windows-latest
@@ -557,13 +574,15 @@ jobs:
 
   quality-gate:
     name: Quality Gate
-    needs: [services, android-client, windows-client, windows-agent, repository, links, dependency-review]
+    needs: [services, browser, macos-gui, android-client, windows-client, windows-agent, repository, links, dependency-review]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - name: Require every CI job to succeed
         env:
+          BROWSER_RESULT: ${{ needs.browser.result }}
+          MACOS_RESULT: ${{ needs.macos-gui.result }}
           SERVICES_RESULT: ${{ needs.services.result }}
           ANDROID_CLIENT_RESULT: ${{ needs.android-client.result }}
           WINDOWS_CLIENT_RESULT: ${{ needs.windows-client.result }}
@@ -572,6 +591,8 @@ jobs:
           LINKS_RESULT: ${{ needs.links.result }}
           DEPENDENCY_REVIEW_RESULT: ${{ needs.dependency-review.result }}
         run: |
+          test "$BROWSER_RESULT" = success
+          test "$MACOS_RESULT" = success
           test "$SERVICES_RESULT" = success
           test "$ANDROID_CLIENT_RESULT" = success
           test "$WINDOWS_CLIENT_RESULT" = success

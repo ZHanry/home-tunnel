@@ -1,22 +1,23 @@
 {
   "name": "home-tunnel-control-center",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json --noEmit",
-    "lint": "eslint src scripts",
+    "lint": "eslint src scripts public browser-tests playwright.config.mjs && node scripts/lint-desktop.mjs && node scripts/validate-workflows.mjs",
     "format:check": "prettier --check \"src/**/*.ts\" \"scripts/**/*.mjs\" package.json tsconfig.json eslint.config.mjs",
     "preview": "node scripts/preview.mjs",
     "preview:ui": "node scripts/ui-preview.mjs",
     "start": "node dist/server.js",
-    "test": "node --test dist/security.test.js dist/db.test.js dist/backup.test.js dist/notifications.test.js dist/quota.test.js dist/public.test.js dist/realtime.test.js dist/contracts.test.js dist/migrations.test.js dist/subdomain-policy.test.js && node --test scripts/api-module.test.mjs && node scripts/run-integration.mjs",
+    "test": "node --test dist/experience.test.js dist/security.test.js dist/db.test.js dist/backup.test.js dist/notifications.test.js dist/quota.test.js dist/public.test.js dist/realtime.test.js dist/contracts.test.js dist/migrations.test.js dist/subdomain-policy.test.js && node --test scripts/api-module.test.mjs && node scripts/run-integration.mjs",
     "test:public-modules": "node --test scripts/api-module.test.mjs",
     "test:public": "node --test dist/public.test.js",
     "test:integration": "node scripts/run-integration.mjs",
     "test:coverage": "c8 --all --include=dist/security.js --include=dist/db.js --include=dist/notifications.js --include=dist/realtime.js --check-coverage --lines=75 --branches=68 --functions=85 --reporter=text --reporter=lcov node --test dist/security.test.js dist/db.test.js dist/notifications.test.js dist/realtime.test.js dist/contracts.test.js dist/migrations.test.js",
-    "test:coverage:realtime": "c8 --all --include=dist/realtime.js --check-coverage --lines=80 --reporter=text node --test dist/realtime.test.js"
+    "test:coverage:realtime": "c8 --all --include=dist/realtime.js --check-coverage --lines=80 --reporter=text node --test dist/realtime.test.js",
+    "test:browser": "playwright test"
   },
   "dependencies": {
     "express": "5.1.0",
@@ -27,14 +28,17 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "1.58.2",
     "@types/express": "5.0.3",
     "@types/node": "24.10.1",
     "@types/ws": "8.18.1",
     "c8": "^12.0.0",
     "eslint": "^10.8.1",
+    "globals": "16.5.0",
     "prettier": "^3.9.6",
     "typescript": "5.9.2",
-    "typescript-eslint": "^8.67.0"
+    "typescript-eslint": "^8.67.0",
+    "yaml": "2.8.2"
   },
   "engines": {
     "node": ">=24.19.0 <25"

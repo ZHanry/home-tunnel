@@ -76,4 +76,12 @@
     <string name="notification_sync">Sync</string>
     <string name="loading">Loading…</string>
     <string name="version_label">Version %1$s · Android Experimental</string>
+
+    <string name="refresh_status">Refresh status</string>
+    <string name="cached_data_warning">Connection interrupted. Showing cached data. Refresh to retry.</string>
+    <string name="last_sync">Last synced %1$s</string>
+    <string name="copy_address">Copy public address</string>
+    <string name="show_password">Show password</string>
+    <string name="hide_password">Hide password</string>
+    <string name="reload_latest">Load latest version and keep my edits</string>
 </resources>

@@ -163,13 +163,30 @@ router.get(
   asyncHandler(async (request, response) => {
     const actor = requirePasswordNormal(request);
     const name = String(request.query.name ?? "").trim();
-    const result = await transaction(async (client) =>
-      checkSubdomainAvailability(client, name, {
-        username: actor.username,
+    const ownerId = String(request.query.user_id ?? actor.userId);
+    if (ownerId !== actor.userId && actor.role !== "admin")
+      throw new HttpError(403, "FORBIDDEN", "不能查询其他用户的命名策略");
+    const connectionId = String(request.query.connection_id ?? "");
+    const result = await transaction(async (client) => {
+      const owner = await client.query<{ username: string }>(
+        "SELECT username FROM users WHERE id=?",
+        [ownerId],
+      );
+      if (!owner.rows[0]) throw new HttpError(404, "NOT_FOUND", "用户不存在");
+      if (connectionId) {
+        const connection = await client.query<{ id: string }>(
+          "SELECT id FROM connections WHERE id=? AND user_id=? AND deleted_at IS NULL",
+          [connectionId, ownerId],
+        );
+        if (!connection.rows[0]) throw new HttpError(404, "NOT_FOUND", "连接不存在");
+      }
+      return checkSubdomainAvailability(client, name, {
+        username: owner.rows[0].username,
         isAdmin: actor.role === "admin",
-        userId: actor.userId,
-      }),
-    );
+        userId: ownerId,
+        connectionId,
+      });
+    });
     response.json(result);
   }),
 );

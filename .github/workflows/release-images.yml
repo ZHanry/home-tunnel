@@ -2,7 +2,7 @@ name: Release
 
 on:
   push:
-    tags: ["v*-rc.*"]
+    tags: ["v*"]
 
 permissions:
   contents: write
@@ -84,9 +84,8 @@ jobs:
           linux_version=$(sed -n 's/^const Version = "\([^"]*\)"$/\1/p' linux-client/internal/model/model.go)
           android_version_name=$(sed -n 's/^HOME_TUNNEL_VERSION_NAME=//p' android-client/gradle.properties)
           android_version_code=$(sed -n 's/^HOME_TUNNEL_VERSION_CODE=//p' android-client/gradle.properties)
-          android_agent_version=$(sed -n 's/^agent_version=//p' android-client/scripts/build-agent.sh)
           deployment_version=$(sed -n 's/^HOME_TUNNEL_VERSION=//p' .env.example)
-          for candidate in "$control_version" "$gateway_version" "$linux_version" "$android_version_name" "$android_agent_version"; do
+          for candidate in "$control_version" "$gateway_version" "$linux_version" "$android_version_name"; do
             test "$candidate" = "$base_version" || {
               echo "Tag $version does not match source version $candidate" >&2
               exit 1
@@ -145,7 +144,6 @@ jobs:
             'Analyze (JavaScript and TypeScript)'
             'Analyze (Go Linux client)'
             'Analyze (Go Windows Agent)'
-            'Analyze (C# Windows client)'
             'Analyze (Java/Kotlin Android client)'
             'Secret Scan'
             'Build and validate Pages'
@@ -259,13 +257,6 @@ jobs:
             Select-Object -First 1 -ExpandProperty FullName
           if (-not $windres) { throw 'windres.exe not found in the pinned MinGW archive' }
           "HOME_TUNNEL_WINDRES=$windres" >> $env:GITHUB_ENV
-          $inno = @(
-            (Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'),
-            (Join-Path $env:ProgramFiles 'Inno Setup 6\ISCC.exe')
-          ) | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } |
-            Select-Object -First 1
-          if (-not $inno) { throw 'Inno Setup 6 is missing from the runner image' }
-          "HOME_TUNNEL_INNO=$inno" >> $env:GITHUB_ENV
       - id: agent
         name: Reproduce the reviewed Agent baseline
         shell: pwsh
@@ -299,7 +290,7 @@ jobs:
             sha256 = $env:AGENT_SHA256
             repository_revision = $env:GITHUB_SHA
             build_identity = "https://github.com/$env:GITHUB_REPOSITORY/.github/workflows/release-images.yml@refs/tags/$env:GITHUB_REF_NAME"
-            distribution = "bundled in HomeTunnel-Windows-x64.zip with home-tunnel-gui"
+            distribution = "bundled in HomeTunnel-Windows-<version>-x64.zip with home-tunnel-gui"
             authenticode = "not used; Windows GUI is an unsigned Go zip"
           }
           [IO.File]::WriteAllText(
@@ -323,6 +314,13 @@ jobs:
               $sha -notmatch '^[0-9a-f]{64}$') {
             throw 'Windows GUI zip or SHA-256 is missing'
           }
+          $inspect = Join-Path $env:RUNNER_TEMP 'home-tunnel-package-smoke'
+          Expand-Archive -LiteralPath $zip -DestinationPath $inspect -Force
+          foreach ($name in @('home-tunnel-gui.exe','home-tunnel-agent.exe','HomeTunnel.ico')) {
+            if (-not (Test-Path -LiteralPath (Join-Path $inspect $name))) { throw "Missing packaged file: $name" }
+          }
+          $agentVersionText = (& (Join-Path $inspect 'home-tunnel-agent.exe') version | Out-String).Trim()
+          if ($LASTEXITCODE -ne 0 -or $agentVersionText -notlike "Home Tunnel Agent $env:VERSION*") { throw 'Packaged Agent version mismatch' }
           $smoke = [ordered]@{
             schema_version = 1
             status = 'passed'
@@ -330,6 +328,8 @@ jobs:
             platform = 'windows'
             architecture = 'x64'
             package_sha256 = $sha
+            archive_layout = 'passed'
+            agent_version_checked = $true
             client = 'home-tunnel-gui'
             repository_revision = $env:GITHUB_SHA
           }
@@ -384,7 +384,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force release-windows | Out-Null
           Get-ChildItem -LiteralPath outputs\windows -File |
-            Where-Object Name -ne 'SHA256SUMS.txt' |
+            Where-Object { $_.Name -like '*.zip*' -or $_.Name -like 'HomeTunnel-Setup-*' } |
             Copy-Item -Destination release-windows
           Copy-Item windows-exe-smoke.json, windows-agent-provenance.json, windows-agent-provenance.json.sigstore.json release-windows
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -416,32 +416,6 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        with:
-          go-version: 1.26.6
-          cache: false
-      - id: android-agent
-        name: Build the embedded arm64 Android Agent
-        working-directory: android-client
-        env:
-          ANDROID_AGENT_ABIS: arm64-v8a
-        run: |
-          set -euo pipefail
-          evidence=$(mktemp)
-          ./scripts/build-agent.sh | tee "$evidence"
-          agent=app/src/main/jniLibs/arm64-v8a/libhometunnel_agent.so
-          test -s "$agent"
-          reported_abi=$(sed -n 's/^ANDROID_AGENT_ABI=//p' "$evidence")
-          reported_sha=$(sed -n 's/^ANDROID_AGENT_SHA256=//p' "$evidence")
-          test "$reported_abi" = arm64-v8a
-          [[ "$reported_sha" =~ ^[0-9a-f]{64}$ ]]
-          test "$(sha256sum "$agent" | awk '{print $1}')" = "$reported_sha"
-          native_outputs=$(find app/src/main/jniLibs -type f -name libhometunnel_agent.so -printf '%P\n' | sort)
-          test "$native_outputs" = arm64-v8a/libhometunnel_agent.so
-          {
-            echo "sha256=$reported_sha"
-            echo "path=$PWD/$agent"
-          } >> "$GITHUB_OUTPUT"
       - id: android
         name: Build the persistently signed Android release packages
         working-directory: ${{ github.workspace }}
@@ -508,7 +482,6 @@ jobs:
           AAB: ${{ steps.android.outputs.aab }}
           EVIDENCE: ${{ steps.android.outputs.evidence }}
           VERSION: ${{ needs.metadata.outputs.base-version }}
-          AGENT_SHA256: ${{ steps.android-agent.outputs.sha256 }}
         run: |
           set -euo pipefail
           export LC_ALL=C
@@ -539,10 +512,8 @@ jobs:
           test "$min_sdk" -eq 26
           test "$target_sdk" -ge 35
           apk_abis=$(unzip -Z1 "$APK" | sed -n 's#^lib/\([^/]*\)/.*#\1#p' | sort -u)
-          test "$apk_abis" = arm64-v8a
-          unzip -Z1 "$APK" | grep -Fxq lib/arm64-v8a/libhometunnel_agent.so
-          apk_agent_sha=$(unzip -p "$APK" lib/arm64-v8a/libhometunnel_agent.so | sha256sum | awk '{print $1}')
-          test "$apk_agent_sha" = "$AGENT_SHA256"
+          test -z "$apk_abis" || test "$apk_abis" = arm64-v8a
+          if unzip -Z1 "$APK" | grep -q libhometunnel_agent; then echo "Management APK must not bundle a tunnel Agent" >&2; exit 1; fi
 
           bundletool="$RUNNER_TEMP/bundletool-all-1.18.3.jar"
           curl --fail --location --proto '=https' --tlsv1.2 \
@@ -558,10 +529,8 @@ jobs:
           test "$(java -jar "$bundletool" dump manifest --bundle="$AAB" --xpath=/manifest/@android:versionName)" = "$VERSION"
           test "$(java -jar "$bundletool" dump manifest --bundle="$AAB" --xpath=/manifest/@android:versionCode)" = "$expected_code"
           aab_abis=$(unzip -Z1 "$AAB" | sed -n 's#^base/lib/\([^/]*\)/.*#\1#p' | sort -u)
-          test "$aab_abis" = arm64-v8a
-          unzip -Z1 "$AAB" | grep -Fxq base/lib/arm64-v8a/libhometunnel_agent.so
-          aab_agent_sha=$(unzip -p "$AAB" base/lib/arm64-v8a/libhometunnel_agent.so | sha256sum | awk '{print $1}')
-          test "$aab_agent_sha" = "$AGENT_SHA256"
+          test -z "$aab_abis" || test "$aab_abis" = arm64-v8a
+          if unzip -Z1 "$AAB" | grep -q libhometunnel_agent; then echo "Management APK must not bundle a tunnel Agent" >&2; exit 1; fi
 
           apk_sha=$(sha256sum "$APK" | awk '{print $1}')
           aab_sha=$(sha256sum "$AAB" | awk '{print $1}')
@@ -574,7 +543,6 @@ jobs:
             --argjson target_sdk "$target_sdk" \
             --arg apk_sha256 "$apk_sha" \
             --arg aab_sha256 "$aab_sha" \
-            --arg agent_sha256 "$AGENT_SHA256" \
             --arg signing_certificate_sha256 "$expected_cert" \
             --arg revision "$GITHUB_SHA" \
             --arg build_identity "https://github.com/$GITHUB_REPOSITORY/.github/workflows/release-images.yml@refs/tags/$GITHUB_REF_NAME" \
@@ -582,9 +550,9 @@ jobs:
               platform:"android",application_id:"io.github.zhanry.hometunnel",
               version_name:$version,version_code:$version_code,min_sdk:$min_sdk,target_sdk:$target_sdk,
               abis:["arm64-v8a"],apk_sha256:$apk_sha256,aab_sha256:$aab_sha256,
-              agent_sha256:$agent_sha256,signing_certificate_sha256:$signing_certificate_sha256,
+              management_only:true,signing_certificate_sha256:$signing_certificate_sha256,
               repository_revision:$revision,build_identity:$build_identity,
-              validations:["unit_tests","lint","apk_signature_v2","aab_signature","bundletool_validate","package_identity","version","arm64_abi","embedded_agent_hash"],
+              validations:["unit_tests","lint","apk_signature_v2","aab_signature","bundletool_validate","package_identity","version","arm64_abi","management_only_no_agent"],
               physical_arm64_install:"not_run_in_github_actions"}' > "$EVIDENCE"
       - id: android-syft
         name: Install the pinned Android SBOM scanner
@@ -662,7 +630,7 @@ jobs:
             script: ./linux-client/packaging/build-release.sh
           - platform: linux
             arch: arm64
-            runner: ubuntu-latest
+            runner: ubuntu-24.04-arm
             script: ./linux-client/packaging/build-release.sh
           - platform: macos
             arch: amd64
@@ -678,10 +646,15 @@ jobs:
         with:
           go-version: 1.26.6
           cache-dependency-path: linux-client/go.mod
+      - name: Install Linux graphical client libraries
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev pkg-config gcc
       - name: Build package once from the tagged commit
         shell: bash
         env:
-          VERSION: ${{ needs.metadata.outputs.rc-version }}
+          VERSION: ${{ needs.metadata.outputs.base-version }}
           ARCH: ${{ matrix.arch }}
         run: ${{ matrix.script }}
       - id: artifact
@@ -689,7 +662,7 @@ jobs:
         shell: bash
         env:
           PLATFORM: ${{ matrix.platform }}
-          VERSION: ${{ needs.metadata.outputs.rc-version }}
+          VERSION: ${{ needs.metadata.outputs.base-version }}
           ARCH: ${{ matrix.arch }}
         run: |
           set -euo pipefail
@@ -787,14 +760,14 @@ jobs:
           set -euo pipefail
           for platform in linux macos; do
             for arch in amd64 arm64; do
-              prefix="release/home-tunnel-$platform-$VERSION-$arch"
+              prefix="release/home-tunnel-$platform-$BASE_VERSION-$arch"
               test -s "$prefix.tar.gz"
               test -s "$prefix.sha256"
               test -s "$prefix.tar.gz.spdx.json"
               test -s "$prefix.tar.gz.sigstore.json"
               test -s "$prefix.sha256.sigstore.json"
               test -s "$prefix.tar.gz.spdx.json.sigstore.json"
-              (cd release && shasum -a 256 -c "home-tunnel-$platform-$VERSION-$arch.sha256")
+              (cd release && shasum -a 256 -c "home-tunnel-$platform-$BASE_VERSION-$arch.sha256")
             done
           done
           jq -s --arg version "$VERSION" --arg revision "$GITHUB_SHA" \
@@ -812,24 +785,13 @@ jobs:
           test -s "$windows_exe.sha256.sigstore.json"
           test -s "$windows_exe.spdx.json.sigstore.json"
           (cd release && sha256sum -c "HomeTunnel-Windows-$BASE_VERSION-x64.zip.sha256")
-          for support in HomeTunnel-Internal-Code-Signing.cer latest.json README-EXE.txt SIGNATURE.txt windows-exe-smoke.json; do
-            test -s "release/$support"
-          done
           test -s release/windows-agent-provenance.json
           test -s release/windows-agent-provenance.json.sigstore.json
-          jq -e --arg version "$BASE_VERSION" '.agent_version == $version and .frp_version == "0.70.1" and
-            .frp_commit == "fa3bcca2b0c4753cd4f0e2ab189dd6a5a6a15708" and
-            (.sha256 | test("^[0-9a-f]{64}$"))' release/windows-agent-provenance.json >/dev/null
           exe_sha=$(sha256sum "$windows_exe" | awk '{print $1}')
-          jq -e --arg version "$BASE_VERSION" --arg sha "$exe_sha" '
-            .version == $version and .platform == "windows" and .architecture == "x64" and
-            .sha256 == $sha and .release_channel == "experimental" and
-            .signature_trust == "untrusted-self-signed"' release/latest.json >/dev/null
-          jq -e --arg version "$BASE_VERSION" --arg sha "$exe_sha" '
-            .status == "passed" and .version == $version and .installer_sha256 == $sha and
-            .install == "passed" and .uninstalled == true and
-            (.agent_version | startswith("Home Tunnel Agent " + $version)) and
-            .signature_trust == "untrusted-self-signed"' release/windows-exe-smoke.json >/dev/null
+          jq -e --arg version "$BASE_VERSION" --arg sha "$exe_sha" --arg revision "$GITHUB_SHA" '
+            .status == "passed" and .version == $version and .package_sha256 == $sha and
+            .repository_revision == $revision and .client == "home-tunnel-gui" and
+            .archive_layout == "passed" and .agent_version_checked == true' release/windows-exe-smoke.json >/dev/null
           android_apk="release/HomeTunnel-Android-$BASE_VERSION-arm64-v8a.apk"
           android_aab="release/HomeTunnel-Android-$BASE_VERSION.aab"
           for subject in "$android_apk" "$android_aab"; do
@@ -845,22 +807,21 @@ jobs:
           test -s release/android-release-evidence.json.sigstore.json
           android_apk_sha=$(sha256sum "$android_apk" | awk '{print $1}')
           android_aab_sha=$(sha256sum "$android_aab" | awk '{print $1}')
-          android_apk_agent_sha=$(unzip -p "$android_apk" lib/arm64-v8a/libhometunnel_agent.so | sha256sum | awk '{print $1}')
-          android_aab_agent_sha=$(unzip -p "$android_aab" base/lib/arm64-v8a/libhometunnel_agent.so | sha256sum | awk '{print $1}')
-          test "$android_apk_agent_sha" = "$android_aab_agent_sha"
+          if unzip -Z1 "$android_apk" | grep -q libhometunnel_agent; then exit 1; fi
+          if unzip -Z1 "$android_aab" | grep -q libhometunnel_agent; then exit 1; fi
           android_version_code=$(sed -n 's/^HOME_TUNNEL_VERSION_CODE=//p' android-client/gradle.properties)
           android_cert=$(tr -d '[:space:]:' < android-client/release-signing-cert.sha256 | tr 'A-F' 'a-f')
           jq -e --arg version "$BASE_VERSION" --argjson version_code "$android_version_code" --arg apk_sha "$android_apk_sha" \
-            --arg aab_sha "$android_aab_sha" --arg agent_sha "$android_apk_agent_sha" \
+            --arg aab_sha "$android_aab_sha" \
             --arg cert "$android_cert" --arg revision "$GITHUB_SHA" '
             .status == "passed" and .release_channel == "experimental" and
             .platform == "android" and .application_id == "io.github.zhanry.hometunnel" and
             .version_name == $version and .version_code == $version_code and .min_sdk == 26 and
             .target_sdk >= 35 and .abis == ["arm64-v8a"] and
             .apk_sha256 == $apk_sha and .aab_sha256 == $aab_sha and
-            .agent_sha256 == $agent_sha and
+            .management_only == true and
             .signing_certificate_sha256 == $cert and .repository_revision == $revision and
-            (.validations | index("embedded_agent_hash")) and
+            (.validations | index("management_only_no_agent")) and
             .physical_arm64_install == "not_run_in_github_actions"' \
             release/android-release-evidence.json >/dev/null
           test "$(jq '.images | length' release/image-digests.json)" -eq 2
@@ -979,8 +940,7 @@ jobs:
             do not apply. The matching Stable tag must promote the exact
             `${{ needs.metadata.outputs.rc-version }}` commit and asset set.
 
-            Windows x64 EXE is Experimental and uses an ephemeral self-signed
-            certificate. Windows can show an unknown-publisher or SmartScreen
+            Windows x64 EXE is Experimental and uses an unsigned Go binary. Windows can show an unknown-publisher or SmartScreen
             warning. Verify SHA256SUMS.txt and the attached Sigstore evidence.
           fail_on_unmatched_files: true
           files: release/*
@@ -1060,7 +1020,7 @@ jobs:
           test "$(jq -r .status release/release-smoke.json)" = passed
           for platform in linux macos; do
             for arch in amd64 arm64; do
-              prefix="release/home-tunnel-$platform-$RC_VERSION-$arch"
+              prefix="release/home-tunnel-$platform-$BASE_VERSION-$arch"
               test -s "$prefix.tar.gz" && test -s "$prefix.sha256" && test -s "$prefix.tar.gz.spdx.json"
               test -s "$prefix.tar.gz.sigstore.json" && test -s "$prefix.sha256.sigstore.json"
               test -s "$prefix.tar.gz.spdx.json.sigstore.json"
@@ -1082,20 +1042,12 @@ jobs:
               --certificate-oidc-issuer https://token.actions.githubusercontent.com "$subject"
           done
           windows_sha=$(sha256sum "$windows_exe" | awk '{print $1}')
-          for support in HomeTunnel-Internal-Code-Signing.cer latest.json README-EXE.txt SIGNATURE.txt windows-agent-provenance.json; do
-            test -s "release/$support"
-          done
-          jq -e --arg version "$BASE_VERSION" '
-            .agent_version == $version and .frp_version == "0.70.1" and
-            .authenticode == "ephemeral self-signed; Windows may show unknown publisher"' \
-            release/windows-agent-provenance.json >/dev/null
-          jq -e --arg version "$BASE_VERSION" --arg sha "$windows_sha" '
-            .version == $version and .sha256 == $sha and
-            .release_channel == "experimental" and
-            .signature_trust == "untrusted-self-signed"' release/latest.json >/dev/null
-          jq -e --arg version "$BASE_VERSION" --arg sha "$windows_sha" '
-            .status == "passed" and .version == $version and .installer_sha256 == $sha and
-            .install == "passed" and .uninstalled == true' release/windows-exe-smoke.json >/dev/null
+          test -s release/windows-agent-provenance.json
+          test -s release/windows-agent-provenance.json.sigstore.json
+          windows_sha=$(sha256sum "$windows_exe" | awk '{print $1}')
+          jq -e --arg version "$BASE_VERSION" --arg sha "$windows_sha" --arg revision "$GITHUB_SHA" '
+            .status == "passed" and .version == $version and .package_sha256 == $sha and
+            .repository_revision == $revision and .archive_layout == "passed" and .agent_version_checked == true' release/windows-exe-smoke.json >/dev/null
           android_apk="release/HomeTunnel-Android-$BASE_VERSION-arm64-v8a.apk"
           android_aab="release/HomeTunnel-Android-$BASE_VERSION.aab"
           for subject in "$android_apk" "$android_aab"; do
@@ -1136,9 +1088,9 @@ jobs:
           test "$($apkanalyzer manifest version-code "$android_apk")" = "$expected_android_code"
           test "$($apkanalyzer manifest min-sdk "$android_apk")" -eq 26
           test "$($apkanalyzer manifest target-sdk "$android_apk")" -ge 35
-          test "$(unzip -Z1 "$android_apk" | sed -n 's#^lib/\([^/]*\)/.*#\1#p' | sort -u)" = arm64-v8a
-          unzip -Z1 "$android_apk" | grep -Fxq lib/arm64-v8a/libhometunnel_agent.so
-          promoted_apk_agent_sha=$(unzip -p "$android_apk" lib/arm64-v8a/libhometunnel_agent.so | sha256sum | awk '{print $1}')
+          apk_abis=$(unzip -Z1 "$android_apk" | sed -n 's#^lib/\([^/]*\)/.*#\1#p' | sort -u)
+          test -z "$apk_abis" || test "$apk_abis" = arm64-v8a
+          if unzip -Z1 "$android_apk" | grep -q libhometunnel_agent; then exit 1; fi
 
           bundletool="$RUNNER_TEMP/bundletool-all-1.18.3.jar"
           curl --fail --location --proto '=https' --tlsv1.2 \
@@ -1153,24 +1105,22 @@ jobs:
           test "$(java -jar "$bundletool" dump manifest --bundle="$android_aab" --xpath=/manifest/@package)" = io.github.zhanry.hometunnel
           test "$(java -jar "$bundletool" dump manifest --bundle="$android_aab" --xpath=/manifest/@android:versionName)" = "$BASE_VERSION"
           test "$(java -jar "$bundletool" dump manifest --bundle="$android_aab" --xpath=/manifest/@android:versionCode)" = "$expected_android_code"
-          test "$(unzip -Z1 "$android_aab" | sed -n 's#^base/lib/\([^/]*\)/.*#\1#p' | sort -u)" = arm64-v8a
-          unzip -Z1 "$android_aab" | grep -Fxq base/lib/arm64-v8a/libhometunnel_agent.so
-          promoted_aab_agent_sha=$(unzip -p "$android_aab" base/lib/arm64-v8a/libhometunnel_agent.so | sha256sum | awk '{print $1}')
-          test "$promoted_apk_agent_sha" = "$promoted_aab_agent_sha"
+          aab_abis=$(unzip -Z1 "$android_aab" | sed -n 's#^base/lib/\([^/]*\)/.*#\1#p' | sort -u)
+          test -z "$aab_abis" || test "$aab_abis" = arm64-v8a
+          if unzip -Z1 "$android_aab" | grep -q libhometunnel_agent; then exit 1; fi
           android_apk_sha=$(sha256sum "$android_apk" | awk '{print $1}')
           android_aab_sha=$(sha256sum "$android_aab" | awk '{print $1}')
           jq -e --arg version "$BASE_VERSION" --argjson version_code "$expected_android_code" \
             --arg apk_sha "$android_apk_sha" --arg aab_sha "$android_aab_sha" \
-            --arg agent_sha "$promoted_apk_agent_sha" \
             --arg cert "$expected_android_cert" --arg revision "$GITHUB_SHA" '
             .status == "passed" and .release_channel == "experimental" and
             .platform == "android" and .application_id == "io.github.zhanry.hometunnel" and
             .version_name == $version and .version_code == $version_code and .min_sdk == 26 and
             .target_sdk >= 35 and .abis == ["arm64-v8a"] and
             .apk_sha256 == $apk_sha and .aab_sha256 == $aab_sha and
-            .agent_sha256 == $agent_sha and
+            .management_only == true and
             .signing_certificate_sha256 == $cert and .repository_revision == $revision and
-            (.validations | index("embedded_agent_hash")) and
+            (.validations | index("management_only_no_agent")) and
             .physical_arm64_install == "not_run_in_github_actions"' \
             release/android-release-evidence.json >/dev/null
           for evidence in e2e-smoke.json backup.json restore.json release-smoke.json windows-exe-smoke.json android-release-evidence.json; do
@@ -1256,8 +1206,7 @@ jobs:
             `${{ needs.metadata.outputs.rc-version }}` commit and asset set
             without rebuilding or re-signing Android packages.
 
-            Windows x64 EXE is Experimental and uses an ephemeral self-signed
-            certificate. Windows can show an unknown-publisher or SmartScreen
+            Windows x64 EXE is Experimental and uses an unsigned Go binary. Windows can show an unknown-publisher or SmartScreen
             warning. Verify SHA256SUMS.txt and the attached Sigstore evidence.
           fail_on_unmatched_files: true
           files: release/*

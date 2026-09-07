@@ -9,7 +9,7 @@ Home Tunnel is a self-hosted tunneling platform for personal and family services
 
 ![The real Home Tunnel management dashboard showing connections, traffic, and component health](docs/site/assets/admin-dashboard.jpg)
 
-> `v4.0.0` is the unified windowed desktop client release. The Linux server and headless client are Stable, macOS headless is Beta, Windows ships `HomeTunnel-Setup-4.0.0-x64.exe`, and the Android 8.0+ `arm64-v8a` management app is Experimental.
+> `v5.0.0` is the unified windowed desktop client release. The Linux server and headless client are Stable, macOS headless is Beta, Windows ships `HomeTunnel-Setup-5.0.0-x64.exe`, and the Android 8.0+ `arm64-v8a` management app is Experimental.
 
 ## Quick Start
 
@@ -41,9 +41,9 @@ Read the one-time password from `deploy/secrets/bootstrap_admin_password`, open 
 | Graphical client | Windows / macOS / Linux | Unified | The same `home-tunnel-gui`; Windows ships as `HomeTunnel-Setup-*-x64.exe` |
 | Mobile client | Android 8.0+ `arm64-v8a` | Experimental | Sideloadable GitHub APK; the AAB is not directly installable or a Play-readiness claim |
 
-The GitHub Release tag is `v4.0.0`. Windows installs with `HomeTunnel-Setup-4.0.0-x64.exe`. Linux/macOS tarballs are `home-tunnel-linux-4.0.0-*.tar.gz` and `home-tunnel-macos-4.0.0-*.tar.gz`. Verify SHA-256 after download. Android updates require the fixed application ID and persistent release certificate.
+The GitHub Release tag is `v5.0.0`. Windows installs with `HomeTunnel-Setup-5.0.0-x64.exe`. Linux/macOS tarballs are `home-tunnel-linux-5.0.0-*.tar.gz` and `home-tunnel-macos-5.0.0-*.tar.gz`. Verify SHA-256 after download. Android updates require the fixed application ID and persistent release certificate.
 
-[Download the Windows installer](https://github.com/ZHanry/home-tunnel/releases/latest/download/HomeTunnel-Setup-4.0.0-x64.exe). Windows, macOS, and Linux share the graphical client.
+[Download the Windows installer](https://github.com/ZHanry/home-tunnel/releases/latest/download/HomeTunnel-Setup-5.0.0-x64.exe). Windows, macOS, and Linux share the graphical client.
 
 The Android app is a management client: sign in to list home devices, copy
 public URLs, and edit HTTP tunnels. It does not run a tunnel Agent on the phone.

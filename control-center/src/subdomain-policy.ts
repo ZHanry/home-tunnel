@@ -31,8 +31,17 @@ export async function setPrefixPolicy(client: DatabaseClient, policy: PrefixPoli
   );
 }
 
+function usernameSlug(username: string): string {
+  return (
+    normalizeUsername(username)
+      .replace(/[^a-z0-9-]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 40) || "user"
+  );
+}
+
 export function usernamePrefix(username: string): string {
-  return `${normalizeUsername(username)}-`;
+  return `${usernameSlug(username)}-`;
 }
 
 export function suggestedSubdomain(name: string, username: string): string {
@@ -41,8 +50,8 @@ export function suggestedSubdomain(name: string, username: string): string {
     .replace(/^-+|-+$/g, "")
     .slice(0, 40);
   const base = slug || "app";
-  const prefixed = `${normalizeUsername(username)}-${base}`.slice(0, 63).replace(/-+$/g, "");
-  return prefixed || `${normalizeUsername(username)}-app`;
+  const prefixed = `${usernameSlug(username)}-${base}`.slice(0, 63).replace(/-+$/g, "");
+  return prefixed || `${usernameSlug(username)}-app`;
 }
 
 export function suggestionCandidates(desired: string, username: string): string[] {
@@ -51,7 +60,7 @@ export function suggestionCandidates(desired: string, username: string): string[
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "")
       .slice(0, 40) || "app";
-  const user = normalizeUsername(username) || "user";
+  const user = usernameSlug(username);
   return [`${user}-${base}`, `${base}-2`, `${base}-3`, `my-${base}`, `${user}-${base}-2`]
     .map((value) => value.slice(0, 63).replace(/-+$/g, ""))
     .filter((value, index, all) => value !== base && all.indexOf(value) === index);
@@ -89,7 +98,7 @@ export type SubdomainAvailability = {
 export async function checkSubdomainAvailability(
   client: DatabaseClient,
   rawName: string,
-  options: { username: string; isAdmin: boolean; userId: string },
+  options: { username: string; isAdmin: boolean; userId: string; connectionId?: string },
 ): Promise<SubdomainAvailability> {
   const name = normalizeSubdomain(rawName);
   const invalid = name ? validateSubdomain(name) : "请输入子域";
@@ -128,8 +137,8 @@ export async function checkSubdomainAvailability(
   }
   const occupied = await client.query<{ username: string }>(
     `SELECT u.username FROM connections c JOIN users u ON u.id=c.user_id
-      WHERE lower(c.subdomain)=lower(?) AND c.deleted_at IS NULL LIMIT 1`,
-    [name],
+      WHERE lower(c.subdomain)=lower(?) AND c.deleted_at IS NULL AND c.id<>? LIMIT 1`,
+    [name, options.connectionId ?? ""],
   );
   if (occupied.rows[0]) {
     return {

@@ -75,4 +75,12 @@
     <string name="notification_sync">同步</string>
     <string name="loading">正在加载…</string>
     <string name="version_label">版本 %1$s · Android 实验版</string>
+
+    <string name="refresh_status">刷新状态</string>
+    <string name="cached_data_warning">连接中断，当前显示缓存。请刷新重试。</string>
+    <string name="last_sync">最近同步 %1$s</string>
+    <string name="copy_address">复制公网地址</string>
+    <string name="show_password">显示密码</string>
+    <string name="hide_password">隐藏密码</string>
+    <string name="reload_latest">读取最新版本并保留我的输入</string>
 </resources>

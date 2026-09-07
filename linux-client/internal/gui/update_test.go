@@ -16,7 +16,7 @@ import (
 )
 
 func TestParseChecksum(t *testing.T) {
-	got := parseChecksum("abc123  HomeTunnel-Setup-4.0.0-x64.exe\n", "HomeTunnel-Setup-4.0.0-x64.exe")
+	got := parseChecksum("abc123  HomeTunnel-Setup-5.0.0-x64.exe\n", "HomeTunnel-Setup-5.0.0-x64.exe")
 	if got != "abc123" {
 		t.Fatalf("got %q", got)
 	}
@@ -65,7 +65,7 @@ func TestUpdateCheckUsesReleaseAsset(t *testing.T) {
 	githubLatestRelease = upstream.URL
 	t.Cleanup(func() { githubLatestRelease = previous })
 
-	server := New(Options{AgentVersion: "4.0.0", StatePath: filepath.Join(t.TempDir(), "state.json")})
+	server := New(Options{AgentVersion: "5.0.0", StatePath: filepath.Join(t.TempDir(), "state.json")})
 	rec := httptest.NewRecorder()
 	server.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/local/update", nil))
 	if rec.Code != http.StatusOK {

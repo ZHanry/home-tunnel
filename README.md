@@ -15,7 +15,7 @@ Home Tunnel 是面向个人与家庭服务的自托管内网穿透平台，用�
 
 ![Home Tunnel 真实管理后台，显示连接、流量和组件健康状态](docs/site/assets/admin-dashboard.jpg)
 
-> `v4.0.0` 统一三端窗口客户端 `home-tunnel-gui`。服务端 Linux `amd64`/`arm64` 与 Linux 无界面客户端为 Stable；macOS headless 为 Beta；Windows 提供 Setup EXE；Android 8.0+ `arm64-v8a` 管理 App 为 Experimental。
+> `v5.0.0` 统一三端窗口客户端 `home-tunnel-gui`。服务端 Linux `amd64`/`arm64` 与 Linux 无界面客户端为 Stable；macOS headless 为 Beta；Windows 提供 Setup EXE；Android 8.0+ `arm64-v8a` 管理 App 为 Experimental。
 
 ## 三步启动
 
@@ -60,7 +60,7 @@ Home Tunnel 是面向个人与家庭服务的自托管内网穿透平台，用�
 | 图形客户端 | Windows / macOS / Linux | 统一 | 同一套 `home-tunnel-gui`；Windows 提供 `HomeTunnel-Setup-*-x64.exe` |
 | 移动客户端 | Android 8.0+ `arm64-v8a` | Experimental | GitHub Release 侧载 APK；AAB 不可直接安装，也不代表 Play-ready |
 
-GitHub Release 标签是 `v4.0.0`。Windows 安装包是 `HomeTunnel-Setup-4.0.0-x64.exe`；Linux/macOS 使用 `home-tunnel-linux-4.0.0-*.tar.gz` / `home-tunnel-macos-4.0.0-*.tar.gz`。下载后请核对 SHA-256。
+GitHub Release 标签是 `v5.0.0`。Windows 安装包是 `HomeTunnel-Setup-5.0.0-x64.exe`；Linux/macOS 使用 `home-tunnel-linux-5.0.0-*.tar.gz` / `home-tunnel-macos-5.0.0-*.tar.gz`。下载后请核对 SHA-256。
 Android 使用必须长期保留的固定发布证书，升级前必须保持 application ID 与证书一致。
 
 ## 为什么不是“裸 FRP”
@@ -116,7 +116,7 @@ TCP 与 UDP 默认关闭，只能由管理员在允许范围内分配精确公�
 
 ### 桌面图形客户端（Windows / macOS / Linux）
 
-三端共用 `home-tunnel-gui`：登录后管理本机隧道，改动同步到服务端。Windows 从 Release 下载并运行 `HomeTunnel-Setup-4.0.0-x64.exe`。Linux/macOS 发行包同时包含 GUI 与 CLI。说明见 [linux-client/README.md](linux-client/README.md)。
+三端共用 `home-tunnel-gui`：登录后管理本机隧道，改动同步到服务端。Windows 从 Release 下载并运行 `HomeTunnel-Setup-5.0.0-x64.exe`。Linux/macOS 发行包同时包含 GUI 与 CLI。说明见 [linux-client/README.md](linux-client/README.md)。
 
 ```powershell
 .\linux-client\packaging\windows\build-release.ps1
@@ -146,8 +146,7 @@ Android 应用用于远程管理账号：查看家里的设备与隧道、复制
 | `control-center/` | REST/WebSocket API、管理后台、FRPS 授权插件 |
 | `traffic-gateway/` | Host 授权、反向代理、访问控制、限速与采样 |
 | `linux-client/` | 共享 Go 客户端：图形界面、CLI、systemd/launchd 与 Windows 打包 |
-| `windows-agent/` | 受管 Agent 源码与 Windows 构建脚本 |
-| `android-client/` | Android 8.0+ 原生客户端、嵌入式 Agent 与 Gradle 构建 |
+| `android-client/` | Android 8.0+ 远程管理 App 与 Gradle 构建 |
 | `windows-agent/` | 能力受限的 FRP Agent 源码与第三方许可 |
 | `contracts/` | 跨组件保留字、配置与协议契约夹具 |
 | `deploy/` | Caddy、FRPS、配置、发布、备份和回滚工具 |

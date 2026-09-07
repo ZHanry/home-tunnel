@@ -43,6 +43,9 @@ import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreVert
 
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
@@ -100,6 +103,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -179,6 +183,7 @@ private fun LoginScreen(state: AppUiState, repository: HomeTunnelRepository) {
     // Passwords deliberately use remember, not rememberSaveable: they must not
     // enter the Activity saved-state bundle or survive process recreation.
     var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
     AuthFrame {
         BrandMark()
         Spacer(Modifier.height(20.dp))
@@ -223,7 +228,10 @@ private fun LoginScreen(state: AppUiState, repository: HomeTunnelRepository) {
             enabled = !state.busy,
             label = { Text(stringResource(R.string.password)) },
             singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = { IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                Icon(if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility, contentDescription = stringResource(if (passwordVisible) R.string.hide_password else R.string.show_password))
+            } },
             leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
         )
@@ -358,6 +366,9 @@ private fun HomeScreen(
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.app_name), fontWeight = FontWeight.SemiBold) },
                 actions = {
+                    IconButton(onClick = { repository.refreshConnections() }, enabled = !state.busy) {
+                        Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.refresh_status))
+                    }
                     IconButton(onClick = { settings = true }) {
                         Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings))
                     }
@@ -424,10 +435,15 @@ private fun HomeScreen(
             devices = state.devices,
             username = state.persisted.username.orEmpty(),
             busy = state.busy,
-            onDismiss = { editor = null },
+            error = state.error,
+            onReloadLatest = {
+                repository.loadConnectionVersion(edit.value.id) { version ->
+                    editor = edit.copy(value = edit.value.copy(version = version))
+                }
+            },
+            onDismiss = { if (!state.busy) editor = null },
             onSave = { value ->
-                repository.saveConnection(value, edit.isNew)
-                editor = null
+                repository.saveConnection(value, edit.isNew, edit.baseline) { editor = null }
             },
             onDelete = if (edit.isNew || edit.value.kind == ProxyKind.UNKNOWN) null else {
                 { deleteTarget = edit.value }
@@ -470,6 +486,8 @@ private fun ManagementStatusCard(state: AppUiState) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.68f)),
     ) {
         Column(Modifier.padding(22.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            if (state.stale) Text(stringResource(R.string.cached_data_warning), color = MaterialTheme.colorScheme.error)
+            state.lastSyncedAt?.let { Text(stringResource(R.string.last_sync, it), style = MaterialTheme.typography.labelSmall) }
             Text(stringResource(R.string.management_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Text(
                 stringResource(R.string.management_detail, online, state.devices.size, state.connections.size),
@@ -522,7 +540,7 @@ private fun ConnectionCard(connection: TunnelConnection, onEdit: () -> Unit, onC
                 )
             }
             IconButton(onClick = { onCopy(connection.publicDisplayEndpoint.ifBlank { connection.subdomain }) }) {
-                Icon(Icons.Default.Language, contentDescription = stringResource(R.string.copied_address))
+                Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.copy_address))
             }
         }
     }
@@ -540,7 +558,7 @@ private fun localizedConnectionState(connection: TunnelConnection): String {
     }
 }
 
-private data class ConnectionEdit(val value: TunnelConnection, val isNew: Boolean)
+private data class ConnectionEdit(val value: TunnelConnection, val isNew: Boolean, val baseline: TunnelConnection = value)
 
 @Composable
 private fun ConnectionEditor(
@@ -548,6 +566,8 @@ private fun ConnectionEditor(
     devices: List<io.github.zhanry.hometunnel.model.ManagedDevice>,
     username: String,
     busy: Boolean,
+    error: String?,
+    onReloadLatest: () -> Unit,
     onDismiss: () -> Unit,
     onSave: (TunnelConnection) -> Unit,
     onDelete: (() -> Unit)?,
@@ -555,7 +575,7 @@ private fun ConnectionEditor(
     var name by rememberSaveable(edit.value.id) { mutableStateOf(edit.value.name) }
     var deviceId by rememberSaveable(edit.value.id) { mutableStateOf(edit.value.deviceId) }
     var subdomain by rememberSaveable(edit.value.id) {
-        mutableStateOf(edit.value.subdomain.ifBlank { if (username.isBlank()) "" else "$username-app" })
+        mutableStateOf(edit.value.subdomain.ifBlank { if (username.isBlank()) "" else "${username.lowercase().replace(Regex("[^a-z0-9-]+"), "-").trim('-').take(40)}-app" })
     }
     var scheme by rememberSaveable(edit.value.id) { mutableStateOf(edit.value.localScheme) }
     var host by rememberSaveable(edit.value.id) { mutableStateOf(edit.value.localHost) }
@@ -574,14 +594,18 @@ private fun ConnectionEditor(
                 Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
+                if (error?.contains("VERSION_CONFLICT") == true) {
+                    OutlinedButton(onClick = onReloadLatest, enabled = !busy) { Text(stringResource(R.string.reload_latest)) }
+                }
+                if (error != null) Text(error, color = MaterialTheme.colorScheme.error, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
                 if (raw) WarningCard(stringResource(R.string.raw_mvp_warning, edit.value.proxyType.uppercase()))
                 if (unknown) WarningCard(stringResource(R.string.unknown_type_warning))
                 if (edit.isNew) {
                     Text(stringResource(R.string.device), fontWeight = FontWeight.SemiBold)
-                    devices.forEach { device ->
+                    devices.filter { it.status == "active" }.forEach { device ->
                         AssistChip(
                             onClick = { deviceId = device.id },
-                            label = { Text(if (device.online) "${device.name} · 在线" else device.name) },
+                            label = { Text(if (device.online) "${device.name} · ${stringResource(R.string.status_online)}" else device.name) },
                             leadingIcon = {
                                 if (deviceId == device.id) Icon(Icons.Default.Security, contentDescription = null, modifier = Modifier.size(18.dp))
                             },

@@ -2,6 +2,24 @@
 
 All notable changes to Home Tunnel are documented in this file. The project follows [Semantic Versioning](https://semver.org/).
 
+## 5.0.0 - 2026-09-07
+
+### User experience
+
+- Redesign connection management with responsive cards, search, pagination, direct pause controls, and diagnostics.
+- Preserve form drafts and focus during live updates; expose stale snapshots and refresh after reconnection.
+- Correct numeric constraints, theme/language initialization, session expiry, field errors, and failed-save recovery.
+- Match subdomain checks to the target owner and exclude the connection being edited; guard empty device selections.
+- Add account password changes and monthly quota visibility; accurately describe health and raw-transport revocation.
+- Keep Android edits open until successful writes, add refresh and stale-state feedback, and improve desktop keyboard forms.
+- Add browser regressions alongside existing service/client checks; update preview scenarios and release packaging.
+
+### Upgrade
+
+- Upgrade the control center and gateway together, keeping the existing SQLite database, secrets, and FRPS TLS certificate.
+- The FRPS 0.70.1-r2 dependency is unchanged. Existing HTTP/TCP/UDP settings remain in force.
+- The administrator connections endpoint now returns pagination metadata; clients should request subsequent pages.
+
 ## [4.0.0] - 2026-09-03
 
 ### Added

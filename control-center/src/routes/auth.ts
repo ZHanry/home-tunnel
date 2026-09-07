@@ -423,7 +423,27 @@ router.get(
   "/me",
   asyncHandler(async (request, response) => {
     const actor = requireActor(request);
+    const policy = await one<{
+      bandwidth_limit_bps: number | null;
+      monthly_quota_bytes: number | null;
+      month_to_date_bytes: number;
+    }>(
+      `SELECT tp.bandwidth_limit_bps,tp.monthly_quota_bytes,
+       (COALESCE((SELECT sum(upload_bytes+download_bytes) FROM traffic_samples WHERE user_id=u.id AND bucket_start>=home_tunnel_month_start()),0)
+       +COALESCE((SELECT sum(upload_bytes+download_bytes) FROM traffic_hourly WHERE user_id=u.id AND bucket_start>=home_tunnel_month_start()),0)) AS month_to_date_bytes
+       FROM users u LEFT JOIN traffic_policies tp ON tp.scope_type='user' AND tp.scope_id=u.id WHERE u.id=?`,
+      [actor.userId],
+    );
+    const now = new Date();
     response.json({
+      bandwidth_limit_bps:
+        policy?.bandwidth_limit_bps == null ? null : Number(policy.bandwidth_limit_bps),
+      monthly_quota_bytes:
+        policy?.monthly_quota_bytes == null ? null : Number(policy.monthly_quota_bytes),
+      month_to_date_bytes: Number(policy?.month_to_date_bytes ?? 0),
+      quota_resets_at: new Date(
+        Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1),
+      ).toISOString(),
       id: actor.userId,
       username: actor.username,
       display_name: actor.displayName,

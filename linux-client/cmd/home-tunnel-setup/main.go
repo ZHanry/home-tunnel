@@ -109,7 +109,7 @@ func writeUninstall(installDir, gui string) error {
 	}
 	defer key.Close()
 	_ = key.SetStringValue("DisplayName", appName)
-	_ = key.SetStringValue("DisplayVersion", "4.0.0")
+	_ = key.SetStringValue("DisplayVersion", "5.0.0")
 	_ = key.SetStringValue("Publisher", "Home Tunnel")
 	_ = key.SetStringValue("InstallLocation", installDir)
 	_ = key.SetStringValue("DisplayIcon", gui)

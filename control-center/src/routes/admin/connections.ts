@@ -58,16 +58,31 @@ router.get(
     requirePasswordNormal(request);
     const search = String(request.query.search ?? "").trim();
     const userId = String(request.query.user_id ?? "");
+    const pageSize = Math.min(
+      100,
+      Math.max(1, Number.parseInt(String(request.query.page_size ?? "25"), 10) || 25),
+    );
+    const page = Math.max(1, Number.parseInt(String(request.query.page ?? "1"), 10) || 1);
+    const count = await one<{ total: number }>(
+      `SELECT count(*) AS total FROM connections c JOIN users u ON u.id=c.user_id
+       WHERE c.deleted_at IS NULL AND (?='' OR c.user_id=?)
+       AND (?='' OR c.subdomain LIKE '%'||?||'%' OR c.name LIKE '%'||?||'%' OR u.username LIKE '%'||?||'%')`,
+      [userId, userId, search, search, search, search],
+    );
     const rows = await query<ConnectionRow>(
       `${adminConnectionSelect}
      WHERE c.deleted_at IS NULL AND (?='' OR c.user_id=?)
        AND (?='' OR c.subdomain LIKE '%'||?||'%' OR c.name LIKE '%'||?||'%' OR u.username LIKE '%'||?||'%')
-     ORDER BY c.updated_at DESC LIMIT 250`,
-      [userId, userId, search, search, search, search],
+     ORDER BY c.updated_at DESC,c.id DESC LIMIT ? OFFSET ?`,
+      [userId, userId, search, search, search, search, pageSize, (page - 1) * pageSize],
     );
     const domains = await customDomainsByConnection(rows.map((row) => row.id));
     response.json({
       items: rows.map((row) => publicConnection(row, domains.get(row.id) ?? [])),
+      total: Number(count?.total ?? 0),
+      page,
+      page_size: pageSize,
+      total_pages: Math.max(1, Math.ceil(Number(count?.total ?? 0) / pageSize)),
       transport_tunnels: {
         tcp: {
           enabled: config.transportTunnels.tcp.enabled,
@@ -298,7 +313,7 @@ router.patch(
     const scopeId = pathParam(request, "scopeId");
     const body = parseBody(
       z.object({
-        bandwidth_limit_bps: nullableBandwidth,
+        bandwidth_limit_bps: nullableBandwidth.optional(),
         monthly_quota_bytes: nullableMonthlyQuota.optional(),
         expected_version: z.number().int().positive().optional(),
       }),
@@ -330,6 +345,12 @@ router.patch(
           current_version: Number(policy.version),
         });
       }
+      const nextBandwidth =
+        body.bandwidth_limit_bps === undefined
+          ? policy.bandwidth_limit_bps == null
+            ? null
+            : Number(policy.bandwidth_limit_bps)
+          : body.bandwidth_limit_bps;
       const nextQuota = quotaProvided
         ? (body.monthly_quota_bytes ?? null)
         : policy.monthly_quota_bytes == null
@@ -338,7 +359,7 @@ router.patch(
       const updated = await client.query<{ version: string; updated_at: Date }>(
         `UPDATE traffic_policies SET bandwidth_limit_bps=?,monthly_quota_bytes=?,version=version+1,updated_at=home_tunnel_now()
         WHERE scope_type=? AND scope_id=? AND version=? RETURNING version,updated_at`,
-        [body.bandwidth_limit_bps, nextQuota, scopeType, scopeId, expected],
+        [nextBandwidth, nextQuota, scopeType, scopeId, expected],
       );
       if (!updated.rows[0]) throw new HttpError(409, "VERSION_CONFLICT", "策略已被其他操作修改");
       if (scopeType === "user") {
@@ -390,18 +411,22 @@ router.patch(
           version: Number(policy.version),
         },
         {
-          bandwidth_limit_bps: body.bandwidth_limit_bps,
+          bandwidth_limit_bps: nextBandwidth,
           monthly_quota_bytes: nextQuota,
           version: Number(updated.rows[0].version),
         },
       );
-      return { ...updated.rows[0], monthly_quota_bytes: nextQuota };
+      return {
+        ...updated.rows[0],
+        monthly_quota_bytes: nextQuota,
+        bandwidth_limit_bps: nextBandwidth,
+      };
     });
     if (quotaProvided && scopeType === "user") triggerQuotaEnforcement();
     response.json({
       scope_type: scopeType,
       scope_id: scopeId,
-      bandwidth_limit_bps: body.bandwidth_limit_bps,
+      bandwidth_limit_bps: result.bandwidth_limit_bps,
       monthly_quota_bytes: result.monthly_quota_bytes,
       version: Number(result.version),
       updated_at: result.updated_at,
