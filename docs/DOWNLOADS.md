@@ -2,6 +2,10 @@
 
 当前以源码构建为主要体验方式，项目暂不提供面向生产使用的稳定版本承诺。
 
+已完成安全修复的客户端测试包：[5.0.1-rc.1](https://github.com/ZHanry/home-tunnel-client/releases/tag/v5.0.1-rc.1)。
+包含 Windows x64、Linux amd64 / arm64 和 macOS Intel / ARM 的完整包及校验信息。
+测试新客户端前先退出旧版本；历史构建记录不作为当前推荐测试入口。
+
 | 组件 | 构建入口 | 产物与用途 |
 | --- | --- | --- |
 | 服务端 | [源码启动指南](https://github.com/ZHanry/home-tunnel-server#readme) | 本地构建镜像和 Compose 测试环境 |
