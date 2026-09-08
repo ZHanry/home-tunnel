@@ -6,6 +6,9 @@
 包含 Windows x64、Linux amd64 / arm64 和 macOS Intel / ARM 的完整包及校验信息。
 测试新客户端前先退出旧版本；历史构建记录不作为当前推荐测试入口。
 
+配套服务端测试构建：[5.0.1-rc.1](https://github.com/ZHanry/home-tunnel-server/releases/tag/v5.0.1-rc.1)。
+Linux amd64 / arm64 已使用修复后的客户端完成集成验证；发布附件提供精确镜像摘要、Compose 覆盖文件与校验清单。
+
 | 组件 | 构建入口 | 产物与用途 |
 | --- | --- | --- |
 | 服务端 | [源码启动指南](https://github.com/ZHanry/home-tunnel-server#readme) | 本地构建镜像和 Compose 测试环境 |
