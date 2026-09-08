@@ -1,189 +1,50 @@
 <div align="center">
-  <img src="control-center/public/HomeTunnel.svg" alt="Home Tunnel" width="92" height="92">
+  <img src="docs/site/assets/HomeTunnel.svg" alt="Home Tunnel" width="92" height="92">
   <h1>Home Tunnel</h1>
-  <p><strong>面向个人与家庭服务的自托管内网穿透平台</strong></p>
-  <p>Self-hosted tunnels for home services</p>
-  <p>
-    <a href="https://github.com/ZHanry/home-tunnel/actions/workflows/ci.yml"><img src="https://github.com/ZHanry/home-tunnel/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-    <a href="https://github.com/ZHanry/home-tunnel/actions/workflows/codeql.yml"><img src="https://github.com/ZHanry/home-tunnel/actions/workflows/codeql.yml/badge.svg" alt="CodeQL"></a>
-    <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="Apache-2.0 license"></a>
-  </p>
-  <p><a href="https://zhanry.github.io/home-tunnel/">项目网站</a> · <a href="README.en.md">English</a> · <a href="docs/SELF_HOSTING.md">自托管指南</a> · <a href="SECURITY.md">安全报告</a></p>
+  <p>面向个人与家庭服务的自托管内网穿透平台</p>
+  <p><a href="https://zhanry.github.io/home-tunnel/">项目网站</a> · <a href="README.en.md">English</a></p>
 </div>
 
-Home Tunnel 是面向个人与家庭服务的自托管内网穿透平台，用可审计、可随时撤销的控制面，安全发布 Web 服务、通用 TCP 字节流与固定端口 UDP 服务。
+Home Tunnel 用集中管理、可撤销的设备授权和受管隧道，发布家中的 Web、TCP 和固定端口 UDP 服务。
 
-![Home Tunnel 真实管理后台，显示连接、流量和组件健康状态](docs/site/assets/admin-dashboard.jpg)
+## 代码仓库
 
-> `v5.0.0` 统一三端窗口客户端 `home-tunnel-gui`。服务端 Linux `amd64`/`arm64` 与 Linux 无界面客户端为 Stable；macOS headless 为 Beta；Windows 提供 Setup EXE；Android 8.0+ `arm64-v8a` 管理 App 为 Experimental。
+本仓库现在是项目主页、通用文档和下载入口。各组件的源码、测试和发布流程分别维护：
 
-## 三步启动
-
-开始前需要一台具有公网地址的 Linux 服务器、一个域名，以及指向服务器的控制台与通配符 DNS 记录。
-
-1. 克隆仓库并生成本地配置：
-
-   ```sh
-   git clone https://github.com/ZHanry/home-tunnel.git
-   cd home-tunnel
-   sh ./deploy/scripts/new-selfhost-config.sh \
-     tunnel.example.com \
-     203.0.113.10 \
-     console.tunnel.example.com \
-     admin@example.com
-   ```
-
-2. 校验并启动：
-
-   ```sh
-   docker compose config --quiet
-   docker compose pull
-   docker compose up -d
-   docker compose ps
-   ```
-
-3. 读取一次性管理员密码，访问 `https://console.tunnel.example.com/admin` 并立即改密：
-
-   ```sh
-   cat deploy/secrets/bootstrap_admin_password
-   ```
-
-完整 DNS、防火墙、备份、回滚与客户端说明见 [自托管指南](docs/SELF_HOSTING.md)。不要将示例域名、示例 IP 或任何 `CHANGE_ME` 值用于公网部署。若要从源码构建镜像，使用 `docker compose -f compose.yaml -f compose.build.yaml up -d --build`。
-
-## 公开支持矩阵
-
-| 组件 | 平台 | 状态 | 分发与限制 |
-| --- | --- | --- | --- |
-| 服务端 | Linux `amd64` / `arm64` | Stable | 容器与源码构建；稳定版要求完整双架构矩阵 |
-| Headless 客户端 | Linux `amd64` / `arm64` | Stable | systemd 服务，实时配置与安全轮询 |
-| Headless 客户端 | macOS `amd64` / `arm64` | Beta | launchd 包；仍需扩大真实硬件验证 |
-| 图形客户端 | Windows / macOS / Linux | 统一 | 同一套 `home-tunnel-gui`；Windows 提供 `HomeTunnel-Setup-*-x64.exe` |
-| 移动客户端 | Android 8.0+ `arm64-v8a` | Experimental | GitHub Release 侧载 APK；AAB 不可直接安装，也不代表 Play-ready |
-
-GitHub Release 标签是 `v5.0.0`。Windows 安装包是 `HomeTunnel-Setup-5.0.0-x64.exe`；Linux/macOS 使用 `home-tunnel-linux-5.0.0-*.tar.gz` / `home-tunnel-macos-5.0.0-*.tar.gz`。下载后请核对 SHA-256。
-Android 使用必须长期保留的固定发布证书，升级前必须保持 application ID 与证书一致。
-
-## 为什么不是“裸 FRP”
-
-- **能力受限的 Agent**：只接受控制中心签发且与服务器配置一致的 HTTP/HTTPS、自定义域名，以及管理员逐端口授权的 TCP/UDP 连接；拒绝通用 FRP 命令和未签发配置。
-- **集中策略**：用户、设备、连接、短期租约与运行状态统一管理；Web 策略直接收敛，FRPS `Ping` 在约 90 秒心跳窗口内让 TCP/UDP 撤销失效。
-- **自动 HTTPS**：Caddy 是唯一公网 Web 入口，按已分配且验证的域名签发证书。
-- **Web 访问与流量控制**：HTTP/HTTPS 路径提供 IP 允许集、Basic Auth、分层限速、流量聚合和月度配额。
-- **可审计运维**：审计事件、组件健康、备份验证、恢复与回滚工具。
-- **默认隔离**：SQLite、控制中心和网关不直接发布主机端口；容器使用只读文件系统和最小能力集。
-- **按用户隔离**：普通用户登录网页控制台后只能看到自己的设备、隧道和流量；管理员单独管用户、配额和 TCP/UDP 公网端口。
-
-## 普通用户如何创建连接
-
-1. 管理员在控制台创建普通账号，并把一次性密码交给本人。
-2. 用户在家里的电脑上运行 `home-tunnel-gui`（Windows / macOS / Linux），用同一账号登录完成设备注册。Android 只用来远程管理，不在手机上跑隧道。
-3. 用户打开 `https://console.tunnel.example.com/admin`，用自己的账号登录网页控制台（不再需要管理员权限）。
-4. 在「连接」里选已注册设备，填写本地地址和子域，即可自助开通 HTTP/HTTPS。
-5. TCP/UDP 仍由管理员分配精确公网端口，不会出现在别人的工作区里。
-
-## 工作方式
-
-```text
-远程浏览器 ─HTTPS→ Caddy ─→ 流量网关 ─→ FRPS ═受管隧道═→ 家中 Windows/Linux/macOS 主机
-远程 TCP/UDP 客户端 ─已分配公网端口→ FRPS ═受管隧道═→ 家中固定 TCP/UDP 端口
-管理员 / 普通用户 ─HTTPS→ Caddy ─→ 控制中心 ─→ SQLite
-Windows/Linux/macOS/Android 客户端 ─REST + WebSocket→ 控制中心
-```
-
-控制流和业务流量分离；详细边界见 [架构说明](docs/ARCHITECTURE.md) 与 [安全模型](docs/SECURITY_MODEL.md)。项目不提供公开动态演示站，Pages 中的截图由当前 UI Preview 和真实前端代码生成，示例域名与数据均为本地夹具。
-
-## 通用 TCP、固定端口 UDP 与 RTSP
-
-Home Tunnel 的“类型”是受管传输类型，不是应用协议清单：
-
-| 类型 | 用途 | 公网路径 |
-| --- | --- | --- |
-| HTTP/HTTPS | Web 应用与 HTTPS 本地目标 | Caddy → 流量网关 → FRPS |
-| TCP | RTSP-over-TCP、SSH、RDP、MQTT、数据库及其他 TCP 字节流 | 公网固定端口 → FRPS |
-| UDP | DNS、游戏或媒体使用的固定 UDP 端口 | 公网固定端口 → FRPS |
-
-RTSP 不是独立隧道类型。若摄像头在本地 `554/tcp` 提供 RTSP，可由管理员创建通用 TCP 映射“公网 `10554` → 本地摄像头 `554`”，然后强制播放器使用 TCP：
-
-```sh
-ffplay -rtsp_transport tcp rtsp://PUBLIC_HOST:10554/path
-```
-
-若设备使用原生 RTP/RTCP over UDP，必须先把摄像头配置为固定媒体端口，再为每个 UDP 端口逐条创建映射；动态协商或随机选择的媒体端口无法保证穿透。项目不支持 raw IP、ICMP、广播、组播、STCP、XTCP、SUDP、visitor 或任意 FRP 插件。
-
-TCP 与 UDP 默认关闭，只能由管理员在允许范围内分配精确公网端口，并要求目标应用自己提供认证与加密。它们绕过 Caddy 和流量网关，因此不具备网关的 Basic Auth、IP 允许集、限速、流量计量或月度配额。UDP 还必须在主机/云防火墙限源、限速，并评估反射放大风险。启用方式见 [自托管指南](docs/SELF_HOSTING.md)。
-
-## 客户端
-
-### 桌面图形客户端（Windows / macOS / Linux）
-
-三端共用 `home-tunnel-gui`：登录后管理本机隧道，改动同步到服务端。Windows 从 Release 下载并运行 `HomeTunnel-Setup-5.0.0-x64.exe`。Linux/macOS 发行包同时包含 GUI 与 CLI。说明见 [linux-client/README.md](linux-client/README.md)。
-
-```powershell
-.\linux-client\packaging\windows\build-release.ps1
-```
-
-### Linux / macOS 无界面服务
-
-NAS 和无桌面主机继续用 `home-tunnel-client` + systemd/launchd。安装后执行 `sudo home-tunnel-enroll`。
-
-### Android 管理 App
-
-Android 应用用于远程管理账号：查看家里的设备与隧道、复制公网地址、开关 HTTP 连接。它不再在手机上运行隧道 Agent。家里的 Windows / macOS / Linux 客户端才是隧道端。构建说明见 [Android 客户端说明](android-client/README.md)。
-
-## 安全证据
-
-- 控制中心 WebSocket 完整消息上限为 64 KiB，并限制碎片数和缓冲分块；回归覆盖超限、鉴权失败、异常断连、资源回收与重连。
-- CI 对生产依赖执行 Moderate 以上审计，并运行 TypeScript、Go、Compose、契约与文档检查。
-- CodeQL 显式分析 JavaScript/TypeScript、Go 与 Android Java/Kotlin；Secret Scanning 与 Push Protection 应始终保持启用。
-- Stable 发布要求同一提交和同一套已验证产物，包含哈希、SBOM、provenance 与签名证据。
-
-不要在公开 Issue 中提交漏洞细节、域名、IP、令牌、密码或日志中的私密信息。请使用 [GitHub 私密漏洞报告](https://github.com/ZHanry/home-tunnel/security/advisories/new)；详细政策见 [SECURITY.md](SECURITY.md)。
-
-## 仓库结构
-
-| 目录 | 内容 |
+| 仓库 | 职责 |
 | --- | --- |
-| `control-center/` | REST/WebSocket API、管理后台、FRPS 授权插件 |
-| `traffic-gateway/` | Host 授权、反向代理、访问控制、限速与采样 |
-| `linux-client/` | 共享 Go 客户端：图形界面、CLI、systemd/launchd 与 Windows 打包 |
-| `android-client/` | Android 8.0+ 远程管理 App 与 Gradle 构建 |
-| `windows-agent/` | 能力受限的 FRP Agent 源码与第三方许可 |
-| `contracts/` | 跨组件保留字、配置与协议契约夹具 |
-| `deploy/` | Caddy、FRPS、配置、发布、备份和回滚工具 |
-| `tests/` | Compose、契约、安装包与端到端验证 |
-| `docs/` | 架构、安全、发布、真实截图与静态 Pages |
+| [home-tunnel-server](https://github.com/ZHanry/home-tunnel-server) | 服务端 API、Web 管理后台、流量网关和 Caddy / FRPS 部署 |
+| [home-tunnel-client](https://github.com/ZHanry/home-tunnel-client) | Windows / macOS / Linux 共用的 GUI、CLI、后台运行逻辑和隧道 Agent |
+| [home-tunnel-android](https://github.com/ZHanry/home-tunnel-android) | Android 远程管理 App，管理家中设备和连接 |
 
-## 本地验证
+GUI 和 CLI 共用客户端核心。Android 用于远程管理，手机本身不运行隧道。
+架构、兼容性与迁移说明见 [仓库拆分说明](docs/REPOSITORIES.md)。
 
-要求 Node.js 24 LTS、pnpm、Go 1.26、JDK 17、Android SDK/NDK、Docker Compose，以及重建 Agent 时使用的 `windres`。实际命令以 [CONTRIBUTING.md](CONTRIBUTING.md) 和 CI 为准。
+## 快速开始
 
-```powershell
-Set-Location control-center
-pnpm install --frozen-lockfile
-pnpm run check
-pnpm run build
-pnpm test
-
-Set-Location ..\traffic-gateway
-pnpm install --frozen-lockfile
-pnpm run check
-pnpm run build
-pnpm test
-
-```
+在公网 Linux 服务器上：
 
 ```sh
-cd linux-client
-go test -race ./...
-go vet ./...
-go build ./cmd/home-tunnel-client
-CGO_ENABLED=1 go build ./cmd/home-tunnel-gui
+git clone https://github.com/ZHanry/home-tunnel-server.git
+cd home-tunnel-server
+sh deploy/scripts/new-selfhost-config.sh tunnel.example.com 203.0.113.10 console.tunnel.example.com admin@example.com
+docker compose config --quiet
+docker compose pull
+docker compose up -d
 ```
 
-## 贡献与反馈
+完整配置见[服务端自托管指南](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/SELF_HOSTING.md)。
+在家中的电脑或 NAS 安装[统一客户端](https://github.com/ZHanry/home-tunnel-client)，注册设备并创建连接。
 
-小而聚焦、带测试且说明安全影响的 PR 最容易审核。开发约定见 [CONTRIBUTING.md](CONTRIBUTING.md)，发布流程见 [docs/RELEASING.md](docs/RELEASING.md)。真实部署结果请使用 [部署反馈表单](https://github.com/ZHanry/home-tunnel/issues/new?template=deployment_feedback.yml)，不要求公开域名、IP 或凭据。
+## 下载与已有用户
 
-## 许可证
+[下载导航](docs/DOWNLOADS.md)提供各端稳定版与后续独立发布入口。
+已经发布的 [5.0.0 安装包和发布记录](https://github.com/ZHanry/home-tunnel/releases/tag/v5.0.0)继续保留。
+此次源码迁移无需用户重装服务器、重新注册设备或更换 Android 应用。
 
-Home Tunnel 使用 [Apache License 2.0](LICENSE)。内置 Agent 基于 FRP，许可证与第三方声明见 `windows-agent/FRP-LICENSE.txt` 和 `windows-agent/THIRD-PARTY-NOTICES.txt`。
+## 反馈与贡献
+
+组件问题请优先提交到对应代码仓库；跨组件问题和项目建议可以继续在本仓库讨论。
+通用参与方式见 [CONTRIBUTING.md](CONTRIBUTING.md)。旧 Issue、提交历史、Release 和网站地址继续保留。
+
+Apache-2.0，见 [LICENSE](LICENSE)。

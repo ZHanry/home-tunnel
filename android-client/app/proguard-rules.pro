@@ -1,4 +1,0 @@
--keepattributes *Annotation*
--keepclassmembers class **$$serializer { *; }
--keep,includedescriptorclasses class io.github.zhanry.hometunnel.model.** { *; }
--dontwarn org.conscrypt.**

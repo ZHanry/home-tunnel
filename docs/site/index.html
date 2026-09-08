@@ -98,8 +98,8 @@
         <article class="card"><span class="number">2</span><h3>生成配置并启动</h3><p>使用仓库脚本生成本地密钥与 Compose 配置，再启动四个服务。</p></article>
         <article class="card"><span class="number">3</span><h3>注册设备与连接</h3><p>修改初始管理员密码，创建用户，在家里的电脑上运行 <code>home-tunnel-gui</code> 登录。</p></article>
       </div>
-      <pre class="code-block" aria-label="Home Tunnel 快速开始命令"><code>git clone https://github.com/ZHanry/home-tunnel.git
-cd home-tunnel
+      <pre class="code-block" aria-label="Home Tunnel 快速开始命令"><code>git clone https://github.com/ZHanry/home-tunnel-server.git
+cd home-tunnel-server
 ./deploy/scripts/new-selfhost-config.sh \
   tunnel.example.com frps.example.com \
   console.example.com admin@example.com
@@ -108,7 +108,7 @@ docker compose pull
 docker compose up -d
 docker compose ps</code></pre>
       <div class="actions">
-        <a class="button primary" href="https://github.com/ZHanry/home-tunnel/blob/main/docs/SELF_HOSTING.md?utm_source=pages&amp;utm_medium=quick_start&amp;utm_campaign=release_3_1" data-goatcounter-click="quick-start-guide">阅读完整自托管指南</a>
+        <a class="button primary" href="https://github.com/ZHanry/home-tunnel-server/blob/main/docs/SELF_HOSTING.md?utm_source=pages&amp;utm_medium=quick_start&amp;utm_campaign=release_3_1" data-goatcounter-click="quick-start-guide">阅读完整自托管指南</a>
         <a class="button" href="https://github.com/ZHanry/home-tunnel/releases?utm_source=pages&amp;utm_medium=release&amp;utm_campaign=release_3_1" data-goatcounter-click="release">查看 Releases</a>
       </div>
     </section>
