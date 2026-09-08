@@ -1,38 +1,36 @@
-# 仓库职责与兼容性
+# 仓库职责与协作
 
-从原项目提交 `cdf6136593d3dd7863f704724746a92a30240123` 拆出三个代码仓库，保留各组件相关的提交历史和作者信息。
-过滤后的提交 ID 会发生变化；原仓库的完整历史和历史标签保留。
+## 代码归属
 
-| 原目录 | 新归属 |
-| --- | --- |
-| `control-center/`、`traffic-gateway/`、`deploy/`、服务端测试 | `home-tunnel-server` |
-| `linux-client/` | `home-tunnel-client` 根目录：`cmd/`、`internal/`、`packaging/` |
-| `windows-agent/` | `home-tunnel-client/agent/`，跨平台共用 |
-| 桌面页面测试 | `home-tunnel-client/tests/browser/` |
-| `android-client/` | `home-tunnel-android` 根目录 |
-| 项目网站与通用文档 | 本仓库 |
+| 仓库 | 维护内容 | 主要交付物 |
+| --- | --- | --- |
+| [home-tunnel-server](https://github.com/ZHanry/home-tunnel-server) | 控制中心、Web 管理后台、HTTP 网关、Caddy / FRPS 配置 | 服务镜像与部署配置 |
+| [home-tunnel-client](https://github.com/ZHanry/home-tunnel-client) | 桌面窗口、CLI、同步核心、Agent、系统服务与安装器 | 各平台客户端测试包 |
+| [home-tunnel-android](https://github.com/ZHanry/home-tunnel-android) | 手机界面、账号会话、设备与连接管理 | 调试 APK 与签名测试包 |
+| [home-tunnel](https://github.com/ZHanry/home-tunnel) | 网站、通用文档、测试入口与路线规划 | 项目网站与文档 |
 
-各代码仓库都有自己的 CI、贡献指南、兼容记录和发布流程。服务端构建不依赖客户端源码；
-GUI 和 CLI 共用客户端核心；Android 只通过服务端 API 管理账号资源。
+GUI 和 CLI 共用核心，避免在两个产品里重复实现登录、配置同步和进程管理。
+服务端各进程在一个仓库协作，可以使用不同容器运行。
+Android 是 API 管理端，转发引擎由电脑或 NAS 客户端提供。
 
-## 版本与协议
+## 协议协作
 
-拆分基线是已发布的服务端 / 客户端 / Android 5.0.0 与 API v1。
-之后各组件独立使用语义化版本号，不能仅凭组件版本号相同推断兼容。
-协议夹具由服务端维护，以 `api-v1.0.0` 等不可移动标签发布。
-客户端与 Android 保存固定版本的协议快照及 SHA-256，正常构建无需访问另一份源码。
-版本组合需要通过契约与集成验证后记录在对应仓库的 `compatibility.json`。
+服务端的 `contracts/` 保存协议测试夹具，初始协议标识为 API v1。
+客户端和 Android 保存明确来源和 SHA-256 的快照，普通构建不需要另一个仓库的检出目录。
+夹具目前描述部分字段、事件和约束，不是完整 OpenAPI 文档。
 
-## 升级和发布衔接
+内部测试期间可以调整协议，但一次接口改动应明确列出受影响组件，并完成相应联调。
+更新夹具时先在服务端验证，再发布新的协议标签，最后更新消费者的快照和锁文件。
+不要移动已使用的协议标签，以免相同标识对应不同内容。
 
-- 原 5.0.0 Release 和服务端镜像地址保留，现有部署与下载链接继续可用。
-- 新客户端源码使用客户端仓库的更新入口。新稳定客户端发布后，运行本仓库
-  `Mirror stable client release` 工作流，将同一套经过验证的产物提供给旧客户端更新入口。
-  镜像发布保留旧版固定文件名的下载，避免已有服务端页面链接失效。
-- Android 保留 `io.github.zhanry.hometunnel`、固定发布证书和递增版本代码。
-- 各仓库继续先构建和验证 RC，再将同一提交、同一批产物提升为 Stable。
+## 版本和状态
 
-## 后续工作位置
+各组件自行维护构建版本。当前状态在代码仓库的 `compatibility.json` 中记录为 `internal-testing`。
+数字版本号用于识别构建，不代表产品稳定性。现在不承担历史构建的长期兼容或升级桥接义务。
+测试版本使用预发布标签，正式发布准备就绪后再明确支持范围和版本策略。
 
-服务端问题进入 `home-tunnel-server`；电脑、NAS、GUI、CLI 和 Agent 问题进入
-`home-tunnel-client`；手机 App 问题进入 `home-tunnel-android`。网站和跨组件规划留在本仓库。
+## 修改放哪里
+
+组件内的问题在对应仓库提交 Issue 和 PR；跨组件修改在描述中列出相关仓库与提交。
+Web 控制台的 UI 属于服务端，客户端窗口的 UI 属于客户端，产品介绍网站属于本仓库。
+共享协议改动、公共概念和测试方案应同步更新通用文档。

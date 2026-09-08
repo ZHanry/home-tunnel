@@ -1,10 +1,13 @@
-# 下载 Home Tunnel
+# 获取测试构建
 
-| 组件 | 已发布基线 | 后续独立版本 |
+当前以源码构建为主要体验方式，项目暂不提供面向生产使用的稳定版本承诺。
+
+| 组件 | 构建入口 | 产物与用途 |
 | --- | --- | --- |
-| 服务端 | [5.0.0](https://github.com/ZHanry/home-tunnel/releases/tag/v5.0.0)，现有镜像保持可用 | [服务端 Releases](https://github.com/ZHanry/home-tunnel-server/releases) |
-| Windows / macOS / Linux GUI 与 CLI | [5.0.0 安装包](https://github.com/ZHanry/home-tunnel/releases/tag/v5.0.0) | [客户端 Releases](https://github.com/ZHanry/home-tunnel-client/releases) |
-| Android 管理 App | [5.0.0 APK](https://github.com/ZHanry/home-tunnel/releases/tag/v5.0.0) | [Android Releases](https://github.com/ZHanry/home-tunnel-android/releases) |
+| 服务端 | [源码启动指南](https://github.com/ZHanry/home-tunnel-server#readme) | 本地构建镜像和 Compose 测试环境 |
+| GUI / CLI | [客户端构建指南](https://github.com/ZHanry/home-tunnel-client#readme) | Windows 安装包、Linux / macOS 归档及配套 Agent |
+| Android | [调试 APK 构建](https://github.com/ZHanry/home-tunnel-android#readme) | 在测试手机或模拟器上验证管理流程 |
 
-仓库拆分不会自动重新发布一套 5.0.0 二进制文件。新的组件版本通过各自的 CI 与发布验证后提供。
-安装后仍使用自己的服务端地址登录。Android APK 用于侧载，AAB 不能直接安装。
+各组件需要分发测试包时，在自己的 Releases 页面以 **Pre-release** 发布，并提供构建来源与校验信息。
+仓库中已有的版本编号和发布记录都是开发测试记录，不代表当前存在稳定版支持政策。
+首次使用见[开始使用](GETTING_STARTED.md)。

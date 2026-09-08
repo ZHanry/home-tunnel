@@ -30,9 +30,9 @@ body:
       options:
         - Linux amd64
         - Linux arm64
-        - macOS amd64 (Beta)
-        - macOS arm64 (Beta)
-        - Windows x64 source build (Experimental)
+        - macOS amd64 (内部测试)
+        - macOS arm64 (内部测试)
+        - Windows x64 source build (内部测试)
     validations:
       required: true
   - type: dropdown

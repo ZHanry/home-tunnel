@@ -1,11 +1,24 @@
-# Contributing
+# 参与开发
 
-This repository owns the website, general documentation, download navigation and
-cross-component roadmap. Code and component-specific development checks live in:
+本仓库负责项目介绍、网站和跨组件文档。整体架构与任务归属见[项目总览](https://github.com/ZHanry/home-tunnel)。
 
-- [Server](https://github.com/ZHanry/home-tunnel-server)
-- [Shared GUI/CLI client](https://github.com/ZHanry/home-tunnel-client)
-- [Android app](https://github.com/ZHanry/home-tunnel-android)
+## 提交方式
 
-Website changes run the existing Pages validation and Lighthouse checks. Preserve existing
-website and historical release links. Do not add component source trees back to this hub.
+1. 从 `main` 建立聚焦单一问题的分支。
+2. 在 PR 中说明问题、修改后的行为与验证结果。
+3. 行为变化更新相关测试；文档、接口或配置变化更新对应说明。
+4. 跨组件改动列出相关仓库与提交，完成所需联调后再合入。
+
+## 本地工作
+
+网站位于 `docs/site/`，使用已有静态资源与中英文页面。调整文案时同步语言版本、链接与页面元数据。
+Pages CI 校验构建产物、性能、可访问性与 SEO。架构文档使用 Mermaid 表达简单关系。
+
+## 约定
+
+- 内部测试期间可以调整接口和配置，但需说明影响和重新验证方式。
+- 安全相关改动说明身份、租约、Agent 配置校验或公开入口的影响。
+- 不提交密钥、设备状态、测试机私有配置或生成的安装包。
+- 使用代码仓库自己的 CI 与发布流程，不要求相邻检出另一个源码仓库。
+
+疑似漏洞使用 [SECURITY.md](SECURITY.md) 中的私密入口。提交内容按 [Apache-2.0](LICENSE) 分发。

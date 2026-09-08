@@ -5,7 +5,7 @@ config:
   MD033: false
   MD041: false
 ignores:
-  - node_modules/**
+  - "**/node_modules/**"
   - .codex-tools/**
   - .downloads/**
   - outputs/**
