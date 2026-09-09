@@ -1,51 +1,39 @@
 <div align="center">
-  <img src="docs/site/assets/HomeTunnel.svg" alt="Home Tunnel" width="80" height="80">
+  <img src="docs/site/assets/HomeTunnel.svg" alt="Home Tunnel" width="72" height="72">
   <h1>Home Tunnel</h1>
-  <p><strong>Self-hosted tunnels for your home services</strong></p>
-  <p>
-    <img src="https://img.shields.io/badge/status-internal_testing-92400e" alt="Status: internal testing">
-    <a href="https://github.com/ZHanry/home-tunnel/actions/workflows/pages.yml"><img src="https://github.com/ZHanry/home-tunnel/actions/workflows/pages.yml/badge.svg" alt="CI"></a>
-    <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="Apache-2.0 license"></a>
-  </p>
-  <p><a href="README.md">简体中文</a> · <a href="https://zhanry.github.io/home-tunnel/">Project website</a></p>
+  <p><strong>Self-hosted access to services at home</strong></p>
+  <p><a href="https://github.com/ZHanry/home-tunnel/releases/latest"><img src="https://img.shields.io/badge/release-6.0.0-176653" alt="Release 6.0.0"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="Apache-2.0"></a></p>
+  <p><a href="README.md">简体中文</a> · <a href="https://zhanry.github.io/home-tunnel/">Website</a></p>
 </div>
 
-Reach a NAS, photo library, Home Assistant or another home service through your own public server. Home Tunnel adds account, device, connection and policy management around FRP.
+Home Tunnel 6.0 is the official release of a self-hosted platform for reaching your NAS, photos, Home Assistant and other home services through your own public server. Each app has been rebuilt around its role.
 
-> **Status: internal testing.** The project is under active development. There is no production-stable release or long-term compatibility commitment yet. APIs, configuration and installation steps may change.
+## Choose your component
 
-## Components
+| Component | Purpose | Download and source |
+| --- | --- | --- |
+| Server | Deploy the console and tunnel services on public Linux infrastructure | [Release](https://github.com/ZHanry/home-tunnel-server/releases/latest) · [Repository](https://github.com/ZHanry/home-tunnel-server) |
+| Desktop / CLI | Run tunnels on Windows, macOS, Linux or a NAS | [Packages](https://github.com/ZHanry/home-tunnel-client/releases/latest) · [Repository](https://github.com/ZHanry/home-tunnel-client) |
+| Android | Remotely manage your devices and services | [APK](https://github.com/ZHanry/home-tunnel-android/releases/latest) · [Repository](https://github.com/ZHanry/home-tunnel-android) |
+| Project hub | Website, shared documentation and release overview | This repository |
 
-| Repository | Responsibility |
-| --- | --- |
-| [home-tunnel-server](https://github.com/ZHanry/home-tunnel-server) | REST / WebSocket API, web console, HTTP gateway and Caddy / FRPS deployment |
-| [home-tunnel-client](https://github.com/ZHanry/home-tunnel-client) | Shared Windows / macOS / Linux GUI, CLI, client core and managed Agent |
-| [home-tunnel-android](https://github.com/ZHanry/home-tunnel-android) | Android app for managing devices and connections remotely |
-| This repository | Project overview, website, shared documentation and planning |
+## What is new in 6.0
 
-GUI and CLI share a core. Android manages tunnels running on home computers or NAS hosts; forwarding takes place on those hosts.
+- New top navigation in the console, a local service workspace on desktop, and four destinations on Android.
+- Registered desktop and CLI sessions are restricted to their own device. Web and Android sessions manage devices owned by the account.
+- One administrator per deployment. Deleting a regular user revokes sessions and device credentials, removes connections and preserves audit history.
+- Service search, explicit target device selection, recoverable form conflicts and clear deletion confirmation.
+- Focused downloads: APK on Android, platform packages on desktop, and a deployment archive for the server. Build and signing evidence remains in Actions.
 
-## Capabilities
+## Get connected
 
-- Publish HTTP / HTTPS services, general TCP streams and fixed-port UDP services.
-- Manage accounts, devices, connections and their runtime state centrally.
-- Apply access and traffic policy to the HTTP path, with short-lived device authorization.
-- Use a desktop window, a headless service or a mobile management interface as appropriate.
+1. [Deploy the server](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/SELF_HOSTING.md).
+2. Install the client on a home computer or NAS and sign in to register it.
+3. Add a connection using an address reachable from that device, then copy its public address.
+4. Sign in on Android or the Web console to manage your devices remotely.
 
-HTTP traffic passes through Caddy and the gateway. Raw TCP / UDP uses administrator-assigned ports and requires application-level authentication and encryption. See the [architecture](docs/ARCHITECTURE.md).
+Android is a management app. Tunnels run on computers or NAS devices. Users can create HTTP / HTTPS connections; administrators assign public TCP and fixed UDP ports. Raw applications provide their own authentication and encryption.
 
-## Try a development build
+![6.0 server overview](docs/site/assets/admin-dashboard.jpg)
 
-1. Prepare a public Linux server and DNS, then build the [server](https://github.com/ZHanry/home-tunnel-server#readme) from source.
-2. Build a complete [client package](https://github.com/ZHanry/home-tunnel-client#readme), sign in and register a home computer.
-3. Publish a simple HTTP test service and verify access, pause/resume and reconnect behavior. Use the [Android app](https://github.com/ZHanry/home-tunnel-android#readme) for remote management.
-
-Source builds are the primary testing path. Component READMEs contain their prerequisites and commands. Automated CI does not establish reliability on every device or network.
-
-![Development web console, using test data](docs/site/assets/admin-dashboard.jpg)
-
-## Contribute
-
-See [getting started](docs/GETTING_STARTED.md), [repository ownership](docs/REPOSITORIES.md), [testing](docs/TESTING.md), [roadmap](docs/ROADMAP.md) and [contributing](CONTRIBUTING.md). Component-specific issues belong in their code repositories. Report suspected vulnerabilities [privately](SECURITY.md).
-
-Licensed under [Apache-2.0](LICENSE). FRP licensing is maintained with the client Agent source.
+[Downloads](docs/DOWNLOADS.md) · [Getting started](docs/GETTING_STARTED.md) · [Upgrading](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/UPGRADING.md) · [Architecture](docs/ARCHITECTURE.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)

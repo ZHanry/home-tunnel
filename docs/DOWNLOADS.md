@@ -1,20 +1,10 @@
-# 获取测试构建
+# 下载 Home Tunnel 6.0
 
-当前以源码构建为主要体验方式，项目暂不提供面向生产使用的稳定版本承诺。
-
-已完成安全修复的客户端测试包：[5.0.1-rc.1](https://github.com/ZHanry/home-tunnel-client/releases/tag/v5.0.1-rc.1)。
-包含 Windows x64、Linux amd64 / arm64 和 macOS Intel / ARM 的完整包及校验信息。
-测试新客户端前先退出旧版本；历史构建记录不作为当前推荐测试入口。
-
-配套服务端测试构建：[5.0.1-rc.1](https://github.com/ZHanry/home-tunnel-server/releases/tag/v5.0.1-rc.1)。
-Linux amd64 / arm64 已使用修复后的客户端完成集成验证；发布附件提供精确镜像摘要、Compose 覆盖文件与校验清单。
-
-| 组件 | 构建入口 | 产物与用途 |
+| 平台 | 正式下载 | 选择方式 |
 | --- | --- | --- |
-| 服务端 | [源码启动指南](https://github.com/ZHanry/home-tunnel-server#readme) | 本地构建镜像和 Compose 测试环境 |
-| GUI / CLI | [客户端构建指南](https://github.com/ZHanry/home-tunnel-client#readme) | Windows 安装包、Linux / macOS 归档及配套 Agent |
-| Android | [调试 APK 构建](https://github.com/ZHanry/home-tunnel-android#readme) | 在测试手机或模拟器上验证管理流程 |
+| 服务端 | [部署包](https://github.com/ZHanry/home-tunnel-server/releases/latest) | Linux amd64 / arm64 共用配置，容器自动选择架构 |
+| Windows | [客户端](https://github.com/ZHanry/home-tunnel-client/releases/latest) | x64 安装器 `.exe`，或便携 `.zip` |
+| Linux / macOS | [客户端](https://github.com/ZHanry/home-tunnel-client/releases/latest) | 按系统和 amd64 / arm64 选择 `.tar.gz` |
+| Android | [手机端 APK](https://github.com/ZHanry/home-tunnel-android/releases/latest) | Android 8.0+，arm64 |
 
-各组件需要分发测试包时，在自己的 Releases 页面以 **Pre-release** 发布，并提供构建来源与校验信息。
-仓库中已有的版本编号和发布记录都是开发测试记录，不代表当前存在稳定版支持政策。
-首次使用见[开始使用](GETTING_STARTED.md)。
+服务端和客户端附 `SHA256SUMS.txt`，APK 校验值写在发布说明。构建与签名证明链接保存在对应 Release 说明中。GitHub 自动提供的源码压缩包属于源码入口，安装请按上表选择。

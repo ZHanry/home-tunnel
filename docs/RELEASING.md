@@ -1,13 +1,13 @@
-# 测试构建与发布
+# 发布流程
 
-本仓库负责项目网站和通用文档，不构建、聚合或转发客户端安装包。
+正式版本使用 `vX.Y.Z` 标签，各组件独立构建。源码版本与标签必须一致，`compatibility.json` 的阶段设为 `public-release`。
 
-每个代码仓库自行维护版本、CI 和测试产物：
+1. 提交代码到 `main`，等待 Quality Gate、CodeQL 和 Secret scan 成功。
+2. 在已通过检查的提交上创建版本标签。
+3. 工作流构建完整安装包，运行组件检查，验证签名与产物身份。
+4. 完整构建证明、SBOM 和签名材料保留在 Actions 的 `release-verification-evidence` 附件中；Release 只上传面向用户的交付物。
+5. 下载正式发布的安装文件，检查版本、签名与启动情况。
 
-- [服务端测试发布](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/RELEASING.md)
-- [客户端测试发布](https://github.com/ZHanry/home-tunnel-client/blob/main/docs/RELEASING.md)
-- [Android 测试发布](https://github.com/ZHanry/home-tunnel-android/blob/main/docs/RELEASING.md)
+Android 的 Release 附件仅为 `.apk`；桌面端为 `.exe`、`.zip`、Linux / macOS `.tar.gz` 和 `SHA256SUMS.txt`；服务端为部署 `.tar.gz`、`compose.release.yaml` 和 `SHA256SUMS.txt`。APK 的 SHA-256 写入发布说明。项目入口仓库只发布版本说明并链接三个组件。
 
-当前使用 `internal-testing` 状态和预发布标签。数字版本只识别构建，不等同于成熟度或兼容承诺。
-现在无需维护跨仓库的旧更新入口；正式分发前再确定更新和支持策略。
-网站由本仓库 Pages 工作流构建并校验。
+发布签名由既有 GitHub 环境管理。API 协议夹具继续使用固定版本，跨组件改动必须验证权限、设备隔离及兼容性。工程中的自动化测试保留用于发布验证。
