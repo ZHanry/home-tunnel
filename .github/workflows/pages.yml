@@ -32,6 +32,7 @@ jobs:
           GOATCOUNTER_ENDPOINT: ${{ vars.GOATCOUNTER_ENDPOINT }}
         run: |
           set -euo pipefail
+          python3 scripts/check-release-entry.py
           cp -R docs/site _site
           python3 - <<'PY'
           import os

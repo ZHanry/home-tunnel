@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "product": "Home Tunnel",
+  "version": "7.0.0",
+  "stage": "stable",
+  "api_major": 1,
+  "contract_ref": "api-v1.1.0",
+  "minimum_server": "7.0.0",
+  "tested_combination": {
+    "server": "7.0.0",
+    "client": "7.0.0",
+    "android": "7.0.0",
+    "agent": "7.0.0"
+  },
+  "components": {
+    "hub": {
+      "repository": "ZHanry/home-tunnel",
+      "version": "7.0.0",
+      "tag": "v7.0.0",
+      "prerelease": false,
+      "release_url": "https://github.com/ZHanry/home-tunnel/releases/tag/v7.0.0"
+    },
+    "server": {
+      "repository": "ZHanry/home-tunnel-server",
+      "version": "7.0.0",
+      "tag": "v7.0.0",
+      "prerelease": false,
+      "release_url": "https://github.com/ZHanry/home-tunnel-server/releases/tag/v7.0.0",
+      "release_revision": "7959bfb6b96ea9532ca0040c1c3c689eaaed93c3",
+      "downloads": [
+        {
+          "filename": "home-tunnel-server-7.0.0.tar.gz",
+          "sha256": "406ef860e86180a0f3efdc100b61eb7654c61499b8c8574ace2470ce7269fe31",
+          "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v7.0.0/home-tunnel-server-7.0.0.tar.gz"
+        },
+        {
+          "filename": "compose.release.yaml",
+          "sha256": "ec935e2ccf2cc458de7509b913cfc494a5880b8c6188bb39f595330dbd04a916",
+          "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v7.0.0/compose.release.yaml"
+        }
+      ]
+    },
+    "client": {
+      "repository": "ZHanry/home-tunnel-client",
+      "version": "7.0.0",
+      "tag": "v7.0.0",
+      "prerelease": false,
+      "release_url": "https://github.com/ZHanry/home-tunnel-client/releases/tag/v7.0.0",
+      "release_revision": "6e9dc52f17ba8f3afdf1813d135a1c33528b4e4a",
+      "downloads": [
+        {
+          "filename": "HomeTunnel-Setup-7.0.0-x64.exe",
+          "sha256": "f9b5d2ea09ec58f42c127c44c73b09819e00509cf4e0fc4c562a67af6e11c64b",
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v7.0.0/HomeTunnel-Setup-7.0.0-x64.exe"
+        },
+        {
+          "filename": "HomeTunnel-Windows-7.0.0-x64.zip",
+          "sha256": "4720d80053f0e14a27dc07fc8a06855bbee05f2d22340321d98d31b8df7cb836",
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v7.0.0/HomeTunnel-Windows-7.0.0-x64.zip"
+        },
+        {
+          "filename": "home-tunnel-linux-7.0.0-amd64.tar.gz",
+          "sha256": "fb5ef803e0285a969274155a936dab5618f9eab21a435e9ee923614b9e0257cb",
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v7.0.0/home-tunnel-linux-7.0.0-amd64.tar.gz"
+        },
+        {
+          "filename": "home-tunnel-linux-7.0.0-arm64.tar.gz",
+          "sha256": "a15b7063132f8eb8af66651265160a8250d21fcbd4fa5430b3871939b54b7730",
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v7.0.0/home-tunnel-linux-7.0.0-arm64.tar.gz"
+        },
+        {
+          "filename": "home-tunnel-macos-7.0.0-amd64.tar.gz",
+          "sha256": "bced853184486ea5aba49c85d472fa0001c35abb0c996acf2557ef63c6df0a11",
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v7.0.0/home-tunnel-macos-7.0.0-amd64.tar.gz"
+        },
+        {
+          "filename": "home-tunnel-macos-7.0.0-arm64.tar.gz",
+          "sha256": "d3fa8fd6e99572e08b3320c6b799fd172b9a1a6cb088b416ebc24e2611396609",
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v7.0.0/home-tunnel-macos-7.0.0-arm64.tar.gz"
+        }
+      ]
+    },
+    "android": {
+      "repository": "ZHanry/home-tunnel-android",
+      "version": "7.0.0",
+      "tag": "v7.0.0",
+      "prerelease": false,
+      "release_url": "https://github.com/ZHanry/home-tunnel-android/releases/tag/v7.0.0",
+      "release_revision": "5e30ff3cc9f656138b141418b67f198fe8e77cc3",
+      "downloads": [
+        {
+          "filename": "HomeTunnel-Android-7.0.0-arm64-v8a.apk",
+          "sha256": "77a2c00bcc0a47726d9a1e3a4e18fe2258128edb4bd48cf04bc47d7a8cef4a85",
+          "url": "https://github.com/ZHanry/home-tunnel-android/releases/download/v7.0.0/HomeTunnel-Android-7.0.0-arm64-v8a.apk"
+        }
+      ]
+    }
+  },
+  "upstream": {
+    "frp": "0.70.1"
+  },
+  "signing": {
+    "windows": "unsigned-no-certificate-configured",
+    "macos": "unsigned-no-certificate-configured",
+    "android_certificate_sha256": "d7779e338be1039acee6dda9a43417cbf2baf4b0c9995578d9708501e95af702"
+  },
+  "contract_revision": "7959bfb6b96ea9532ca0040c1c3c689eaaed93c3"
+}
