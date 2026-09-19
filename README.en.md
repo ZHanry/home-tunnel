@@ -1,39 +1,56 @@
-<div align="center">
-  <img src="docs/site/assets/HomeTunnel.svg" alt="Home Tunnel" width="72" height="72">
-  <h1>Home Tunnel</h1>
-  <p><strong>Self-hosted access to services at home</strong></p>
-  <p><a href="https://github.com/ZHanry/home-tunnel/releases/latest"><img src="https://img.shields.io/badge/release-6.0.0-176653" alt="Release 6.0.0"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="Apache-2.0"></a></p>
-  <p><a href="README.md">简体中文</a> · <a href="https://zhanry.github.io/home-tunnel/">Website</a></p>
-</div>
+<img src="docs/site/assets/HomeTunnel.svg" alt="" width="64" height="64">
 
-Home Tunnel 6.0 is the official release of a self-hosted platform for reaching your NAS, photos, Home Assistant and other home services through your own public server. Each app has been rebuilt around its role.
+# Home Tunnel
 
-## Choose your component
+**Self-hosted access to your home services**
 
-| Component | Purpose | Download and source |
-| --- | --- | --- |
-| Server | Deploy the console and tunnel services on public Linux infrastructure | [Release](https://github.com/ZHanry/home-tunnel-server/releases/latest) · [Repository](https://github.com/ZHanry/home-tunnel-server) |
-| Desktop / CLI | Run tunnels on Windows, macOS, Linux or a NAS | [Packages](https://github.com/ZHanry/home-tunnel-client/releases/latest) · [Repository](https://github.com/ZHanry/home-tunnel-client) |
-| Android | Remotely manage your devices and services | [APK](https://github.com/ZHanry/home-tunnel-android/releases/latest) · [Repository](https://github.com/ZHanry/home-tunnel-android) |
-| Project hub | Website, shared documentation and release overview | This repository |
+[![Stable 7.0.0](https://img.shields.io/badge/stable-7.0.0-176653)](https://github.com/ZHanry/home-tunnel/releases/tag/v7.0.0) [![License Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
-## What is new in 6.0
+[简体中文](README.md) · [Website](https://zhanry.github.io/home-tunnel/en/) · [Downloads](https://github.com/ZHanry/home-tunnel/blob/main/docs/DOWNLOADS.md) · [Quick start](https://github.com/ZHanry/home-tunnel/blob/main/docs/GETTING_STARTED.md)
 
-- New top navigation in the console, a local service workspace on desktop, and four destinations on Android.
-- Registered desktop and CLI sessions are restricted to their own device. Web and Android sessions manage devices owned by the account.
-- One administrator per deployment. Deleting a regular user revokes sessions and device credentials, removes connections and preserves audit history.
-- Service search, explicit target device selection, recoverable form conflicts and clear deletion confirmation.
-- Focused downloads: APK on Android, platform packages on desktop, and a deployment archive for the server. Build and signing evidence remains in Actions.
 
-## Get connected
+Reach your NAS, Home Assistant, Immich, Jellyfin and other local services through
+your own public server. A desktop/NAS Agent runs the tunnels; Web and Android
+manage them. Supports HTTP/HTTPS, TCP/UDP and SSH/RDP/RTSP presets without an
+account on a hosted relay service.
 
-1. [Deploy the server](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/SELF_HOSTING.md).
-2. Install the client on a home computer or NAS and sign in to register it.
-3. Add a connection using an address reachable from that device, then copy its public address.
-4. Sign in on Android or the Web console to manage your devices remotely.
+| Start here | Link |
+| --- | --- |
+| Deploy a public Linux server | [Server guide](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/SELF_HOSTING.md) · [Server release](https://github.com/ZHanry/home-tunnel-server/releases/tag/v7.0.0) |
+| Connect a computer or NAS | [Desktop/CLI release](https://github.com/ZHanry/home-tunnel-client/releases/tag/v7.0.0) · [NAS template](https://github.com/ZHanry/home-tunnel-client/tree/main/packaging/nas) |
+| Manage several deployments from your phone | [Android APK](https://github.com/ZHanry/home-tunnel-android/releases/tag/v7.0.0) |
+| Configure a home application | [Scenario guide](docs/SCENARIOS.md) |
 
-Android is a management app. Tunnels run on computers or NAS devices. Users can create HTTP / HTTPS connections; administrators assign public TCP and fixed UDP ports. Raw applications provide their own authentication and encryption.
+## What's new in 7.0.0
 
-![6.0 server overview](docs/site/assets/admin-dashboard.jpg)
+- Ten-minute single-use enrollment, TOTP MFA, recovery codes and session revocation.
+- OS-backed credentials on Windows/macOS/Android; explicit 0600 storage on headless Linux.
+- Encrypted Android server/account profiles, device tags/favorites and per-item batch pause/resume.
+- Deployment wizard/preflight, redacted diagnostics, host-only administrator recovery,
+  encrypted off-host backup and clean-volume restoration, Grafana and nine alert rules.
+- Coordinated Web sessions, strictly verified atomic updates, separate ACL version
+  conflicts, durable backup health and capability-driven Android transport controls.
+- OpenAPI/JSON Schema, a checked compatibility matrix and durable release evidence.
 
-[Downloads](docs/DOWNLOADS.md) · [Getting started](docs/GETTING_STARTED.md) · [Upgrading](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/UPGRADING.md) · [Architecture](docs/ARCHITECTURE.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
+All four repositories and the managed Agent use **7.0.0**. Upstream FRP stays at
+**0.70.1**. Windows/macOS currently have no publisher certificates: packages disclose
+their unsigned state while the signing/notarization workflow is ready. Android
+retains its established release signature. [Verification details](https://github.com/ZHanry/home-tunnel-client/blob/main/docs/PLATFORM_SECURITY.md).
+
+## Connect in three steps
+
+1. Deploy the server on a public Linux host with your domain and Docker Compose.
+2. Install the client on a home host and enroll with an account or one-time code.
+3. Add a reachable local service and verify its public address from another network.
+
+Android is a management app; tunnels continue on the home host. Administrators
+enable TCP/UDP pools and self-service permissions; the server assigns public ports.
+Raw transports rely on the target application's authentication and encryption.
+
+![Console example](docs/site/assets/admin-dashboard-7.jpg)
+
+[Downloads/compatibility](docs/DOWNLOADS.md) · [API](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/API.md) · [Recovery](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/disaster-recovery.md) · [Monitoring](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/MONITORING.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
+
+Help with a reproducible issue, a real deployment story, documentation or code.
+If Home Tunnel is useful to you, a Star or a link from your project helps others
+discover it. Never publish credentials or private network details in an issue.

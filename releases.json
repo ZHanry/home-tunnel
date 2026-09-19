@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "product": "Home Tunnel",
+  "version": "7.0.0",
+  "stage": "stable",
+  "api_major": 1,
+  "contract_ref": "api-v1.1.0",
+  "minimum_server": "7.0.0",
+  "tested_combination": {
+    "server": "7.0.0",
+    "client": "7.0.0",
+    "android": "7.0.0",
+    "agent": "7.0.0"
+  },
+  "components": {
+    "hub": {
+      "repository": "ZHanry/home-tunnel",
+      "version": "7.0.0",
+      "tag": "v7.0.0",
+      "prerelease": false
+    },
+    "server": {
+      "repository": "ZHanry/home-tunnel-server",
+      "version": "7.0.0",
+      "tag": "v7.0.0",
+      "prerelease": false
+    },
+    "client": {
+      "repository": "ZHanry/home-tunnel-client",
+      "version": "7.0.0",
+      "tag": "v7.0.0",
+      "prerelease": false
+    },
+    "android": {
+      "repository": "ZHanry/home-tunnel-android",
+      "version": "7.0.0",
+      "tag": "v7.0.0",
+      "prerelease": false
+    }
+  },
+  "upstream": {
+    "frp": "0.70.1"
+  },
+  "signing": {
+    "windows": "unsigned-no-certificate-configured",
+    "macos": "unsigned-no-certificate-configured",
+    "android_certificate_sha256": "d7779e338be1039acee6dda9a43417cbf2baf4b0c9995578d9708501e95af702"
+  }
+}

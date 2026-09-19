@@ -1,43 +1,64 @@
-<div align="center">
-  <img src="docs/site/assets/HomeTunnel.svg" alt="Home Tunnel" width="72" height="72">
-  <h1>Home Tunnel</h1>
-  <p><strong>自托管的家庭服务连接平台</strong></p>
-  <p><a href="https://github.com/ZHanry/home-tunnel/releases/latest"><img src="https://img.shields.io/badge/release-6.0.0-176653" alt="Release 6.0.0"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="Apache-2.0"></a></p>
-  <p><a href="README.en.md">English</a> · <a href="https://zhanry.github.io/home-tunnel/">项目网站</a></p>
-</div>
+<img src="docs/site/assets/HomeTunnel.svg" alt="" width="64" height="64">
 
-Home Tunnel 6.0 正式版通过你自己的公网服务器，让家里的 NAS、相册、Home Assistant 和其他服务随时可达。Web 控制台、桌面端与 Android 端围绕各自的使用场景重新设计。
+# Home Tunnel
 
-## 选择你的入口
+**自托管的家庭服务连接平台**
 
-| 组件 | 用途 | 下载与源码 |
-| --- | --- | --- |
-| 服务端 | 在公网 Linux 主机上部署控制台与转发服务 | [正式版](https://github.com/ZHanry/home-tunnel-server/releases/latest) · [仓库](https://github.com/ZHanry/home-tunnel-server) |
-| 桌面与 CLI | 在 Windows、macOS、Linux 电脑或 NAS 上运行隧道 | [安装包](https://github.com/ZHanry/home-tunnel-client/releases/latest) · [仓库](https://github.com/ZHanry/home-tunnel-client) |
-| Android | 从手机管理账号名下的设备与连接 | [APK](https://github.com/ZHanry/home-tunnel-android/releases/latest) · [仓库](https://github.com/ZHanry/home-tunnel-android) |
-| 项目入口 | 网站、跨端使用指南与版本说明 | 本仓库 |
+[![Stable 7.0.0](https://img.shields.io/badge/stable-7.0.0-176653)](https://github.com/ZHanry/home-tunnel/releases/tag/v7.0.0) [![License Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
-## 6.0 带来了什么
+[English](README.en.md) · [项目网站](https://zhanry.github.io/home-tunnel/) · [下载](https://github.com/ZHanry/home-tunnel/blob/main/docs/DOWNLOADS.md) · [快速开始](https://github.com/ZHanry/home-tunnel/blob/main/docs/GETTING_STARTED.md)
 
-- **全新界面结构**：服务端顶部导航、桌面本机服务工作区、手机四个主入口。
-- **清晰的设备边界**：已登记的桌面与 CLI 会话只访问本机资源；Web 和 Android 可以管理账号名下的多台设备。
-- **完整的账号管理**：每套部署保留一名管理员；删除普通用户时撤销会话和设备凭据、移除连接，保留历史审计。
-- **更顺手的操作**：按设备和名称查找连接，明确选择目标设备，保存冲突时保留输入，删除前说明影响。
-- **简洁的下载页**：Android 仅提供 APK；桌面端提供各平台安装包；服务端提供部署包。签名与检查记录保存在构建工作流中。
 
-## 开始使用
+用自己的公网服务器，将家里的 NAS、Home Assistant、Immich、Jellyfin 和其他
+本地服务安全地连接到外部网络。电脑/NAS 运行隧道，浏览器和 Android 管理连接。
+支持 HTTP/HTTPS、TCP、UDP，以及 SSH/RDP/RTSP 预设；不依赖第三方托管中转账号。
 
-1. 按[自托管指南](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/SELF_HOSTING.md)部署服务端。
-2. 在家庭电脑或 NAS 上安装客户端，登录并登记设备。
-3. 为这台设备添加连接，填写它可以访问的本地服务地址，再复制公网地址使用。
-4. 在 Android 或浏览器中登录同一账号，即可远程管理这些连接。
+## 从这里开始
 
-Android 负责管理，实际隧道持续运行在电脑或 NAS 上。HTTP / HTTPS 连接可自行创建；通用 TCP 和固定端口 UDP 的公网端口由管理员分配，应用负责自身的认证与加密。
+| 你要做的事 | 入口 |
+| --- | --- |
+| 部署自己的公网服务端 | [部署指南](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/SELF_HOSTING.md) · [Server 7.0.0](https://github.com/ZHanry/home-tunnel-server/releases/tag/v7.0.0) |
+| 连接家中电脑或 NAS | [桌面/CLI 7.0.0](https://github.com/ZHanry/home-tunnel-client/releases/tag/v7.0.0) · [NAS 模板](https://github.com/ZHanry/home-tunnel-client/tree/main/packaging/nas) |
+| 手机远程管理多台服务器 | [Android 7.0.0 APK](https://github.com/ZHanry/home-tunnel-android/releases/tag/v7.0.0) |
+| 给家庭应用配置连接 | [Home Assistant / Immich / Jellyfin 场景](docs/SCENARIOS.md) |
 
-## 界面
+## 7.0.0 的重点
 
-![6.0 服务端总览](docs/site/assets/admin-dashboard.jpg)
+- **接入与账号安全**：10 分钟一次性设备接入码、TOTP 双重验证、恢复码、会话撤销；Windows DPAPI、macOS Keychain、AndroidKeyStore。
+- **日常管理**：Android 加密保存多服务器/账号；Web、桌面、手机的设备标签、收藏、批量暂停/恢复，逐项报告结果。
+- **完整的运维路径**：部署向导与预检、脱敏诊断包、唯一管理员离线恢复、加密异机备份、干净卷恢复验证、Grafana 和 9 条告警规则。
+- **可靠性修复**：Web 多标签页会话协调、严格校验的原子更新、独立访问策略并发保护、持久化备份健康、手机端口池与能力发现。
+- **公开的交付依据**：API 1.1/OpenAPI/JSON Schema、兼容矩阵、跨平台检查；校验清单、SBOM、构建证明和扫描结果随 Release 保存。
 
-## 文档
+四个仓库与自有 Agent 统一为 **7.0.0**，FRP 使用独立的 **0.70.1** 版本。
+Windows/macOS 暂无平台发行证书，包内明确标注未签名；签名/公证流程已接入。
+Android 使用既有正式签名。[验证与签名说明](https://github.com/ZHanry/home-tunnel-client/blob/main/docs/PLATFORM_SECURITY.md)。
 
-[下载说明](docs/DOWNLOADS.md) · [开始使用](docs/GETTING_STARTED.md) · [升级说明](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/UPGRADING.md) · [架构](docs/ARCHITECTURE.md) · [仓库职责](docs/REPOSITORIES.md) · [贡献指南](CONTRIBUTING.md) · [安全报告](SECURITY.md)
+## 三步连接
+
+1. 准备公网 Linux 主机、域名和 Docker Compose，部署服务端并修改初始管理员密码。
+2. 在家庭电脑/NAS 安装客户端，通过账号或一次性接入码登记设备。
+3. 添加本地服务，等待在线，复制地址并从外部网络验证访问。
+
+TCP/UDP 需要管理员开放端口池并授权，公网端口由服务端自动分配。原始 TCP/UDP
+不附带 HTTP 白名单或 Basic Auth，必须使用目标应用的认证与加密。
+
+## 界面与架构
+
+![Home Tunnel 7.0.0 控制台（示例数据）](docs/site/assets/admin-dashboard-7.jpg)
+
+```mermaid
+flowchart LR
+  Visitor[浏览器 / 远程应用] --> Edge[自己的公网服务器]
+  Edge --> Agent[家庭电脑 / NAS Agent]
+  Agent --> App[Home Assistant / 相册 / 媒体库]
+  Manager[Web / Android 管理] --> Edge
+```
+
+[下载与兼容性](docs/DOWNLOADS.md) · [升级](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/UPGRADING.md) · [账号安全](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/ACCOUNT_SECURITY.md) · [备份恢复](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/disaster-recovery.md) · [监控](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/MONITORING.md) · [API](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/API.md)
+
+## 参与项目
+
+先阅读 [贡献指南](CONTRIBUTING.md)。问题反馈请提供组件版本、平台、复现步骤和脱敏
+诊断结果，切勿公开密码/接入码。安全问题按 [SECURITY.md](SECURITY.md) 私下报告。
+如果项目帮助你解决了真实需求，欢迎 Star、分享使用场景或提交文档改进。
