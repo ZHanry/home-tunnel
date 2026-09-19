@@ -11,7 +11,8 @@ FRP 独立为 0.70.1。[机器可读清单](../releases.json) 记录发行提交
 | Android 8.0+ arm64-v8a | `HomeTunnel-Android-7.0.0-arm64-v8a.apk` | [Android Release](https://github.com/ZHanry/home-tunnel-android/releases/tag/v7.0.0) |
 | Linux 服务端 amd64 / arm64 | `home-tunnel-server-7.0.0.tar.gz` + `compose.release.yaml` | [Server Release](https://github.com/ZHanry/home-tunnel-server/releases/tag/v7.0.0) |
 
-每个 Release 保留 SHA256SUMS、Sigstore bundle、SBOM、检查和签名证据，AAB 供
+三个组件的 Release 保留 SHA256SUMS、Sigstore bundle 和验证证据。桌面/Android 的
+SBOM 为 Release 附件；服务端镜像 SBOM/构建证明保存在清单引用的 GHCR 镜像摘要上。AAB 供
 Android 分发工程使用，普通用户安装 APK。核对文件名/版本和哈希，不要下载随机网盘镜像。
 
 Windows/macOS 没有平台发行证书，当前包为明确标注的未签名包。Android 保持原正式签名。
