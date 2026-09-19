@@ -2,7 +2,7 @@
 
 正式版本使用 `vX.Y.Z` 标签。7.0.0 将四个仓库与自有 Agent 统一版本，各组件独立构建，FRP 保留其第三方版本。源码版本与标签必须一致，`compatibility.json` 的阶段设为 `public-release`。
 
-1. 提交代码到 `main`，等待 Quality Gate、CodeQL 和 Secret scan 成功。
+1. 三个组件提交到 `main` 后等待 Quality Gate、CodeQL 和 Secret scan 成功；项目入口仓库等待 Pages（包含 Lighthouse 和发布清单检查）与 Secret scan 成功。
 2. 在已通过检查的提交上创建版本标签。
 3. 工作流构建完整安装包，运行组件检查，验证签名与产物身份。
 4. 完整构建证明、SBOM、扫描/安装报告及签名材料与安装包一起保存为 Release 附件；Actions 附件提供额外副本。保持封存的 `SHA256SUMS.txt` 与 Sigstore bundle 原样，不能在签名后重写或删减清单。

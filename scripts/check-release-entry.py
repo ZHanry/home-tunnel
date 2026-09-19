@@ -9,6 +9,16 @@ assert re.fullmatch(r'\d+\.\d+\.\d+',version)
 assert manifest['version']==version and manifest['stage']=='stable'
 assert all(x['version']==version and x['tag']=='v'+version and x['prerelease'] is False for x in manifest['components'].values())
 assert all(x==version for x in manifest['tested_combination'].values())
+for component,record in manifest['components'].items():
+    base='https://github.com/'+record['repository']+'/releases/'
+    assert record['release_url']==base+'tag/v'+version
+    if component=='hub':continue
+    assert re.fullmatch(r'[0-9a-f]{40}',record['release_revision'])
+    assert record['downloads']
+    for package in record['downloads']:
+        assert re.fullmatch(r'[0-9a-f]{64}',package['sha256'])
+        assert package['url']==base+'download/v'+version+'/'+package['filename']
+assert manifest['contract_revision']==manifest['components']['server']['release_revision']
 assert json.loads((root/'docs/site/releases.json').read_text(encoding='utf-8'))==manifest
 for path in (root/'docs/site/index.html',root/'docs/site/en/index.html'):
     text=path.read_text(encoding='utf-8')
