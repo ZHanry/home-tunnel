@@ -33,6 +33,11 @@ jobs:
         run: |
           set -euo pipefail
           python3 scripts/check-release-entry.py
+          python3 -m unittest discover -s scripts -p 'test_*.py'
+          if [ -f candidate-releases.json ]; then
+            python3 scripts/check-candidate-release.py candidate-releases.json
+            cmp candidate-releases.json docs/site/candidate-releases.json
+          fi
           cp -R docs/site _site
           python3 - <<'PY'
           import os

@@ -1,0 +1,811 @@
+{
+  "schema_version": 1,
+  "target": "8.0.0",
+  "stage": "development",
+  "original_cases": 68,
+  "extended_cases": 12,
+  "cases": [
+    {
+      "id": "A01",
+      "trigger": "用户A请求用户B endpoint/session/grant",
+      "expected": "不返回B存在性/在线/SDP；统一不可见",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "A02",
+      "trigger": "复制RD token到无私钥进程",
+      "expected": "DPoP校验失败，不回退Bearer",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "A03",
+      "trigger": "重放challenge、DPoP jti、signal ticket",
+      "expected": "最多首次有效，后续拒绝且资源不增加",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "A04",
+      "trigger": "修改JWS typ/alg/kid/aud或使用任意jwk",
+      "expected": "全部拒绝；不跟随远程key URL",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "A05",
+      "trigger": "admin尝试控制无本机授权host",
+      "expected": "拒绝；admin只能管理和停止",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "A06",
+      "trigger": "账号密码已知，新建controller",
+      "expected": "仍需host本地批准；旧授权不能套用到新公钥",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "A07",
+      "trigger": "browser清站点数据/换浏览器/原生重装",
+      "expected": "新身份重新配对，不按名称自动恢复信任",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "A08",
+      "trigger": "browser注册host或伪造linked_device_id",
+      "expected": "服务端schema/owner/角色约束拒绝",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "A09",
+      "trigger": "普通隧道接入码/device credential请求他机列表",
+      "expected": "拒绝；原隧道管理继续正常",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "A10",
+      "trigger": "修改密码、退出父session、撤销设备、禁用用户",
+      "expected": "拒绝新票据/续租；在线host停止，离线不超当前lease",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "A11",
+      "trigger": "服务端伪造扩大grant/回滚grant版本",
+      "expected": "host本地不接受，输入不开放",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "A12",
+      "trigger": "OS密钥存储失败/浏览器不可持久化",
+      "expected": "明确受限/临时身份；无明文私钥悄悄落盘",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "A13",
+      "trigger": "Web跨站请求、错误Origin、CSRF缺失、多标签并发",
+      "expected": "未授权操作失败；标签不互踢无限重连",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "A14",
+      "trigger": "本机点击“关闭被控”或“立即停止”且服务器不可达",
+      "expected": "当地立即停止捕获和输入，不等待远端确认",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "S01",
+      "trigger": "并发重复创建/批准/renew，同幂等键不同body",
+      "expected": "同请求同结果，不同body 409，不超槽",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "S02",
+      "trigger": "host/controller双角色同时占位、两个controller争host",
+      "expected": "唯一slot保证最多一个活动占位，失败请求不泄漏资源",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "S03",
+      "trigger": "发出票据前数据库commit失败/磁盘满",
+      "expected": "不把未持久化授权发出，不创建幽灵lease",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "S04",
+      "trigger": "active中server进程崩溃重启",
+      "expected": "slot从持久化恢复；未过期直连可继续，不重复放行名额",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "S05",
+      "trigger": "server离线跨过lease到期/调系统时钟回退",
+      "expected": "最晚按原到期停止，不能重新起算900秒",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "S06",
+      "trigger": "controller谎报close立刻申请新会话",
+      "expected": "原槽在host确认或lease过期前保留",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "S07",
+      "trigger": "信令连接旧generation晚到close回调",
+      "expected": "新连接presence不被误标离线",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "S08",
+      "trigger": "超大/碎片/慢消费者/未知type/重复候选",
+      "expected": "消息与内存上限生效，旧服务不崩溃",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "S09",
+      "trigger": "账号日业务字节耗尽",
+      "expected": "禁止新会话；安全关闭仍可执行；保留预算不能传任意数据",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "S10",
+      "trigger": "同时已有 `/api/v1/ws` 和新RD WSS",
+      "expected": "两者各自正确升级/鉴权；旧handler不误关新socket",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "S11",
+      "trigger": "当前7.0访问新8.0、8.0访问旧服务端",
+      "expected": "支持策略与capability准确；隧道回归通过，新RD有清楚不可用提示",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "S12",
+      "trigger": "从旧备份恢复、旧kid轮换、未知kid",
+      "expected": "restore_epoch与信任规则执行，旧撤销不复活，未知key安全失败",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "P01",
+      "trigger": "配置注入turn/turns或ICE-TCP",
+      "expected": "启动/创建会话拒绝；不能静默改用",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "P02",
+      "trigger": "SDP/trickle出现relay、TCP、非法地址或超数",
+      "expected": "严格拒绝/受控剔除；host不进入敏感业务",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "P03",
+      "trigger": "合法prflx、IPv6、RFC1918/ULA、mDNS host",
+      "expected": "受支持库正常处理；不能全拒私网或所有域名",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "P04",
+      "trigger": "建连后路径变化为不合规/不可验证",
+      "expected": "先停输入/画面，再验证或终止；UI不保持旧P2P标识",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "P05",
+      "trigger": "禁止UDP/不可穿透NAT",
+      "expected": "20秒内结束本轮；无FRP/WSS/HTTP媒体回退",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "P06",
+      "trigger": "服务器抓包，视频分别10/40Mbps",
+      "expected": "无媒体/输入转发，服务器带宽不随视频线性增加",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "P07",
+      "trigger": "STUN Allocate/Refresh/ChannelData/Send、端口扫描",
+      "expected": "TURN不可用，无relay端口暴露；只开放必要UDP入口",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "P08",
+      "trigger": "STUN Binding洪泛、伪源/大量来源桶",
+      "expected": "限速与内存/出站预算有效，无无限错误放大；不声称网卡入站零流量",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "P09",
+      "trigger": "STUN关闭/单IP故障，LAN/IPv6可达",
+      "expected": "可用直接候选按真实能力工作；否则明确失败，不转公共服务",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "P10",
+      "trigger": "Wi-Fi↔蜂窝、WSS与UDP不同出口",
+      "expected": "按epoch恢复/失败；不因错误IP绑定否认合法身份",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "P11",
+      "trigger": "重放旧epoch的offer/candidate/input/异步回调",
+      "expected": "不作用于新PC/新输入，配额仍是原session槽",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "P12",
+      "trigger": "管理服务器仅IPv4，两端IPv6互通",
+      "expected": "控制面可达时可测IPv6直连；控制面不可达时明确新会话不可用",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "M01",
+      "trigger": "H.264 profile/level/尺寸不兼容",
+      "expected": "正确协商或报错；不声称任意浏览器支持HEVC",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "M02",
+      "trigger": "禁用/失效硬件codec、跨GPU捕获",
+      "expected": "报告实际路径；显式软件/低规格回退或失败，无伪硬编",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "M03",
+      "trigger": "静态桌面→快速滚动→视频→静态",
+      "expected": "队列有界、质量自适应，无持续高空闲编码",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "M04",
+      "trigger": "丢关键帧、RTX过期、持续拥塞",
+      "expected": "有限关键帧恢复，无无限重传/关键帧风暴",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "M05",
+      "trigger": "同分辨率切另一屏、迟到旧帧",
+      "expected": "遮罩/重建与layout门保证不在旧画面位置误操作",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "M06",
+      "trigger": "Windows锁屏/UAC/GPU reset",
+      "expected": "正确暂停/限制提示，恢复资源，无关闭UAC行为",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "M07",
+      "trigger": "macOS首次安装/TCC拒绝/撤销/Retina",
+      "expected": "权限引导与状态准确，坐标正确，旧授权不冒充新包权限",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "M08",
+      "trigger": "GNOME/KDE Wayland分别授权/取消/restore",
+      "expected": "capture/input同一Portal会话，取消立即释放，无root绕过",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "M09",
+      "trigger": "Android旋转/Surface销毁/后台/发热",
+      "expected": "无旧Surface输出，不无限建codec，热降频合理降档",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "M10",
+      "trigger": "Chrome/Edge/Firefox/Safari隐藏统计或保留键",
+      "expected": "诊断如实标未知/host验证；工具栏有效、没有强行劫持承诺",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "I01",
+      "trigger": "按住Ctrl/Shift/鼠标拖拽突然断网",
+      "expected": "2秒内释放；随后旧可靠KEY_DOWN不复活",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "I02",
+      "trigger": "丢失最后移动包后点击、乱序movement",
+      "expected": "BUTTON自带位置，点击正确，旧motion水位被拒绝",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "I03",
+      "trigger": "高DPI/负原点/旋转/黑边/缩放/平移",
+      "expected": "统一变换正确；黑边不触发边缘误点",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "I04",
+      "trigger": "中文拼音、组合文字、emoji、代理对、重复提交",
+      "expected": "仅最终文字提交，UTF8完整，ID去重，失败不ACK成功",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "I05",
+      "trigger": "Linux不同XKB/IBus/Fcitx环境",
+      "expected": "记录明确text模式；受支持中文路径通过，不能用未授权剪贴板代替",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "I06",
+      "trigger": "实体键盘左右修饰键/快捷键/长按",
+      "expected": "正确KeyId映射与重复，不出现双重文字路径",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "I07",
+      "trigger": "相对运动中丢包/乱序/大幅增量",
+      "expected": "累计值恢复，异常拒绝，切模式重新同步",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "I08",
+      "trigger": "用户失焦/退出全屏/手机手势取消/浏览器冻结",
+      "expected": "及时释放控制权，host看门狗兜底",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "I09",
+      "trigger": "新layout/input_epoch下迟到旧指针/文本",
+      "expected": "严格拒绝，不能在新布局输入旧动作",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "I10",
+      "trigger": "只看模式伪造input/text、未经握手输入",
+      "expected": "拒绝并有限审计，不能因DataChannel已open而放行",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "O01",
+      "trigger": "启用/关闭RD前后访问HTTP/TCP/UDP/RDP预设",
+      "expected": "原流量路径与权限语义不变，现有测试通过",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "O02",
+      "trigger": "worker崩溃/ABI错误/恶意IPC/本地网页攻击",
+      "expected": "worker安全失败，旧隧道继续，无任意命令/签名接口",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "O03",
+      "trigger": "升级中断/manifest篡改/包哈希错误/签名错误",
+      "expected": "原有更新保护继续生效，父子组件不混版本",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "O04",
+      "trigger": "数据库/密钥一致性备份→干净卷恢复",
+      "expected": "可恢复，旧session撤销，restore_epoch正确，host授权仍由本机决定",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "O05",
+      "trigger": "关闭RD回滚、旧镜像误指新schema",
+      "expected": "功能关闭可用；不允许未经验证的数据库降级",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "O06",
+      "trigger": "日志/诊断导出/指标标签检查",
+      "expected": "无画面、文本、按键、完整SDP/token；基数有界",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "O07",
+      "trigger": "实际安装/卸载/自启/账号退出",
+      "expected": "单安装包，权限提示合理，卸载清理含用户选择，旧隧道数据不误删",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "O08",
+      "trigger": "Android现有正式包升级",
+      "expected": "applicationId/证书不变，原多服务器账户可用，新增native ABI完整",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "O09",
+      "trigger": "CLI/NAS构建与无图形环境运行",
+      "expected": "无GUI/媒体依赖要求，不误报可被控",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "O10",
+      "trigger": "发布清单/下载/校验/SBOM/签名核对",
+      "expected": "产品/协议/引擎版本一致，签名状态如实标明",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "E01",
+      "trigger": "四个控制窗口并发；关闭、重连和切换焦点",
+      "expected": "四会话名额生效；只有焦点窗口接收输入；其他窗口持续可用",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "E02",
+      "trigger": "系统声音未授权、授权后启动和中途撤销",
+      "expected": "独立Opus音轨；默认静音；撤销立即停止捕获与输出",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "E03",
+      "trigger": "两个会话争用麦克风、后台与关闭",
+      "expected": "仅显式指定的一个会话收到；关闭清缓冲并静音",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "E04",
+      "trigger": "Windows产品虚拟麦克风安装/升级/卸载",
+      "expected": "有效发行签名；目标应用可选择；权限及失败反馈准确",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "E05",
+      "trigger": "macOS AudioServerPlugIn与Linux PipeWire虚拟输入",
+      "expected": "目标应用可选择；独立授权；安装卸载和失败恢复可验证",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "E06",
+      "trigger": "同文双向复制、重复ID、前后台、超长中文",
+      "expected": "文本64KiB上限；去重无回环；只作用于指定且被授权会话",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "E07",
+      "trigger": "多文件、慢盘、空间不足、重名、用户取消",
+      "expected": "显式目标；最多2并发；逐块确认；不覆盖未授权文件；失败不报告成功",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "E08",
+      "trigger": "篡改块/顺序/长度/最终hash及连接丢失",
+      "expected": "SHA256和偏移验证；中止并清理未提交文件；不自动恢复旧传输",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "E09",
+      "trigger": "AV1/HEVC缺失硬件、失败、能力冲突",
+      "expected": "依据真实能力协商；H264/VP8明确回退；报告实际encoder/硬编状态",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "E10",
+      "trigger": "7.0→多个8.0 RC→8.0正式版连续升级与回滚",
+      "expected": "组件版本一致；升级前停止远控释放输入；Android签名不变且versionCode递增",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "E11",
+      "trigger": "签名keyset连续轮换、未知kid、回滚与恢复",
+      "expected": "从旧pin逐版验证；拒绝换根和倒退；restore_epoch变化清旧会话",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "id": "E12",
+      "trigger": "RC清单、真实下载、摘要、SBOM、报告与稳定入口",
+      "expected": "四仓实际不可变产物齐备；限制如实；7.0稳定入口不被RC覆盖",
+      "status": "not_verified",
+      "evidence": []
+    }
+  ],
+  "platform_matrix": [
+    {
+      "controller": "Windows Chrome",
+      "host": "Windows",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "Windows Chrome",
+      "host": "macOS",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "Windows Chrome",
+      "host": "Linux X11",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "Windows Chrome",
+      "host": "GNOME Wayland",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "Windows Chrome",
+      "host": "KDE Wayland",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "Windows Edge",
+      "host": "Windows",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "Windows Edge",
+      "host": "macOS",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "Windows Edge",
+      "host": "Linux X11",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "Windows Edge",
+      "host": "GNOME Wayland",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "Windows Edge",
+      "host": "KDE Wayland",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "Linux Firefox",
+      "host": "Windows",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "Linux Firefox",
+      "host": "macOS",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "Linux Firefox",
+      "host": "Linux X11",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "Linux Firefox",
+      "host": "GNOME Wayland",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "Linux Firefox",
+      "host": "KDE Wayland",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "macOS Safari",
+      "host": "Windows",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "macOS Safari",
+      "host": "macOS",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "macOS Safari",
+      "host": "Linux X11",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "macOS Safari",
+      "host": "GNOME Wayland",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "macOS Safari",
+      "host": "KDE Wayland",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "Windows desktop",
+      "host": "Windows",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "Windows desktop",
+      "host": "macOS",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "Windows desktop",
+      "host": "Linux X11",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "Windows desktop",
+      "host": "GNOME Wayland",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "Windows desktop",
+      "host": "KDE Wayland",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "macOS desktop",
+      "host": "Windows",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "macOS desktop",
+      "host": "macOS",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "macOS desktop",
+      "host": "Linux X11",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "macOS desktop",
+      "host": "GNOME Wayland",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "macOS desktop",
+      "host": "KDE Wayland",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "Linux desktop",
+      "host": "Windows",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "Linux desktop",
+      "host": "macOS",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "Linux desktop",
+      "host": "Linux X11",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "Linux desktop",
+      "host": "GNOME Wayland",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "Linux desktop",
+      "host": "KDE Wayland",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "Android physical device",
+      "host": "Windows",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "Android physical device",
+      "host": "macOS",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "Android physical device",
+      "host": "Linux X11",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "Android physical device",
+      "host": "GNOME Wayland",
+      "status": "not_verified",
+      "evidence": []
+    },
+    {
+      "controller": "Android physical device",
+      "host": "KDE Wayland",
+      "status": "not_verified",
+      "evidence": []
+    }
+  ]
+}

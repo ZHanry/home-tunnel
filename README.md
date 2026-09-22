@@ -15,6 +15,8 @@
 
 ## 从这里开始
 
+8.0 开发中：见 [已确认范围](docs/8.0/SCOPE.md)、[80 项验收表](docs/8.0/ACCEPTANCE.md) 和 [候选版发布要求](docs/8.0/RELEASE_CANDIDATE.md)。当前尚无 8.0 候选安装包，稳定下载仍为 7.0.0。
+
 | 你要做的事 | 入口 |
 | --- | --- |
 | 部署自己的公网服务端 | [部署指南](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/SELF_HOSTING.md) · [Server 7.0.0](https://github.com/ZHanry/home-tunnel-server/releases/tag/v7.0.0) |
