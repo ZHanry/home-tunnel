@@ -1,0 +1,40 @@
+{
+  "data_channel_round_trips": 1,
+  "decoded_height": 720,
+  "decoded_width": 1280,
+  "desktop_frames_captured": 45,
+  "dtls_connected": true,
+  "product_acceptance": false,
+  "receiver": {
+    "bytes_received": 44359,
+    "clock_rate": 90000,
+    "decoder_implementation": "FFmpeg",
+    "frames_decoded": 30,
+    "mime_type": "video/H264",
+    "packets_received": 153,
+    "payload_type": 108,
+    "power_efficient_decoder": false,
+    "sdp_fmtp_line": "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f",
+    "total_decode_time_seconds": 0.024
+  },
+  "requested_codec": "H264",
+  "scope": "local-native-media-probe",
+  "screen_content_saved": false,
+  "selected_pair": "udp-host-host",
+  "sender": {
+    "clock_rate": 90000,
+    "encoder_implementation": "OpenH264",
+    "frames_encoded": 30,
+    "mime_type": "video/H264",
+    "payload_type": 108,
+    "power_efficient_encoder": false,
+    "sdp_fmtp_line": "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f",
+    "total_encode_time_seconds": 0.216
+  },
+  "status": "passed",
+  "video_frames_decoded": 30,
+  "exit_code": 0,
+  "probe_sha256": "baba53bf318b992cf5be149c5ee51c98ef10438923a548ff298ddf8c2811395d",
+  "webrtc_revision": "94e682e18fbcc0751463be2257b09d2a646a5a68",
+  "deps_lock_sha256": "b89bd86b6aa093a7226d8e533a7468c021bd267c1e11c164d66ca213f9e54195"
+}

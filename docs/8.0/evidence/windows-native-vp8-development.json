@@ -1,0 +1,40 @@
+{
+  "data_channel_round_trips": 1,
+  "decoded_height": 720,
+  "decoded_width": 1280,
+  "desktop_frames_captured": 32,
+  "dtls_connected": true,
+  "product_acceptance": false,
+  "receiver": {
+    "bytes_received": 139040,
+    "clock_rate": 90000,
+    "decoder_implementation": "libvpx",
+    "frames_decoded": 30,
+    "mime_type": "video/VP8",
+    "packets_received": 140,
+    "payload_type": 96,
+    "power_efficient_decoder": false,
+    "sdp_fmtp_line": null,
+    "total_decode_time_seconds": 0.046
+  },
+  "requested_codec": "VP8",
+  "scope": "local-native-media-probe",
+  "screen_content_saved": false,
+  "selected_pair": "udp-host-host",
+  "sender": {
+    "clock_rate": 90000,
+    "encoder_implementation": "libvpx",
+    "frames_encoded": 30,
+    "mime_type": "video/VP8",
+    "payload_type": 96,
+    "power_efficient_encoder": false,
+    "sdp_fmtp_line": null,
+    "total_encode_time_seconds": 0.093
+  },
+  "status": "passed",
+  "video_frames_decoded": 30,
+  "probe_sha256": "baba53bf318b992cf5be149c5ee51c98ef10438923a548ff298ddf8c2811395d",
+  "deps_lock_sha256": "b89bd86b6aa093a7226d8e533a7468c021bd267c1e11c164d66ca213f9e54195",
+  "webrtc_revision": "94e682e18fbcc0751463be2257b09d2a646a5a68",
+  "exit_code": 0
+}

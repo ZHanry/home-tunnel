@@ -108,4 +108,6 @@
 - Windows→Chromium：[开发视频报告](evidence/windows-browser-view-development.json) 记录真实配对和本机授权、UDP/DTLS 与持续 1920×1080 解码。仅限同机观看；源码未封存，输入、系统声音、文件等未由此验证。
 - STUN：[实际容器报告](evidence/stun-runtime-development.json) 来自 [GitHub 隔离运行](https://github.com/ZHanry/home-tunnel-server/actions/runs/35756694517)。修复启动失败后，锁定的 coturn 镜像通过 Binding、Allocate/Refresh/CreatePermission/ChannelBind 拒绝、Send/ChannelData 本地不转发、TCP/TLS 无监听及 nftables 检查。60 个短时 Binding 请求接收 20 个，丢弃计数 46（含其他拒绝请求）。该报告只证明隔离 Linux namespace，不证明公网、IPv6、Docker DNAT 或云端计费负载结果。
 - 服务端、桌面和 Android 的自动化结果由各仓库 CI 和组件开发报告保存；统一候选报告必须绑定最终提交与产物摘要。
+- 原生编解码：[H.264](evidence/windows-native-h264-development.json) 和 [VP8](evidence/windows-native-vp8-development.json) 分别在同机 UDP/DTLS 探针上实际解码 30 帧；软件路径及编码器名称已记录。不是产品浏览器互通、硬件编码或跨网验收。
+- 原生构建：[Windows runner 记录](evidence/windows-runner-build-development.json) 绑定成功 CI 的历史提交、worker 摘要、初始磁盘和构建用时。授权与守护进程生命周期测试通过，没有执行真实按键注入；当前输入实测被系统屏幕选择器遮挡，发布门禁仍未通过。
 - 这些结果不证明完整平台功能、真实网关穿透或最终发行安装包已通过验收。

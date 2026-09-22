@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "kind": "development-build-evidence",
+  "status": "passed",
+  "scope": "GitHub Windows runner source build and native authorization, input-guard lifecycle and worker IPC tests",
+  "product_acceptance": false,
+  "workflow_url": "https://github.com/ZHanry/home-tunnel-client/actions/runs/35758757714",
+  "repository_revision": "4e6961f4402a91d70363fd33206786c854563e7f",
+  "source_modified": false,
+  "build_started_at": "2026-09-22T17:09:15Z",
+  "build_completed_at": "2026-09-22T17:36:59Z",
+  "build_seconds": 1664,
+  "processor_count": 4,
+  "jobs": 4,
+  "initial_free_bytes": 235453120512,
+  "required_free_bytes": 25769803776,
+  "worker_bytes": 19321856,
+  "worker_sha256": "41547d33f3978e75c23f1054c0d4e2dda929ba0b9a61a0386ee10b1013d8e612",
+  "deps_lock_sha256": "2c7b40298b30ef13e6ecf31b4a72790f2cb6e4fe6e23113b7bb5423a7b6d2535",
+  "limitations": [
+    "Historical development build; subsequent source and dependency changes require a new build.",
+    "Build duration includes source setup, compilation, licensing and automated checks, not just compiler execution.",
+    "Free space is the initial observation and the configured minimum, not peak build disk usage.",
+    "No real keyboard or pointer injection, browser interoperability, physical GPU, installation, clipboard or cross-network acceptance is established."
+  ]
+}
