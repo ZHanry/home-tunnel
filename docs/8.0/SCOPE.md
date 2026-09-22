@@ -7,7 +7,7 @@
 | 控制面 | 独立身份、双端配对、本机授权、DPoP、ES256、持久租约、撤销、四出站/单入站配额 | 已实现，自动化验证中 |
 | 共享协议 | API 1.2、独立 RD/ABI 版本、四语言常量与真实签名向量 | 已生成，尚未冻结发行标签 |
 | 原生媒体 | 同源 C++20/libwebrtc；实际 UDP 对确认后才开放数据 | Windows 原生捕获→真实控制面→Chromium 视频直连已在同机开发环境通过；跨机/跨网待验收 |
-| Windows | 捕获、编码、解码、输入、隔离 worker、权限与单包升级 | 安全核心、原生签名验证及输入适配已有构建测试；worker 集成待完成 |
+| Windows | 捕获、编码、解码、输入、隔离 worker、权限与单包升级 | 原生被控 worker、私有管道和 GUI 能力检查已集成；Windows 开发安装包已构建；输入与最终包验收进行中，桌面观看端未完成 |
 | macOS | ScreenCaptureKit、VideoToolbox、TCC、原生窗口 | 尚未完成与实机验收 |
 | Linux | X11；GNOME/KDE Wayland Portal、PipeWire、libei | 尚未完成与实机验收 |
 | 网页 | 身份与配对、观看、显示器切换、焦点输入、诊断、最多四窗口 | 与 Windows 真实视频互通通过；输入、切屏和多路实机验收进行中 |
@@ -29,4 +29,6 @@ Windows 产品虚拟麦克风必须使用产品驱动及合法发行签名；mac
 
 完整门禁见 [IMPLEMENTATION.md](IMPLEMENTATION.md)，逐项结果见 [ACCEPTANCE.md](ACCEPTANCE.md)。
 
-2026-09-23 开发检查点：远控协议 28 项、远控浏览器界面 7 项及桌面界面 13 项回归通过。原生本机基础探针见 [windows-native-probe.json](evidence/windows-native-probe.json)。新增的 [Windows→Chromium 开发报告](evidence/windows-browser-view-development.json) 经过真实签名配对、本机批准、peer proof、双端 UDP/DTLS 检查，接收 20 帧 1920×1080 视频。该次仅观看、同一台机器、源码含未提交修改；不能用作最终发行包、输入、跨网或完整平台验收证据。
+2026-09-23 开发检查点：远控协议 32 项、远控浏览器界面 7 项及桌面界面 13 项回归通过。文字提交现等待匹配 UUID 和输入代次的 `TEXT_ACK`，收到确认或明确失败后才释放该次输入；超时不会自动重发可能已经插入的文字。原生本机基础探针见 [windows-native-probe.json](evidence/windows-native-probe.json)。新增的 [Windows→Chromium 开发报告](evidence/windows-browser-view-development.json) 经过真实签名配对、本机批准、peer proof、双端 UDP/DTLS 检查，接收 20 帧 1920×1080 视频。该次仅观看、同一台机器、源码含未提交修改；不能用作最终发行包、输入、跨网或完整平台验收证据。
+
+候选发布分为构建封存和验收后发布两阶段。先保留同一标签构建的完整安装包，再使用这些原始字节执行原生视频、键盘、中文、鼠标、心跳失联及 worker 崩溃验收，验证源提交、安装与便携包中的 worker 摘要一致，之后才能公开 Release。预备产物不能当作已验证发布；实际输入验收或两秒释放期限未通过时门禁保持失败。
