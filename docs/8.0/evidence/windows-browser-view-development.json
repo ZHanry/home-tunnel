@@ -1,0 +1,84 @@
+{
+  "schema": 1,
+  "started_at": "2026-09-22T16:31:02.813Z",
+  "status": "verified",
+  "scope": "Windows native desktop capture to Chromium on the same machine, view only",
+  "transport": "isolated HTTP/WS IPv4 loopback fixture; production HTTPS policy unchanged",
+  "checks": {
+    "isolated_real_server": true,
+    "native_backend_ready": true,
+    "real_browser_identity": true,
+    "signed_pairing_and_code_match": true,
+    "explicit_session_approval": true,
+    "real_continuing_video": true,
+    "selected_udp_and_dtls": true,
+    "clean_session_shutdown": true
+  },
+  "limitations": [
+    "Cross-network traversal, Android, audio, clipboard, files and input are not established by this run."
+  ],
+  "input": {
+    "status": "not_verified",
+    "reason": "No native target-window confinement contract; no input injection is attempted.",
+    "target_created": true
+  },
+  "privacy": {
+    "screenshots": false,
+    "recordings": false,
+    "sdp": false,
+    "network_addresses": false,
+    "credentials": false
+  },
+  "worker_sha256": "2b6c09be5b1ab15c923b5817c695b1a9c65b9acc07806b15826b4b40e7f00e7d",
+  "sources": {
+    "client": {
+      "commit": "fce4319f36a59a46f690bfc8e4a456e75cc5358f",
+      "modified": true
+    },
+    "server": {
+      "commit": "66fcaa400b16c004097fd3104ea76660c4243470",
+      "modified": true
+    }
+  },
+  "capabilities": {
+    "permissions": [
+      "view"
+    ],
+    "codecs": [
+      "VP8"
+    ],
+    "display_count": 1
+  },
+  "browser_version": "145.0.7632.6",
+  "media": {
+    "phases": [
+      "connecting",
+      "waiting_for_frame",
+      "viewing"
+    ],
+    "failures": [],
+    "frames": 20,
+    "width": 1920,
+    "height": 1080,
+    "mediaTime": 2.035,
+    "ready": true,
+    "closed": false,
+    "peer_verified": true,
+    "host_path_verified": true,
+    "browser_udp_verified": true,
+    "input_enabled": false,
+    "connection_state": "connected",
+    "dtls_state": "connected",
+    "frames_decoded": 20,
+    "bytes_received": 207279,
+    "local_candidate": {
+      "protocol": "udp",
+      "type": "prflx"
+    },
+    "remote_candidate": {
+      "protocol": "udp",
+      "type": "host"
+    }
+  },
+  "finished_at": "2026-09-22T16:31:13.250Z"
+}
