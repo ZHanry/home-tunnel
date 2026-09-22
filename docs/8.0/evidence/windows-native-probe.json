@@ -1,0 +1,33 @@
+{
+  "kind": "development-evidence",
+  "status": "passed",
+  "scope": "local-native-media-probe",
+  "product_interoperability": "not_verified",
+  "product_backend_available": false,
+  "client_checkpoint_ancestor": "df958b1302befac8c2cb77ce4926d8d77db316e0",
+  "source_tree_dirty_at_report": true,
+  "webrtc_revision": "94e682e18fbcc0751463be2257b09d2a646a5a68",
+  "deps_lock_sha256": "2c7b40298b30ef13e6ecf31b4a72790f2cb6e4fe6e23113b7bb5423a7b6d2535",
+  "target_os": "win",
+  "target_cpu": "x64",
+  "artifact_sha256": "e5f09fb58609412cd7e38f14da4aa421ee3d636524ea338e25e1893eff1b9de0",
+  "artifact_bytes": 368482204,
+  "local_probe": {
+    "status": "passed",
+    "scope": "local-native-media-probe",
+    "desktop_frames_captured": 32,
+    "video_frames_decoded": 30,
+    "decoded_width": 1280,
+    "decoded_height": 720,
+    "data_channel_round_trips": 1,
+    "selected_pair": "udp-host-host",
+    "dtls_connected": true,
+    "screen_content_saved": false,
+    "product_backend_available": false
+  },
+  "limitations": [
+    "Both peers ran in the same process on this Windows machine.",
+    "No browser, Android, cross-NAT, audio or user-input interoperability was exercised.",
+    "This development evidence is not a sealed installable-release report."
+  ]
+}
