@@ -104,8 +104,9 @@
 
 ## 已有局部自动化证据
 
-- 浏览器：32 项协议测试涵盖严格消息 schema、真实公开签名向量、密钥链、候选检查、单调租约、输入心跳与授权代次、流式文件和文本剪贴板；包括文字确认 UUID/代次校验、拒绝、超时、不自动重发及旧请求清理不释放新授权；7 项远控界面回归通过。
+- 浏览器：43 项协议测试涵盖严格消息 schema、真实公开签名向量、密钥链、候选检查、单调租约、输入心跳与授权代次、流式文件和文本剪贴板；包括文字确认 UUID/代次校验、拒绝、超时、不自动重发及旧请求清理不释放新授权；剪贴板跨通道授权、取消、迟到回复与非法文本回归通过；7 项远控界面回归通过。
 - Windows→Chromium：[开发视频报告](evidence/windows-browser-view-development.json) 记录真实配对和本机授权、UDP/DTLS 与持续 1920×1080 解码。仅限同机观看；源码未封存，输入、系统声音、文件等未由此验证。
+- 产品编码互通：[H.264 开发报告](evidence/windows-browser-h264-development.json) 和 [VP8 开发报告](evidence/windows-browser-vp8-development.json) 分别约束真实 Chromium 的视频能力，核对实际接收编码与原生编码器统计，均通过 1920×1080 UDP 视频。H.264 为 OpenH264，VP8 为 libvpx；浏览器未提供的解码器/硬件统计保持 null。仍是同机观看开发证据，不代表实机完整矩阵或最终包。
 - STUN：[实际容器报告](evidence/stun-runtime-development.json) 来自 [GitHub 隔离运行](https://github.com/ZHanry/home-tunnel-server/actions/runs/35756694517)。修复启动失败后，锁定的 coturn 镜像通过 Binding、Allocate/Refresh/CreatePermission/ChannelBind 拒绝、Send/ChannelData 本地不转发、TCP/TLS 无监听及 nftables 检查。60 个短时 Binding 请求接收 20 个，丢弃计数 46（含其他拒绝请求）。该报告只证明隔离 Linux namespace，不证明公网、IPv6、Docker DNAT 或云端计费负载结果。
 - 服务端、桌面和 Android 的自动化结果由各仓库 CI 和组件开发报告保存；统一候选报告必须绑定最终提交与产物摘要。
 - 原生编解码：[H.264](evidence/windows-native-h264-development.json) 和 [VP8](evidence/windows-native-vp8-development.json) 分别在同机 UDP/DTLS 探针上实际解码 30 帧；软件路径及编码器名称已记录。不是产品浏览器互通、硬件编码或跨网验收。

@@ -1,0 +1,126 @@
+{
+  "schema": 1,
+  "started_at": "2026-09-22T18:13:02.707Z",
+  "status": "passed",
+  "scope": "Windows native desktop capture to Chromium on the same machine, view only",
+  "transport": "isolated HTTP/WS IPv4 loopback fixture; production HTTPS policy unchanged",
+  "checks": {
+    "isolated_real_server": true,
+    "native_backend_ready": true,
+    "real_browser_identity": true,
+    "signed_pairing_and_code_match": true,
+    "explicit_session_approval": true,
+    "real_continuing_video": true,
+    "selected_udp_and_dtls": true,
+    "requested_codec_encoded_and_decoded": true,
+    "clean_session_shutdown": true
+  },
+  "limitations": [
+    "Cross-network traversal, Android, audio, clipboard, files and input are not established by this run."
+  ],
+  "input": {
+    "status": "not_verified",
+    "reason": "Input acceptance was not requested; no input injection is attempted.",
+    "target_created": true
+  },
+  "privacy": {
+    "screenshots": false,
+    "recordings": false,
+    "sdp": false,
+    "network_addresses": false,
+    "credentials": false
+  },
+  "requested_codec": "H264",
+  "worker_sha256": "88e755a84059199abb6ab00f3e6a5a82513fe2ea014ec2071b7414cc830e8fb0",
+  "sources": {
+    "client": {
+      "commit": "24eef5541c6881129d68b363860f802b520bb624",
+      "modified": true
+    },
+    "server": {
+      "commit": "275d3668ede85d9d51b0adfe39219c9849d4dc20",
+      "modified": false
+    }
+  },
+  "server_build": {
+    "fresh": true,
+    "source_commit": "275d3668ede85d9d51b0adfe39219c9849d4dc20",
+    "command": "pnpm run build",
+    "dist": {
+      "file_count": 138,
+      "sha256": "0950831f72104afcfaf8d1bd9c8ea9f9c61ca1c8e47b6a3488fb4b28facf4676"
+    }
+  },
+  "capabilities": {
+    "permissions": [
+      "view",
+      "input.keyboard",
+      "input.pointer",
+      "input.text",
+      "clipboard.read",
+      "clipboard.write"
+    ],
+    "codecs": [
+      "H264",
+      "VP8"
+    ],
+    "display_count": 1
+  },
+  "browser_version": "145.0.7632.6",
+  "media": {
+    "phases": [
+      "connecting",
+      "waiting_for_frame",
+      "viewing"
+    ],
+    "failures": [],
+    "input_releases": [],
+    "frames": 15,
+    "width": 1920,
+    "height": 1080,
+    "mediaTime": 2.63,
+    "ready": true,
+    "closed": false,
+    "peer_verified": true,
+    "host_path_verified": true,
+    "browser_udp_verified": true,
+    "input_enabled": false,
+    "connection_state": "connected",
+    "input_epoch": 0,
+    "dtls_state": "connected",
+    "frames_decoded": 15,
+    "bytes_received": 85278,
+    "video_codec": "video/H264",
+    "video_codec_parameters": "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f",
+    "video_decoder_implementation": null,
+    "video_power_efficient_decoder": null,
+    "input_frames_sent": 0,
+    "input_buffered_bytes": 0,
+    "local_candidate": {
+      "protocol": "udp",
+      "type": "prflx"
+    },
+    "remote_candidate": {
+      "protocol": "udp",
+      "type": "host"
+    }
+  },
+  "native_media": {
+    "input_accepted": 0,
+    "input_enabled": false,
+    "input_epoch": 0,
+    "input_failed": 0,
+    "input_ignored_disabled": 0,
+    "input_ignored_epoch": 0,
+    "input_received": 0,
+    "input_replayed": 0,
+    "video_codec": "video/H264",
+    "video_codec_parameters": "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f",
+    "video_encoder_implementation": "OpenH264",
+    "video_frame_height": 1080,
+    "video_frame_width": 1920,
+    "video_frames_encoded": 13,
+    "video_power_efficient_encoder": false
+  },
+  "finished_at": "2026-09-22T18:13:56.496Z"
+}
