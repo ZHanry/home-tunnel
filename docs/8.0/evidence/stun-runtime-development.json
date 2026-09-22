@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "status": "passed",
+  "scope": "isolated Linux network namespace",
+  "public_network": "not_verified",
+  "image": "coturn/coturn:4.6.3@sha256:71c3c990283385567f11794ee692e3a47b66fd9b0bb39e42afbe776e331dd888",
+  "repository_revision": "c43b391d10d14a700629d584c627202904454d07",
+  "source_modified": false,
+  "source_sha256": {
+    "deploy/stun/turnserver.conf": "dbbffd82b08f35d7925f62f9aea747153d6871a56acb71409c1b830e041a133c",
+    "deploy/stun/firewall.nft": "eebe7fa0f439caa3a7edf3adf409170c42ba5faec854cf94dbb4a22e3d39f44a",
+    "deploy/scripts/probe-stun.py": "16170d059e3ae8429c502a1a23f2377913b600680170c03f6bd4b4079b0397fb"
+  },
+  "coturn_without_firewall": {
+    "binding": "passed",
+    "turn_allocate": "dropped",
+    "turn_refresh": "dropped",
+    "transport": "udp",
+    "public_media_relay_tested": false,
+    "turn_create_permission": "dropped",
+    "turn_channel_bind": "dropped",
+    "send_and_channel_data": "not_forwarded_to_isolated_local_sink",
+    "tcp_and_tls_listeners": "absent"
+  },
+  "coturn_with_firewall": {
+    "binding": "passed",
+    "turn_allocate": "dropped",
+    "turn_refresh": "dropped",
+    "transport": "udp",
+    "public_media_relay_tested": false,
+    "turn_create_permission": "dropped",
+    "turn_channel_bind": "dropped",
+    "send_and_channel_data": "not_forwarded_to_isolated_local_sink",
+    "tcp_and_tls_listeners": "absent",
+    "bounded_burst": {
+      "sent": 60,
+      "received": 20,
+      "drop_counter": 46
+    }
+  }
+}

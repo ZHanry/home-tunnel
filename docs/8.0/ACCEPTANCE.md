@@ -106,5 +106,6 @@
 
 - 浏览器：28 项协议测试涵盖严格消息 schema、真实公开签名向量、密钥链、候选检查、单调租约、输入心跳与授权代次、流式文件和文本剪贴板；7 项远控界面回归通过。
 - Windows→Chromium：[开发视频报告](evidence/windows-browser-view-development.json) 记录真实配对和本机授权、UDP/DTLS 与持续 1920×1080 解码。仅限同机观看；源码未封存，输入、系统声音、文件等未由此验证。
+- STUN：[实际容器报告](evidence/stun-runtime-development.json) 来自 [GitHub 隔离运行](https://github.com/ZHanry/home-tunnel-server/actions/runs/35756694517)。修复启动失败后，锁定的 coturn 镜像通过 Binding、Allocate/Refresh/CreatePermission/ChannelBind 拒绝、Send/ChannelData 本地不转发、TCP/TLS 无监听及 nftables 检查。60 个短时 Binding 请求接收 20 个，丢弃计数 46（含其他拒绝请求）。该报告只证明隔离 Linux namespace，不证明公网、IPv6、Docker DNAT 或云端计费负载结果。
 - 服务端、桌面和 Android 的自动化结果由各仓库 CI 和组件开发报告保存；统一候选报告必须绑定最终提交与产物摘要。
 - 这些结果不证明完整平台功能、真实网关穿透或最终发行安装包已通过验收。
