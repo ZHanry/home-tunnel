@@ -104,6 +104,7 @@
 
 ## 已有局部自动化证据
 
+- Linux 原生和 GUI：[开发构建报告](evidence/linux-native-gui-development.json) 绑定干净提交 `97dfdc93e02cbfe504a641fa65d1eb48f01ececf`，包含完整 GUI 候选包、生产 worker 摘要和依赖证据。隔离 Docker/Xvfb 内的 H.264、VP8 均通过真实 UDP/DTLS 解码，XTest 心跳释放 1203 ms、进程崩溃释放 25 ms，原本已按住的本机键保持不变；测试专用 worker 未进入安装包。该版本早于后续安全修复，未验证实体 Xorg、GUI 启动、系统安装、密钥环、Wayland 或跨网，不作为最终 RC 产物验收。
 - 冻结服务端联调：[首轮失败记录](evidence/windows-browser-frozen-server-first-attempt.json) 的视频和文件通过，但缺少键盘按下事件；[相同 worker 再测](evidence/windows-browser-frozen-server-development.json) 的视频、文件、中文/键鼠、旧代次和关闭均通过，心跳释放 1473 ms，崩溃后按键/鼠标释放约 57/59 ms。两轮均使用干净的 API 候选合并提交 `9c54212b91d3bfac24aa5af4863dd2f8649fa5fe`；首轮原因尚未确认，保留失败，不据此宣称输入稳定性或最终包验收完成。
 - 释放调度余量：[加固后的联合报告](evidence/windows-browser-files-input-margin-development.json) 保持视频、文件、取消/撤销及全部输入场景通过；心跳释放 1394 ms，worker 崩溃按键/鼠标约 76/77 ms。内部提前释放为系统调度留余量，对外两秒验收标准未放宽；仍为开发 worker，最终封存包需要单独报告。
 - 视频、文件和输入联合验证：[最新开发报告](evidence/windows-browser-files-input-development.json) 记录真实 H.264/UDP 视频、双向空文件和超过 1 MiB 的文件、实际磁盘字节与 SHA256、取消/撤销、已保存文件不被删除以及视频持续；之后键盘、中文、鼠标、旧代次和 worker 崩溃释放仍通过。该次心跳释放为 1982 ms，崩溃释放约 68/74 ms；内部调度余量仍在加固，最终包需重测。文件选择使用隔离测试目录与浏览器私有文件系统，不代替完整 OS 选择器验收。
