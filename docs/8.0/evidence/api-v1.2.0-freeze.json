@@ -1,0 +1,76 @@
+{
+  "repository": "ZHanry/home-tunnel-server",
+  "tag": "api-v1.2.0",
+  "tag_object": "f4316948686da0e333698b7a8fc9c548061d94bc",
+  "commit": "4319f8d0cf2c6dcad0cc06d322e8a55ac83edf50",
+  "source_worktree": "D:\\home-tunnel\\artifacts\\server-api-v1.2.0-4319f8d",
+  "remote_bytes_verified": true,
+  "retrieval": "GitHub contents API base64 decoded bytes (avoids CLI raw control-character sanitization)",
+  "files": {
+    "contracts/README.md": {
+      "sha256": "91672058c9ae9a780fd2c6335c8fea178fc8e2518ba2aef862b309b2cac11010",
+      "bytes": 1125,
+      "git_blob": "0e61d69d2b167fe637a183bfd1e10b7e9db29526"
+    },
+    "contracts/REMOTE_PROTOCOL.md": {
+      "sha256": "75bf739048bfb75569d27a654a915ab94b5d658fad6d0b2d109ce7d7a3a609e6",
+      "bytes": 15912,
+      "git_blob": "56d6f89ceaad8d13efc4aa2fecaa72cf9d68ad90"
+    },
+    "contracts/api.schema.json": {
+      "sha256": "7ccdfb54ef8427948e76a50ea87ce90b684f00fbf885f1b134ed36d4f1d19b1b",
+      "bytes": 152793,
+      "git_blob": "11c819a33e731a7946c977e447a4e3fda7da4323"
+    },
+    "contracts/generated/remote_protocol.hpp": {
+      "sha256": "fd4dd9488f2d61f2b61a2a7d59062e92a2eea8c3bcce1bfc3a493eff372a6631",
+      "bytes": 3018,
+      "git_blob": "2dfbd438aa9a753e5a434a59853e6b70e346118d"
+    },
+    "contracts/generated/remote_protocol.js": {
+      "sha256": "826633dc203b89ed35c50c034d143fe52501e9962e0e13c9f96b3e5b2e9f3666",
+      "bytes": 53368,
+      "git_blob": "774943f00f97e792e2edb78ea6888f7e24061d01"
+    },
+    "contracts/generated/remote_protocol.kt": {
+      "sha256": "2517ae736467e6469c9dbefb69395ec049235803339c05805f23e8a0031bea5f",
+      "bytes": 2229,
+      "git_blob": "ba5b2f584420e8cbe6125ac11bc1e7c0e96eec5b"
+    },
+    "contracts/generated/remote_protocol.ts": {
+      "sha256": "90106c64bddc7b9746f1119633f380922e5f514a9ccd50d20f31a35725fe6f01",
+      "bytes": 53377,
+      "git_blob": "23d62cd0100f6806874a3240429bebd4948b712f"
+    },
+    "contracts/home-tunnel.v1.json": {
+      "sha256": "47122e7f75788e0b60efe1f7b5180a6098183ea0310d248a9f96098474a5ef2a",
+      "bytes": 2387,
+      "git_blob": "67dcc5e4b781ea7366f16aef69585fa82a963855"
+    },
+    "contracts/openapi.v1.json": {
+      "sha256": "5a97a9fb6f7b28cb0f3fd32f0f54ba79b4b809c164bdadd93413569c030b5ec9",
+      "bytes": 813477,
+      "git_blob": "f1436c4ba74fe2bad5d7ecf2ada43c3e927afadb"
+    },
+    "contracts/remote-authorization-vectors.json": {
+      "sha256": "6ddafdaeb937cd8500c736e62bc21cb3ee92148173c4ae984d3fb9121a26cece",
+      "bytes": 30084,
+      "git_blob": "61f2046fe52c70bbd25a337a80ce9aa8e15b0423"
+    },
+    "contracts/remote-crypto-vector.json": {
+      "sha256": "2911d06ad45dbcb9f8d7bfe6942bc79f7327b92dec2916608e94a879f4bf9a85",
+      "bytes": 683,
+      "git_blob": "bda18698021743a8748f1183bb54bfd8ae4b2937"
+    },
+    "contracts/remote-desktop.v1.json": {
+      "sha256": "9ba5380e301351656bab0ebccd0c551c75b8a9301297004da621cbbadadf33de",
+      "bytes": 52370,
+      "git_blob": "98ffb2ee49f19b5e162a7f7652b6202c3e5a2226"
+    },
+    "contracts/remote-test-vectors.json": {
+      "sha256": "e4c47ea288cf92266f09ea2b40e595c1dd333132dc3262d42e86ef9ea042b168",
+      "bytes": 1842,
+      "git_blob": "13d6fa5677df7653a3a9dcbbf35cdd28f43ed074"
+    }
+  }
+}
