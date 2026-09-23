@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "scope": "development-only-sdk-source-license-validation",
+  "policy_commit": "16d55f0e65b8d0f61d21d9770ecf0f6e94115af3",
+  "windows_complete_inventory": {
+    "report_sha256": "2f7749a71d8b90de532eead1ce6842587d1d4ed7b4f5b039a97cc77671feea8a",
+    "report": {
+      "status": "passed",
+      "scope": "full copied Windows dependency inventory verified against committed final policy",
+      "revision": "16d55f0e65b8d0f61d21d9770ecf0f6e94115af3",
+      "files": 42056,
+      "elapsed_seconds": 28.58,
+      "actual_windows_legacy_notice_passed": true,
+      "chromium_sha256": "368cca1106be99d39ecd32a38d8305585d802a475effb66380b91ffc9bcf709b"
+    }
+  },
+  "linux_complete_inventory": {
+    "report_sha256": "e16220048c9741d1ce4ca04c89077da69ec84e62f707fbf6345dc021067fc003",
+    "report": {
+      "status": "passed",
+      "scope": "complete Linux pinned checkout header/notice collection with real filesystem symlinks, not an Android release build",
+      "files": 42526,
+      "providers": 57,
+      "headers": 40152,
+      "notices": 2376,
+      "license_inventory_bytes": 3540138,
+      "hashed_file_inventory_json_bytes": 6162300,
+      "elapsed_seconds": 68.54,
+      "chromium_sha256": "368cca1106be99d39ecd32a38d8305585d802a475effb66380b91ffc9bcf709b"
+    }
+  },
+  "windows_sdk_packaging": {
+    "report_sha256": "7fd575669d26ba4db1132c44f31e371b03e2ac83aabb4bb7ee4c99e805732b22",
+    "report": {
+      "schema_version": 1,
+      "status": "passed",
+      "scope": "development-windows-sdk-original-license-packaging",
+      "version": "8.0.0",
+      "compiled_library_revision": "67522e1624730f157511dc50d69643b58ab7347c",
+      "validation_checkout_head": "83c81ccf81bbd64e2c910f978809405c7e3d2ca2",
+      "validation_checkout_dirty": true,
+      "archive": {
+        "name": "HomeTunnel-Remote-SDK-8.0.0-windows-x64.zip",
+        "bytes": 138548952,
+        "sha256": "a18858294a1e08473cd2ad540954aa4477390d37d55c548439063eba03553b95"
+      },
+      "library": {
+        "name": "lib/webrtc.lib",
+        "sha256": "1ef358892df70e1a2e7de1d74255e5b1240d847271f22fa84f7ca5890208ed0d",
+        "bytes": 376457020
+      },
+      "chromium_license_sha256": "368cca1106be99d39ecd32a38d8305585d802a475effb66380b91ffc9bcf709b",
+      "chromium_source_licenses": {
+        "src/build": {
+          "path": "source-licenses/chromium/LICENSE",
+          "sha256": "368cca1106be99d39ecd32a38d8305585d802a475effb66380b91ffc9bcf709b",
+          "source": "https://chromium.googlesource.com/chromium/src/+/41e5cf5e71b16fdde8ae211bb6d39d5e871134a1/LICENSE",
+          "upstream": "https://chromium.googlesource.com/chromium/src/build@0a2808e883f9443b41ed1f49eb0aa4da0cfe3cf6"
+        },
+        "src/testing": {
+          "path": "source-licenses/chromium/LICENSE",
+          "sha256": "368cca1106be99d39ecd32a38d8305585d802a475effb66380b91ffc9bcf709b",
+          "source": "https://chromium.googlesource.com/chromium/src/+/6a5a7bde528fb0d0a3cff46e4e10fb6885acc1c7/LICENSE",
+          "upstream": "https://chromium.googlesource.com/chromium/src/testing@6f55acdadefd12ad87e386cab5cee31ae610ed7e"
+        },
+        "src/third_party": {
+          "path": "source-licenses/chromium/LICENSE",
+          "sha256": "368cca1106be99d39ecd32a38d8305585d802a475effb66380b91ffc9bcf709b",
+          "source": "https://chromium.googlesource.com/chromium/src/+/17a3918979e73d9a840546b79c3f5a7c0a49d35f/LICENSE",
+          "upstream": "https://chromium.googlesource.com/chromium/src/third_party@e7b072867dcb5c59a461d58b853a498f938f8f96"
+        },
+        "src/tools": {
+          "path": "source-licenses/chromium/LICENSE",
+          "sha256": "368cca1106be99d39ecd32a38d8305585d802a475effb66380b91ffc9bcf709b",
+          "source": "https://chromium.googlesource.com/chromium/src/+/41e5cf5e71b16fdde8ae211bb6d39d5e871134a1/LICENSE",
+          "upstream": "https://chromium.googlesource.com/chromium/src/tools@c60db23bebc8938b6bfa250eee92fefee66bd571"
+        }
+      },
+      "header_count": 15489,
+      "checks": {
+        "package_remote_sdk_completed": true,
+        "release_verify_remote_sdk_passed": true,
+        "actual_library_hash_matches_original_build": true,
+        "original_chromium_license_bytes_match_policy": true
+      },
+      "policy_files": {
+        "scripts/package-remote-sdk.py": "4fb8f558cfcc5c4ce67c6a18a1f16aca41056655ae1dcad774ee7e0f03352877",
+        "scripts/build-remote-android-webrtc.py": "e82b3303333d5305fc3f1041d8e35d03adb337849e8c1b1bc02cfa785f10e54d",
+        "scripts/release.py": "a3007a5ad644e8ebfcd4e3c9dec8c0dce8ddc3d76bc2d392daac196d0ffacd85"
+      },
+      "limitations": [
+        "Existing library was built from 67522e1; current packaging policy changes were not a final tagged build.",
+        "This verifies SDK package bytes and source-license identity, not runtime or platform acceptance."
+      ]
+    }
+  },
+  "previous_android_failure": {
+    "status": "failed",
+    "revision": "83c81ccf81bbd64e2c910f978809405c7e3d2ca2",
+    "workflow_url": "https://github.com/ZHanry/home-tunnel-client/actions/runs/35811614587",
+    "reason": "The compiler succeeded; the later SDK source-notice collector rejected a legacy notice because its Git LF digest differed from the Windows CRLF exception. No distributable SDK was produced.",
+    "original_report_sha256": "a9a1ba8717aa4736e47428a1e020518cc0c0335b4f73e7b59dccdaf3170030d1"
+  },
+  "limitations": [
+    "Windows SDK packaging uses a library built from 67522e1 and does not prove a final tag build.",
+    "The Linux full collector used the pinned Linux dependency checkout, not the complete Android release build.",
+    "Final tag packages and Android full SDK archive still require their own build, byte verification and acceptance."
+  ]
+}

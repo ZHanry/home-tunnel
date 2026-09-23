@@ -4,6 +4,8 @@
 
 状态：`passed` / `failed` / `not_verified`。失败必须记录，禁止改写为未验证来绕过发布门禁。机器可读明细见 [acceptance.json](acceptance.json)。
 
+[共享 SDK 许可证修复记录](evidence/native-sdk-license-development.json) 保留 Android 开发构建的实际失败，并记录补全 Chromium 原始根许可证、校正 LF/CRLF 摘要后的完整来源校验：Windows 42,056 个文件绑定提交 `16d55f0` 重新计算 SHA256，Linux 40,152 个头文件及 57 个来源通过，旧 Windows 实际库的重新打包通过。它们不替代最终标签或 Android 完整发行 ZIP 的验证。
+
 | ID | 操作 | 必须观察到 | 完整验收 |
 | --- | --- | --- | --- |
 | A01 | 用户A请求用户B endpoint/session/grant | 不返回B存在性/在线/SDP；统一不可见 | 未验证 |
