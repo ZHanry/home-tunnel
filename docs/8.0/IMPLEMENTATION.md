@@ -5,12 +5,17 @@ not evidence that remote desktop works on a particular platform.
 
 ## Accepted scope
 
-The 8.0 release integrates Web, desktop and Android controllers with Windows,
+The agreed 8.0 scope includes Web, desktop and Android controllers with Windows,
 macOS, X11 and GNOME/KDE Wayland hosts. The scope includes four concurrent desktop
 controller windows (including browser windows), monitor selection, physical keys and Unicode text, system
 audio, microphone forwarding into an installed virtual input device, opt-in text
 clipboard, and selected-file transfers. H.264/VP8 are the interoperability
 baseline; AV1/HEVC require negotiated and verified backend support.
+
+This is the requested scope. Implemented and verified support remains narrower;
+the current delivery status is recorded in [SCOPE.md](SCOPE.md) and the individual
+acceptance results in [ACCEPTANCE.md](ACCEPTANCE.md). Choosing a public 8.0.0
+version does not mark unimplemented backends or unrun platform checks complete.
 
 All remote desktop payloads use authenticated direct UDP WebRTC. The server
 provides account management, authorization, signaling and STUN address discovery;
