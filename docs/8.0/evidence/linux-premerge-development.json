@@ -1,0 +1,223 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-09-23T01:35:19.702137+00:00",
+  "status": "passed",
+  "scope": "development-build-and-isolated-linux-validation",
+  "version": "8.0.0-rc.1",
+  "repository": "ZHanry/home-tunnel-client",
+  "revision": "3ae888cd25f8207bc789a408c3224e32cdde24bd",
+  "source_modified": false,
+  "environment": {
+    "platform": "Ubuntu 24.04 x86_64 container on Docker Desktop Windows",
+    "native_image_id": "sha256:8dae8f7e4470ccc10fefee4fa9755efa42c2ff10bd6a3ce35db0f4a702a23a16",
+    "gui_image_id": "sha256:6162b5874dab7882af7b4d5888fb6b45f125ee3a6662755e444909f52216dc41",
+    "native_network": "dedicated Docker internal bridge; no external connectivity or published ports",
+    "gui_build_network": "none; preloaded read-only Go module cache",
+    "go": "1.26.6",
+    "go_archive_sha256": "708effb774be8237570d0add163225abbdfaf4fca28b2611df167beba4feef89"
+  },
+  "commands": [
+    "python3 scripts/build-native-linux.py --build-existing --cache /cache --jobs 4",
+    "python3 scripts/package-native-linux.py --build-record outputs/native-linux-build/remote-host-build.json --version 8.0.0-rc.1",
+    "VERSION=8.0.0-rc.1 REMOTE_HOST_BUILD=/workspace/outputs/native-linux-build/remote-host-build.json bash packaging/build-linux-remote-candidate.sh",
+    "python3 scripts/package-native-linux.py --verify-archive outputs/linux/home-tunnel-linux-8.0.0-rc.1-amd64.tar.gz --version 8.0.0-rc.1 --revision 3ae888cd25f8207bc789a408c3224e32cdde24bd",
+    "python3 outputs/verify-linux-package.py",
+    "python3 scripts/test_native_linux_package.py",
+    "python3 scripts/test_installer_upgrade.py",
+    "go test ./cmd/home-tunnel-gui ./internal/remoteengine"
+  ],
+  "worker": {
+    "name": "home_tunnel_remote_host",
+    "bytes": 25055952,
+    "sha256": "e6090f4d8ec268791849443c42c99e6838aa662eba6c1d1b6f61a136959cb33d"
+  },
+  "dependency_evidence": {
+    "webrtc_revision": "94e682e18fbcc0751463be2257b09d2a646a5a68",
+    "deps_lock_sha256": "f0b0e46823e19a989fa14fece5d243be35939e742b247e77f45c6a17c714585d",
+    "linux_recipe_sha256": "bf1efe8c4cc07c9f76a51d0a4848294bbd5fbd8c1ae4d3e2af76857de45a0571",
+    "linux_source_tree_sha256": "dc014905bcd47e993fb2db4360e593ab37861476ba0798b996f8f4ff452de609",
+    "notices_sha256": "0b459a7d4b30cccc5595ac0d4738815b9524e96db4499c3bc14beefddca8fe86",
+    "source_manifest_sha256": "1a5ebb4e84ff816d8ca24e903911e85df5c2218d65d263b125782725beabaf5b",
+    "isolated_xvfb_evidence_sha256": "2c19be62b0ddf1dbc4ae5cebd1baa83e63765614f19ed207923336bdfd583276"
+  },
+  "native_regressions": {
+    "authorization_tests": "passed",
+    "clipboard_protocol_tests": "passed",
+    "file_transfer_tests": "passed"
+  },
+  "isolated_xvfb": {
+    "schema_version": 1,
+    "status": "passed",
+    "scope": "isolated-xvfb",
+    "physical_xorg_acceptance": false,
+    "wayland_acceptance": false,
+    "production_worker_sha256": "e6090f4d8ec268791849443c42c99e6838aa662eba6c1d1b6f61a136959cb33d",
+    "test_worker_sha256": "7d41b71679ce20a2fb8e673c8a240cd7d5286d1afae9dd99ce95e09f49c1330e",
+    "input_test_sha256": "a4a90acd3e34f1a71ac8d98fdb411728cac294ebd9cf10b1bff2906f5aa04ef7",
+    "recipe_sha256": "bf1efe8c4cc07c9f76a51d0a4848294bbd5fbd8c1ae4d3e2af76857de45a0571",
+    "input": {
+      "status": "passed",
+      "scope": "isolated-xvfb-real-xtest-input",
+      "live_release_ms": 1805,
+      "heartbeat_release_ms": 1203,
+      "worker_crash_release_ms": 20,
+      "unrelated_key_preserved": true,
+      "already_held_key_preserved": true,
+      "physical_xorg_acceptance": false
+    },
+    "production_ipc": {
+      "hello": "passed",
+      "capability_boundary": "passed",
+      "unsigned_authorization": "not_started"
+    },
+    "test_ipc": {
+      "hello": "passed",
+      "capability_boundary": "passed",
+      "unsigned_authorization": "rejected"
+    },
+    "H264": {
+      "data_channel_round_trips": 1,
+      "decoded_height": 600,
+      "decoded_width": 800,
+      "desktop_frames_captured": 30,
+      "dtls_connected": true,
+      "product_acceptance": false,
+      "receiver": {
+        "bytes_received": 19032,
+        "clock_rate": 90000,
+        "decoder_implementation": "FFmpeg",
+        "frames_decoded": 30,
+        "mime_type": "video/H264",
+        "packets_received": 106,
+        "payload_type": 108,
+        "power_efficient_decoder": false,
+        "sdp_fmtp_line": "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f",
+        "total_decode_time_seconds": 0.017096999999999998
+      },
+      "requested_codec": "H264",
+      "scope": "isolated-xvfb-local-udp-loopback",
+      "screen_content_saved": false,
+      "selected_pair": "udp-host-host",
+      "sender": {
+        "clock_rate": 90000,
+        "encoder_implementation": "OpenH264",
+        "frames_encoded": 30,
+        "mime_type": "video/H264",
+        "payload_type": 108,
+        "power_efficient_encoder": false,
+        "sdp_fmtp_line": "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f",
+        "total_encode_time_seconds": 0.065
+      },
+      "status": "passed",
+      "video_frames_decoded": 30,
+      "exit_code": 0,
+      "probe_sha256": "4f89aef86f889fd6ec7fea95c97cce9a982a7c7a08e971d54ae3ca92bfb7d989",
+      "physical_xorg_acceptance": false
+    },
+    "VP8": {
+      "data_channel_round_trips": 1,
+      "decoded_height": 600,
+      "decoded_width": 800,
+      "desktop_frames_captured": 32,
+      "dtls_connected": true,
+      "product_acceptance": false,
+      "receiver": {
+        "bytes_received": 22616,
+        "clock_rate": 90000,
+        "decoder_implementation": "libvpx",
+        "frames_decoded": 30,
+        "mime_type": "video/VP8",
+        "packets_received": 103,
+        "payload_type": 96,
+        "power_efficient_decoder": false,
+        "sdp_fmtp_line": null,
+        "total_decode_time_seconds": 0.033794
+      },
+      "requested_codec": "VP8",
+      "scope": "isolated-xvfb-local-udp-loopback",
+      "screen_content_saved": false,
+      "selected_pair": "udp-host-host",
+      "sender": {
+        "clock_rate": 90000,
+        "encoder_implementation": "libvpx",
+        "frames_encoded": 30,
+        "mime_type": "video/VP8",
+        "payload_type": 96,
+        "power_efficient_encoder": false,
+        "sdp_fmtp_line": null,
+        "total_encode_time_seconds": 0.049
+      },
+      "status": "passed",
+      "video_frames_decoded": 30,
+      "exit_code": 0,
+      "probe_sha256": "4f89aef86f889fd6ec7fea95c97cce9a982a7c7a08e971d54ae3ca92bfb7d989",
+      "physical_xorg_acceptance": false
+    }
+  },
+  "gui_package": {
+    "schema_version": 1,
+    "status": "passed",
+    "scope": "local-clean-candidate-package-validation",
+    "source_revision": "3ae888cd25f8207bc789a408c3224e32cdde24bd",
+    "archive": {
+      "name": "home-tunnel-linux-8.0.0-rc.1-amd64.tar.gz",
+      "bytes": 22549689,
+      "sha256": "bcefb12e9ae34d2959494bf3a8960103e3f385d0d0443f54af7dd75d46740ab2"
+    },
+    "binaries": {
+      "bin/home-tunnel-client": {
+        "sha256": "5a621e8b6df22229a9e2ae1785878d2e20afc03bc601586c4901ec45cc402735",
+        "bytes": 6996094,
+        "mode": "0o755"
+      },
+      "bin/home-tunnel-gui": {
+        "sha256": "809525153333bbdf51b23015627c8b18baa79b4022b5cae3ff7741b0d5901302",
+        "bytes": 10305208,
+        "mode": "0o755"
+      },
+      "lib/home-tunnel-agent": {
+        "sha256": "07b522389cd62a15d5d2ff04f4caab3116c40e10cfa2515de2837552ef2e9078",
+        "bytes": 15814782,
+        "mode": "0o755"
+      },
+      "bin/home_tunnel_remote_host": {
+        "sha256": "e6090f4d8ec268791849443c42c99e6838aa662eba6c1d1b6f61a136959cb33d",
+        "bytes": 25055952,
+        "mode": "0o755"
+      }
+    },
+    "checks": {
+      "archive_checksum": true,
+      "production_worker_exact_bytes": true,
+      "test_executables_excluded": true,
+      "elf_x64_and_no_group_world_write": true,
+      "gui_cgo_gtk_webkit": true,
+      "gui_worker_digest_constant_present": true,
+      "worker_and_gui_runtime_libraries_resolved": true,
+      "source_license_evidence_included": true,
+      "original_tar_release_validator": true
+    },
+    "physical_desktop_acceptance": false,
+    "gui_launch_acceptance": false,
+    "real_systemd_installation": false
+  },
+  "policy_regressions": {
+    "native_package_rejection_tests": 14,
+    "unix_installer_test_methods": 7,
+    "installer_scope": "temporary filesystem; mocked service/account commands; includes Linux native rollback and tunnel-only worker removal"
+  },
+  "limitations": [
+    "No physical Xorg desktop, lock/unlock, multi-monitor or cross-device/network acceptance.",
+    "No actual GTK window launch or installation into a real systemd host was performed.",
+    "Xvfb capture/input and native-to-native codec loopback do not establish browser or physical-device interoperability.",
+    "Linux advertises only view, input.keyboard and input.pointer; Unicode text, clipboard, files, audio and Wayland remain unavailable.",
+    "Linux endpoint enrollment still requires secret-tool and an unlocked Secret Service session; no real keyring enrollment was performed.",
+    "This clean pre-merge development artifact is not a tagged GitHub release. Stable 8.0.0 source version and final tag bytes require a fresh build and their own evidence."
+  ],
+  "github_workflow_run": {
+    "url": "https://github.com/ZHanry/home-tunnel-client/actions/runs/35806481348",
+    "head_sha": "3ae888cd25f8207bc789a408c3224e32cdde24bd",
+    "x11_platform": "passed",
+    "native": "in_progress_at_report_generation"
+  }
+}

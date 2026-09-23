@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "component": "android",
+  "version": "8.0.0",
+  "version_code": 8000002,
+  "source_revision": "18af0dd89f02014d599b86e33fd385ea0bbe0307",
+  "generated_at": "2026-09-23T01:45:16.604423+00:00",
+  "device_media_accepted": false,
+  "physical_devices": 0,
+  "native_profile": "dual-ABI security core, not controller media acceptance",
+  "native_source_revision": "3decfc51171767b86e193dee3d69f2e057849749",
+  "native_surface_revision": "c9c81352c3fb8c3327fdfea64ec4145d50e25b0c",
+  "checks": {
+    "testDebugUnitTest": {
+      "tests": 61,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "testReleaseUnitTest": {
+      "tests": 61,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "android-surface-gradle-final.log": {
+      "passed": true,
+      "sha256": "42d254e7ae5c74df3e771d302214a932e898d325ea66a6acb54d2e16245e7258"
+    },
+    "android-surface-instrumentation-compile.log": {
+      "passed": true,
+      "sha256": "dfd43f8cddcbdbec6d3b65b0001a1ffa7a59a4484bb0c0bf804783a9e60a4415"
+    },
+    "native_surface": {
+      "NDK_27_arm64_API26_strict_syntax": true,
+      "native_core_lifecycle_regression": true,
+      "note": "Production lifecycle state tested; does not establish real rendering acceptance."
+    }
+  },
+  "not_verified": [
+    "Physical Android Surface decode and input",
+    "Cross-network interoperability",
+    "Two-target real Surface replacement acceptance",
+    "Final published SDK import and signed APK/AAB release"
+  ]
+}
