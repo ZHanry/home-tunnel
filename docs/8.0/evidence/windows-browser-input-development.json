@@ -1,0 +1,185 @@
+{
+  "schema": 1,
+  "started_at": "2026-09-23T00:33:08.630Z",
+  "status": "passed",
+  "scope": "Windows native desktop capture to Chromium on the same machine, view and input confined to a dedicated test browser process",
+  "transport": "isolated HTTP/WS IPv4 loopback fixture; production HTTPS policy unchanged",
+  "checks": {
+    "isolated_real_server": true,
+    "native_backend_ready": true,
+    "real_browser_identity": true,
+    "signed_pairing_and_code_match": true,
+    "explicit_session_approval": true,
+    "real_continuing_video": true,
+    "selected_udp_and_dtls": true,
+    "requested_codec_encoded_and_decoded": true,
+    "clean_session_shutdown": true
+  },
+  "limitations": [
+    "Cross-network traversal, Android, audio, clipboard, files are not established by this run."
+  ],
+  "input": {
+    "status": "passed",
+    "target_created": true,
+    "native_process_confinement": true,
+    "target_window_found": true,
+    "target_window_activated": true,
+    "target_event_probe": true,
+    "window_diagnostics": {
+      "focus_is_foreground_frame": true,
+      "focus_matches_target_pid": true,
+      "foreground_matches_target": true,
+      "gui_thread_info": true,
+      "target_focus_class": "Chrome_WidgetWin_1"
+    },
+    "os_foreground_verified": true,
+    "target_point": {
+      "client_height": 692,
+      "client_left": 48,
+      "client_top": 40,
+      "client_width": 884,
+      "display_origin_x": 0,
+      "display_origin_y": 0,
+      "height": 1080,
+      "hit_class": "Chrome_RenderWidgetHostHWND",
+      "hit_matches_target_pid": true,
+      "hit_matches_target_root": true,
+      "hit_owner_class": "",
+      "hit_owner_process_id": 0,
+      "hit_process_id": 62268,
+      "target_cloaked": 0,
+      "target_extended_style": 2097416,
+      "width": 1920,
+      "window_bottom": 740,
+      "window_left": 40,
+      "window_right": 940,
+      "window_top": 40,
+      "x": 490,
+      "y": 386
+    },
+    "pointer_down_up": true,
+    "keyboard_sender": {
+      "frames_sent": 4,
+      "held_keys": 0
+    },
+    "keyboard_down_up": true,
+    "unicode_text": true,
+    "trusted_event_count": 22,
+    "stale_epoch_rejected": true,
+    "heartbeat_watchdog": {
+      "passed": true,
+      "release_ms": 1884.7999999523163,
+      "measured_from": "trusted_keydown"
+    },
+    "released": true,
+    "worker_crash": {
+      "passed": true,
+      "key_release_ms": 43.800000071525574,
+      "button_release_ms": 45.89999997615814
+    }
+  },
+  "privacy": {
+    "screenshots": false,
+    "recordings": false,
+    "sdp": false,
+    "network_addresses": false,
+    "credentials": false
+  },
+  "requested_codec": "H264",
+  "worker_sha256": "eb4ac96dfaec525c500282f3c81075c3d972972b4bd8b1a06b99646f8129419f",
+  "sources": {
+    "client": {
+      "commit": "4c36187c5254632627c70fb6cb50df0676a8cc3f",
+      "modified": true
+    },
+    "server": {
+      "commit": "ed1c9017467d0ff3c075548d2ad7ccc922ec4552",
+      "modified": false
+    }
+  },
+  "server_build": {
+    "fresh": true,
+    "source_commit": "ed1c9017467d0ff3c075548d2ad7ccc922ec4552",
+    "command": "pnpm run build",
+    "dist": {
+      "file_count": 138,
+      "sha256": "0950831f72104afcfaf8d1bd9c8ea9f9c61ca1c8e47b6a3488fb4b28facf4676"
+    }
+  },
+  "capabilities": {
+    "permissions": [
+      "view",
+      "input.keyboard",
+      "input.pointer",
+      "input.text",
+      "clipboard.read",
+      "clipboard.write",
+      "files.send",
+      "files.receive"
+    ],
+    "codecs": [
+      "H264",
+      "VP8"
+    ],
+    "display_count": 1
+  },
+  "browser_version": "145.0.7632.6",
+  "media": {
+    "phases": [
+      "connecting",
+      "waiting_for_frame",
+      "viewing"
+    ],
+    "failures": [],
+    "input_releases": [
+      "RD_INPUT_WATCHDOG"
+    ],
+    "frames": 56,
+    "width": 1920,
+    "height": 1080,
+    "mediaTime": 5.963,
+    "ready": true,
+    "closed": false,
+    "peer_verified": true,
+    "host_path_verified": true,
+    "browser_udp_verified": true,
+    "input_enabled": false,
+    "connection_state": "connected",
+    "input_epoch": 2,
+    "dtls_state": "connected",
+    "frames_decoded": 58,
+    "bytes_received": 174842,
+    "video_codec": "video/H264",
+    "video_codec_parameters": "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f",
+    "video_decoder_implementation": null,
+    "video_power_efficient_decoder": null,
+    "input_frames_sent": 9,
+    "input_buffered_bytes": 0,
+    "local_candidate": {
+      "protocol": "udp",
+      "type": "prflx"
+    },
+    "remote_candidate": {
+      "protocol": "udp",
+      "type": "host"
+    }
+  },
+  "native_media": {
+    "input_accepted": 0,
+    "input_enabled": false,
+    "input_epoch": 0,
+    "input_failed": 0,
+    "input_ignored_disabled": 0,
+    "input_ignored_epoch": 0,
+    "input_received": 0,
+    "input_replayed": 0,
+    "video_codec": "video/H264",
+    "video_codec_parameters": "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f",
+    "video_encoder_implementation": "OpenH264",
+    "video_frame_height": 1080,
+    "video_frame_width": 1920,
+    "video_frames_encoded": 16,
+    "video_power_efficient_encoder": false
+  },
+  "finished_at": "2026-09-23T00:34:04.596Z"
+}
