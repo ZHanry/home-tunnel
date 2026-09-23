@@ -18,7 +18,10 @@ for component,record in manifest['components'].items():
     for package in record['downloads']:
         assert re.fullmatch(r'[0-9a-f]{64}',package['sha256'])
         assert package['url']==base+'download/v'+version+'/'+package['filename']
-assert manifest['contract_revision']==manifest['components']['server']['release_revision']
+assert re.fullmatch(r'[0-9a-f]{40}',manifest['contract_revision'])
+assert re.fullmatch(r'api-v\d+\.\d+\.\d+',manifest['contract_ref'])
+# The immutable API tag can be frozen before the server's client-download
+# baseline is updated. Contract and product revisions are independent identities.
 assert json.loads((root/'docs/site/releases.json').read_text(encoding='utf-8'))==manifest
 for path in (root/'docs/site/index.html',root/'docs/site/en/index.html'):
     text=path.read_text(encoding='utf-8')

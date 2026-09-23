@@ -1,0 +1,219 @@
+{
+  "schema": 1,
+  "started_at": "2026-09-23T01:29:02.124Z",
+  "status": "passed",
+  "scope": "Windows native desktop capture to Chromium on the same machine, view and input confined to a dedicated test browser process, with bidirectional fixture file transfer",
+  "transport": "isolated HTTP/WS IPv4 loopback fixture; production HTTPS policy unchanged",
+  "checks": {
+    "isolated_real_server": true,
+    "native_backend_ready": true,
+    "real_browser_identity": true,
+    "signed_pairing_and_code_match": true,
+    "explicit_session_approval": true,
+    "real_continuing_video": true,
+    "selected_udp_and_dtls": true,
+    "requested_codec_encoded_and_decoded": true,
+    "bidirectional_file_bytes_and_hashes": true,
+    "video_continues_after_files_disabled": true,
+    "clean_session_shutdown": true
+  },
+  "limitations": [
+    "Cross-network traversal, Android, audio, clipboard are not established by this run.",
+    "File selection uses a confined test fixture and browser origin-private storage; native and browser user pickers are not established."
+  ],
+  "input": {
+    "status": "passed",
+    "target_created": true,
+    "native_process_confinement": true,
+    "target_window_found": true,
+    "target_window_activated": true,
+    "target_event_probe": true,
+    "window_diagnostics": {
+      "focus_is_foreground_frame": true,
+      "focus_matches_target_pid": true,
+      "foreground_matches_target": true,
+      "gui_thread_info": true,
+      "target_focus_class": "Chrome_WidgetWin_1"
+    },
+    "os_foreground_verified": true,
+    "target_point": {
+      "client_height": 692,
+      "client_left": 48,
+      "client_top": 40,
+      "client_width": 884,
+      "display_origin_x": 0,
+      "display_origin_y": 0,
+      "height": 1080,
+      "hit_class": "Chrome_RenderWidgetHostHWND",
+      "hit_matches_target_pid": true,
+      "hit_matches_target_root": true,
+      "hit_owner_class": "",
+      "hit_owner_process_id": 0,
+      "hit_process_id": 68592,
+      "target_cloaked": 0,
+      "target_extended_style": 2097416,
+      "width": 1920,
+      "window_bottom": 740,
+      "window_left": 40,
+      "window_right": 940,
+      "window_top": 40,
+      "x": 490,
+      "y": 386
+    },
+    "pointer_down_up": true,
+    "keyboard_sender": {
+      "frames_sent": 4,
+      "held_keys": 0
+    },
+    "keyboard_down_up": true,
+    "unicode_text": true,
+    "trusted_event_count": 22,
+    "stale_epoch_rejected": true,
+    "heartbeat_watchdog": {
+      "passed": true,
+      "release_ms": 1465.6000000238419,
+      "measured_from": "trusted_keydown"
+    },
+    "released": true,
+    "worker_crash": {
+      "passed": true,
+      "key_release_ms": 43.89999997615814,
+      "button_release_ms": 46.299999952316284
+    }
+  },
+  "privacy": {
+    "screenshots": false,
+    "recordings": false,
+    "sdp": false,
+    "network_addresses": false,
+    "credentials": false
+  },
+  "requested_codec": "H264",
+  "worker_sha256": "37c8871a4489aca3c2b7c5287bb1bb25840a11328013a172c2f1aefdb79efb03",
+  "sources": {
+    "client": {
+      "commit": "3ae888cd25f8207bc789a408c3224e32cdde24bd",
+      "modified": false
+    },
+    "server": {
+      "commit": "9c54212b91d3bfac24aa5af4863dd2f8649fa5fe",
+      "modified": false
+    }
+  },
+  "server_build": {
+    "fresh": true,
+    "source_commit": "9c54212b91d3bfac24aa5af4863dd2f8649fa5fe",
+    "command": "pnpm run build",
+    "dist": {
+      "file_count": 138,
+      "sha256": "0950831f72104afcfaf8d1bd9c8ea9f9c61ca1c8e47b6a3488fb4b28facf4676"
+    }
+  },
+  "capabilities": {
+    "permissions": [
+      "view",
+      "input.keyboard",
+      "input.pointer",
+      "input.text",
+      "clipboard.read",
+      "clipboard.write",
+      "files.send",
+      "files.receive"
+    ],
+    "codecs": [
+      "H264",
+      "VP8"
+    ],
+    "display_count": 1
+  },
+  "browser_version": "145.0.7632.6",
+  "media": {
+    "phases": [
+      "connecting",
+      "waiting_for_frame",
+      "viewing"
+    ],
+    "failures": [],
+    "input_releases": [
+      "RD_INPUT_WATCHDOG"
+    ],
+    "frames": 54,
+    "width": 1920,
+    "height": 1080,
+    "mediaTime": 8.448,
+    "ready": true,
+    "closed": false,
+    "peer_verified": true,
+    "host_path_verified": true,
+    "browser_udp_verified": true,
+    "input_enabled": false,
+    "connection_state": "connected",
+    "input_epoch": 2,
+    "dtls_state": "connected",
+    "frames_decoded": 54,
+    "bytes_received": 191522,
+    "video_codec": "video/H264",
+    "video_codec_parameters": "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f",
+    "video_decoder_implementation": null,
+    "video_power_efficient_decoder": null,
+    "input_frames_sent": 9,
+    "input_buffered_bytes": 0,
+    "local_candidate": {
+      "protocol": "udp",
+      "type": "prflx"
+    },
+    "remote_candidate": {
+      "protocol": "udp",
+      "type": "host"
+    }
+  },
+  "native_media": {
+    "input_accepted": 0,
+    "input_enabled": false,
+    "input_epoch": 0,
+    "input_failed": 0,
+    "input_ignored_disabled": 0,
+    "input_ignored_epoch": 0,
+    "input_received": 0,
+    "input_replayed": 0,
+    "video_codec": "video/H264",
+    "video_codec_parameters": "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f",
+    "video_encoder_implementation": "OpenH264",
+    "video_frame_height": 1080,
+    "video_frame_width": 1920,
+    "video_frames_encoded": 13,
+    "video_power_efficient_encoder": false
+  },
+  "files": {
+    "status": "passed",
+    "scope": "Real bidirectional DataChannel bytes and disk writes using isolated fixture selection; native and browser user pickers are not exercised.",
+    "browser_to_native": [
+      {
+        "name": "browser-empty.bin",
+        "size": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "browser-multichunk.bin",
+        "size": 1048593,
+        "sha256": "02ee4b4f2c2374f7248152e18fcc93af56812d15ceefbc9c0b593c7c642fab25"
+      }
+    ],
+    "native_to_browser": [
+      {
+        "name": "native-empty.bin",
+        "size": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "native-multichunk.bin",
+        "size": 1048607,
+        "sha256": "6f822df87e8c85bd93c44b6ccaa44cb428006e5f28df4f0836e0138f0a0c0075"
+      }
+    ],
+    "cancellation_and_revocation": "passed",
+    "saved_file_preserved": true,
+    "video_frames_decoded_after": 28
+  },
+  "finished_at": "2026-09-23T01:29:43.616Z"
+}

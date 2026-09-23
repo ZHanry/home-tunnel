@@ -59,22 +59,25 @@ report missing prerequisites without claiming successful microphone injection.
 
 An unrun check is **not verified**, never passed. Hosted runners, software video
 fixtures and emulators do not prove physical GPU, TCC, Portal, driver, microphone,
-touch or real-NAT behavior. A failed safety check blocks release. Missing physical
-evidence limits a candidate's declared support and blocks the final stable release.
+touch or real-NAT behavior. Failed safety checks must be resolved for the shipped
+path. Missing physical evidence limits the stated support and remains explicitly
+unverified even when the maintainer chooses a public release.
 
 ## Publication
 
-Development uses `codex/8.0.0-remote-desktop` branches in the four original
-repositories. Candidate tags use `v8.0.0-rc.N` and GitHub prerelease status, with
-`latest=false`. The stable 7.0 manifest and default downloads remain intact until
-8.0 passes its final gates. Candidate manifests must contain actual immutable
-revisions, download URLs and checksums, with passed/failed/not-verified reports.
+The maintainer has changed the publication decision to a direct **8.0.0** public
+release, without an intermediate RC. The four repositories will retain only
+`main` after integration; GitHub Releases use `v8.0.0` and actual build artifacts.
+Until those artifacts exist, the 7.0 manifest remains valid. The entry is updated
+only with verified tags, revisions, download URLs and hashes. Historical 7.0
+versioned downloads remain accessible.
 
-The publication order is the frozen candidate contract, desktop/native core,
+The publication order is the frozen contract, desktop/native core,
 Android consuming that core, server integration against the actual client artifact,
-then the hub candidate manifest. A rebuilt artifact requires new verification.
-Publishing a stable 8.0.0 release additionally requires physical-platform and
-network evidence and the signing prerequisites for included drivers.
+then the hub release manifest. A rebuilt artifact requires new verification.
+Incomplete capabilities and missing physical/network evidence remain visible in
+the release notes and acceptance ledger. Unimplemented or unsigned virtual-audio
+drivers are not shipped or represented as available.
 
 Excluded: Android hosting, login/UAC secure desktops, cross-account sharing,
 image clipboard and recursive directory transfer. Deployment tests use isolated
