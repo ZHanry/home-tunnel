@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-09-23T02:56:35.975124+00:00",
+  "generated_at": "2026-09-23T03:01:13.880179+00:00",
   "status": "development-controller-package-preflight-passed",
   "app_implementation_revision": "4e318b807a9dbcc4b4f02ab8335aea8b6be3b96e",
   "package_notice_implementation_revision": "ebc722cb1e81ee7ee17f765890f367cd0b1d94e7",
@@ -57,6 +57,10 @@
     "android-controller-notices-zipalign.log": {
       "path": "D:\\home-tunnel\\artifacts\\android-controller-notices-zipalign.log",
       "sha256": "cf2948bb8cdf7a89c07f10f1891218b247f0e5ac648ed85bf90cb3340009de60"
+    },
+    "android-controller-preflight-apk-identity.txt": {
+      "path": "D:\\home-tunnel\\artifacts\\android-controller-preflight-apk-identity.txt",
+      "sha256": "3f685621adae3ef56684bfff556c1fc33446837b7dc64805d666b3ec2e8feec6"
     },
     "old-sdk-zip-preflight.log": {
       "path": "D:\\home-tunnel\\artifacts\\old-sdk-zip-preflight.log",
