@@ -5,7 +5,7 @@
 | 能力 | 8.0 交付要求 | 当前状态 |
 | --- | --- | --- |
 | 控制面 | 独立身份、双端配对、本机授权、DPoP、ES256、持久租约、撤销、四出站/单入站配额 | 已实现，自动化验证中 |
-| 共享协议 | API 1.2、独立 RD/ABI 版本、四语言常量与真实签名向量 | 已生成，尚未冻结发行标签 |
+| 共享协议 | API 1.2、独立 RD/ABI 版本、四语言常量与真实签名向量 | API 候选契约已冻结为 `api-v1.2.0-rc.1`，客户端快照绑定实际提交和摘要 |
 | 原生媒体 | 同源 C++20/libwebrtc；实际 UDP 对确认后才开放数据 | Windows 原生捕获→真实控制面→Chromium 视频直连已在同机开发环境通过；跨机/跨网待验收 |
 | Windows | 捕获、编码、解码、输入、隔离 worker、权限与单包升级 | 原生被控 worker、私有管道和 GUI 能力检查已集成；Windows 开发安装包已构建；输入与最终包验收进行中，桌面观看端未完成 |
 | macOS | ScreenCaptureKit、VideoToolbox、TCC、原生窗口 | 尚未完成与实机验收 |
@@ -33,8 +33,10 @@ Windows 产品虚拟麦克风必须使用产品驱动及合法发行签名；mac
 
 新增 [Windows→Chromium 真实输入报告](evidence/windows-browser-input-development.json)：键盘按下/释放、中文、鼠标、旧输入代次拒绝均通过；停止输入心跳后按键释放 1885 ms，终止 worker 后按键/鼠标释放约 44/46 ms。测试只向独立测试浏览器进程注入，经过真实签名配对、批准、UDP 和 DTLS。这是同机开发 worker 的实测，不能代替最终安装包、锁屏、高 DPI、多屏和跨网验收。
 
-2026-09-23 开发检查点：远控协议 43 项、远控浏览器界面 7 项及桌面界面 13 项回归通过。文字提交现等待匹配 UUID 和输入代次的 `TEXT_ACK`，收到确认或明确失败后才释放该次输入；超时不会自动重发可能已经插入的文字。剪贴板通道等待已请求的启用确认，撤销会立即清除权限和缓冲；迟到确认不会重新授权。原生本机基础探针见 [windows-native-probe.json](evidence/windows-native-probe.json)。[Windows→Chromium H.264](evidence/windows-browser-h264-development.json) 与 [VP8](evidence/windows-browser-vp8-development.json) 各自经过真实签名配对、本机批准、peer proof、双端 UDP/DTLS 检查及持续 1920×1080 解码，并核对原生编码器与浏览器统计。两次均仅观看、同一台机器、客户端源码含未提交修改；不能用作最终发行包、输入、跨网或完整平台验收证据。
+2026-09-23 开发检查点：远控协议 51 项、远控浏览器界面 7 项及桌面界面 14 项回归通过。文字提交现等待匹配 UUID 和输入代次的 `TEXT_ACK`，收到确认或明确失败后才释放该次输入；超时不会自动重发可能已经插入的文字。剪贴板通道等待已请求的启用确认，撤销会立即清除权限和缓冲；迟到确认不会重新授权。原生本机基础探针见 [windows-native-probe.json](evidence/windows-native-probe.json)。[Windows→Chromium H.264](evidence/windows-browser-h264-development.json) 与 [VP8](evidence/windows-browser-vp8-development.json) 各自经过真实签名配对、本机批准、peer proof、双端 UDP/DTLS 检查及持续 1920×1080 解码，并核对原生编码器与浏览器统计。两次均仅观看、同一台机器、客户端源码含未提交修改；不能用作最终发行包、输入、跨网或完整平台验收证据。
 
 候选发布分为构建封存和验收后发布两阶段。先保留同一标签构建的完整安装包，再使用这些原始字节执行原生视频、键盘、中文、鼠标、心跳失联及 worker 崩溃验收，验证源提交、安装与便携包中的 worker 摘要一致，之后才能公开 Release。预备产物不能当作已验证发布；实际输入验收或两秒释放期限未通过时门禁保持失败。
 
 新增局部证据：[Windows runner 构建](evidence/windows-runner-build-development.json) 在四核、四任务下用 27 分 44 秒完成源码准备、构建及检查；这是历史开发提交，不是最终候选包。[H.264](evidence/windows-native-h264-development.json) 使用 OpenH264→FFmpeg，[VP8](evidence/windows-native-vp8-development.json) 使用 libvpx，均在同机 UDP/DTLS 原生探针上实际解码 1280×720 视频。两者均为软件编解码，不证明浏览器、Android、硬件或跨网支持。H.264 曾因未编入 FFmpeg 解码器而失败；依赖构建已改为包含该解码器，失败记录仍保存在组件构建记录中。
+
+API 候选契约已在服务端 PR #3 合并并通过主分支检查后冻结：[api-v1.2.0-rc.1](https://github.com/ZHanry/home-tunnel-server/tree/api-v1.2.0-rc.1) 对应提交 `9c54212b91d3bfac24aa5af4863dd2f8649fa5fe`。该标签仅冻结契约，不代表产品 RC 已发布；桌面与 Android 已同步不可变快照和实际 SHA256。

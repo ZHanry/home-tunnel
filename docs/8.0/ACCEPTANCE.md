@@ -104,14 +104,15 @@
 
 ## 已有局部自动化证据
 
+- 冻结服务端联调：[首轮失败记录](evidence/windows-browser-frozen-server-first-attempt.json) 的视频和文件通过，但缺少键盘按下事件；[相同 worker 再测](evidence/windows-browser-frozen-server-development.json) 的视频、文件、中文/键鼠、旧代次和关闭均通过，心跳释放 1473 ms，崩溃后按键/鼠标释放约 57/59 ms。两轮均使用干净的 API 候选合并提交 `9c54212b91d3bfac24aa5af4863dd2f8649fa5fe`；首轮原因尚未确认，保留失败，不据此宣称输入稳定性或最终包验收完成。
 - 释放调度余量：[加固后的联合报告](evidence/windows-browser-files-input-margin-development.json) 保持视频、文件、取消/撤销及全部输入场景通过；心跳释放 1394 ms，worker 崩溃按键/鼠标约 76/77 ms。内部提前释放为系统调度留余量，对外两秒验收标准未放宽；仍为开发 worker，最终封存包需要单独报告。
 - 视频、文件和输入联合验证：[最新开发报告](evidence/windows-browser-files-input-development.json) 记录真实 H.264/UDP 视频、双向空文件和超过 1 MiB 的文件、实际磁盘字节与 SHA256、取消/撤销、已保存文件不被删除以及视频持续；之后键盘、中文、鼠标、旧代次和 worker 崩溃释放仍通过。该次心跳释放为 1982 ms，崩溃释放约 68/74 ms；内部调度余量仍在加固，最终包需重测。文件选择使用隔离测试目录与浏览器私有文件系统，不代替完整 OS 选择器验收。
 - Windows 真实输入：[开发报告](evidence/windows-browser-input-development.json) 记录独立浏览器目标中的可信键盘/鼠标事件、精确中文结果、旧输入代次拒绝；心跳中断释放 1885 ms，worker 崩溃释放按键/鼠标约 44/46 ms。系统屏幕选择器退出后该次实测通过。源码未封存，最终包及完整 I01/I04/I09 场景仍需验收；未把单机局部结果提升为完整条目通过。
-- 浏览器：43 项协议测试涵盖严格消息 schema、真实公开签名向量、密钥链、候选检查、单调租约、输入心跳与授权代次、流式文件和文本剪贴板；包括文字确认 UUID/代次校验、拒绝、超时、不自动重发及旧请求清理不释放新授权；剪贴板跨通道授权、取消、迟到回复与非法文本回归通过；7 项远控界面回归通过。
+- 浏览器：51 项协议测试涵盖严格消息 schema、真实公开签名向量、密钥链、候选检查、单调租约、输入心跳与授权代次、流式文件和文本剪贴板；包括文字确认 UUID/代次校验、拒绝、超时、不自动重发及旧请求清理不释放新授权；剪贴板跨通道授权、取消、迟到回复与非法文本回归通过；7 项远控界面回归通过。
 - Windows→Chromium：[开发视频报告](evidence/windows-browser-view-development.json) 记录真实配对和本机授权、UDP/DTLS 与持续 1920×1080 解码。仅限同机观看；源码未封存，输入、系统声音、文件等未由此验证。
 - 产品编码互通：[H.264 开发报告](evidence/windows-browser-h264-development.json) 和 [VP8 开发报告](evidence/windows-browser-vp8-development.json) 分别约束真实 Chromium 的视频能力，核对实际接收编码与原生编码器统计，均通过 1920×1080 UDP 视频。H.264 为 OpenH264，VP8 为 libvpx；浏览器未提供的解码器/硬件统计保持 null。仍是同机观看开发证据，不代表实机完整矩阵或最终包。
 - STUN：[实际容器报告](evidence/stun-runtime-development.json) 来自 [GitHub 隔离运行](https://github.com/ZHanry/home-tunnel-server/actions/runs/35756694517)。修复启动失败后，锁定的 coturn 镜像通过 Binding、Allocate/Refresh/CreatePermission/ChannelBind 拒绝、Send/ChannelData 本地不转发、TCP/TLS 无监听及 nftables 检查。60 个短时 Binding 请求接收 20 个，丢弃计数 46（含其他拒绝请求）。该报告只证明隔离 Linux namespace，不证明公网、IPv6、Docker DNAT 或云端计费负载结果。
 - 服务端、桌面和 Android 的自动化结果由各仓库 CI 和组件开发报告保存；统一候选报告必须绑定最终提交与产物摘要。
 - 原生编解码：[H.264](evidence/windows-native-h264-development.json) 和 [VP8](evidence/windows-native-vp8-development.json) 分别在同机 UDP/DTLS 探针上实际解码 30 帧；软件路径及编码器名称已记录。不是产品浏览器互通、硬件编码或跨网验收。
-- 原生构建：[Windows runner 记录](evidence/windows-runner-build-development.json) 绑定成功 CI 的历史提交、worker 摘要、初始磁盘和构建用时。授权与守护进程生命周期测试通过，没有执行真实按键注入；当前输入实测被系统屏幕选择器遮挡，发布门禁仍未通过。
+- 原生构建：[Windows runner 记录](evidence/windows-runner-build-development.json) 绑定成功 CI 的历史提交、worker 摘要、初始磁盘和构建用时。授权与守护进程生命周期测试通过，没有执行真实按键注入；后续开发 worker 输入局部实测见上文；最终封存包的发布门禁仍需独立验收。
 - 这些结果不证明完整平台功能、真实网关穿透或最终发行安装包已通过验收。
