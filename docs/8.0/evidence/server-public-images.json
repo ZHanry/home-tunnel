@@ -1,0 +1,98 @@
+{
+  "status": "passed",
+  "repository": "ZHanry/home-tunnel-server",
+  "tag": "v8.0.0",
+  "revision": "15fd9de2a8f8e984d68472877753dbbf6cf60775",
+  "verified_at": "2026-09-23T04:55:03.958700+00:00",
+  "images": [
+    {
+      "image": "ghcr.io/zhanry/home-tunnel-control-center",
+      "digest": "sha256:ef675406812089a1a88cf2ae62f437bb608b68806ddae6256acaa8d98810e3ab",
+      "version_tag_digest": "sha256:ef675406812089a1a88cf2ae62f437bb608b68806ddae6256acaa8d98810e3ab",
+      "signature_verified": true,
+      "signature_identity": "https://github.com/ZHanry/home-tunnel-server/.github/workflows/release.yml@refs/tags/v8.0.0",
+      "anonymous_registry_pull": true,
+      "platforms": [
+        {
+          "platform": "linux/amd64",
+          "digest": "sha256:fa35357d3bee1cafd26444b549f210dfada8d3f905ffc62c90db138ad27275f3",
+          "source_revision_label": "15fd9de2a8f8e984d68472877753dbbf6cf60775",
+          "oci_predicates": [
+            {
+              "predicate_type": "https://spdx.dev/Document",
+              "digest": "sha256:635a2eec7d71fd4755ae7a5fd8c130d7ca683a2393a90a71d783c96f97c2a82f",
+              "size_bytes": 615618
+            },
+            {
+              "predicate_type": "https://slsa.dev/provenance/v1",
+              "digest": "sha256:7173c5cbed23859e455e4b8a6803c17dc14199d99f4cec3f675d7144df2d05d2",
+              "size_bytes": 32387
+            }
+          ]
+        },
+        {
+          "platform": "linux/arm64",
+          "digest": "sha256:2e25c67497f50c0c8663fb2d833f411f93fe1292ad726f9b6bfc283a8e19adf5",
+          "source_revision_label": "15fd9de2a8f8e984d68472877753dbbf6cf60775",
+          "oci_predicates": [
+            {
+              "predicate_type": "https://spdx.dev/Document",
+              "digest": "sha256:b6ba88215c6c9a70524628691d36e5a91b7ecade3ff4ccfb74114fa01227f3b2",
+              "size_bytes": 614922
+            },
+            {
+              "predicate_type": "https://slsa.dev/provenance/v1",
+              "digest": "sha256:f8362adf13e747efbd36dbdc074d92da297f6be5c039142c80fb4fdeed36dbd7",
+              "size_bytes": 32387
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "image": "ghcr.io/zhanry/home-tunnel-traffic-gateway",
+      "digest": "sha256:f00a0d388e7020f43a0d9b4699f748b951bb9dab6ac8621287b70993c4ef903f",
+      "version_tag_digest": "sha256:f00a0d388e7020f43a0d9b4699f748b951bb9dab6ac8621287b70993c4ef903f",
+      "signature_verified": true,
+      "signature_identity": "https://github.com/ZHanry/home-tunnel-server/.github/workflows/release.yml@refs/tags/v8.0.0",
+      "anonymous_registry_pull": true,
+      "platforms": [
+        {
+          "platform": "linux/amd64",
+          "digest": "sha256:d50fc3ccdd0a679e1a4142bdbd725d9ec67a1cdeb0840fc2e8eb2a7c54ca508f",
+          "source_revision_label": "15fd9de2a8f8e984d68472877753dbbf6cf60775",
+          "oci_predicates": [
+            {
+              "predicate_type": "https://spdx.dev/Document",
+              "digest": "sha256:e7d62e6e11377f97d9d8c502b5c5f717cd10bfeb756a4da0290ee7e868e4e280",
+              "size_bytes": 448157
+            },
+            {
+              "predicate_type": "https://slsa.dev/provenance/v1",
+              "digest": "sha256:6e17ae1224e4908a982c5ba26b6383c2d34b1646917ed590b40a9bcc686ca7e8",
+              "size_bytes": 26123
+            }
+          ]
+        },
+        {
+          "platform": "linux/arm64",
+          "digest": "sha256:bb606c37a8c8711a42ddeb4bca9cda3593a23aa669ef3a5cf4280126265fde07",
+          "source_revision_label": "15fd9de2a8f8e984d68472877753dbbf6cf60775",
+          "oci_predicates": [
+            {
+              "predicate_type": "https://spdx.dev/Document",
+              "digest": "sha256:0b35e7da4d1dc74070cb7cae5b54cac48aeec9cb30edc5b89a41f2035933d5bf",
+              "size_bytes": 447461
+            },
+            {
+              "predicate_type": "https://slsa.dev/provenance/v1",
+              "digest": "sha256:1ffb69c0aa57ac75d487c0e63d68fa56d37aacec415f985d718a9a70b32f705a",
+              "size_bytes": 26123
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "scope": "Public OCI image signatures, content digests, architecture labels and retrievable architecture-bound SPDX/SLSA attestations. OCI evidence is attached to immutable registry images, not GitHub Release attachments."
+}

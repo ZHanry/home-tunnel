@@ -1,0 +1,302 @@
+{
+  "status": "passed",
+  "repository": "ZHanry/home-tunnel-client",
+  "tag": "v8.0.0",
+  "revision": "16d55f0e65b8d0f61d21d9770ecf0f6e94115af3",
+  "release_url": "https://github.com/ZHanry/home-tunnel-client/releases/tag/v8.0.0",
+  "public": true,
+  "prerelease": false,
+  "latest": true,
+  "checksum_signature_identity": "https://github.com/ZHanry/home-tunnel-client/.github/workflows/release.yml@refs/tags/v8.0.0",
+  "checksum_signature_verified": true,
+  "expected_revision": "16d55f0e65b8d0f61d21d9770ecf0f6e94115af3",
+  "asset_count": 57,
+  "assets": [
+    {
+      "name": "HomeTunnel-Remote-SDK-8.0.0-android-arm64.zip",
+      "size_bytes": 130813297,
+      "sha256": "548116e4a61a9c9d5b2e7eb905cb0620e1d07c2be3d4f7e62baaf6d1c9cd5189"
+    },
+    {
+      "name": "HomeTunnel-Remote-SDK-8.0.0-android-arm64.zip.sha256",
+      "size_bytes": 112,
+      "sha256": "21ca95a101f39732fbdf8bdba9950dc1960ac5a2d6d4cf75768ac8d43fe0d34b"
+    },
+    {
+      "name": "HomeTunnel-Remote-SDK-8.0.0-android-arm64.zip.sha256.sigstore.json",
+      "size_bytes": 10515,
+      "sha256": "18c1089a10a4d4ae3eec1b7b90cc5283251a2741e8c696df904c8e12090a0532"
+    },
+    {
+      "name": "HomeTunnel-Remote-SDK-8.0.0-android-arm64.zip.sigstore.json",
+      "size_bytes": 10467,
+      "sha256": "31436446d21594185ab52eb74414d4db9f3b80be0ccde189ce98cf6a0f1f6d3f"
+    },
+    {
+      "name": "HomeTunnel-Remote-SDK-8.0.0-windows-x64.zip",
+      "size_bytes": 138544811,
+      "sha256": "036449e70a0cd474c2055ea20eeb57ad82c2bc581a15de1055abb23c1df95efc"
+    },
+    {
+      "name": "HomeTunnel-Setup-8.0.0-x64.exe",
+      "size_bytes": 15809033,
+      "sha256": "a7a92045fa6fc6bbf26e3c7c797a0a4d6d6604b9f33cf8bc986941ae82fff3f3"
+    },
+    {
+      "name": "HomeTunnel-Setup-8.0.0-x64.exe.sha256",
+      "size_bytes": 97,
+      "sha256": "a2db5ae710ec94d1252f5fe3f41fd2c799deacbd1f39e631bdbf458533fab592"
+    },
+    {
+      "name": "HomeTunnel-Setup-8.0.0-x64.exe.sigstore.json",
+      "size_bytes": 10579,
+      "sha256": "ad9b16068cc50b0a005875de9a9b13b6e0c9b9a89bc59502effe25702776f252"
+    },
+    {
+      "name": "HomeTunnel-Windows-8.0.0-x64.zip",
+      "size_bytes": 19425759,
+      "sha256": "a700adbedb562a7a7a243fc39f115117c011e103d82926d5172d16b430c05a5d"
+    },
+    {
+      "name": "HomeTunnel-Windows-8.0.0-x64.zip.sha256",
+      "size_bytes": 99,
+      "sha256": "1077cb6c132b8ff18395ddbbe17feb43a7316d007eb24876a3d7545a151f66a3"
+    },
+    {
+      "name": "HomeTunnel-Windows-8.0.0-x64.zip.sha256.sigstore.json",
+      "size_bytes": 10515,
+      "sha256": "d98ccb8911984fd18e42c0844be66caecb4e18229ea6c4c4169766dea22aff47"
+    },
+    {
+      "name": "HomeTunnel-Windows-8.0.0-x64.zip.sigstore.json",
+      "size_bytes": 10515,
+      "sha256": "123f01396de7df3d7d84e5a32a99121c9488d34cf94384e0d349a63719ef9493"
+    },
+    {
+      "name": "HomeTunnel-Windows-8.0.0-x64.zip.spdx.json",
+      "size_bytes": 66381,
+      "sha256": "2c98a711bfaa2cb17da6e5d61f8ac614065f7de8363e8f8c80e8386ba184e420"
+    },
+    {
+      "name": "HomeTunnel-Windows-8.0.0-x64.zip.spdx.json.sigstore.json",
+      "size_bytes": 10467,
+      "sha256": "81c80cd558e8b254a528eb29c1c0de1a01c0a98937364d525f9f9fec9d1b8bdb"
+    },
+    {
+      "name": "SHA256SUMS.txt",
+      "size_bytes": 5915,
+      "sha256": "b653afad5b2e6c4e6a91d91ef52954f0d5fe5f7f1977c3de80441ce76ee51a30"
+    },
+    {
+      "name": "SHA256SUMS.txt.sigstore.json",
+      "size_bytes": 10767,
+      "sha256": "8f0df9e6eb5bbaf18a8ef7eceaee0156c7a4390f297dcd90c31a35ff814fab18"
+    },
+    {
+      "name": "WEBRTC-THIRD-PARTY-NOTICES.md",
+      "size_bytes": 223216,
+      "sha256": "8d38f9fee5b8b7be0571c91f8837008bd6ee952dc5e85c82b3a5e499972f6182"
+    },
+    {
+      "name": "agent-provenance.json",
+      "size_bytes": 1918,
+      "sha256": "1eb2583edb3db5330f00dc14e4bb6102e1a9aee2253052a463130dec7b8ceef1"
+    },
+    {
+      "name": "agent-provenance.json.sigstore.json",
+      "size_bytes": 10291,
+      "sha256": "76176fbb59d6b3e5a45c106a8dea5a4f6e092d0a9b3286c68ccfd6fc33fd8e6a"
+    },
+    {
+      "name": "android-sdk-provenance.json",
+      "size_bytes": 7191330,
+      "sha256": "3673a6dda2e73aad55d86c40c1c36222c4bd57cf1589e4b0961d48c4ef94cfec"
+    },
+    {
+      "name": "android-sdk-provenance.json.sigstore.json",
+      "size_bytes": 10611,
+      "sha256": "6446c751c524d584fe77e2a0c2d812c715effc134518f6207ce03ec035bf3ab8"
+    },
+    {
+      "name": "android-sdk.spdx.json",
+      "size_bytes": 14183,
+      "sha256": "f7bce33db905578ba2117fdd7c62e7e5aea9585b144c6e2f75360140a5bf188e"
+    },
+    {
+      "name": "android-sdk.spdx.json.sigstore.json",
+      "size_bytes": 10627,
+      "sha256": "efe2ce5e58e388c56500d83623f366db1879944f1284c684f152b855bf385146"
+    },
+    {
+      "name": "home-tunnel-linux-8.0.0-amd64.sha256",
+      "size_bytes": 103,
+      "sha256": "bae70648460bbd4e1f37fae88d939411e541b18cbd39379e6f0d0e57e55fb160"
+    },
+    {
+      "name": "home-tunnel-linux-8.0.0-amd64.sha256.sigstore.json",
+      "size_bytes": 10719,
+      "sha256": "8118d444dbf23163f7552ac4b2c0758587095c0cc69f575c5d5f4b2a2d7a84f2"
+    },
+    {
+      "name": "home-tunnel-linux-8.0.0-amd64.tar.gz",
+      "size_bytes": 22553807,
+      "sha256": "ff68081e94be047e1a731864036f96bfd6181dd80b37e0622de63a90e13b5f52"
+    },
+    {
+      "name": "home-tunnel-linux-8.0.0-amd64.tar.gz.sigstore.json",
+      "size_bytes": 10655,
+      "sha256": "7adc4881169a02c80166a29620d9d4b02e64a851f82f612e453bcfb166df27ee"
+    },
+    {
+      "name": "home-tunnel-linux-8.0.0-amd64.tar.gz.spdx.json",
+      "size_bytes": 62460,
+      "sha256": "6a9bf01b0a6d228e266429c12e96b9a5b37815a382f6d9e2dfa061f1d06193e7"
+    },
+    {
+      "name": "home-tunnel-linux-8.0.0-amd64.tar.gz.spdx.json.sigstore.json",
+      "size_bytes": 10563,
+      "sha256": "07ca0d11e1cfc8e69cdcf408f897596d9215615ae3bc5de31176630e3af7a159"
+    },
+    {
+      "name": "home-tunnel-linux-8.0.0-arm64.sha256",
+      "size_bytes": 103,
+      "sha256": "c91163d4fc3411f41d77f7deb4fd557d9558cfdaa66d028e41329e5c8bb11dac"
+    },
+    {
+      "name": "home-tunnel-linux-8.0.0-arm64.sha256.sigstore.json",
+      "size_bytes": 10523,
+      "sha256": "b73df383d69e9bddb26e48c40da62bdab8ab23768c7ab58804aafbba8641d5c2"
+    },
+    {
+      "name": "home-tunnel-linux-8.0.0-arm64.tar.gz",
+      "size_bytes": 11903854,
+      "sha256": "854cf29432e68f47706fd2381bd6fd5dc6d884b7ad188e98f51905781a79f490"
+    },
+    {
+      "name": "home-tunnel-linux-8.0.0-arm64.tar.gz.sigstore.json",
+      "size_bytes": 10500,
+      "sha256": "e1b2b32c462499d9007b20d2328bf0a916a26053a9e5cfa51d485b5480e7eb9d"
+    },
+    {
+      "name": "home-tunnel-linux-8.0.0-arm64.tar.gz.spdx.json",
+      "size_bytes": 62121,
+      "sha256": "18d06f7d44cc69f9820615f8d83be603309d8b485ffd139f54f400c9af3aad02"
+    },
+    {
+      "name": "home-tunnel-linux-8.0.0-arm64.tar.gz.spdx.json.sigstore.json",
+      "size_bytes": 10543,
+      "sha256": "50aab227a11211c6131083f8b930ee37e6796c4663df3abd5ae75522377b26ac"
+    },
+    {
+      "name": "home-tunnel-macos-8.0.0-amd64.sha256",
+      "size_bytes": 103,
+      "sha256": "4870c23cad3d4767d10a145e975b8b0d62a907e82768a6998ba2324ed42aaca7"
+    },
+    {
+      "name": "home-tunnel-macos-8.0.0-amd64.sha256.sigstore.json",
+      "size_bytes": 10463,
+      "sha256": "69705d2b528041205f9c98cc7d12da47d0a5444e60043fdfcac7ccb402111457"
+    },
+    {
+      "name": "home-tunnel-macos-8.0.0-amd64.tar.gz",
+      "size_bytes": 12584638,
+      "sha256": "7f50ddf2239b5612580c82dc5df5f48daddbb28be7f5d8f67aa8023582094772"
+    },
+    {
+      "name": "home-tunnel-macos-8.0.0-amd64.tar.gz.sigstore.json",
+      "size_bytes": 10323,
+      "sha256": "c40e6475ccfff8810f67f76142f0248b7c151d2f18e32f4647b9cec22bafa0d7"
+    },
+    {
+      "name": "home-tunnel-macos-8.0.0-amd64.tar.gz.spdx.json",
+      "size_bytes": 59487,
+      "sha256": "9c34d3227e5451ab016bc3d7164d7e080012acdc8c46fd59f114d4a4b156d012"
+    },
+    {
+      "name": "home-tunnel-macos-8.0.0-amd64.tar.gz.spdx.json.sigstore.json",
+      "size_bytes": 10343,
+      "sha256": "09f92db5f38c8081ac0646505e5118be3ce29e3575ac34d5b88f57211522aab6"
+    },
+    {
+      "name": "home-tunnel-macos-8.0.0-arm64.sha256",
+      "size_bytes": 103,
+      "sha256": "b05498ed26ef6ceaa9392098e2b2a8b1845718cc8d40751bc11a0d0b8762b36f"
+    },
+    {
+      "name": "home-tunnel-macos-8.0.0-arm64.sha256.sigstore.json",
+      "size_bytes": 10496,
+      "sha256": "3513e830a6284d9fcd928637072812d454dd7a796bf6f9d18a855fe4939b018f"
+    },
+    {
+      "name": "home-tunnel-macos-8.0.0-arm64.tar.gz",
+      "size_bytes": 11473891,
+      "sha256": "7026c8a385436a44b0b5dd3c9afe81e2960d75b8b5eadee0bc1b37606e955053"
+    },
+    {
+      "name": "home-tunnel-macos-8.0.0-arm64.tar.gz.sigstore.json",
+      "size_bytes": 10335,
+      "sha256": "0f5cce3ef72c655159c80bccb9b2a8354614a0568f8ed9ab6045bd76fc487422"
+    },
+    {
+      "name": "home-tunnel-macos-8.0.0-arm64.tar.gz.spdx.json",
+      "size_bytes": 59487,
+      "sha256": "77b223decef74e83af9c2970e0bf3b20555e416bd6be6ccef39cedc76af8bd09"
+    },
+    {
+      "name": "home-tunnel-macos-8.0.0-arm64.tar.gz.spdx.json.sigstore.json",
+      "size_bytes": 10292,
+      "sha256": "92596520e5e562dc1ea0cfe91184d3c95d99d00c9bd98964900f08a680fabd62"
+    },
+    {
+      "name": "release-manifest.json",
+      "size_bytes": 229,
+      "sha256": "515a72bb62bc9d490a57abc5fde8269159f1fba01fda1f0d4887641456d6a5c1"
+    },
+    {
+      "name": "remote-host-build.json",
+      "size_bytes": 2408,
+      "sha256": "79fddffe3454f8947701509503b2974f104b7a6a9143ec308c6896f94b180f44"
+    },
+    {
+      "name": "remote-host-provenance.json",
+      "size_bytes": 953,
+      "sha256": "5391fd17b394654766af3b2352f783552427a03fd2a44af22b782e287ff094be"
+    },
+    {
+      "name": "remote-sdk-provenance.json",
+      "size_bytes": 874,
+      "sha256": "e24152dbb4fda8ad2f61d21ca2ce05851903c3baf9c71e6871fb89d3c8a0dc0e"
+    },
+    {
+      "name": "remote-source-manifest.json",
+      "size_bytes": 18037,
+      "sha256": "c08f92cf9b2dabf78d82f0100de4b22748f0112f29c8968b0b33db93f9e0c639"
+    },
+    {
+      "name": "windows-defender-scan.json",
+      "size_bytes": 1216,
+      "sha256": "bb902cdd1faa13303da3c336d244537dc97d47170f06eb3da1e3aae894ad65d6"
+    },
+    {
+      "name": "windows-exe-smoke.json",
+      "size_bytes": 383,
+      "sha256": "580473260c32c11035c124fc8ec31afabd9b0cfb1f84d51739e2bd28904f531d"
+    },
+    {
+      "name": "windows-installer-smoke.json",
+      "size_bytes": 2254,
+      "sha256": "169592b3ee457c45fd4a4944f13cd62fba915627332fab156d792beb2a0f55e4"
+    },
+    {
+      "name": "windows-platform-signing.json",
+      "size_bytes": 850,
+      "sha256": "5f5c6b968a1726cf315e490abbb043d32cf92d8ccc61d5b1a894978963ca3244"
+    },
+    {
+      "name": "windows-remote-native-acceptance.json",
+      "size_bytes": 6476,
+      "sha256": "2c895b03dcec7d3c91f9219076c04e3c0d1118415d82e985397b914f458cc473"
+    }
+  ],
+  "scope": "Public asset bytes, sealed inventory and source identity; this is not a physical feature acceptance."
+}

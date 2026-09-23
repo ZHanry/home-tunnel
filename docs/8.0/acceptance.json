@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "target": "8.0.0",
-  "stage": "development",
+  "stage": "stable",
   "original_cases": 68,
   "extended_cases": 12,
   "cases": [
@@ -807,5 +807,67 @@
       "status": "not_verified",
       "evidence": []
     }
-  ]
+  ],
+  "partial_verification": [
+    {
+      "id": "windows_final_h264_input_files",
+      "status": "passed",
+      "evidence": [
+        "evidence/windows-final-package-h264.json"
+      ],
+      "scope": "Final distributed Windows worker: same-machine Chromium H.264 video, confined input and fixture file bytes; not the complete platform matrix."
+    },
+    {
+      "id": "windows_final_vp8_video",
+      "status": "passed",
+      "evidence": [
+        "evidence/windows-final-package-vp8.json"
+      ],
+      "scope": "Same final Windows worker: actual same-machine Chromium VP8 video; no input or file test in this run."
+    },
+    {
+      "id": "client_public_release_assets",
+      "status": "passed",
+      "evidence": [
+        "evidence/client-public-release.json"
+      ],
+      "scope": "All 57 public assets, their bytes, source revision and signed checksum inventory; not physical-platform functionality."
+    },
+    {
+      "id": "server_final_release",
+      "status": "passed",
+      "evidence": [
+        "evidence/server-public-release.json",
+        "evidence/server-public-images.json",
+        "evidence/server-final-integration.json"
+      ],
+      "scope": "All 21 public assets and two digest-pinned multi-architecture images, signed SPDX/SLSA evidence and isolated amd64/arm64 tunnel/STUN integration; not public-network or full upgrade acceptance."
+    },
+    {
+      "id": "linux_final_package",
+      "status": "passed",
+      "evidence": [
+        "evidence/linux-final-package.json"
+      ],
+      "scope": "Final Linux amd64 package identity and archived same-source Xvfb probe evidence, plus production worker IPC; not physical desktop, browser or cross-network acceptance."
+    },
+    {
+      "id": "android_final_sdk_import",
+      "status": "passed",
+      "evidence": [
+        "evidence/android-final-sdk-import.json"
+      ],
+      "scope": "Published signed client SDK, actual source/controller import, JVM and policy tests, unsigned local APK/AAB native bytes and 16 KiB alignment; not device media or final signed package acceptance."
+    },
+    {
+      "id": "android_final_signed_release",
+      "status": "passed",
+      "evidence": [
+        "evidence/android-public-release.json",
+        "evidence/android-final-signed-packages.json"
+      ],
+      "scope": "All 27 public assets, original APK/AAB signing certificate, actual identity/version, exact client SDK library and notices, ELF/ZIP 16 KiB alignment; physical device media remains unverified."
+    }
+  ],
+  "release_decision": "Publish 8.0.0 as requested; original full-scope and physical-platform acceptance remains incomplete."
 }

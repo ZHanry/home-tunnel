@@ -1,7 +1,8 @@
 # Home Tunnel 8.0 implementation and verification
 
-Status: development. The latest stable release remains 7.0.0. This document is
-not evidence that remote desktop works on a particular platform.
+Status: 8.0.0 stable publication. The verified component downloads and source
+identities are recorded in releases.json. The complete feature plan and physical
+platform acceptance remain incomplete; consult ACCEPTANCE.md for actual evidence.
 
 ## Accepted scope
 
@@ -73,9 +74,8 @@ unverified even when the maintainer chooses a public release.
 The maintainer has changed the publication decision to a direct **8.0.0** public
 release, without an intermediate RC. The four repositories will retain only
 `main` after integration; GitHub Releases use `v8.0.0` and actual build artifacts.
-Until those artifacts exist, the 7.0 manifest remains valid. The entry is updated
-only with verified tags, revisions, download URLs and hashes. Historical 7.0
-versioned downloads remain accessible.
+The entry now records the actual public 8.0.0 components with verified tags,
+revisions, download URLs and hashes. Historical 7.0 versioned downloads remain accessible.
 
 The publication order is the frozen contract, desktop/native core,
 Android consuming that core, server integration against the actual client artifact,

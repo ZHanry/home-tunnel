@@ -1,97 +1,106 @@
 {
   "schema_version": 1,
   "product": "Home Tunnel",
-  "version": "7.0.0",
+  "version": "8.0.0",
   "stage": "stable",
   "api_major": 1,
-  "contract_ref": "api-v1.1.0",
+  "contract_ref": "api-v1.2.0",
   "minimum_server": "7.0.0",
   "tested_combination": {
-    "server": "7.0.0",
-    "client": "7.0.0",
-    "android": "7.0.0",
-    "agent": "7.0.0"
+    "server": "8.0.0",
+    "client": "8.0.0",
+    "android": "8.0.0",
+    "agent": "8.0.0"
   },
   "components": {
     "hub": {
       "repository": "ZHanry/home-tunnel",
-      "version": "7.0.0",
-      "tag": "v7.0.0",
+      "version": "8.0.0",
+      "tag": "v8.0.0",
       "prerelease": false,
-      "release_url": "https://github.com/ZHanry/home-tunnel/releases/tag/v7.0.0"
+      "release_url": "https://github.com/ZHanry/home-tunnel/releases/tag/v8.0.0"
     },
     "server": {
       "repository": "ZHanry/home-tunnel-server",
-      "version": "7.0.0",
-      "tag": "v7.0.0",
+      "version": "8.0.0",
+      "tag": "v8.0.0",
       "prerelease": false,
-      "release_url": "https://github.com/ZHanry/home-tunnel-server/releases/tag/v7.0.0",
-      "release_revision": "7959bfb6b96ea9532ca0040c1c3c689eaaed93c3",
+      "release_url": "https://github.com/ZHanry/home-tunnel-server/releases/tag/v8.0.0",
+      "release_revision": "15fd9de2a8f8e984d68472877753dbbf6cf60775",
       "downloads": [
         {
-          "filename": "home-tunnel-server-7.0.0.tar.gz",
-          "sha256": "406ef860e86180a0f3efdc100b61eb7654c61499b8c8574ace2470ce7269fe31",
-          "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v7.0.0/home-tunnel-server-7.0.0.tar.gz"
+          "filename": "home-tunnel-server-8.0.0.tar.gz",
+          "sha256": "0335a6c9fd912e20d0ddf6193ae36f5d07b54b82bb1edc731eb16b71e0c8180f",
+          "size_bytes": 357488,
+          "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v8.0.0/home-tunnel-server-8.0.0.tar.gz"
         },
         {
           "filename": "compose.release.yaml",
-          "sha256": "ec935e2ccf2cc458de7509b913cfc494a5880b8c6188bb39f595330dbd04a916",
-          "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v7.0.0/compose.release.yaml"
+          "sha256": "6ca44003190e42009820f2fc9dad08bffac6d2b0db50552ab59a519431b35e49",
+          "size_bytes": 298,
+          "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v8.0.0/compose.release.yaml"
         }
       ]
     },
     "client": {
       "repository": "ZHanry/home-tunnel-client",
-      "version": "7.0.0",
-      "tag": "v7.0.0",
+      "version": "8.0.0",
+      "tag": "v8.0.0",
       "prerelease": false,
-      "release_url": "https://github.com/ZHanry/home-tunnel-client/releases/tag/v7.0.0",
-      "release_revision": "6e9dc52f17ba8f3afdf1813d135a1c33528b4e4a",
+      "release_url": "https://github.com/ZHanry/home-tunnel-client/releases/tag/v8.0.0",
+      "release_revision": "16d55f0e65b8d0f61d21d9770ecf0f6e94115af3",
       "downloads": [
         {
-          "filename": "HomeTunnel-Setup-7.0.0-x64.exe",
-          "sha256": "f9b5d2ea09ec58f42c127c44c73b09819e00509cf4e0fc4c562a67af6e11c64b",
-          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v7.0.0/HomeTunnel-Setup-7.0.0-x64.exe"
+          "filename": "HomeTunnel-Setup-8.0.0-x64.exe",
+          "sha256": "a7a92045fa6fc6bbf26e3c7c797a0a4d6d6604b9f33cf8bc986941ae82fff3f3",
+          "size_bytes": 15809033,
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v8.0.0/HomeTunnel-Setup-8.0.0-x64.exe"
         },
         {
-          "filename": "HomeTunnel-Windows-7.0.0-x64.zip",
-          "sha256": "4720d80053f0e14a27dc07fc8a06855bbee05f2d22340321d98d31b8df7cb836",
-          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v7.0.0/HomeTunnel-Windows-7.0.0-x64.zip"
+          "filename": "HomeTunnel-Windows-8.0.0-x64.zip",
+          "sha256": "a700adbedb562a7a7a243fc39f115117c011e103d82926d5172d16b430c05a5d",
+          "size_bytes": 19425759,
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v8.0.0/HomeTunnel-Windows-8.0.0-x64.zip"
         },
         {
-          "filename": "home-tunnel-linux-7.0.0-amd64.tar.gz",
-          "sha256": "fb5ef803e0285a969274155a936dab5618f9eab21a435e9ee923614b9e0257cb",
-          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v7.0.0/home-tunnel-linux-7.0.0-amd64.tar.gz"
+          "filename": "home-tunnel-linux-8.0.0-amd64.tar.gz",
+          "sha256": "ff68081e94be047e1a731864036f96bfd6181dd80b37e0622de63a90e13b5f52",
+          "size_bytes": 22553807,
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v8.0.0/home-tunnel-linux-8.0.0-amd64.tar.gz"
         },
         {
-          "filename": "home-tunnel-linux-7.0.0-arm64.tar.gz",
-          "sha256": "a15b7063132f8eb8af66651265160a8250d21fcbd4fa5430b3871939b54b7730",
-          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v7.0.0/home-tunnel-linux-7.0.0-arm64.tar.gz"
+          "filename": "home-tunnel-linux-8.0.0-arm64.tar.gz",
+          "sha256": "854cf29432e68f47706fd2381bd6fd5dc6d884b7ad188e98f51905781a79f490",
+          "size_bytes": 11903854,
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v8.0.0/home-tunnel-linux-8.0.0-arm64.tar.gz"
         },
         {
-          "filename": "home-tunnel-macos-7.0.0-amd64.tar.gz",
-          "sha256": "bced853184486ea5aba49c85d472fa0001c35abb0c996acf2557ef63c6df0a11",
-          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v7.0.0/home-tunnel-macos-7.0.0-amd64.tar.gz"
+          "filename": "home-tunnel-macos-8.0.0-amd64.tar.gz",
+          "sha256": "7f50ddf2239b5612580c82dc5df5f48daddbb28be7f5d8f67aa8023582094772",
+          "size_bytes": 12584638,
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v8.0.0/home-tunnel-macos-8.0.0-amd64.tar.gz"
         },
         {
-          "filename": "home-tunnel-macos-7.0.0-arm64.tar.gz",
-          "sha256": "d3fa8fd6e99572e08b3320c6b799fd172b9a1a6cb088b416ebc24e2611396609",
-          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v7.0.0/home-tunnel-macos-7.0.0-arm64.tar.gz"
+          "filename": "home-tunnel-macos-8.0.0-arm64.tar.gz",
+          "sha256": "7026c8a385436a44b0b5dd3c9afe81e2960d75b8b5eadee0bc1b37606e955053",
+          "size_bytes": 11473891,
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v8.0.0/home-tunnel-macos-8.0.0-arm64.tar.gz"
         }
       ]
     },
     "android": {
       "repository": "ZHanry/home-tunnel-android",
-      "version": "7.0.0",
-      "tag": "v7.0.0",
+      "version": "8.0.0",
+      "tag": "v8.0.0",
       "prerelease": false,
-      "release_url": "https://github.com/ZHanry/home-tunnel-android/releases/tag/v7.0.0",
-      "release_revision": "5e30ff3cc9f656138b141418b67f198fe8e77cc3",
+      "release_url": "https://github.com/ZHanry/home-tunnel-android/releases/tag/v8.0.0",
+      "release_revision": "618e3b9d2676361e1aff47935a53d59105179dc1",
       "downloads": [
         {
-          "filename": "HomeTunnel-Android-7.0.0-arm64-v8a.apk",
-          "sha256": "77a2c00bcc0a47726d9a1e3a4e18fe2258128edb4bd48cf04bc47d7a8cef4a85",
-          "url": "https://github.com/ZHanry/home-tunnel-android/releases/download/v7.0.0/HomeTunnel-Android-7.0.0-arm64-v8a.apk"
+          "filename": "HomeTunnel-Android-8.0.0-arm64-v8a.apk",
+          "sha256": "550f5846c009c012f2c0e3f25d5e4e19c4fbf6d424e9c02d883ade53f286dc70",
+          "size_bytes": 16119877,
+          "url": "https://github.com/ZHanry/home-tunnel-android/releases/download/v8.0.0/HomeTunnel-Android-8.0.0-arm64-v8a.apk"
         }
       ]
     }
@@ -104,5 +113,7 @@
     "macos": "unsigned-no-certificate-configured",
     "android_certificate_sha256": "d7779e338be1039acee6dda9a43417cbf2baf4b0c9995578d9708501e95af702"
   },
-  "contract_revision": "7959bfb6b96ea9532ca0040c1c3c689eaaed93c3"
+  "contract_revision": "4319f8d0cf2c6dcad0cc06d322e8a55ac83edf50",
+  "contract_sha256": "5a97a9fb6f7b28cb0f3fd32f0f54ba79b4b809c164bdadd93413569c030b5ec9",
+  "verification_note": "tested_combination \u8bb0\u5f55\u672c\u6b21\u5bf9\u5e94\u7684\u7ec4\u4ef6\u7248\u672c\u3001\u6784\u5efa\u8eab\u4efd\u53ca\u5df2\u5b8c\u6210\u7684\u9650\u5b9a\u81ea\u52a8\u5316\u7ec4\u5408\uff0c\u4e0d\u8868\u793a Android \u771f\u673a\u30018 \u7c7b\u63a7\u5236\u7aef \u00d7 5 \u7c7b\u88ab\u63a7\u73af\u5883\u3001\u771f\u5b9e\u8de8\u7f51\u6216\u5b8c\u6574\u5b9e\u673a\u4e92\u901a\u5df2\u7ecf\u9a8c\u6536\u3002\u5177\u4f53\u901a\u8fc7\u3001\u5931\u8d25\u548c\u672a\u9a8c\u8bc1\u8303\u56f4\u4ee5\u5404\u7ec4\u4ef6 Release \u8bc1\u636e\u53ca 8.0 \u9a8c\u6536\u8868\u4e3a\u51c6\u3002"
 }

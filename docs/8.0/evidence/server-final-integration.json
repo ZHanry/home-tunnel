@@ -1,0 +1,58 @@
+{
+  "status": "passed",
+  "revision": "15fd9de2a8f8e984d68472877753dbbf6cf60775",
+  "workflow_run": "https://github.com/ZHanry/home-tunnel-server/actions/runs/35819677136",
+  "checks": [
+    {
+      "arch": "amd64",
+      "production_tunnel_integration": "passed",
+      "checks": [
+        "landing_page",
+        "linux_quick_start_link",
+        "authenticated_api",
+        "http_local",
+        "https_local",
+        "sse",
+        "websocket",
+        "tcp_byte_for_byte_echo",
+        "udp_datagram_echo",
+        "rtsp_tcp_interleaved",
+        "unassigned_host_denied",
+        "policy_revocation",
+        "raw_tcp_revocation",
+        "raw_udp_revocation",
+        "frps_ping_device_revocation",
+        "component_health"
+      ],
+      "stun_isolated_namespace": "passed",
+      "stun_source_hashes_match_tagged_commit": true,
+      "public_network": "not_verified"
+    },
+    {
+      "arch": "arm64",
+      "production_tunnel_integration": "passed",
+      "checks": [
+        "landing_page",
+        "linux_quick_start_link",
+        "authenticated_api",
+        "http_local",
+        "https_local",
+        "sse",
+        "websocket",
+        "tcp_byte_for_byte_echo",
+        "udp_datagram_echo",
+        "rtsp_tcp_interleaved",
+        "unassigned_host_denied",
+        "policy_revocation",
+        "raw_tcp_revocation",
+        "raw_udp_revocation",
+        "frps_ping_device_revocation",
+        "component_health"
+      ],
+      "stun_isolated_namespace": "passed",
+      "stun_source_hashes_match_tagged_commit": true,
+      "public_network": "not_verified"
+    }
+  ],
+  "scope": "Real release images and actual released clients exercised on GitHub amd64/arm64 runners; isolated STUN runtime does not claim public cross-network or physical device acceptance."
+}

@@ -4,6 +4,39 @@
 
 状态：`passed` / `failed` / `not_verified`。失败必须记录，禁止改写为未验证来绕过发布门禁。机器可读明细见 [acceptance.json](acceptance.json)。
 
+## 最终 Windows 分发包的局部验收
+
+客户端正式标签 `v8.0.0`（`16d55f0e65b8d0f61d21d9770ecf0f6e94115af3`）的原始分发 worker 已独立验算，并与安装包所封存的 worker 摘要核对一致：`0c37a7f36d5d7e5b558a01ffeb30e0d7b580b1aa4871139c44b51266b0ef535b`。
+[H.264 最终包报告](evidence/windows-final-package-h264.json) 通过实际配对、本机批准、UDP/DTLS、持续视频、双向空/多分块文件与完整性校验、取消/撤销、中文和键鼠、旧输入代次拒绝。停止心跳后释放为 1688.3 ms，worker 崩溃后按键/鼠标释放为 28.4/29.6 ms，均符合 2 秒要求。
+[VP8 最终包报告](evidence/windows-final-package-vp8.json) 另行通过同一程序的真实持续视频与编码协商。
+
+[客户端公开发行复核](evidence/client-public-release.json) 对 `v8.0.0` 的全部 57 个公开附件重新下载，逐项核验字节数、SHA256、完整封存清单和精确标签的 Sigstore 签名；公开正式版及 latest 状态均已验证。
+
+以上测试使用同机 Chromium、冻结 API 服务端及隔离文件目录；VP8 这轮仅验证视频。它们不覆盖真实跨网、操作系统文件选择器、剪贴板、完整平台矩阵和长期在线，因此不将下表的复合验收条目整体标记为通过。
+
+## 最终服务端发行验证
+
+[服务端公开附件](evidence/server-public-release.json) 的 21 个文件全部通过签名、下载字节、摘要及提交身份校验。
+[最终发行联调](evidence/server-final-integration.json) 在 amd64 与 arm64 使用真实客户端 8.0.0 和最终镜像验证 HTTP/HTTPS、WebSocket、TCP、UDP、RTSP、权限撤销、端口配置、备份完整性及隔离 STUN。
+[镜像验证](evidence/server-public-images.json) 另行核对精确标签身份的 Cosign 签名、实际双架构、SPDX 和 SLSA v1；这些 OCI 证据保存在镜像摘要上。
+
+发行联调的备份完整性检查不等于全部平台的升级恢复验收；干净卷加密恢复及管理员登录检查属于最终 main CI 的运维测试。隔离 STUN 结果不代表真实公网或跨 NAT 验收。
+
+## 最终 Linux 包及隔离证据
+
+[最终 Linux amd64 包核验](evidence/linux-final-package.json) 使用正式源码校验器重核公开 tar 的生产 worker、GUI 内嵌摘要、源清单、安装器清单及隔离证据。H.264/VP8 各 30 帧、输入心跳 1200 ms/崩溃 20 ms 来自同源专用程序的 Xvfb 测试；生产 worker 另有 IPC 检查，不能当作完整生产远控或实体桌面验收。包内没有交付测试程序。
+
+## 最终 Android 签名包
+
+正式 Android SDK 导入和本地测试见 [最终 SDK 记录](evidence/android-final-sdk-import.json)。
+[Android 公开发行复核](evidence/android-public-release.json) 已重新下载并验证全部 27 个附件；
+[最终签名包记录](evidence/android-final-signed-packages.json) 通过实际 APK/AAB 签名工具验证原证书、applicationId、`8.0.0 / 8000002`、公开 SDK 原生库、许可证及 16 KiB ELF/ZIP 对齐。
+设备媒体验收仍为 `false`：这些结果不代表 Android 真机解码、触控、IME 或切网已验收。
+
+## 历史开发证据
+
+以下保留历史开发、构建和失败记录，与上述最终产物证据分别解释。
+
 [共享 SDK 许可证修复记录](evidence/native-sdk-license-development.json) 保留 Android 开发构建的实际失败，并记录补全 Chromium 原始根许可证、校正 LF/CRLF 摘要后的完整来源校验：Windows 42,056 个文件绑定提交 `16d55f0` 重新计算 SHA256，Linux 40,152 个头文件及 57 个来源通过，旧 Windows 实际库的重新打包通过。它们不替代最终标签或 Android 完整发行 ZIP 的验证。
 
 随后，[Android 实际 SDK 归档报告](evidence/android-sdk-archive-development.json) 验证提交 `16d55f0` 的成功云端构建和原始下载摘要。130,813,297 字节的 SDK ZIP 含 42,785 个文件、40,396 个头文件与 60 个来源；全部文件、原生库与许可证校验通过。它是开发分支的真实归档验证，仍不是最终产品标签或 Android 真机媒体验收。

@@ -1,0 +1,152 @@
+{
+  "status": "passed",
+  "repository": "ZHanry/home-tunnel-android",
+  "tag": "v8.0.0",
+  "revision": "618e3b9d2676361e1aff47935a53d59105179dc1",
+  "release_url": "https://github.com/ZHanry/home-tunnel-android/releases/tag/v8.0.0",
+  "public": true,
+  "prerelease": false,
+  "latest": true,
+  "checksum_signature_identity": "https://github.com/ZHanry/home-tunnel-android/.github/workflows/release.yml@refs/tags/v8.0.0",
+  "checksum_signature_verified": true,
+  "expected_revision": "618e3b9d2676361e1aff47935a53d59105179dc1",
+  "asset_count": 27,
+  "assets": [
+    {
+      "name": "HomeTunnel-Android-8.0.0-arm64-v8a.apk",
+      "size_bytes": 16119877,
+      "sha256": "550f5846c009c012f2c0e3f25d5e4e19c4fbf6d424e9c02d883ade53f286dc70"
+    },
+    {
+      "name": "HomeTunnel-Android-8.0.0-arm64-v8a.apk.sha256",
+      "size_bytes": 105,
+      "sha256": "5e23e2978da6b48aaf0aecb7b3bf562d31f894ff29330b55141ef98354f884ca"
+    },
+    {
+      "name": "HomeTunnel-Android-8.0.0-arm64-v8a.apk.sha256.sigstore.json",
+      "size_bytes": 10659,
+      "sha256": "433dbfd7a000ab91b74a2d7da3fbd10286d639db1f963edfef83a432aa9b11a1"
+    },
+    {
+      "name": "HomeTunnel-Android-8.0.0-arm64-v8a.apk.sigstore.json",
+      "size_bytes": 10499,
+      "sha256": "3bbf5d1465f2f8497526bfbb2df1a404373d29bdb0637f919820e3d90c6eaccf"
+    },
+    {
+      "name": "HomeTunnel-Android-8.0.0-arm64-v8a.apk.spdx.json",
+      "size_bytes": 1122,
+      "sha256": "b643829aeafa0c217f250d5bf8923059b78d1bd97a8c289570b5ea2f36f60f69"
+    },
+    {
+      "name": "HomeTunnel-Android-8.0.0-arm64-v8a.apk.spdx.json.sigstore.json",
+      "size_bytes": 10595,
+      "sha256": "a99f477df446252cf78a01504441b110642cefd60074d2cecc70522e61e6c31b"
+    },
+    {
+      "name": "HomeTunnel-Android-8.0.0.aab",
+      "size_bytes": 11843205,
+      "sha256": "1a87e19c213f223c51106d63cfb6da181e373e9c3d61d91af00de94ddbe7f27c"
+    },
+    {
+      "name": "HomeTunnel-Android-8.0.0.aab.sha256",
+      "size_bytes": 95,
+      "sha256": "7efa31d0c9bcfa1c2881ec7b04deae1172533080c304711f8a790e5afc8b1e2f"
+    },
+    {
+      "name": "HomeTunnel-Android-8.0.0.aab.sha256.sigstore.json",
+      "size_bytes": 10563,
+      "sha256": "a58106b28bd9bc3ea648f556d865c3f3905515bb2030b3e4e379f4c4642ea810"
+    },
+    {
+      "name": "HomeTunnel-Android-8.0.0.aab.sigstore.json",
+      "size_bytes": 10611,
+      "sha256": "aa54e10ba684ad5cbc28401e32e979a100c1f26c5f94e2308c5288df60d010a9"
+    },
+    {
+      "name": "HomeTunnel-Android-8.0.0.aab.spdx.json",
+      "size_bytes": 1072,
+      "sha256": "0b19a52ddaf5f33fe66ade76506d3eb45eb6ff6f6750bb6854ba22ee5f4e6f54"
+    },
+    {
+      "name": "HomeTunnel-Android-8.0.0.aab.spdx.json.sigstore.json",
+      "size_bytes": 10603,
+      "sha256": "44f1f5f5324d7679274778b3874b89b42d38a4390cc72c7e0ffd973a4ebd24f5"
+    },
+    {
+      "name": "SHA256SUMS.txt",
+      "size_bytes": 2630,
+      "sha256": "15a917e760b1a7e124b19bce05cf198744d92ee367b034963c2a1b104963f187"
+    },
+    {
+      "name": "SHA256SUMS.txt.sigstore.json",
+      "size_bytes": 10351,
+      "sha256": "d20278015a708f804678ec68d28d09ca2c4d2450c4e918c1a085f83e550ee064"
+    },
+    {
+      "name": "android-controller-build.json",
+      "size_bytes": 6300120,
+      "sha256": "e5aadf77cd31e4c82833c12776b97477383030324257baa1128ccbc76961e32e"
+    },
+    {
+      "name": "android-controller-sdk-provenance.json",
+      "size_bytes": 7191330,
+      "sha256": "3673a6dda2e73aad55d86c40c1c36222c4bd57cf1589e4b0961d48c4ef94cfec"
+    },
+    {
+      "name": "android-controller-sdk.lock.json",
+      "size_bytes": 486,
+      "sha256": "6bd371801ff3d031a9f93d3d895a52b43b7affb77fd55ff081fc7e17dfd50f30"
+    },
+    {
+      "name": "android-native-NDK-NOTICE",
+      "size_bytes": 522923,
+      "sha256": "4d5224d1c0b54ffa88b0dc0088191638fdbb7227835095dfb98f7f66b416a323"
+    },
+    {
+      "name": "android-native-NDK-NOTICE.toolchain",
+      "size_bytes": 806124,
+      "sha256": "cbe3237be53c0a819f8df6aac5358fdee848eee3b6571b4e2ca20767ebd7465e"
+    },
+    {
+      "name": "android-native-PROJECT-LICENSE",
+      "size_bytes": 11354,
+      "sha256": "06a4d0421042d3d1e428040475b124cde7f4f25c39a68a1898fa66a9c1fbf7cc"
+    },
+    {
+      "name": "android-native-WEBRTC-LICENSE.md",
+      "size_bytes": 227223,
+      "sha256": "473f71c4a48636e3393ddf8822daccbe0e807bc79ac46694876738269a8b9a29"
+    },
+    {
+      "name": "android-native-evidence.json",
+      "size_bytes": 960,
+      "sha256": "5d90787c833b90241d83a8cef49a0135df657b58b52e3bc543c097ac1636f596"
+    },
+    {
+      "name": "android-native-native-notices.json",
+      "size_bytes": 596,
+      "sha256": "2b67d276bf60a97c4a304b60e0c6e514824c313e33c7b901b2113093cdaec65b"
+    },
+    {
+      "name": "android-native-source.lock.json",
+      "size_bytes": 7586,
+      "sha256": "03c4ad4299f3151d9dbbf602a960e00e7335b2aa11f727ea4a9546074f4afb8a"
+    },
+    {
+      "name": "android-release-evidence.json",
+      "size_bytes": 1388,
+      "sha256": "64fea6839f00d6cfcacf6d5e9f0b96eaecff71cfa3a0cd5ace9a0e74fede82dc"
+    },
+    {
+      "name": "android-release-evidence.json.sigstore.json",
+      "size_bytes": 10607,
+      "sha256": "93107a205ad6078ed4606d0449d3603e1226f5dd44e0e38303ce2367a41e029f"
+    },
+    {
+      "name": "release-manifest.json",
+      "size_bytes": 225,
+      "sha256": "dc0bf462b81dcdcdcc1a4d39dfbab1cda6186442581bb0a8fc995b24183027b0"
+    }
+  ],
+  "scope": "Public asset bytes, sealed inventory and source identity; this is not a physical feature acceptance."
+}

@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "status": "passed",
+  "verification_kind": "published-final-linux-amd64-package-evidence",
+  "verified_at": "2026-09-23T05:03:29.280551+00:00",
+  "repository": "ZHanry/home-tunnel-client",
+  "tag": "v8.0.0",
+  "revision": "16d55f0e65b8d0f61d21d9770ecf0f6e94115af3",
+  "release_archive": {
+    "file": "home-tunnel-linux-8.0.0-amd64.tar.gz",
+    "size_bytes": 22553807,
+    "sha256": "ff68081e94be047e1a731864036f96bfd6181dd80b37e0622de63a90e13b5f52",
+    "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v8.0.0/home-tunnel-linux-8.0.0-amd64.tar.gz"
+  },
+  "sealed_release": {
+    "signature_verified": true,
+    "signature_identity": "https://github.com/ZHanry/home-tunnel-client/.github/workflows/release.yml@refs/tags/v8.0.0",
+    "verification_report": "D:\\home-tunnel\\artifacts\\published-8.0.0-assets\\client-verification.json",
+    "verification_report_sha256": "c70f497a43c9803f2b85ab75ff6624ac64f4290334d33c36683e1641e7757ef7"
+  },
+  "original_publication_validator": {
+    "path": "scripts/package-native-linux.py",
+    "sha256": "cf0cd862bbb4078d308e2d71f49e779e57bf522242384d12f65a18417b47da16",
+    "source_revision": "16d55f0e65b8d0f61d21d9770ecf0f6e94115af3",
+    "clean_checkout": true,
+    "result": "passed",
+    "command": [
+      "python",
+      "scripts/package-native-linux.py",
+      "--verify-archive",
+      "D:\\home-tunnel\\artifacts\\published-8.0.0-assets\\client\\home-tunnel-linux-8.0.0-amd64.tar.gz",
+      "--version",
+      "8.0.0",
+      "--revision",
+      "16d55f0e65b8d0f61d21d9770ecf0f6e94115af3"
+    ],
+    "output_worker_sha256": "9789d4ed21166b450971e012b976299e64e7dd29467c3b66180a36b223520d49",
+    "linux_binaries_executed_during_this_verification": false
+  },
+  "archive_bindings": {
+    "executables": {
+      "bin/home_tunnel_remote_host": {
+        "sha256": "9789d4ed21166b450971e012b976299e64e7dd29467c3b66180a36b223520d49",
+        "size_bytes": 25055952,
+        "mode": "0o755",
+        "architecture": "ELF64 little-endian x86_64"
+      },
+      "bin/home-tunnel-gui": {
+        "sha256": "e4b07c7cb384ba515122b2f3df3d0d6e3e3ee0b77f4090c392ea5a154639dd5e",
+        "size_bytes": 10305208,
+        "mode": "0o755",
+        "architecture": "ELF64 little-endian x86_64"
+      },
+      "bin/home-tunnel-client": {
+        "sha256": "e4b23a2b41d97e38b1679d2821600b3ff79be00135210ee297ac8399f6c91293",
+        "size_bytes": 6996094,
+        "mode": "0o755",
+        "architecture": "ELF64 little-endian x86_64"
+      },
+      "lib/home-tunnel-agent": {
+        "sha256": "f077b065756911099be17aeef1a22820bceb7286f6a746e1a42937976a2d1bbb",
+        "size_bytes": 15814782,
+        "mode": "0o755",
+        "architecture": "ELF64 little-endian x86_64"
+      }
+    },
+    "gui_contains_production_worker_digest": true,
+    "installer_worker_checksum_matches": true,
+    "test_executables_absent": true,
+    "remote_build_record_sha256": "8821031302e27d298b95974807e02df4ab48404bbc6f6979470661324a975f0b",
+    "source_tree_sha256": "8f5235a7b71e134e7d89d8aad8ffcd5ac22b1d1df3a5d26453088623e21fa931",
+    "source_manifest_sha256": "742ee634fecb6182bd0ee114ebf3b1836c7228decd962e3233913ecd4ffdd71a",
+    "isolated_evidence_sha256": "51e00d4a14b34f802abf17395c884a273090e2b668f4ef25e38d2a890b5a3976",
+    "dependency_lock_sha256": "f0b0e46823e19a989fa14fece5d243be35939e742b247e77f45c6a17c714585d",
+    "linux_recipe_sha256": "bf1efe8c4cc07c9f76a51d0a4848294bbd5fbd8c1ae4d3e2af76857de45a0571",
+    "webrtc_revision": "94e682e18fbcc0751463be2257b09d2a646a5a68"
+  },
+  "recorded_isolated_evidence": {
+    "status": "passed",
+    "scope": "isolated-xvfb",
+    "production_worker_sha256": "9789d4ed21166b450971e012b976299e64e7dd29467c3b66180a36b223520d49",
+    "test_worker_sha256": "ef0a75081929715d34f5f99e7addabee87eee03854807bb4e4ef85d376096425",
+    "input": {
+      "status": "passed",
+      "scope": "isolated-xvfb-real-xtest-input",
+      "live_release_ms": 1806,
+      "heartbeat_release_ms": 1200,
+      "worker_crash_release_ms": 20,
+      "unrelated_key_preserved": true,
+      "already_held_key_preserved": true,
+      "physical_xorg_acceptance": false
+    },
+    "production_ipc": {
+      "hello": "passed",
+      "capability_boundary": "passed",
+      "unsigned_authorization": "not_started"
+    },
+    "test_ipc": {
+      "hello": "passed",
+      "capability_boundary": "passed",
+      "unsigned_authorization": "rejected"
+    },
+    "codecs": {
+      "H264": {
+        "status": "passed",
+        "scope": "isolated-xvfb-local-udp-loopback",
+        "selected_pair": "udp-host-host",
+        "dtls_connected": true,
+        "desktop_frames_captured": 30,
+        "video_frames_decoded": 30,
+        "data_channel_round_trips": 1,
+        "probe_sha256": "7f5e831a28bd2613ba2b4726f7e4093ee1deb84448403d55155aa20428afbd22",
+        "product_acceptance": false
+      },
+      "VP8": {
+        "status": "passed",
+        "scope": "isolated-xvfb-local-udp-loopback",
+        "selected_pair": "udp-host-host",
+        "dtls_connected": true,
+        "desktop_frames_captured": 32,
+        "video_frames_decoded": 30,
+        "data_channel_round_trips": 1,
+        "probe_sha256": "7f5e831a28bd2613ba2b4726f7e4093ee1deb84448403d55155aa20428afbd22",
+        "product_acceptance": false
+      }
+    }
+  },
+  "recorded_native_unit_checks": {
+    "authorization_tests": "passed",
+    "clipboard_protocol_tests": "passed",
+    "file_transfer_tests": "passed"
+  },
+  "acceptance_boundary": {
+    "physical_xorg_acceptance": false,
+    "wayland_acceptance": false,
+    "native_gui_launch": "not_verified",
+    "public_cross_network": "not_verified",
+    "browser_interoperability": "not_verified",
+    "audio_unicode_clipboard_and_file_product_acceptance": "not_verified",
+    "two_hour_activity_and_24_hour_online": "not_verified",
+    "note": "Media and XTest input results come from separate isolated Xvfb probe/test binaries linked by recorded hashes; production worker IPC boundary is checked separately. Those test binaries are not shipped. Final release package identity and evidence binding are verified; this does not establish physical desktop or end-to-end product acceptance."
+  }
+}
