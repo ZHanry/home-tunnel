@@ -9,7 +9,7 @@
 | 原生媒体 | 同源 C++20/libwebrtc；实际 UDP 对确认后才开放数据 | Windows 原生捕获→真实控制面→Chromium 视频直连已在同机开发环境通过；跨机/跨网待验收 |
 | Windows | 捕获、编码、解码、输入、隔离 worker、权限与单包升级 | 原生被控 worker、私有管道和 GUI 能力检查已集成；Windows 开发安装包已构建；输入与最终包验收进行中，桌面观看端未完成 |
 | macOS | ScreenCaptureKit、VideoToolbox、TCC、原生窗口 | 尚未完成与实机验收 |
-| Linux | X11；GNOME/KDE Wayland Portal、PipeWire、libei | Xorg/logind 权限门、输入守护和 GUI 候选包已构建；隔离环境实际 H.264/VP8/UDP、XTest 与包摘要验证通过；实体桌面与 Wayland 待验收 |
+| Linux | X11；GNOME/KDE Wayland Portal、PipeWire、libei | Xorg/logind 权限门、输入守护和 8.0.0 开发 GUI 包已在云端构建并下载回读；隔离环境实际 H.264/VP8/UDP、XTest 与包摘要验证通过；实体桌面与 Wayland 待验收 |
 | 网页 | 身份与配对、观看、显示器切换、焦点输入、诊断、最多四窗口 | 与 Windows 真实视频、中文/键鼠和双向文件同机互通通过；切屏、多路和最终包实机验收进行中 |
 | Android | 相同源 JNI、Surface、触控、IME、前后台与切网 | 正式版本 APK/JNI、122 次 JVM 执行及 Lint 通过；早期 API 26/35 仪器测试通过，完整 controller SDK 云端打包验证进行中；真机/实际解码待验证 |
 | 多窗口 | 每控制端/账号默认四会话，每被控端一会话；单窗关闭互不影响 | 会话模型及窗口隔离测试；媒体并发待验证 |
@@ -28,6 +28,8 @@ Windows 产品虚拟麦克风必须使用产品驱动及合法发行签名；mac
 范围不含 Android 被控、登录前/UAC 安全桌面、跨账号共享、图片剪贴板、目录递归传输。现有用户数据与部署环境不用于破坏性验收。
 
 完整门禁见 [IMPLEMENTATION.md](IMPLEMENTATION.md)，逐项结果见 [ACCEPTANCE.md](ACCEPTANCE.md)。
+
+[Linux 正式版本开发归档报告](evidence/linux-cloud-public8-development.json) 记录干净 `67522e1` 云端构建及实际下载归档核验：GUI/native 两个包中的生产 worker 一致，源码、文件权限与哈希通过；H.264/VP8 各实际解码 30 帧，失联释放 1204 ms、崩溃释放 25 ms。该报告仍属于预合并开发提交与隔离 Xvfb 环境，不是最终标签或实体桌面验收。
 
 最新 [正式版本源码联调报告](evidence/windows-browser-public8-development.json) 使用干净客户端 `67522e1` 与正式 API 服务端 `4319f8d`，通过真实 H.264 视频、双向空/多分块文件与 SHA256、取消、权限撤销、保存文件保留，以及键盘/中文/鼠标和旧代次拒绝。心跳释放为 1481.5 ms，worker 崩溃按键/鼠标约 27.4/29.8 ms。它仍是本机开发构建，不能替代最终标签安装包、完整 OS 文件选择与跨网验收；历史成功及失败报告均保留。
 

@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "status": "passed",
+  "scope": "downloaded-original-github-linux-artifact-verification",
+  "version": "8.0.0",
+  "revision": "67522e1624730f157511dc50d69643b58ab7347c",
+  "source_modified": false,
+  "workflow_url": "https://github.com/ZHanry/home-tunnel-client/actions/runs/35808373942",
+  "artifact": {
+    "id": 10728973476,
+    "bytes": 31709147,
+    "sha256": "aa81e9f77a73b7554423c0634f007c584c0dd147adb050e5d77087543fdd1a86"
+  },
+  "package": {
+    "name": "home-tunnel-linux-8.0.0-amd64.tar.gz",
+    "bytes": 22553655,
+    "sha256": "0fa32eb80e026039fab6b04dbf5c334a96460d7a279c2a836c75d96868b1fc2e"
+  },
+  "worker_sha256": "9789d4ed21166b450971e012b976299e64e7dd29467c3b66180a36b223520d49",
+  "source_tree_sha256": "8f5235a7b71e134e7d89d8aad8ffcd5ac22b1d1df3a5d26453088623e21fa931",
+  "isolated_xvfb": {
+    "schema_version": 1,
+    "status": "passed",
+    "scope": "isolated-xvfb",
+    "physical_xorg_acceptance": false,
+    "wayland_acceptance": false,
+    "production_worker_sha256": "9789d4ed21166b450971e012b976299e64e7dd29467c3b66180a36b223520d49",
+    "test_worker_sha256": "ef0a75081929715d34f5f99e7addabee87eee03854807bb4e4ef85d376096425",
+    "input_test_sha256": "3ad9d38bbb18a7c9c1465379d2f1194bae9f80f3e8c0868f7c35014ebba1c188",
+    "recipe_sha256": "bf1efe8c4cc07c9f76a51d0a4848294bbd5fbd8c1ae4d3e2af76857de45a0571",
+    "input": {
+      "status": "passed",
+      "scope": "isolated-xvfb-real-xtest-input",
+      "live_release_ms": 1804,
+      "heartbeat_release_ms": 1204,
+      "worker_crash_release_ms": 25,
+      "unrelated_key_preserved": true,
+      "already_held_key_preserved": true,
+      "physical_xorg_acceptance": false
+    },
+    "production_ipc": {
+      "hello": "passed",
+      "capability_boundary": "passed",
+      "unsigned_authorization": "not_started"
+    },
+    "test_ipc": {
+      "hello": "passed",
+      "capability_boundary": "passed",
+      "unsigned_authorization": "rejected"
+    },
+    "H264": {
+      "data_channel_round_trips": 1,
+      "decoded_height": 600,
+      "decoded_width": 800,
+      "desktop_frames_captured": 30,
+      "dtls_connected": true,
+      "product_acceptance": false,
+      "receiver": {
+        "bytes_received": 11913,
+        "clock_rate": 90000,
+        "decoder_implementation": "FFmpeg",
+        "frames_decoded": 30,
+        "mime_type": "video/H264",
+        "packets_received": 100,
+        "payload_type": 108,
+        "power_efficient_decoder": false,
+        "sdp_fmtp_line": "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f",
+        "total_decode_time_seconds": 0.015396
+      },
+      "requested_codec": "H264",
+      "scope": "isolated-xvfb-local-udp-loopback",
+      "screen_content_saved": false,
+      "selected_pair": "udp-host-host",
+      "sender": {
+        "clock_rate": 90000,
+        "encoder_implementation": "OpenH264",
+        "frames_encoded": 30,
+        "mime_type": "video/H264",
+        "payload_type": 108,
+        "power_efficient_encoder": false,
+        "sdp_fmtp_line": "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f",
+        "total_encode_time_seconds": 0.058
+      },
+      "status": "passed",
+      "video_frames_decoded": 30,
+      "exit_code": 0,
+      "probe_sha256": "7f5e831a28bd2613ba2b4726f7e4093ee1deb84448403d55155aa20428afbd22",
+      "physical_xorg_acceptance": false
+    },
+    "VP8": {
+      "data_channel_round_trips": 1,
+      "decoded_height": 600,
+      "decoded_width": 800,
+      "desktop_frames_captured": 32,
+      "dtls_connected": true,
+      "product_acceptance": false,
+      "receiver": {
+        "bytes_received": 23017,
+        "clock_rate": 90000,
+        "decoder_implementation": "libvpx",
+        "frames_decoded": 30,
+        "mime_type": "video/VP8",
+        "packets_received": 102,
+        "payload_type": 96,
+        "power_efficient_decoder": false,
+        "sdp_fmtp_line": null,
+        "total_decode_time_seconds": 0.028374999999999997
+      },
+      "requested_codec": "VP8",
+      "scope": "isolated-xvfb-local-udp-loopback",
+      "screen_content_saved": false,
+      "selected_pair": "udp-host-host",
+      "sender": {
+        "clock_rate": 90000,
+        "encoder_implementation": "libvpx",
+        "frames_encoded": 30,
+        "mime_type": "video/VP8",
+        "payload_type": 96,
+        "power_efficient_encoder": false,
+        "sdp_fmtp_line": null,
+        "total_encode_time_seconds": 0.034
+      },
+      "status": "passed",
+      "video_frames_decoded": 30,
+      "exit_code": 0,
+      "probe_sha256": "7f5e831a28bd2613ba2b4726f7e4093ee1deb84448403d55155aa20428afbd22",
+      "physical_xorg_acceptance": false
+    }
+  },
+  "checks": {
+    "github_artifact_digest": true,
+    "original_package_checksum": true,
+    "original_tar_release_validator": true,
+    "trusted_clean_checkout_fingerprint": true,
+    "native_and_gui_archives_contain_identical_production_worker": true
+  },
+  "limitations": [
+    "This branch artifact is not a final tagged release.",
+    "Xvfb results do not establish physical Xorg, Wayland, browser/device or cross-network acceptance.",
+    "No GUI window launch or real systemd installation was performed."
+  ]
+}
