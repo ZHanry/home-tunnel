@@ -6,6 +6,8 @@
 
 [共享 SDK 许可证修复记录](evidence/native-sdk-license-development.json) 保留 Android 开发构建的实际失败，并记录补全 Chromium 原始根许可证、校正 LF/CRLF 摘要后的完整来源校验：Windows 42,056 个文件绑定提交 `16d55f0` 重新计算 SHA256，Linux 40,152 个头文件及 57 个来源通过，旧 Windows 实际库的重新打包通过。它们不替代最终标签或 Android 完整发行 ZIP 的验证。
 
+随后，[Android 实际 SDK 归档报告](evidence/android-sdk-archive-development.json) 验证提交 `16d55f0` 的成功云端构建和原始下载摘要。130,813,297 字节的 SDK ZIP 含 42,785 个文件、40,396 个头文件与 60 个来源；全部文件、原生库与许可证校验通过。它是开发分支的真实归档验证，仍不是最终产品标签或 Android 真机媒体验收。
+
 | ID | 操作 | 必须观察到 | 完整验收 |
 | --- | --- | --- | --- |
 | A01 | 用户A请求用户B endpoint/session/grant | 不返回B存在性/在线/SDP；统一不可见 | 未验证 |

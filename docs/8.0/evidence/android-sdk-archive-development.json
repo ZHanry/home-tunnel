@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "status": "passed",
+  "scope": "development-ci-real-sdk-distribution-verification",
+  "source_revision": "16d55f0e65b8d0f61d21d9770ecf0f6e94115af3",
+  "workflow_run": 35813578533,
+  "workflow_url": "https://github.com/ZHanry/home-tunnel-client/actions/runs/35813578533",
+  "github_artifact": {
+    "id": 10730374149,
+    "bytes": 122012406,
+    "sha256": "aab1a534de4609b96084ba736a3c15bd35ae8c41d4116fff4c52095a9239e451",
+    "digest_matches": true
+  },
+  "sdk_archive": {
+    "name": "HomeTunnel-Remote-SDK-8.0.0-android-arm64.zip",
+    "bytes": 130813297,
+    "sha256": "d3a6c4c258bdf3b312d1dd6ec726cef42de5dd59cd79d7bb9a9022bee262ef2c",
+    "members": 42785,
+    "uncompressed_bytes": 479337735
+  },
+  "engine_files": 42781,
+  "headers": 40396,
+  "source_providers": 60,
+  "notice_references": 2383,
+  "license_inventory_bytes": 3569075,
+  "license_inventory_sha256": "dd5260fcad555021488ca3f0d9dcf0d91c8bf2769de7842a6205a001dc4d26a7",
+  "source_tree_sha256": "784cd0da25f9ba64d87fccd29fffee959b7584c05d396e6f40322fb4d8312b4d",
+  "libraries": {
+    "libhome_tunnel_android_surface.a": {
+      "bytes": 15854,
+      "sha256": "7c5889050e0873903888f4c7271b188c1d3d16009b8efa839465faf0e0fda106"
+    },
+    "libhome_tunnel_remote.so": {
+      "bytes": 12604688,
+      "sha256": "4a9d379dbf57015acf587dc304e72dca9f3755ddba5025e5464077aef37fee62"
+    },
+    "libwebrtc.a": {
+      "bytes": 99023920,
+      "sha256": "901cd60c2ac8a065529bf63279e2ba496f034df6c1e801afebb61c996d1e7af0"
+    }
+  },
+  "chromium_origin_licenses": {
+    "src/build": {
+      "path": "source-licenses/chromium/LICENSE",
+      "sha256": "368cca1106be99d39ecd32a38d8305585d802a475effb66380b91ffc9bcf709b",
+      "source": "https://chromium.googlesource.com/chromium/src/+/41e5cf5e71b16fdde8ae211bb6d39d5e871134a1/LICENSE"
+    },
+    "src/testing": {
+      "path": "source-licenses/chromium/LICENSE",
+      "sha256": "368cca1106be99d39ecd32a38d8305585d802a475effb66380b91ffc9bcf709b",
+      "source": "https://chromium.googlesource.com/chromium/src/+/6a5a7bde528fb0d0a3cff46e4e10fb6885acc1c7/LICENSE"
+    },
+    "src/third_party": {
+      "path": "source-licenses/chromium/LICENSE",
+      "sha256": "368cca1106be99d39ecd32a38d8305585d802a475effb66380b91ffc9bcf709b",
+      "source": "https://chromium.googlesource.com/chromium/src/+/17a3918979e73d9a840546b79c3f5a7c0a49d35f/LICENSE"
+    },
+    "src/tools": {
+      "path": "source-licenses/chromium/LICENSE",
+      "sha256": "368cca1106be99d39ecd32a38d8305585d802a475effb66380b91ffc9bcf709b",
+      "source": "https://chromium.googlesource.com/chromium/src/+/41e5cf5e71b16fdde8ae211bb6d39d5e871134a1/LICENSE"
+    }
+  },
+  "current_zip_verifier_passed": true,
+  "checksum_companion_passed": true,
+  "final_tag_release": false,
+  "physical_device_acceptance": false,
+  "verifier_checkout_clean": true,
+  "verifier_sha256": "f837318afe84157a3420f4f3ba3d77ab30ffa9f4c51884eecbb260767b0321a3",
+  "shared_checkout_newline_evidence": "local-source-newline-evidence.json"
+}
