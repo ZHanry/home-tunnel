@@ -4,45 +4,45 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <title>Home Tunnel 8.0.0 · 功能与限制</title>
-  <meta name="description" content="Home Tunnel 8.0.0 远程桌面的平台范围、已验证环境与未交付能力。">
+  <title>Home Tunnel 9.0.0 · 功能与限制</title>
+  <meta name="description" content="Home Tunnel 9.0.0 远程桌面的连接方式、已验证环境与未交付能力。">
   <link rel="canonical" href="https://zhanry.github.io/home-tunnel/preview.html">
   <link rel="icon" type="image/svg+xml" href="assets/HomeTunnel.svg">
-  <link rel="stylesheet" href="assets/site.css?v=8.0.0">
+  <link rel="stylesheet" href="assets/site.css?v=9.0.0">
 </head>
 <body>
   <a class="skip" href="#content">跳到主要内容</a>
   <div class="wrap">
     <header class="site-header">
       <a class="brand" href="index.html"><img src="assets/HomeTunnel.svg" alt="" width="36" height="36">Home Tunnel</a>
-      <nav aria-label="主导航"><a href="index.html#download">8.0.0 下载</a><a href="#english">English</a><a href="https://github.com/ZHanry/home-tunnel">GitHub ↗</a></nav>
+      <nav aria-label="主导航"><a href="index.html#download">9.0.0 下载</a><a href="#english">English</a><a href="https://github.com/ZHanry/home-tunnel">GitHub ↗</a></nav>
     </header>
     <main id="content">
       <section class="preview">
         <p class="eyebrow">SCOPE AND LIMITS</p>
-        <h1>Home Tunnel 8.0.0</h1>
-        <p>8.0.0 保留隧道与设备管理，增加独立授权的远程桌面。正式版本号不代表完整方案或全部平台已验收。请根据下面的实现范围选择环境，并核对各组件 Release 中的实际产物与最终安装包证据。</p>
+        <h1>Home Tunnel 9.0.0</h1>
+        <p>9.0.0 分开内网穿透与远程桌面，刷新网站、Windows 和 Android 界面。正式版本号不代表完整方案或全部平台已验收；请核对各组件 Release 的实际产物与测试证据。</p>
         <h2>当前远控范围</h2>
         <ul>
-          <li><strong>Windows x64 与浏览器：</strong>H.264/VP8 视频、键鼠、中文文本和双向多文件；配对、本机批准和逐项权限控制。最终 Windows 包的同机验证已覆盖真实视频、输入和文件；完整文件选择、多屏、高 DPI、锁屏与跨网仍待验收。编码证据来自软件路径，不代表硬件加速已验证。</li>
+          <li><strong>Windows x64 与浏览器：</strong>独立远控窗口；临时请求并批准、固定密码、一次性临时密码三种授权；签名票据、租约和即时撤销。视频、键鼠、文本及文件的最终包结果以本版组件 Release 证据为准。</li>
           <li><strong>Linux x64 X11：</strong>仅观看、键盘和鼠标。当前证据来自隔离 Xvfb 环境，实体桌面和锁屏恢复未验收；文本、剪贴板和文件不可用。Linux arm64、NAS 和 CLI 继续提供隧道功能。</li>
-          <li><strong>Android：</strong>保留多服务器管理，接入同源核心、JNI 与 Surface；真机解码和输入未验收。音频、麦克风回传、剪贴板/文件、多会话界面与增强编码不可用。</li>
+          <li><strong>Android：</strong>保留多服务器管理，提供三种连接方式和远控画面。API 35 x86_64 模拟器测试不证明发行 arm64 APK 或真机运行；实际剪贴板互通仍未验收，音频与文件不可用。</li>
         </ul>
         <p>远控画面、输入和文件只能走两端 UDP P2P。服务器负责身份、授权、信令和 STUN；无法直连时明确失败，不回退至 TURN、FRP、HTTP 或 WSS 载荷转发。原有隧道业务仍使用自己的公网服务端转发。</p>
         <h2>尚未交付或完成验收</h2>
-        <p>macOS/Wayland 被控、桌面原生观看窗口、系统声音、麦克风回传、虚拟麦克风与 AV1/HEVC 尚未交付。Windows 文本剪贴板已有实现，实际系统互通未验证。多窗口媒体并发、真实跨网、完整升级恢复、8×5 平台组合以及 2 小时活动/24 小时在线验收仍未完成。</p>
-        <p>Android 被控、登录前/UAC 安全桌面、跨账号共享、图片剪贴板和目录递归传输不在当前范围内。未支持的能力在界面中保持不可用；模拟器、隔离环境与云端构建均不能替代对应实机证据。</p>
+        <p>Windows 锁屏、登录前和 UAC 安全桌面控制与高权限代理尚未完成。系统声音、麦克风回传、macOS/Wayland 被控、AV1/HEVC 尚未交付。剪贴板互通、真实跨网、完整升级恢复和长期在线仍待验收。</p>
+        <p>Android 被控、图片剪贴板和目录递归传输不在当前范围内。未支持的能力不应被报告为通过；模拟器、隔离环境与云端构建不能替代对应实机证据。</p>
         <p>Windows/macOS 平台签名状态以每个实际产物报告为准。Android 沿用原 applicationId 和发行证书。网站控制台图片仍是标明版本的 7.0.0 历史示例。</p>
-        <div class="actions"><a class="button" href="index.html#download">下载 8.0.0</a><a class="button secondary" href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">发布说明</a></div>
-        <p><a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/8.0/SCOPE.md">完整范围</a> · <a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/8.0/ACCEPTANCE.md">逐项验收</a> · <a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/GETTING_STARTED.md">快速开始</a> · <a href="https://github.com/ZHanry/home-tunnel/releases/tag/v7.0.0">7.0.0 历史入口</a></p>
+        <div class="actions"><a class="button" href="index.html#download">下载 9.0.0</a><a class="button secondary" href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">发布说明</a></div>
+        <p><a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/GETTING_STARTED.md">快速开始</a> · <a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/8.0/ACCEPTANCE.md">8.0 历史验收</a> · <a href="https://github.com/ZHanry/home-tunnel/releases/tag/v7.0.0">7.0.0 历史入口</a></p>
       </section>
       <section id="english" class="preview" lang="en" aria-label="English scope and limits">
-        <h2>8.0.0 scope and limits</h2>
-        <p>Windows-to-browser H.264/VP8 video, keyboard/pointer, Unicode text and bidirectional files have passed same-machine checks of the final Windows package. Final-package results belong to the separate Release evidence. Full file-picker interaction, multiple displays, high DPI, lock/unlock and cross-network use remain unverified; current codec evidence uses software encoding.</p>
-        <p>Linux x64 X11 exposes viewing, keyboard and pointer only. Its evidence comes from isolated Xvfb tests; physical desktops and lock/unlock remain unverified. Text, clipboard and files are unavailable. Android integrates the shared controller, JNI and Surface, but physical-device decoding and input remain unverified. Android audio, microphone return, clipboard/files, multi-session UI and optional codecs are unavailable.</p>
-        <p>macOS/Wayland hosting, native desktop viewers, system audio, microphone return, virtual microphones and AV1/HEVC are not delivered. Windows system clipboard, concurrent media windows, cross-network traversal, complete upgrade/restore and long-running acceptance remain outstanding. The version number does not imply that the complete plan has passed.</p>
+        <h2>9.0.0 scope and limits</h2>
+        <p>Windows and browser remote access offers a host-approved request, a host-configured fixed password, and a one-use temporary password, with a separate viewer window. Final video, input and file results belong to the component Release evidence. Pre-login, locked-screen and UAC secure-desktop control remain incomplete.</p>
+        <p>Linux x64 X11 exposes viewing, keyboard and pointer only, with isolated Xvfb evidence. Android includes remote-control UI and a shared native controller, but API 35 x86_64 emulator results do not validate the arm64 APK or a physical phone. Actual clipboard interoperability remains unverified.</p>
+        <p>Audio, macOS/Wayland hosting and AV1/HEVC are not delivered. Cross-network traversal, complete upgrade/restore and long-running acceptance remain outstanding. A stable version number does not imply full-plan completion.</p>
         <p>Remote-desktop payloads require direct UDP P2P. The server handles identity, authorization, signaling and STUN; an unavailable direct path fails with no TURN, tunnel, HTTP or WSS payload fallback. Existing tunnel services retain their server-forwarded path.</p>
-        <p>Read each artifact's actual signing and verification reports. Android retains its app ID and release certificate. The website preserves the original, labeled 7.0.0 console screenshot. <a href="en/index.html#download">Download 8.0.0</a> · <a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">Release notes</a> · <a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/8.0/ACCEPTANCE.md">Acceptance record</a></p>
+        <p>Read each artifact's actual signing and verification reports. Android retains its app ID and release certificate. The website preserves the original, labeled 7.0.0 console screenshot. <a href="en/index.html#download">Download 9.0.0</a> · <a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">Release notes</a> · <a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/8.0/ACCEPTANCE.md">Historical 8.0 acceptance</a></p>
       </section>
     </main>
     <footer class="site-footer"><span>© 2026 Home Tunnel · Apache-2.0</span><nav aria-label="页脚"><a href="index.html">项目首页</a><a href="privacy.html">隐私说明</a><a href="https://github.com/ZHanry/home-tunnel/issues">反馈问题</a></nav></footer>

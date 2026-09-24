@@ -1,3 +1,15 @@
+# Home Tunnel 9.0.0 发布流程
+
+四仓正式标签为 `v9.0.0`，均从 `main` 发行。共享契约先固定为不可移动的 `api-v1.3.0`；组件版本与 FRP 自身版本分开。正式版本号不覆盖功能缺口或未完成验收。
+
+本版依次核对服务端、桌面、Android 与入口仓库的 Quality Gate、CodeQL、Secret scan 和真实发行附件。桌面标签构建先封存 `candidate-assets`，必须对最终安装包内的原生 worker 字节运行 Windows 视频与输入验收，并把成功构建 run ID 和完整报告送入同一标签的发布工作流。Android 只能锁定桌面正式 Release 的真实签名 SDK，保持发行证书及递增 versionCode；x86_64 模拟器结果不能充当 arm64 APK 运行证据。最后才按实际附件的大小与 SHA-256 更新入口清单、网站和下载页，核对四仓公开正式 Release。标签不移动，CI 和签名门槛不得跳过。
+
+本轮仅发布 GitHub，不部署生产服务器。Windows 安全桌面/高权限代理、音频、arm64 APK 运行及剪贴板实际互通的限制必须在发布说明中保留。
+
+桌面端首次 `v9.0.0` 标签构建 [35984898445](https://github.com/ZHanry/home-tunnel-client/actions/runs/35984898445) 因遗留的 Linux 8.0 版本守卫失败；第二次 [发行验证](https://github.com/ZHanry/home-tunnel-client/actions/runs/35996490571) 因旧验收字段名被拒绝。两次均未生成公开 Release，失败记录保留。修复均通过 `main` 的 CI，公开发行前重建标签至 `ac48749044c0e761b21650539a0643fbeadb4ff2`。已公开的标签和附件不得按此方式更改。
+
+## 历史流程：8.0.0
+
 # Home Tunnel 8.0.0 发布流程
 
 四个仓库保留独立构建与 Release，正式标签使用 `v8.0.0`，源码和产物显示版本使用

@@ -1,5 +1,14 @@
 # Changelog
 
+## 9.0.0 — 2026-09-24
+
+- Refresh the website, Windows client and Android navigation and visual identity.
+- Separate remote desktop from tunnels and add host-approved requests, fixed passwords and one-use temporary passwords.
+- Pin API 1.3 and publish verified component downloads with their actual checksums.
+- Keep direct UDP P2P for remote-control payloads and preserve the 7.0 tunnel compatibility path.
+
+Windows secure-desktop control and audio remain unavailable. Android arm64 runtime and real-device decoding, clipboard interoperability, cross-network and long-running acceptance remain unverified. See [release scope](docs/RELEASE_NOTES.md).
+
 ## 7.0.0 — 2026-09-19
 
 All first-party components and the managed Agent now use 7.0.0. Upgrade the server,
