@@ -482,7 +482,7 @@ async function main() {
           nav: document.querySelector('.nav-toggle') ? document.querySelector('.nav-toggle').getAttribute('aria-expanded') : null,
           faqOpen: document.querySelectorAll('details[open]').length,
           scrollBehavior: getComputedStyle(doc).scrollBehavior,
-          active: active ? { tag: active.tagName, id: active.id, className: String(active.className).slice(0, 40), outline: style.outlineStyle, width: style.outlineWidth } : null
+          active: active ? { tag: active.tagName, id: active.id, themeChoice: active.getAttribute('data-theme-choice'), className: String(active.className).slice(0, 40), outline: style.outlineStyle, width: style.outlineWidth } : null
         };
       })()`);
       if (a11y.client !== item.width) throw new Error(`viewport ${a11y.client} != ${item.width}`);
@@ -490,6 +490,7 @@ async function main() {
       if (a11y.h1 !== 1) throw new Error("expected one h1");
       if (a11y.bg !== item.expectBg) throw new Error(`background ${a11y.bg} != ${item.expectBg}`);
       if (item.interaction.startsWith("focus-") && (!a11y.active || a11y.active.outline === "none")) throw new Error(`focus outline missing ${JSON.stringify(a11y.active)}`);
+      if (item.interaction === "focus-theme" && a11y.active.themeChoice !== item.themeQuery) throw new Error("Tab did not reach the selected theme radio");
       const metrics = await session.send("Page.getLayoutMetrics");
       const css = metrics.cssContentSize;
       const slices = [];
@@ -569,7 +570,7 @@ function publicCase(item) {
     state: item.state,
     interaction: item.interaction,
     route: `${item.path}?theme=${item.themeQuery}`,
-    original_focus: item.originalFocus,
+    expected_focused_theme: item.originalFocus?.replace(/^theme-/, "") || null,
   };
 }
 

@@ -258,6 +258,7 @@ code { overflow-wrap: anywhere; }
 }
 .board p { color: var(--board-ink); }
 @media (max-width: 800px) {
+  .download-table th:first-child { width: 58%; }
   .wrap { padding: 0 16px; }
   .theme { flex-basis: 100%; margin-left: 0; }
   html.js .nav-toggle { display: inline-flex; }
