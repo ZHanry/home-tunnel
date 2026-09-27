@@ -92,6 +92,12 @@ const promoted = state.view({
   fallbackStable: '9.0.0'
 });
 if (promoted.tone !== 'ready' || !promoted.en.includes('10.0.0')) process.exit(6);
+for (const pair of [[{}, candidate], [stable, {}], [[], candidate],
+  [{...stable, version: null}, candidate], [{...stable, version: '9.0.0-rc.1'}, candidate],
+  [stable, {...candidate, promotion_status: 'unknown'}]]) {
+  const invalid = state.view({ transport: 'ok', stable: pair[0], candidate: pair[1], fallbackStable: '9.0.0' });
+  if (invalid.tone !== 'error' || invalid.en.includes('undefined')) process.exit(9);
+}
 """
         completed = subprocess.run([node, "--input-type=commonjs", "-e", script], cwd=ROOT, capture_output=True, text=True)
         if completed.returncode != 0:

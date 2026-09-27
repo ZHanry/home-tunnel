@@ -26,7 +26,15 @@
         en: "You are offline. When the network returns, use the links below to download stable version " + fallback + "."
       };
     }
-    if (input.transport !== "ok" || !input.stable || !input.candidate) {
+    var stableVersion = input.stable && input.stable.version;
+    var candidateTag = input.candidate && input.candidate.version;
+    var versionPattern = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-rc\.[1-9][0-9]*)?$/;
+    if (input.transport !== "ok" || !input.stable || !input.candidate ||
+        typeof stableVersion !== "string" || !versionPattern.test(stableVersion) || stableVersion.indexOf("-rc.") !== -1 ||
+        input.stable.stage !== "stable" || typeof candidateTag !== "string" || !versionPattern.test(candidateTag) ||
+        ["not_promoted", "promoted"].indexOf(input.candidate.promotion_status) === -1 ||
+        ["pending", "not_submitted", "accepted"].indexOf(input.candidate.acceptance_status) === -1 ||
+        typeof input.candidate.downloads_published !== "boolean") {
       return {
         tone: "error",
         zh: "下载清单没有读到。可继续使用下方稳定版 " + fallback + " 的链接，或稍后刷新页面。",

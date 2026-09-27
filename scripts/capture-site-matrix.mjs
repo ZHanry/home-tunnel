@@ -38,8 +38,8 @@ const REFLOW_DESKTOP = { name: "reflow-720", width: 720, height: 900, dsf: 1 };
 const LANDSCAPE = { name: "landscape-mobile", width: 844, height: 390, dsf: 1 };
 const MAIN = [DESKTOP, TABLET, MOBILE];
 const SNIPPET = {
-  "zh-CN": { ready: "稳定下载是", loading: "正在读取", error: "没有读到", offline: "离线" },
-  en: { ready: "Stable downloads are", loading: "Reading the download manifest", error: "could not be read", offline: "offline" },
+  "zh-CN": { ready: "稳定下载是", loading: "正在读取", error: "没有读到", empty: "没有读到", invalid: "没有读到", offline: "离线" },
+  en: { ready: "Stable downloads are", loading: "Reading the download manifest", error: "could not be read", empty: "could not be read", invalid: "could not be read", offline: "offline" },
 };
 
 function arg(name, fallback = "") {
@@ -83,7 +83,7 @@ function buildCases() {
       for (const viewport of MAIN) add(makeCase(route, viewport, theme, "ready", "default"));
       if (route.status) {
         for (const viewport of [DESKTOP, MOBILE]) {
-          for (const state of ["loading", "error", "offline"]) add(makeCase(route, viewport, theme, state, "default"));
+          for (const state of ["loading", "error", "empty", "invalid", "offline"]) add(makeCase(route, viewport, theme, state, "default"));
         }
       }
     }
@@ -104,10 +104,10 @@ function buildCases() {
   for (const route of ROUTES) {
     for (const theme of THEMES) {
       for (const viewport of [DESKTOP, MOBILE]) {
-        add(makeCase(route, viewport, theme, "ready", "focus-theme", { originalFocus: "theme-light" }));
+        add(makeCase(route, viewport, theme, "ready", "focus-theme", { originalFocus: `theme-${theme.query}` }));
         if (route.page === "downloads") {
           for (const state of ["error", "offline"]) {
-            add(makeCase(route, viewport, theme, state, "focus-theme", { originalFocus: "theme-light" }));
+            add(makeCase(route, viewport, theme, state, "focus-theme", { originalFocus: `theme-${theme.query}` }));
           }
         }
       }
@@ -163,7 +163,8 @@ function buildCases() {
               const interaction = focus === "none" ? "default" : "focus-theme";
               const covers = themes.map((item) => `site.${locale}.${page}.${viewport}.${item}.${state}.${interaction}`);
               const missing = covers.filter((caseId) => !cases.some((item) => item.id === caseId));
-              original.push({ id, covers, missing, status: missing.length ? "gap" : "covered" });
+              original.push({ id, covers, missing, status: missing.length ? "gap" : "covered",
+                note: focus === "none" ? "Default rendering" : "Keyboard Tab reaches the selected theme radio; legacy focus-light labels are corrected to the selected theme." });
             }
           }
         }
@@ -190,6 +191,7 @@ async function launchEdge(profileRoot) {
     "--hide-scrollbars",
     "--no-first-run",
     "--no-default-browser-check",
+    "--edge-skip-compat-layer-relaunch",
     "--disable-extensions",
     "--remote-debugging-port=0",
     "--remote-debugging-address=127.0.0.1",
@@ -247,7 +249,11 @@ async function launchEdge(profileRoot) {
 }
 
 async function closeEdge(session) {
+  // Edge may relaunch a browser process behind its initial Windows launcher.
+  // Close the actual DevTools-owned browser, not merely that launcher PID.
+  if (session.send) await session.send("Browser.close").catch(() => {});
   session.ws?.close();
+  await sleep(500);
   if (session.child.exitCode === null) {
     await new Promise((done) => {
       const cleanup = spawn("taskkill", ["/PID", String(session.child.pid), "/T", "/F"], { stdio: "ignore", windowsHide: true });
@@ -343,6 +349,10 @@ async function main() {
       const requestId = message.params.requestId;
       if (fetchMode === "hold") held.add(requestId);
       else if (fetchMode === "fail") session.send("Fetch.failRequest", { requestId, errorReason: "ConnectionRefused" }).catch(() => {});
+      else if (fetchMode === "empty" || fetchMode === "invalid") session.send("Fetch.fulfillRequest", {
+        requestId, responseCode: 200, responseHeaders: [{ name: "Content-Type", value: "application/json" }],
+        body: Buffer.from(fetchMode === "empty" ? "" : "{}").toString("base64")
+      }).catch(() => {});
       else session.send("Fetch.continueRequest", { requestId }).catch(() => {});
     }
   };
@@ -362,7 +372,8 @@ async function main() {
   }
   async function key(name, code, vk) {
     const baseEvent = { key: name, code, windowsVirtualKeyCode: vk, nativeVirtualKeyCode: vk };
-    await session.send("Input.dispatchKeyEvent", { type: "keyDown", ...baseEvent });
+    await session.send("Input.dispatchKeyEvent", { type: "keyDown", ...baseEvent,
+      ...(name === "Enter" ? { text: "\r", unmodifiedText: "\r" } : {}) });
     await session.send("Input.dispatchKeyEvent", { type: "keyUp", ...baseEvent });
   }
   async function tabUntil(selector, max = 40) {
@@ -384,7 +395,7 @@ async function main() {
   for (const item of selected) {
     const started = new Date();
     try {
-      fetchMode = item.state === "loading" ? "hold" : item.state === "error" ? "fail" : "continue";
+      fetchMode = item.state === "loading" ? "hold" : item.state === "error" ? "fail" : ["empty", "invalid"].includes(item.state) ? item.state : "continue";
       await session.send("Emulation.setDeviceMetricsOverride", {
         width: item.width,
         height: item.height,
@@ -420,7 +431,8 @@ async function main() {
       }
       if (item.statusRegion) {
         const snippet = SNIPPET[item.locale][item.state];
-        await waitFor(() => evaluate(`(() => { const node = document.getElementById('download-status'); return !!(node && node.dataset.tone === ${JSON.stringify(item.state)} && node.textContent.includes(${JSON.stringify(snippet)})); })()`), 8000);
+        const expectedTone = ["empty", "invalid"].includes(item.state) ? "error" : item.state;
+        await waitFor(() => evaluate(`(() => { const node = document.getElementById('download-status'); return !!(node && node.dataset.tone === ${JSON.stringify(expectedTone)} && node.textContent.includes(${JSON.stringify(snippet)})); })()`), 8000);
       }
       if (item.interaction === "nav-open" || item.interaction === "focus-nav") {
         if (item.interaction === "focus-nav") {
@@ -441,6 +453,7 @@ async function main() {
       if (item.interaction === "focus-summary") {
         await tabUntil("summary");
         await key("Enter", "Enter", 13);
+        await waitFor(() => evaluate("document.activeElement.matches('summary') && document.activeElement.parentElement.open"));
       }
       if (item.interaction === "nav-escape") {
         await evaluate("document.querySelector('.nav-toggle').click()");
@@ -513,7 +526,7 @@ async function main() {
         source_manifest_sha256: sourceManifestHash,
         network_transitions: networkTransitions,
         synthetic_data: false,
-        state_driver: item.state === "offline" ? "emulated-offline" : item.state === "error" ? "failed-manifest-request" : item.state === "loading" ? "paused-manifest-request" : "network-ok",
+        state_driver: item.state === "offline" ? "emulated-offline" : item.state === "error" ? "failed-manifest-request" : item.state === "loading" ? "paused-manifest-request" : ["empty", "invalid"].includes(item.state) ? `fixture-${item.state}-manifest-response` : "network-ok",
       });
       console.log("ok", item.id, slices[0].sha256.slice(0, 12));
     } catch (error) {
