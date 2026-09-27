@@ -270,6 +270,7 @@ code { overflow-wrap: anywhere; }
 @media (max-width: 480px) {
   table, caption, tbody, tr, td { display: block; width: 100%; }
   thead { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  thead tr, thead th { display: block; width: 1px; height: 1px; padding: 0; border: 0; overflow: hidden; }
   tr { border-top: 1px solid var(--line); }
   td { border: 0; }
   td + td { padding-top: 0; }
