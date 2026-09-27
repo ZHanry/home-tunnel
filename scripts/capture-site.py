@@ -13,6 +13,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+import time
 from pathlib import Path
 
 CASES = (
@@ -62,12 +63,25 @@ def capture(browser, url, destination: Path, width, height):
             f"--screenshot={destination}",
             url,
         ]
-        subprocess.run(command, cwd=cwd, check=True, timeout=60)
-        if destination.is_file() and destination.stat().st_size > 0:
-            return
-        fallback = cwd / "screenshot.png"
-        if fallback.is_file():
-            shutil.move(str(fallback), destination)
+        process = subprocess.Popen(command, cwd=cwd)
+        deadline = time.time() + 40
+        while time.time() < deadline:
+            if destination.is_file() and destination.stat().st_size > 1000:
+                break
+            fallback = cwd / "screenshot.png"
+            if fallback.is_file() and fallback.stat().st_size > 1000:
+                shutil.move(str(fallback), destination)
+                break
+            if process.poll() is not None and time.time() + 8 < deadline:
+                deadline = min(deadline, time.time() + 8)
+            time.sleep(0.3)
+        if process.poll() is None:
+            process.terminate()
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                process.kill()
+        if destination.is_file() and destination.stat().st_size > 1000:
             return
     raise RuntimeError(f"browser produced no screenshot for {url}")
 
