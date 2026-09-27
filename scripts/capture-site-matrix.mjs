@@ -257,7 +257,7 @@ async function closeEdge(session) {
   const full = await realpath(session.profile);
   const parent = await realpath(session.profileRoot);
   if (full !== resolve(session.profile) || dirname(full) !== parent) throw new Error("Browser profile cleanup target changed");
-  await rm(full, { recursive: true, force: true });
+  await rm(full, { recursive: true, force: true, maxRetries: 8, retryDelay: 200 });
 }
 
 function gitValue(repo, args) {
