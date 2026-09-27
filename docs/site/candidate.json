@@ -1,0 +1,63 @@
+{
+  "version": "10.0.0",
+  "stage": "development",
+  "promotion_status": "not_promoted",
+  "downloads_published": false,
+  "acceptance_status": "pending",
+  "prerelease": false,
+  "tag": null,
+  "frp": "0.70.1",
+  "contract": {
+    "current_stable_ref": "api-v1.3.0",
+    "planned_ref": "api-v1.4.0",
+    "frozen": false,
+    "note": "api-v1.4.0 is planned and is not frozen. Do not publish 10.0.0 until the server contract is complete and real evidence promotes this channel."
+  },
+  "components": {
+    "hub": {
+      "repository": "ZHanry/home-tunnel",
+      "version": "10.0.0",
+      "source_sha": null,
+      "artifacts": []
+    },
+    "server": {
+      "repository": "ZHanry/home-tunnel-server",
+      "version": "10.0.0",
+      "source_sha": null,
+      "artifacts": []
+    },
+    "client": {
+      "repository": "ZHanry/home-tunnel-client",
+      "version": "10.0.0",
+      "source_sha": null,
+      "artifacts": []
+    },
+    "android": {
+      "repository": "ZHanry/home-tunnel-android",
+      "version": "10.0.0",
+      "source_sha": null,
+      "artifacts": []
+    }
+  },
+  "planned_capabilities": [
+    "Authorized UDP-only remote control stays the remote path, including device list or code, recent and favorites, local approval, one-time password, fixed password, and explicitly enabled unattended access.",
+    "Windows service and session broker for startup, lock screen, sign-in, UAC secure desktop, and session switching is planned and not accepted.",
+    "Authorized system-audio playback and bidirectional multi-file transfer with progress, cancel, SHA-256, and cleanup are planned and not accepted.",
+    "FRP publishing remains separate: HTTP, HTTPS, TCP, UDP, and templates for NAS, Home Assistant, Immich, Jellyfin, SSH, RDP, and RTSP are planned and not accepted.",
+    "A coordinated 9 to 10 upgrade with backup and recovery is planned. Long-term mixed-version operation is not a supported goal. Migration acceptance is pending."
+  ],
+  "not_verified": [
+    "secure-desktop",
+    "system-audio",
+    "bidirectional-file-acceptance",
+    "10.0.0-stable-downloads",
+    "api-v1.4.0-freeze",
+    "vm-network-migration-30-repeat-2h-24h"
+  ],
+  "signing": {
+    "windows": "unsigned-no-certificate-configured",
+    "macos": "unsigned-no-certificate-configured",
+    "android_certificate_sha256": "d7779e338be1039acee6dda9a43417cbf2baf4b0c9995578d9708501e95af702",
+    "note": "No Authenticode or Apple Developer ID identity is configured. SHA-256 and Sigstore build provenance are not publisher signatures."
+  }
+}

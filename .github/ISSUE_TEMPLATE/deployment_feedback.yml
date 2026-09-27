@@ -1,16 +1,26 @@
 name: Deployment feedback
-description: Share a real installation result and any blocker without exposing your infrastructure.
+description: Share a real 9.0.0 installation result without exposing infrastructure.
 title: "[Deployment]: "
 labels: [deployment-feedback, triage]
 body:
   - type: markdown
     attributes:
-      value: Thank you for testing Home Tunnel. Do not include domains, IP addresses, credentials, tokens, private keys, or unredacted logs.
+      value: Do not include domains, IP addresses, credentials, tokens, private keys, or unredacted logs. 10.0.0 has no stable deployment package.
+  - type: dropdown
+    id: workflow
+    attributes:
+      label: What you tried
+      options:
+        - FRP service publishing
+        - Authorized UDP remote control
+        - Both
+    validations:
+      required: true
   - type: input
     id: version
     attributes:
-      label: Home Tunnel version or commit
-      placeholder: 3.2.0 or a commit SHA
+      label: Home Tunnel version
+      placeholder: 9.0.0
     validations:
       required: true
   - type: dropdown
@@ -28,35 +38,34 @@ body:
     attributes:
       label: Client platform
       options:
+        - Windows x64
         - Linux amd64
         - Linux arm64
-        - macOS amd64 (内部测试)
-        - macOS arm64 (内部测试)
-        - Windows x64 source build (内部测试)
+        - macOS amd64
+        - macOS arm64
+        - Android arm64
     validations:
       required: true
   - type: dropdown
     id: result
     attributes:
-      label: Installation result
+      label: Result
       options:
         - Deployed successfully
         - Partially deployed
-        - Blocked before first tunnel
+        - Blocked before the first connection
     validations:
       required: true
   - type: textarea
     id: steps
     attributes:
-      label: What you tried
-      description: Summarize the documented path you followed and any intentional deviations.
+      label: Path followed
     validations:
       required: true
   - type: textarea
     id: blocker
     attributes:
       label: Result and blockers
-      description: What worked, what did not, and which documentation or error message would have helped?
     validations:
       required: true
   - type: checkboxes
@@ -65,6 +74,4 @@ body:
       label: Privacy checklist
       options:
         - label: I removed domains, public IPs, credentials, tokens, private keys, and personal deployment details.
-          required: true
-        - label: This is a real deployment attempt and I am not a project maintainer.
           required: true

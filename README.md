@@ -1,75 +1,54 @@
 <img src="docs/site/assets/HomeTunnel.svg" alt="" width="64" height="64">
 
-# Home Tunnel 9.0.0
+# Home Tunnel
 
-**自托管的家庭服务连接与远程桌面平台**
+**自托管的两条路径：授权后的 UDP 远控，以及 FRP 服务发布。**
 
-[![Version 9.0.0](https://img.shields.io/badge/version-9.0.0-595AD7)](https://github.com/ZHanry/home-tunnel/releases/tag/v9.0.0) [![License Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+[![License Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
-[English](README.en.md) · [项目网站](https://zhanry.github.io/home-tunnel/) · [下载](docs/DOWNLOADS.md) · [快速开始](docs/GETTING_STARTED.md) · [9.0 功能与限制](docs/RELEASE_NOTES.md)
+[English](README.en.md) · [网站](https://zhanry.github.io/home-tunnel/) · [下载](docs/DOWNLOADS.md) · [快速开始](docs/GETTING_STARTED.md) · [架构](docs/ARCHITECTURE.md) · [功能矩阵](docs/FEATURE_MATRIX.md)
 
-用自己的公网服务器，将家里的 NAS、Home Assistant、Immich、Jellyfin 和其他
-本地服务连接到外部网络。电脑/NAS 运行隧道，浏览器和 Android 管理连接。
-支持 HTTP/HTTPS、TCP、UDP，以及 SSH/RDP/RTSP 预设。
-9.0 将远程桌面和内网穿透分开，提供独立远控窗口及三种连接方式：临时请求并批准、固定密码和一次性临时密码。远控载荷只走 UDP P2P；无法直连时明确失败。
+开发线是 **10.0.0**。当前可以安装的稳定版仍是 **9.0.0**。10.0.0 验收尚未完成，没有稳定安装包。FRP 保持独立的 **0.70.1**。稳定通道和开发线写在同一个 [`distribution.json`](distribution.json) 里；晋升时只改这一份，再运行 `python scripts/sync-distribution.py`。
 
 ## 从这里开始
 
 | 你要做的事 | 入口 |
 | --- | --- |
-| 部署自己的公网服务端 | [部署指南](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/SELF_HOSTING.md) · [Server 9.0.0](https://github.com/ZHanry/home-tunnel-server/releases/tag/v9.0.0) |
-| 连接家中电脑或 NAS | [桌面/CLI 9.0.0](https://github.com/ZHanry/home-tunnel-client/releases/tag/v9.0.0) · [NAS 模板](https://github.com/ZHanry/home-tunnel-client/tree/main/packaging/nas) |
-| 手机远程管理多台服务器 | [Android 9.0.0 APK](https://github.com/ZHanry/home-tunnel-android/releases/tag/v9.0.0) |
-| 给家庭应用配置连接 | [Home Assistant / Immich / Jellyfin 场景](docs/SCENARIOS.md) |
+| 授权后远程操作一台 Windows 主机 | [快速开始 · 远控](docs/GETTING_STARTED.md) · [9.0 范围](docs/RELEASE_NOTES.md) |
+| 把家里的服务发布到公网 | [快速开始 · FRP](docs/GETTING_STARTED.md) · [部署](docs/SELF_HOSTING.md) · [场景](docs/SCENARIOS.md) |
+| 安装现在能用的版本 | [9.0.0 下载与校验](docs/DOWNLOADS.md) |
+| 出了问题 | [排查](docs/TROUBLESHOOTING.md) · [升级](docs/UPGRADING.md) |
 
-## 9.0.0 的交付范围
+## 两条路径不要混用
 
-- **Windows 与浏览器**：远控独立窗口、临时请求并批准、固定密码与一次性临时密码；签名授权、租约和即时撤销。H.264/VP8 视频、键鼠、Unicode 文本及文件路径的验证结果以本版组件 Release 证据为准。
-- **Linux x64 X11**：被控端只开放观看、键盘和鼠标。已完成隔离 Xvfb 环境验证；实体桌面、锁屏恢复仍待验收，文本、剪贴板、文件在此配置中不可用。Linux arm64/NAS/CLI 继续用于隧道。
-- **Android**：保留多服务器管理，提供三种连接方式及独立远控画面。API 35 x86_64 模拟器验证不代表 arm64 APK 或真机运行验收；剪贴板互通仍未验收，音频与文件不可用。
-- **原有管理与运维**：继续提供一次性设备接入码、TOTP/恢复码、会话撤销、标签/收藏、批量操作、部署预检、脱敏诊断、加密异机备份和监控。
-- **共享接口与发布证据**：REST 保持 `/api/v1`，契约固定为 `api-v1.3.0`；各组件 Release 保存实际产物、摘要和验证材料。
+远控要求双方登录同一台自托管服务器。被控端可以批准临时请求、设置固定密码，或生成一次性临时密码。画面和输入只走 UDP 直连。连不上就失败，不改走 TURN、ICE-TCP、FRP、HTTP 或 WSS。
 
-Windows 登录前、锁屏和 UAC 安全桌面控制尚未完成；音频、macOS/Wayland 被控、AV1/HEVC 也未交付。剪贴板实际跨端互通、arm64 APK 运行、跨网、完整升级恢复及长期在线验收仍未完成。
+服务发布使用家里的 Agent 和 FRP 0.70.1。HTTP/HTTPS、TCP 和 UDP 走这条隧道。TCP/UDP 不附带 HTTP 登录保护，认证由目标应用自己完成。
 
-**正式版本号不代表全部远控能力已验收。** 查看 [发布说明](docs/RELEASE_NOTES.md) 与各组件 Release 证据；[8.0 历史验收](docs/8.0/ACCEPTANCE.md) 不可替代本版产物验证。
+## 9.0.0 已发布，10.0.0 还没有验收
 
-四个仓库与自有 Agent 使用 **9.0.0**，FRP 保持独立的 **0.70.1**。
-Windows/macOS 包没有 Authenticode / Developer ID 发行签名，提供 SHA-256 和 Sigstore 构建证明；Android 沿用原 applicationId 和发行证书。
-[验证与签名说明](https://github.com/ZHanry/home-tunnel-client/blob/main/docs/PLATFORM_SECURITY.md)。
+9.0.0 包含上述远控入口、独立窗口，以及原有的账号、设备、备份和监控能力。Windows 登录前、锁屏和 UAC 安全桌面尚未完成。音频没有交付。剪贴板跨端互通、arm64 APK 真机运行、跨网和长期在线仍未验收。
 
-## 三步连接
+10.0.0 计划补上 Windows 服务/会话代理、明确开启的无人值守、系统音频、带进度和校验的双向文件，以及 FRP 发布向导。这些都还不能当成已经支持。安全桌面、音频和文件传输验收尚未完成。`api-v1.4.0` 也还没有冻结，稳定契约仍是 `api-v1.3.0`。
 
-1. 准备公网 Linux 主机、域名和 Docker Compose，部署服务端并修改初始管理员密码。
-2. 在家庭电脑/NAS 安装客户端，通过账号或一次性接入码登记设备。
-3. 添加本地服务，等待在线，复制地址并从外部网络验证访问。
+Windows 和 macOS 没有 Authenticode 或 Developer ID 发行证书。Android 沿用原来的 applicationId 和发行证书。SHA-256 与 Sigstore 构建证明不是发行商签名。
 
-TCP/UDP 隧道需要管理员开放端口池并授权，公网端口由服务端分配。原始 TCP/UDP
-不附带 HTTP 白名单或 Basic Auth，使用目标应用的认证与加密。
-
-远程桌面要求双方登录同一服务器；被控端可以批准临时请求，或预先启用固定密码、生成一次性临时密码。服务器负责身份、授权和信令；画面、输入与文件只走两端 UDP 直连，不提供 TURN 或隧道中转回退。具体操作见 [快速开始](docs/GETTING_STARTED.md)。
-
-## 界面与架构
-
-以下保留 7.0.0 控制台示例截图，未将历史图片作为 9.0 远程桌面演示。
-
-![Home Tunnel 7.0.0 控制台（历史截图，示例数据）](docs/site/assets/admin-dashboard-7.jpg)
+[8.0 历史验收](docs/8.0/ACCEPTANCE.md) 只记录当时的结果，不能代替 9.0.0 或 10.0.0 的产物。
 
 ```mermaid
 flowchart LR
-  Visitor[浏览器 / 远程应用] --> Edge[自己的公网服务器]
-  Edge --> Agent[家庭电脑 / NAS Agent]
-  Agent --> App[Home Assistant / 相册 / 媒体库]
-  Manager[Web / Android 管理] --> Edge
-  Controller[远控浏览器] <-->|UDP P2P| Host[受支持的被控端]
+  Controller[Windows / Web / Android 控制端] <-->|UDP 直连| Host[Windows 被控端]
+  Controller -->|信令| Control[你的控制面]
+  Host -->|信令| Control
+  Visitor[访问者] --> FRP[FRP 0.70.1]
+  FRP <--> Agent[家里的 Agent]
+  Agent --> App[本地服务]
 ```
 
-[下载与兼容性](docs/DOWNLOADS.md) · [升级](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/UPGRADING.md) · [账号安全](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/ACCOUNT_SECURITY.md) · [备份恢复](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/disaster-recovery.md) · [监控](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/MONITORING.md) · [API](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/API.md)
+下图是 7.0.0 控制台的历史截图，使用示例数据。它不是 10.0 的远控或向导界面。10.0 截图槽位见 [screenshot-slots.json](docs/site/screenshot-slots.json)。
 
-7.0.0 和 8.0.0 历史产物继续保留。升级前先备份；旧服务端不提供 9.0 的三种远控授权方式。
+![Home Tunnel 7.0.0 控制台历史截图，示例数据](docs/site/assets/admin-dashboard-7.jpg)
 
 ## 参与项目
 
-先阅读 [贡献指南](CONTRIBUTING.md)。问题反馈请提供组件版本、平台、复现步骤和脱敏
-诊断结果，切勿公开密码/接入码。安全问题按 [SECURITY.md](SECURITY.md) 私下报告。
-欢迎分享实际部署经验、提交可复现问题或改进文档。
+先看 [贡献指南](CONTRIBUTING.md)。反馈时写明是远控还是 FRP、组件版本和脱敏后的复现步骤。安全问题按 [SECURITY.md](SECURITY.md) 私下报告。

@@ -1,1 +1,73 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Data handling for the Home Tunnel website and self-hosted service."><link rel="canonical" href="https://zhanry.github.io/home-tunnel/en/privacy.html"><title>Privacy · Home Tunnel</title><link rel="stylesheet" href="../assets/site.css?v=7.0.0"><link rel="icon" type="image/svg+xml" href="../assets/HomeTunnel.svg"></head><body><div class="wrap"><header class="site-header"><a class="brand" href="index.html">Home Tunnel</a><a href="index.html">Back to home</a></header><main class="privacy"><p class="eyebrow">HOME TUNNEL</p><h1>Privacy</h1><h2>Project website</h2><p>This site provides product information and download links. It does not require sign-in or collect Home Tunnel accounts or device credentials. GitHub Pages hosts the site and processes basic request information.</p><h2>Self-hosted service</h2><p>Accounts, devices, connections, traffic statistics and audit records are stored on the server you deploy, under the control of its administrator. Device credentials authorize tunnels; Android sessions provide remote management.</p><h2>Feedback and contact</h2><p>Remove passwords, tokens, private keys and personal information before filing a GitHub issue. For security reports, follow SECURITY.md in the repository.</p></main></div></body></html>
+<!doctype html>
+<html lang="en" data-goatcounter-endpoint="__GOATCOUNTER_ENDPOINT__">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<script>
+(function () {
+  var allowed = { light: 1, dark: 1, system: 1 };
+  var theme = "system";
+  try {
+    var query = new URLSearchParams(location.search).get("theme");
+    if (allowed[query]) theme = query;
+    else {
+      var stored = localStorage.getItem("home-tunnel-theme");
+      if (allowed[stored]) theme = stored;
+    }
+  } catch (error) {}
+  document.documentElement.setAttribute("data-theme", theme);
+  document.documentElement.classList.add("js");
+})();
+</script>
+<title>Privacy · Home Tunnel</title>
+<meta name="description" content="How the Home Tunnel website and a self-hosted service handle data.">
+<link rel="canonical" href="https://zhanry.github.io/home-tunnel/en/privacy.html">
+<link rel="alternate" hreflang="en" href="https://zhanry.github.io/home-tunnel/en/privacy.html">
+<link rel="alternate" hreflang="zh-CN" href="https://zhanry.github.io/home-tunnel/privacy.html">
+<link rel="icon" type="image/svg+xml" href="../assets/HomeTunnel.svg">
+<link rel="stylesheet" href="../assets/site.css?v=10.0.0-dev">
+</head>
+<body data-root="../" data-stable-version="9.0.0" data-development-version="10.0.0">
+<a class="skip" href="#content">Skip to content</a>
+<div class="wrap">
+<header class="site-header">
+<a class="brand" href="index.html"><img src="../assets/HomeTunnel.svg" alt="" width="36" height="36">Home Tunnel</a>
+<button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+<nav id="site-nav" aria-label="Primary">
+<a href="index.html#remote">Remote control</a>
+<a href="index.html#tunnel">Tunnels</a>
+<a href="downloads.html">Downloads</a>
+<a href="preview.html">Scope</a>
+<a href="index.html#faq">FAQ</a>
+<a href="../privacy.html" hreflang="zh-CN" lang="zh-CN">中文</a>
+<a href="https://github.com/ZHanry/home-tunnel">GitHub</a>
+</nav>
+<div class="theme" role="radiogroup" aria-label="Color theme">
+<button type="button" role="radio" id="theme-light" data-theme-choice="light" aria-checked="false">Light</button>
+<button type="button" role="radio" data-theme-choice="dark" aria-checked="false">Dark</button>
+<button type="button" role="radio" data-theme-choice="system" aria-checked="false">System</button>
+</div>
+</header>
+<main id="content" class="section">
+<p class="eyebrow">Privacy</p>
+<h1>Privacy</h1>
+<h2>Project website</h2>
+<p>This site explains the product and links to downloads. It does not require sign-in and it does not collect Home Tunnel accounts or device credentials. GitHub Pages hosts the site and processes basic request information. The theme choice stays in this browser under the localStorage key home-tunnel-theme and is not sent to a Home Tunnel server.</p>
+<p>The repository leaves page analytics empty. Only a configured GoatCounter HTTPS /count endpoint on the GitHub Pages production host loads the counter from gc.zgo.at. That counter covers visits to this website, not Home Tunnel accounts, remote-desktop pictures, or tunnel credentials. See <a href="https://www.goatcounter.com/privacy">goatcounter.com/privacy</a>.</p>
+<h2>Self-hosted service</h2>
+<p>Accounts, devices, connections, traffic statistics, and audit records are stored on the server you deploy and are managed by that deployment's administrator. Device credentials authorize connections. Android sign-in manages your own server and is not stored on this website.</p>
+<p>Remote-control pictures, input, and planned file or audio payloads do not pass through this website. Your server handles identity, authorization, and signaling. Direct UDP runs between the two endpoints. FRP publishes the local services you configure, and that traffic crosses your server rather than this documentation site.</p>
+<h2>Feedback</h2>
+<p>Remove passwords, tokens, private keys, enrollment codes, and personal information before opening a GitHub issue. Report security problems through <a href="https://github.com/ZHanry/home-tunnel/security/advisories/new">private vulnerability reports</a>, not a public issue. SECURITY.md in the repository points to the same place.</p>
+</main>
+<footer class="site-footer">
+<span>© 2026 Home Tunnel · Apache-2.0</span>
+<nav aria-label="Footer"><a href="index.html">Home</a><a href="downloads.html">Downloads</a></nav>
+</footer>
+</div>
+<script src="../assets/download-state.js"></script>
+<script src="../assets/site.js"></script>
+<script src="../assets/analytics.js"></script>
+</body>
+</html>

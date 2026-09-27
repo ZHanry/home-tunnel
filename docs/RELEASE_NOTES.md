@@ -1,3 +1,11 @@
+# Home Tunnel 10.0.0 development line
+
+10.0.0 is not a release. Acceptance is pending. There is no stable download.
+Secure desktop, system audio, and bidirectional file transfer are planned and
+are not accepted. The installable set remains 9.0.0 with FRP 0.70.1.
+`api-v1.4.0` is not frozen. The notes below describe the published 9.0.0 and
+the historical 8.0.0 record.
+
 # Home Tunnel 9.0.0
 
 四个仓库与自有 Agent 统一为 9.0.0，FRP 独立保持 0.70.1。网站、Windows 和 Android 更新了视觉与导航；远程桌面和内网穿透分区，远控使用独立窗口。登录仅在服务端要求 MFA 后显示动态码输入。更新检查只认正式 GitHub Release。

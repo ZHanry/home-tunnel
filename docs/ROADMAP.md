@@ -1,5 +1,9 @@
 # Roadmap
 
+10.0.0 plans authorized UDP-only remote control improvements and a clearer FRP
+publishing wizard. Secure desktop, audio, bidirectional files, migration, and
+stable 10.0.0 downloads are not accepted. No date is attached to that work.
+
 7.0.0 ships the audit fixes, unified releases, API contract, diagnostics, host-only
 recovery, encrypted backup/restore, preflight/NAS recipes, enrollment codes, MFA,
 credential protection, signing workflow, monitoring and management improvements.

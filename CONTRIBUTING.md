@@ -1,24 +1,46 @@
-# 参与开发
+# 参与开发 / Contributing
 
-本仓库负责项目介绍、网站和跨组件文档。整体架构与任务归属见[项目总览](https://github.com/ZHanry/home-tunnel)。
+本仓库是项目入口、网站和跨组件文档。服务端、桌面和 Android 的实现在各自仓库。
 
-## 提交方式
+## 提交
 
-1. 从 `main` 建立聚焦单一问题的分支。
-2. 在 PR 中说明问题、修改后的行为与验证结果。
-3. 行为变化更新相关测试；文档、接口或配置变化更新对应说明。
-4. 跨组件改动列出相关仓库与提交，完成所需联调后再合入。
+1. 从当前开发分支做小改动。发布完成前，远程最终只保留 `main`。
+2. 说明问题、改动后的行为和验证结果。
+3. 改文档时同步中英文、链接和网站元数据。
+4. 不要提交密钥、诊断包、测试机配置或安装包。
 
-## 本地工作
+稳定下载和开发线只改 [`distribution.json`](distribution.json)，然后运行：
 
-网站位于 `docs/site/`，使用已有静态资源与中英文页面。调整文案时同步语言版本、链接与页面元数据。
-Pages CI 校验构建产物、性能、可访问性与 SEO。架构文档使用 Mermaid 表达简单关系。
+```bash
+python scripts/sync-distribution.py
+```
 
-## 约定
+不要手改 `releases.json` 或 `docs/site/releases.json`。未晋升时，稳定通道必须保持已发布的 9.0.0 快照。
 
-- 正式发布期间可以调整接口和配置，但需说明影响和重新验证方式。
-- 安全相关改动说明身份、租约、Agent 配置校验或公开入口的影响。
-- 不提交密钥、设备状态、测试机私有配置或生成的安装包。
-- 使用代码仓库自己的 CI 与发布流程，不要求相邻检出另一个源码仓库。
+## 本地检查
 
-疑似漏洞使用 [SECURITY.md](SECURITY.md) 中的私密入口。提交内容按 [Apache-2.0](LICENSE) 分发。
+```bash
+python scripts/check-release-entry.py
+python scripts/check-site-policy.py
+python scripts/check-secrets.py
+python scripts/check-license.py
+python scripts/check-dependencies.py
+python scripts/check-v10-evidence.py --status docs/release/acceptance-status.json
+python -m unittest discover -s scripts -p "test_*.py"
+```
+
+网站在 `docs/site/`。本地预览：
+
+```bash
+python -m http.server 8765 --directory docs/site
+```
+
+Pages 工作流还会跑 Lighthouse。本仓库没有应用依赖清单，不对空仓库做 npm 或 Go 漏洞扫描。CodeQL 只覆盖这里的 JavaScript 和 Python。密钥扫描在 CI 使用 Gitleaks。
+
+10.0.0 验收记录不能用夹具冒充。`docs/release/acceptance-status.json` 在真正的虚拟机、网络、迁移和长时间门禁完成前保持 `not_submitted`。
+
+推荐的仓库描述、主题和分支保护写在 [docs/governance/recommended-repository-settings.json](docs/governance/recommended-repository-settings.json)。`apply` 为 false，本批不调用 GitHub 去改远程设置。
+
+## English
+
+Edit `distribution.json` for channel changes, then project it. Keep 9.0.0 downloads working until promotion. Run the Python checks above. Do not claim secure desktop, audio, file acceptance, or 10.0.0 stable downloads without a real evidence record. Security reports use [SECURITY.md](SECURITY.md). Contributions are under [Apache-2.0](LICENSE).

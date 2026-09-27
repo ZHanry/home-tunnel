@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img">
+  <title>Home Tunnel</title>
+  <rect width="1200" height="630" fill="#14352c"/>
+  <rect x="72" y="72" width="96" height="96" rx="28" fill="#595AD7"/>
+  <path d="M105 98c2-4 6-6 10-5 4 1 6 5 4 9l-11 35c-1 4-5 6-9 5-4-1-6-5-5-9l11-35Zm22 17c2-4 6-6 10-5 4 1 6 5 5 9l-7 19c-2 4-6 6-10 5-4-1-6-5-5-9l7-19Z" fill="#fff"/>
+  <text x="192" y="132" fill="#f4f5f0" font-family="Segoe UI, sans-serif" font-size="48" font-weight="700">Home Tunnel</text>
+  <text x="72" y="250" fill="#f4f5f0" font-family="Segoe UI, sans-serif" font-size="54" font-weight="700">UDP remote control and FRP publishing</text>
+  <text x="72" y="330" fill="#d5e6dc" font-family="Segoe UI, sans-serif" font-size="32">Stable downloads remain 9.0.0</text>
+  <text x="72" y="390" fill="#d5e6dc" font-family="Segoe UI, sans-serif" font-size="32">10.0.0 acceptance is pending</text>
+</svg>

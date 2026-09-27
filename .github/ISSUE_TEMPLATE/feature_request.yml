@@ -1,13 +1,23 @@
 name: Feature request
-description: Propose a focused improvement for personal or family self-hosting.
+description: Propose a change to remote control or FRP publishing.
 title: "[Feature]: "
 labels: [enhancement, triage]
 body:
+  - type: dropdown
+    id: workflow
+    attributes:
+      label: Workflow
+      options:
+        - Authorized UDP remote control
+        - FRP service publishing
+        - Website or documentation
+    validations:
+      required: true
   - type: textarea
     id: problem
     attributes:
       label: Problem
-      description: What user problem should Home Tunnel solve?
+      description: What should a self-hosted deployment be able to do?
     validations:
       required: true
   - type: textarea
@@ -17,11 +27,14 @@ body:
     validations:
       required: true
   - type: textarea
-    id: alternatives
+    id: acceptance
     attributes:
-      label: Alternatives considered
+      label: Observable acceptance check
+      description: How would a later release show this works, without treating the idea as already accepted?
+    validations:
+      required: true
   - type: textarea
     id: security
     attributes:
       label: Security and compatibility impact
-      description: Explain whether this changes public exposure, authentication, Agent capability or existing deployments.
+      description: Mention public exposure, authentication, UDP-only remote payloads, or existing 9.0.0 deployments.

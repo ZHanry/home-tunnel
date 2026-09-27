@@ -1,0 +1,33 @@
+{
+  "title": "Home Tunnel 10.0.0 aggregate candidate evidence",
+  "x-authoritative-validator": "scripts/v10_evidence.py",
+  "x-required-gates": [
+    "vm_windows_pair",
+    "vm_web_to_windows",
+    "vm_android_x64",
+    "network_direct_udp",
+    "network_blocked_udp",
+    "network_ipv6",
+    "migration_9_to_10",
+    "repeat_30",
+    "input_release_2s",
+    "network_restore_30s",
+    "active_2h",
+    "online_24h"
+  ],
+  "description": "Fail closed unless all four source SHAs, artifact digests, the immutable api-v1.4.0 contract, full Gemini UI coverage, and every required VM, network, migration, 30-repeat, recovery, 2h, and 24h gate are present and matched. Do not store a fixture in this shape as acceptance evidence.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "product",
+    "version",
+    "stage",
+    "source_frozen_at",
+    "frp",
+    "sources",
+    "contract",
+    "components",
+    "ui_coverage",
+    "gates"
+  ]
+}

@@ -1,0 +1,190 @@
+{
+  "schema_version": 1,
+  "product": "Home Tunnel",
+  "source_of_truth": "distribution.json",
+  "development_line": "10.0.0",
+  "channels": {
+    "stable": {
+      "schema_version": 1,
+      "product": "Home Tunnel",
+      "version": "9.0.0",
+      "stage": "stable",
+      "api_major": 1,
+      "contract_ref": "api-v1.3.0",
+      "minimum_server": "7.0.0",
+      "tested_combination": {
+        "server": "9.0.0",
+        "client": "9.0.0",
+        "android": "9.0.0",
+        "agent": "9.0.0"
+      },
+      "components": {
+        "hub": {
+          "repository": "ZHanry/home-tunnel",
+          "version": "9.0.0",
+          "tag": "v9.0.0",
+          "prerelease": false,
+          "release_url": "https://github.com/ZHanry/home-tunnel/releases/tag/v9.0.0"
+        },
+        "server": {
+          "repository": "ZHanry/home-tunnel-server",
+          "version": "9.0.0",
+          "tag": "v9.0.0",
+          "prerelease": false,
+          "release_url": "https://github.com/ZHanry/home-tunnel-server/releases/tag/v9.0.0",
+          "release_revision": "82b30aa2dc169e141bc5a4ae8c653aabb74fd96c",
+          "downloads": [
+            {
+              "filename": "home-tunnel-server-9.0.0.tar.gz",
+              "sha256": "55c5d92743691ddb57f6f359b8f3e3f7f86a608cf555b943071cc906d6353183",
+              "size_bytes": 363814,
+              "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v9.0.0/home-tunnel-server-9.0.0.tar.gz"
+            },
+            {
+              "filename": "compose.release.yaml",
+              "sha256": "44019ca07116a76dd6c1d25ec9266ebcc06239ee800213b6a995ac28cd62c0a2",
+              "size_bytes": 298,
+              "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v9.0.0/compose.release.yaml"
+            }
+          ]
+        },
+        "client": {
+          "repository": "ZHanry/home-tunnel-client",
+          "version": "9.0.0",
+          "tag": "v9.0.0",
+          "prerelease": false,
+          "release_url": "https://github.com/ZHanry/home-tunnel-client/releases/tag/v9.0.0",
+          "release_revision": "ac48749044c0e761b21650539a0643fbeadb4ff2",
+          "downloads": [
+            {
+              "filename": "HomeTunnel-Setup-9.0.0-x64.exe",
+              "sha256": "9edd66e01ccabfd15c6c502eac749334fb0354fb87209f74cb73415c3366a8fb",
+              "size_bytes": 15795562,
+              "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v9.0.0/HomeTunnel-Setup-9.0.0-x64.exe"
+            },
+            {
+              "filename": "HomeTunnel-Windows-9.0.0-x64.zip",
+              "sha256": "9f679f66bcc7b600c74e7a95e518c9e2d59e17bfe62ae8fecfd0aac7fcfd779d",
+              "size_bytes": 19440325,
+              "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v9.0.0/HomeTunnel-Windows-9.0.0-x64.zip"
+            },
+            {
+              "filename": "home-tunnel-linux-9.0.0-amd64.tar.gz",
+              "sha256": "080d3c8234f1376b246d262e8270caf36460c1de9c2549ba9e81514bb2db89e6",
+              "size_bytes": 22613297,
+              "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v9.0.0/home-tunnel-linux-9.0.0-amd64.tar.gz"
+            },
+            {
+              "filename": "home-tunnel-linux-9.0.0-arm64.tar.gz",
+              "sha256": "4282bd85396e4cccde129c6fc74d79ccd13d8634d4c1ad9db11aeeb7ce19b987",
+              "size_bytes": 11961701,
+              "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v9.0.0/home-tunnel-linux-9.0.0-arm64.tar.gz"
+            },
+            {
+              "filename": "home-tunnel-macos-9.0.0-amd64.tar.gz",
+              "sha256": "8658699b8db54cb0dafaca6583cec50e7da7cd2b63c400416208755ca3ba6b54",
+              "size_bytes": 12647466,
+              "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v9.0.0/home-tunnel-macos-9.0.0-amd64.tar.gz"
+            },
+            {
+              "filename": "home-tunnel-macos-9.0.0-arm64.tar.gz",
+              "sha256": "73b8e838dbc6bdcd3dad09dfc96d4949ac585a43bb313ab5fa8b1915e7395123",
+              "size_bytes": 11536361,
+              "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v9.0.0/home-tunnel-macos-9.0.0-arm64.tar.gz"
+            }
+          ]
+        },
+        "android": {
+          "repository": "ZHanry/home-tunnel-android",
+          "version": "9.0.0",
+          "tag": "v9.0.0",
+          "prerelease": false,
+          "release_url": "https://github.com/ZHanry/home-tunnel-android/releases/tag/v9.0.0",
+          "release_revision": "e67a9cca365366a74046432460c92f5f7db49f4a",
+          "downloads": [
+            {
+              "filename": "HomeTunnel-Android-9.0.0-arm64-v8a.apk",
+              "sha256": "83a96d399660d5136133029effbe4520240ccfabee34a1c386ef5f2cf514a841",
+              "size_bytes": 16210519,
+              "url": "https://github.com/ZHanry/home-tunnel-android/releases/download/v9.0.0/HomeTunnel-Android-9.0.0-arm64-v8a.apk"
+            }
+          ]
+        }
+      },
+      "upstream": {
+        "frp": "0.70.1"
+      },
+      "signing": {
+        "windows": "unsigned-no-certificate-configured",
+        "macos": "unsigned-no-certificate-configured",
+        "android_certificate_sha256": "d7779e338be1039acee6dda9a43417cbf2baf4b0c9995578d9708501e95af702"
+      },
+      "contract_revision": "82b30aa2dc169e141bc5a4ae8c653aabb74fd96c",
+      "contract_sha256": "a0892fb0263cb20fdb66f2d1d7497fa30d0a0ca7b8a5b28d46829cdfa83ba2fd",
+      "verification_note": "tested_combination 记录本版对应的组件版本和有限验证范围，不表示 Windows 安全桌面、音频、Android arm64 APK/真机、剪贴板跨端互通、跨网或长期在线已通过验收。API 35 x86_64 模拟器不能代替 arm64 运行验证；具体结果以各组件 9.0.0 Release 证据为准。"
+    },
+    "candidate": {
+      "version": "10.0.0",
+      "stage": "development",
+      "promotion_status": "not_promoted",
+      "downloads_published": false,
+      "acceptance_status": "pending",
+      "prerelease": false,
+      "tag": null,
+      "frp": "0.70.1",
+      "contract": {
+        "current_stable_ref": "api-v1.3.0",
+        "planned_ref": "api-v1.4.0",
+        "frozen": false,
+        "note": "api-v1.4.0 is planned and is not frozen. Do not publish 10.0.0 until the server contract is complete and real evidence promotes this channel."
+      },
+      "components": {
+        "hub": {
+          "repository": "ZHanry/home-tunnel",
+          "version": "10.0.0",
+          "source_sha": null,
+          "artifacts": []
+        },
+        "server": {
+          "repository": "ZHanry/home-tunnel-server",
+          "version": "10.0.0",
+          "source_sha": null,
+          "artifacts": []
+        },
+        "client": {
+          "repository": "ZHanry/home-tunnel-client",
+          "version": "10.0.0",
+          "source_sha": null,
+          "artifacts": []
+        },
+        "android": {
+          "repository": "ZHanry/home-tunnel-android",
+          "version": "10.0.0",
+          "source_sha": null,
+          "artifacts": []
+        }
+      },
+      "planned_capabilities": [
+        "Authorized UDP-only remote control stays the remote path, including device list or code, recent and favorites, local approval, one-time password, fixed password, and explicitly enabled unattended access.",
+        "Windows service and session broker for startup, lock screen, sign-in, UAC secure desktop, and session switching is planned and not accepted.",
+        "Authorized system-audio playback and bidirectional multi-file transfer with progress, cancel, SHA-256, and cleanup are planned and not accepted.",
+        "FRP publishing remains separate: HTTP, HTTPS, TCP, UDP, and templates for NAS, Home Assistant, Immich, Jellyfin, SSH, RDP, and RTSP are planned and not accepted.",
+        "A coordinated 9 to 10 upgrade with backup and recovery is planned. Long-term mixed-version operation is not a supported goal. Migration acceptance is pending."
+      ],
+      "not_verified": [
+        "secure-desktop",
+        "system-audio",
+        "bidirectional-file-acceptance",
+        "10.0.0-stable-downloads",
+        "api-v1.4.0-freeze",
+        "vm-network-migration-30-repeat-2h-24h"
+      ],
+      "signing": {
+        "windows": "unsigned-no-certificate-configured",
+        "macos": "unsigned-no-certificate-configured",
+        "android_certificate_sha256": "d7779e338be1039acee6dda9a43417cbf2baf4b0c9995578d9708501e95af702",
+        "note": "No Authenticode or Apple Developer ID identity is configured. SHA-256 and Sigstore build provenance are not publisher signatures."
+      }
+    }
+  }
+}

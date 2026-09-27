@@ -1,0 +1,110 @@
+(function () {
+  var params = new URLSearchParams(location.search);
+  var toggle = document.querySelector(".nav-toggle");
+  var nav = document.getElementById("site-nav");
+  if (toggle && nav) {
+    toggle.addEventListener("click", function () {
+      var open = toggle.getAttribute("aria-expanded") !== "true";
+      toggle.setAttribute("aria-expanded", open ? "true" : "false");
+      nav.classList.toggle("is-open", open);
+      if (open) {
+        var first = nav.querySelector("a");
+        if (first) first.focus();
+      }
+    });
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && toggle.getAttribute("aria-expanded") === "true") {
+        toggle.setAttribute("aria-expanded", "false");
+        nav.classList.remove("is-open");
+        toggle.focus();
+      }
+    });
+  }
+
+  var group = document.querySelector(".theme");
+  if (group) {
+    var buttons = Array.prototype.slice.call(group.querySelectorAll("[data-theme-choice]"));
+    function paint() {
+      var value = document.documentElement.getAttribute("data-theme") || "system";
+      buttons.forEach(function (button) {
+        var selected = button.getAttribute("data-theme-choice") === value;
+        button.setAttribute("aria-checked", selected ? "true" : "false");
+        button.tabIndex = selected ? 0 : -1;
+      });
+    }
+    function choose(value, persist) {
+      document.documentElement.setAttribute("data-theme", value);
+      if (persist) {
+        try { localStorage.setItem("home-tunnel-theme", value); } catch (error) {}
+      }
+      paint();
+    }
+    buttons.forEach(function (button, index) {
+      button.addEventListener("click", function () {
+        choose(button.getAttribute("data-theme-choice"), true);
+      });
+      button.addEventListener("keydown", function (event) {
+        var next = null;
+        if (event.key === "ArrowRight" || event.key === "ArrowDown") next = buttons[(index + 1) % buttons.length];
+        if (event.key === "ArrowLeft" || event.key === "ArrowUp") next = buttons[(index + buttons.length - 1) % buttons.length];
+        if (!next) return;
+        event.preventDefault();
+        choose(next.getAttribute("data-theme-choice"), true);
+        next.focus();
+      });
+    });
+    paint();
+  }
+
+  var focusId = params.get("focus");
+  if (focusId) {
+    var target = document.getElementById(focusId);
+    if (target) target.focus();
+  }
+
+  var status = document.getElementById("download-status");
+  if (!status || !globalThis.HomeTunnelDownloadState) return;
+  var lang = document.documentElement.lang || "zh-CN";
+  var fallback = document.body.getAttribute("data-stable-version") || "9.0.0";
+  var root = document.body.getAttribute("data-root") || "";
+  function paintStatus(view) {
+    status.dataset.tone = view.tone;
+    status.textContent = lang.indexOf("zh") === 0 ? view.zh : view.en;
+  }
+  var forced = params.get("state");
+  if (forced === "offline" || forced === "error") {
+    paintStatus(globalThis.HomeTunnelDownloadState.view({
+      transport: forced,
+      stable: null,
+      candidate: null,
+      fallbackStable: fallback
+    }));
+    return;
+  }
+  if (navigator.onLine === false) {
+    paintStatus(globalThis.HomeTunnelDownloadState.view({ transport: "offline", fallbackStable: fallback }));
+    return;
+  }
+  Promise.all([
+    fetch(root + "releases.json", { cache: "no-store" }).then(function (response) {
+      if (!response.ok) throw new Error("stable");
+      return response.json();
+    }),
+    fetch(root + "candidate.json", { cache: "no-store" }).then(function (response) {
+      if (!response.ok) throw new Error("candidate");
+      return response.json();
+    })
+  ]).then(function (pair) {
+    paintStatus(globalThis.HomeTunnelDownloadState.view({
+      transport: "ok",
+      stable: pair[0],
+      candidate: pair[1],
+      fallbackStable: fallback
+    }));
+  }).catch(function () {
+    paintStatus(globalThis.HomeTunnelDownloadState.view({
+      transport: navigator.onLine === false ? "offline" : "error",
+      fallbackStable: fallback
+    }));
+  });
+})();

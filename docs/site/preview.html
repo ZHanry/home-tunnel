@@ -1,51 +1,97 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-goatcounter-endpoint="__GOATCOUNTER_ENDPOINT__">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light dark">
-  <title>Home Tunnel 9.0.0 · 功能与限制</title>
-  <meta name="description" content="Home Tunnel 9.0.0 远程桌面的连接方式、已验证环境与未交付能力。">
-  <link rel="canonical" href="https://zhanry.github.io/home-tunnel/preview.html">
-  <link rel="icon" type="image/svg+xml" href="assets/HomeTunnel.svg">
-  <link rel="stylesheet" href="assets/site.css?v=9.0.0">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<script>
+(function () {
+  var allowed = { light: 1, dark: 1, system: 1 };
+  var theme = "system";
+  try {
+    var query = new URLSearchParams(location.search).get("theme");
+    if (allowed[query]) theme = query;
+    else {
+      var stored = localStorage.getItem("home-tunnel-theme");
+      if (allowed[stored]) theme = stored;
+    }
+  } catch (error) {}
+  document.documentElement.setAttribute("data-theme", theme);
+  document.documentElement.classList.add("js");
+})();
+</script>
+<title>Home Tunnel 范围与 10.0 计划</title>
+<meta name="description" content="9.0.0 已发布能力、已知限制，以及尚未验收的 10.0.0 计划。">
+<link rel="canonical" href="https://zhanry.github.io/home-tunnel/preview.html">
+<link rel="alternate" hreflang="zh-CN" href="https://zhanry.github.io/home-tunnel/preview.html">
+<link rel="alternate" hreflang="en" href="https://zhanry.github.io/home-tunnel/en/preview.html">
+<link rel="icon" type="image/svg+xml" href="assets/HomeTunnel.svg">
+<link rel="stylesheet" href="assets/site.css?v=10.0.0-dev">
 </head>
-<body>
-  <a class="skip" href="#content">跳到主要内容</a>
-  <div class="wrap">
-    <header class="site-header">
-      <a class="brand" href="index.html"><img src="assets/HomeTunnel.svg" alt="" width="36" height="36">Home Tunnel</a>
-      <nav aria-label="主导航"><a href="index.html#download">9.0.0 下载</a><a href="#english">English</a><a href="https://github.com/ZHanry/home-tunnel">GitHub ↗</a></nav>
-    </header>
-    <main id="content">
-      <section class="preview">
-        <p class="eyebrow">SCOPE AND LIMITS</p>
-        <h1>Home Tunnel 9.0.0</h1>
-        <p>9.0.0 分开内网穿透与远程桌面，刷新网站、Windows 和 Android 界面。正式版本号不代表完整方案或全部平台已验收；请核对各组件 Release 的实际产物与测试证据。</p>
-        <h2>当前远控范围</h2>
-        <ul>
-          <li><strong>Windows x64 与浏览器：</strong>独立远控窗口；临时请求并批准、固定密码、一次性临时密码三种授权；签名票据、租约和即时撤销。视频、键鼠、文本及文件的最终包结果以本版组件 Release 证据为准。</li>
-          <li><strong>Linux x64 X11：</strong>仅观看、键盘和鼠标。当前证据来自隔离 Xvfb 环境，实体桌面和锁屏恢复未验收；文本、剪贴板和文件不可用。Linux arm64、NAS 和 CLI 继续提供隧道功能。</li>
-          <li><strong>Android：</strong>保留多服务器管理，提供三种连接方式和远控画面。API 35 x86_64 模拟器测试不证明发行 arm64 APK 或真机运行；实际剪贴板互通仍未验收，音频与文件不可用。</li>
-        </ul>
-        <p>远控画面、输入和文件只能走两端 UDP P2P。服务器负责身份、授权、信令和 STUN；无法直连时明确失败，不回退至 TURN、FRP、HTTP 或 WSS 载荷转发。原有隧道业务仍使用自己的公网服务端转发。</p>
-        <h2>尚未交付或完成验收</h2>
-        <p>Windows 锁屏、登录前和 UAC 安全桌面控制与高权限代理尚未完成。系统声音、麦克风回传、macOS/Wayland 被控、AV1/HEVC 尚未交付。剪贴板互通、真实跨网、完整升级恢复和长期在线仍待验收。</p>
-        <p>Android 被控、图片剪贴板和目录递归传输不在当前范围内。未支持的能力不应被报告为通过；模拟器、隔离环境与云端构建不能替代对应实机证据。</p>
-        <p>Windows/macOS 平台签名状态以每个实际产物报告为准。Android 沿用原 applicationId 和发行证书。网站控制台图片仍是标明版本的 7.0.0 历史示例。</p>
-        <div class="actions"><a class="button" href="index.html#download">下载 9.0.0</a><a class="button secondary" href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">发布说明</a></div>
-        <p><a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/GETTING_STARTED.md">快速开始</a> · <a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/8.0/ACCEPTANCE.md">8.0 历史验收</a> · <a href="https://github.com/ZHanry/home-tunnel/releases/tag/v7.0.0">7.0.0 历史入口</a></p>
-      </section>
-      <section id="english" class="preview" lang="en" aria-label="English scope and limits">
-        <h2>9.0.0 scope and limits</h2>
-        <p>Windows and browser remote access offers a host-approved request, a host-configured fixed password, and a one-use temporary password, with a separate viewer window. Final video, input and file results belong to the component Release evidence. Pre-login, locked-screen and UAC secure-desktop control remain incomplete.</p>
-        <p>Linux x64 X11 exposes viewing, keyboard and pointer only, with isolated Xvfb evidence. Android includes remote-control UI and a shared native controller, but API 35 x86_64 emulator results do not validate the arm64 APK or a physical phone. Actual clipboard interoperability remains unverified.</p>
-        <p>Audio, macOS/Wayland hosting and AV1/HEVC are not delivered. Cross-network traversal, complete upgrade/restore and long-running acceptance remain outstanding. A stable version number does not imply full-plan completion.</p>
-        <p>Remote-desktop payloads require direct UDP P2P. The server handles identity, authorization, signaling and STUN; an unavailable direct path fails with no TURN, tunnel, HTTP or WSS payload fallback. Existing tunnel services retain their server-forwarded path.</p>
-        <p>Read each artifact's actual signing and verification reports. Android retains its app ID and release certificate. The website preserves the original, labeled 7.0.0 console screenshot. <a href="en/index.html#download">Download 9.0.0</a> · <a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">Release notes</a> · <a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/8.0/ACCEPTANCE.md">Historical 8.0 acceptance</a></p>
-      </section>
-    </main>
-    <footer class="site-footer"><span>© 2026 Home Tunnel · Apache-2.0</span><nav aria-label="页脚"><a href="index.html">项目首页</a><a href="privacy.html">隐私说明</a><a href="https://github.com/ZHanry/home-tunnel/issues">反馈问题</a></nav></footer>
-  </div>
+<body data-root="" data-stable-version="9.0.0" data-development-version="10.0.0">
+<a class="skip" href="#content">跳到主要内容</a>
+<div class="wrap">
+<header class="site-header">
+<a class="brand" href="index.html"><img src="assets/HomeTunnel.svg" alt="" width="36" height="36">Home Tunnel</a>
+<button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">菜单</button>
+<nav id="site-nav" aria-label="主导航">
+<a href="index.html#remote">远程控制</a>
+<a href="index.html#tunnel">内网穿透</a>
+<a href="downloads.html">下载</a>
+<a href="preview.html" aria-current="page">范围</a>
+<a href="index.html#faq">常见问题</a>
+<a href="en/preview.html" hreflang="en" lang="en">English</a>
+<a href="https://github.com/ZHanry/home-tunnel">GitHub</a>
+</nav>
+<div class="theme" role="radiogroup" aria-label="颜色主题">
+<button type="button" role="radio" id="theme-light" data-theme-choice="light" aria-checked="false">浅色</button>
+<button type="button" role="radio" data-theme-choice="dark" aria-checked="false">深色</button>
+<button type="button" role="radio" data-theme-choice="system" aria-checked="false">系统</button>
+</div>
+</header>
+<main id="content">
+<section class="section">
+<p class="eyebrow">范围</p>
+<h1>9.0.0 是稳定版，10.0.0 还在开发。</h1>
+<p class="lede">正式版本号不表示每一项远控能力都已验收。10.0.0 的安全桌面、音频、文件传输和稳定下载都还没有验收结果。契约仍是已发布的 api-v1.3.0；api-v1.4.0 尚未冻结。</p>
+<h2>两条路径</h2>
+<table>
+<caption>不要把计划中的 10.0 能力写成已经可用。</caption>
+<thead><tr><th>路径</th><th>9.0.0 已发布行为</th><th>10.0.0 计划</th></tr></thead>
+<tbody>
+<tr><td>远程控制</td><td>同一服务器上的本机批准、固定密码、一次性密码。设备码不是接入码。载荷只走 UDP 直连。</td><td>仍只走 UDP。无人值守、安全桌面、音频和双向文件都待验收。</td></tr>
+<tr><td>FRP 发布</td><td>HTTP/HTTPS、TCP、UDP，由家里的 Agent 连接 FRP 0.70.1。</td><td>向导和 NAS、Home Assistant、Immich、Jellyfin、SSH、RDP、RTSP 模板待验收。</td></tr>
+</tbody>
+</table>
+<h2>9.0.0 不能忽略的限制</h2>
+<ul class="plain">
+<li>Windows 登录前、锁屏和 UAC 安全桌面控制尚未完成。</li>
+<li>音频、macOS/Wayland 被控、AV1/HEVC 未交付。</li>
+<li>剪贴板跨端互通、arm64 APK 运行、跨网、完整升级恢复和长期在线仍未验收。</li>
+<li>Linux x64 X11 的证据来自隔离环境，不等于实体桌面。</li>
+<li>8.0 验收记录是历史材料，不能代替 9.0 或 10.0 的产物验证。</li>
+</ul>
+<figure class="shot-slot" data-shot-slot="v10-remote-window" data-slot-status="awaiting-v10-capture">
+<figcaption><strong>10.0 远控窗口</strong><span>槽位 v10-remote-window。替换文件 assets/v10/remote-window.png。</span></figcaption>
+<p class="slot-empty">等待实际产品截图</p>
+</figure>
+<figure class="shot-slot" data-shot-slot="v10-tunnel-wizard" data-slot-status="awaiting-v10-capture">
+<figcaption><strong>10.0 隧道向导</strong><span>槽位 v10-tunnel-wizard。替换文件 assets/v10/tunnel-wizard.png。</span></figcaption>
+<p class="slot-empty">等待实际产品截图</p>
+</figure>
+<figure class="shot-slot" data-shot-slot="history-console-7" data-slot-status="historical-labeled">
+<figcaption><strong>7.0.0 控制台，历史示例</strong><span>保留作 7.0.0 历史图片，不代表当前远控界面。</span></figcaption>
+<img src="assets/admin-dashboard-7.jpg" alt="Home Tunnel 7.0.0 控制台历史截图，示例数据" width="1440" height="1195">
+</figure>
+</section>
+</main>
+<footer class="site-footer">
+<span>© 2026 Home Tunnel · Apache-2.0</span>
+<nav aria-label="页脚"><a href="index.html">首页</a><a href="downloads.html">下载</a><a href="privacy.html">隐私说明</a></nav>
+</footer>
+</div>
+<script src="assets/download-state.js"></script>
+<script src="assets/site.js"></script>
+<script src="assets/analytics.js"></script>
 </body>
 </html>

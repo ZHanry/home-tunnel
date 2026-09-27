@@ -1,16 +1,28 @@
 name: Bug report
-description: Report a reproducible Home Tunnel problem without including secrets.
+description: Report a reproducible remote-control or FRP problem without secrets.
 title: "[Bug]: "
 labels: [bug, triage]
 body:
   - type: markdown
     attributes:
-      value: Do not include passwords, tokens, private keys, full diagnostic archives or unredacted public infrastructure details.
+      value: Do not include passwords, tokens, private keys, enrollment codes, or unredacted diagnostics. The installable stable release is 9.0.0. 10.0.0 acceptance is pending.
+  - type: dropdown
+    id: workflow
+    attributes:
+      label: Workflow
+      options:
+        - Authorized UDP remote control
+        - FRP service publishing
+        - Website or documentation
+        - Upgrade or backup
+    validations:
+      required: true
   - type: input
     id: version
     attributes:
       label: Version
-      placeholder: 3.2.0 or a commit SHA
+      description: Use 9.0.0 for the stable release, or a commit SHA for the 10.0.0 development line. Do not report a 10.0.0 stable package.
+      placeholder: 9.0.0
     validations:
       required: true
   - type: dropdown
@@ -18,18 +30,19 @@ body:
     attributes:
       label: Component
       options:
-        - Windows client / Agent
+        - Windows remote host
+        - Windows / Web / Android controller
         - Control center
-        - Traffic gateway
-        - FRPS / Caddy
-        - Docker Compose / deployment
+        - FRP / gateway
+        - Android app
+        - Website
     validations:
       required: true
   - type: textarea
     id: environment
     attributes:
       label: Environment
-      description: Operating system, architecture, Docker/.NET versions and relevant network topology. Redact public addresses if unnecessary.
+      description: Operating system, architecture, and whether both sides used the same server. Redact addresses.
     validations:
       required: true
   - type: textarea

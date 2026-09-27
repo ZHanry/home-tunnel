@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased · 10.0.0 development
+
+- Document the UDP remote-control path and the FRP publishing path separately.
+- Keep installable downloads on published 9.0.0 while 10.0.0 acceptance is pending.
+- Record stable and candidate channels in one `distribution.json` source.
+- 10.0.0 secure desktop, audio, file transfer, and stable packages are not accepted.
+
 ## 9.0.0 — 2026-09-24
 
 - Refresh the website, Windows client and Android navigation and visual identity.

@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="zh-CN" data-goatcounter-endpoint="__GOATCOUNTER_ENDPOINT__">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<script>
+(function () {
+  var allowed = { light: 1, dark: 1, system: 1 };
+  var theme = "system";
+  try {
+    var query = new URLSearchParams(location.search).get("theme");
+    if (allowed[query]) theme = query;
+    else {
+      var stored = localStorage.getItem("home-tunnel-theme");
+      if (allowed[stored]) theme = stored;
+    }
+  } catch (error) {}
+  document.documentElement.setAttribute("data-theme", theme);
+  document.documentElement.classList.add("js");
+})();
+</script>
+<title>下载 Home Tunnel 9.0.0</title>
+<meta name="description" content="Home Tunnel 9.0.0 稳定下载和 SHA-256。10.0.0 没有稳定包，验收尚未完成。">
+<link rel="canonical" href="https://zhanry.github.io/home-tunnel/downloads.html">
+<link rel="alternate" hreflang="zh-CN" href="https://zhanry.github.io/home-tunnel/downloads.html">
+<link rel="alternate" hreflang="en" href="https://zhanry.github.io/home-tunnel/en/downloads.html">
+<link rel="icon" type="image/svg+xml" href="assets/HomeTunnel.svg">
+<link rel="stylesheet" href="assets/site.css?v=10.0.0-dev">
+</head>
+<body data-root="" data-stable-version="9.0.0" data-development-version="10.0.0">
+<a class="skip" href="#content">跳到主要内容</a>
+<div class="wrap">
+<header class="site-header">
+<a class="brand" href="index.html"><img src="assets/HomeTunnel.svg" alt="" width="36" height="36">Home Tunnel</a>
+<button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">菜单</button>
+<nav id="site-nav" aria-label="主导航">
+<a href="index.html#remote">远程控制</a>
+<a href="index.html#tunnel">内网穿透</a>
+<a href="downloads.html" aria-current="page">下载</a>
+<a href="preview.html">范围</a>
+<a href="index.html#faq">常见问题</a>
+<a href="en/downloads.html" hreflang="en" lang="en">English</a>
+<a href="https://github.com/ZHanry/home-tunnel">GitHub</a>
+</nav>
+<div class="theme" role="radiogroup" aria-label="颜色主题">
+<button type="button" role="radio" id="theme-light" data-theme-choice="light" aria-checked="false">浅色</button>
+<button type="button" role="radio" data-theme-choice="dark" aria-checked="false">深色</button>
+<button type="button" role="radio" data-theme-choice="system" aria-checked="false">系统</button>
+</div>
+</header>
+<main id="content">
+<section class="section">
+<p class="eyebrow">稳定通道</p>
+<h1>下载 9.0.0</h1>
+<p class="lede">下面的文件来自已经发布的 9.0.0 Release。10.0.0 尚未晋升，没有稳定包，验收尚未完成。Windows 和 macOS 没有 Authenticode 或 Developer ID 发行证书。Android 发行证书 SHA-256 是 <code>d7779e338be1039acee6dda9a43417cbf2baf4b0c9995578d9708501e95af702</code>。</p>
+<p id="download-status" class="notice" role="status" aria-live="polite" data-tone="ready">稳定下载是 9.0.0。10.0.0 尚未晋升，没有稳定包，验收尚未完成。若清单无法刷新，仍使用本页列出的 9.0.0 链接。</p>
+<noscript><p class="notice" data-tone="ready">浏览器没有运行脚本。下载链接和校验值已经写在页面上。</p></noscript>
+<h2>服务端</h2>
+<table>
+<caption>9.0.0 服务端部署包。FRP 仍是独立的 0.70.1。</caption>
+<thead><tr><th>文件</th><th>SHA-256</th></tr></thead>
+<tbody>
+<tr><td><a href="https://github.com/ZHanry/home-tunnel-server/releases/download/v9.0.0/home-tunnel-server-9.0.0.tar.gz">home-tunnel-server-9.0.0.tar.gz</a></td><td><code>55c5d92743691ddb57f6f359b8f3e3f7f86a608cf555b943071cc906d6353183</code></td></tr>
+<tr><td><a href="https://github.com/ZHanry/home-tunnel-server/releases/download/v9.0.0/compose.release.yaml">compose.release.yaml</a></td><td><code>44019ca07116a76dd6c1d25ec9266ebcc06239ee800213b6a995ac28cd62c0a2</code></td></tr>
+</tbody>
+</table>
+<h2>桌面与命令行</h2>
+<table>
+<caption>9.0.0 客户端安装包。安装前核对摘要。</caption>
+<thead><tr><th>文件</th><th>SHA-256</th></tr></thead>
+<tbody>
+<tr><td><a href="https://github.com/ZHanry/home-tunnel-client/releases/download/v9.0.0/HomeTunnel-Setup-9.0.0-x64.exe">HomeTunnel-Setup-9.0.0-x64.exe</a></td><td><code>9edd66e01ccabfd15c6c502eac749334fb0354fb87209f74cb73415c3366a8fb</code></td></tr>
+<tr><td><a href="https://github.com/ZHanry/home-tunnel-client/releases/download/v9.0.0/HomeTunnel-Windows-9.0.0-x64.zip">HomeTunnel-Windows-9.0.0-x64.zip</a></td><td><code>9f679f66bcc7b600c74e7a95e518c9e2d59e17bfe62ae8fecfd0aac7fcfd779d</code></td></tr>
+<tr><td><a href="https://github.com/ZHanry/home-tunnel-client/releases/download/v9.0.0/home-tunnel-linux-9.0.0-amd64.tar.gz">home-tunnel-linux-9.0.0-amd64.tar.gz</a></td><td><code>080d3c8234f1376b246d262e8270caf36460c1de9c2549ba9e81514bb2db89e6</code></td></tr>
+<tr><td><a href="https://github.com/ZHanry/home-tunnel-client/releases/download/v9.0.0/home-tunnel-linux-9.0.0-arm64.tar.gz">home-tunnel-linux-9.0.0-arm64.tar.gz</a></td><td><code>4282bd85396e4cccde129c6fc74d79ccd13d8634d4c1ad9db11aeeb7ce19b987</code></td></tr>
+<tr><td><a href="https://github.com/ZHanry/home-tunnel-client/releases/download/v9.0.0/home-tunnel-macos-9.0.0-amd64.tar.gz">home-tunnel-macos-9.0.0-amd64.tar.gz</a></td><td><code>8658699b8db54cb0dafaca6583cec50e7da7cd2b63c400416208755ca3ba6b54</code></td></tr>
+<tr><td><a href="https://github.com/ZHanry/home-tunnel-client/releases/download/v9.0.0/home-tunnel-macos-9.0.0-arm64.tar.gz">home-tunnel-macos-9.0.0-arm64.tar.gz</a></td><td><code>73b8e838dbc6bdcd3dad09dfc96d4949ac585a43bb313ab5fa8b1915e7395123</code></td></tr>
+</tbody>
+</table>
+<h2>Android</h2>
+<table>
+<caption>已发布的 9.0.0 arm64 APK。模拟器结果不能代替这个包的真机验收。</caption>
+<thead><tr><th>文件</th><th>SHA-256</th></tr></thead>
+<tbody>
+<tr><td><a href="https://github.com/ZHanry/home-tunnel-android/releases/download/v9.0.0/HomeTunnel-Android-9.0.0-arm64-v8a.apk">HomeTunnel-Android-9.0.0-arm64-v8a.apk</a></td><td><code>83a96d399660d5136133029effbe4520240ccfabee34a1c386ef5f2cf514a841</code></td></tr>
+</tbody>
+</table>
+<h2>更早的正式版</h2>
+<p>7.0.0 和 8.0.0 的发布页仍然保留。不要用 9.0.0 的摘要去校验旧包。</p>
+<p><a href="https://github.com/ZHanry/home-tunnel/releases/tag/v8.0.0">8.0.0</a> · <a href="https://github.com/ZHanry/home-tunnel/releases/tag/v7.0.0">7.0.0</a></p>
+</section>
+</main>
+<footer class="site-footer">
+<span>© 2026 Home Tunnel · Apache-2.0</span>
+<nav aria-label="页脚">
+<a href="privacy.html">隐私说明</a>
+<a href="preview.html">范围与计划</a>
+<a href="index.html">首页</a>
+</nav>
+</footer>
+</div>
+<script src="assets/download-state.js"></script>
+<script src="assets/site.js"></script>
+<script src="assets/analytics.js"></script>
+</body>
+</html>

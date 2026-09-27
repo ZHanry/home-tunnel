@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "note": "Replace only a slot whose status is awaiting-v10-capture, using its replacement_file. Do not point a 10.0 slot at a historical image.",
+  "slots": [
+    {
+      "id": "history-console-7",
+      "status": "historical-labeled",
+      "pages": ["index.html", "en/index.html", "preview.html", "en/preview.html"],
+      "asset": "assets/admin-dashboard-7.jpg",
+      "captured_product_version": "7.0.0",
+      "label_must_include": ["7.0.0"],
+      "replacement": "Keep this historical figure. Add a new slot for a later capture."
+    },
+    {
+      "id": "vector-architecture",
+      "status": "vector-diagram",
+      "pages": ["index.html", "en/index.html"],
+      "asset": "assets/architecture.svg",
+      "label_must_include": ["FRP"],
+      "replacement": "Vector diagram of the control plane and FRP path. It is not a remote-desktop screenshot."
+    },
+    {
+      "id": "v10-remote-window",
+      "status": "awaiting-v10-capture",
+      "pages": ["index.html", "en/index.html", "preview.html", "en/preview.html"],
+      "asset": null,
+      "replacement_file": "assets/v10/remote-window.png",
+      "replacement_rules": "Actual Windows remote-window screenshot after a real capture. Do not use admin-dashboard-7.jpg or social-preview.jpg."
+    },
+    {
+      "id": "v10-tunnel-wizard",
+      "status": "awaiting-v10-capture",
+      "pages": ["index.html", "en/index.html", "preview.html", "en/preview.html"],
+      "asset": null,
+      "replacement_file": "assets/v10/tunnel-wizard.png",
+      "replacement_rules": "Actual FRP tunnel wizard screenshot. Not a decorative mock."
+    }
+  ],
+  "historical_assets_not_for_v10": [
+    "assets/admin-connections-v5.jpg",
+    "assets/admin-dashboard.jpg",
+    "assets/admin-dashboard-small.jpg",
+    "assets/admin-mobile.jpg",
+    "assets/android.jpg",
+    "assets/desktop.jpg",
+    "assets/social-preview.jpg"
+  ]
+}

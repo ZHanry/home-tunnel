@@ -6,7 +6,11 @@
         "http://localhost/",
         "http://localhost/en/",
         "http://localhost/privacy.html",
-        "http://localhost/en/privacy.html"
+        "http://localhost/en/privacy.html",
+        "http://localhost/preview.html",
+        "http://localhost/en/preview.html",
+        "http://localhost/downloads.html",
+        "http://localhost/en/downloads.html"
       ],
       "numberOfRuns": 3,
       "settings": {

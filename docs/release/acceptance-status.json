@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "version": "10.0.0",
+  "status": "not_submitted",
+  "evidence_file": null,
+  "reason": "10.0.0 acceptance has not been run. This status is not evidence and cannot promote a release."
+}

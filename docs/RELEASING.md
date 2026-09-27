@@ -1,3 +1,17 @@
+# Home Tunnel 10.0.0 发布门槛
+
+10.0.0 还不能发布。候选和稳定通道只存在于 `distribution.json`。
+未晋升时稳定通道必须等于 `docs/release/stable-9.0.0.json`。
+
+晋升前需要一份真实证据，而不是夹具：四个源码 SHA、产物摘要、不可变的
+`api-v1.4.0`、完整的界面审查，以及虚拟机、网络、9 到 10 迁移、30 次连续成功、
+输入释放、网络恢复、2 小时活动和 24 小时在线。缺项、未跑、过期或不匹配都失败关闭。
+校验器是 `scripts/v10_evidence.py`。当前 `acceptance-status.json` 为 `not_submitted`。
+
+发布顺序仍是客户端/共享 SDK，然后 Android 和服务端，最后入口仓库。
+Windows/macOS 没有 Authenticode 或 Developer ID 证书时必须继续写明未签名。
+FRP 保持自己的版本。历史 9.0.0 和 8.0.0 流程保留在下面，已发布的标签不移动。
+
 # Home Tunnel 9.0.0 发布流程
 
 四仓正式标签为 `v9.0.0`，均从 `main` 发行。共享契约先固定为不可移动的 `api-v1.3.0`；组件版本与 FRP 自身版本分开。正式版本号不覆盖功能缺口或未完成验收。

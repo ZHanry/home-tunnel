@@ -1,74 +1,54 @@
 <img src="docs/site/assets/HomeTunnel.svg" alt="" width="64" height="64">
 
-# Home Tunnel 9.0.0
+# Home Tunnel
 
-**Self-hosted access to home services and remote desktops**
+**Two self-hosted paths: authorized UDP remote control, and FRP service publishing.**
 
-[![Version 9.0.0](https://img.shields.io/badge/version-9.0.0-595AD7)](https://github.com/ZHanry/home-tunnel/releases/tag/v9.0.0) [![License Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+[![License Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
-[简体中文](README.md) · [Website](https://zhanry.github.io/home-tunnel/en/) · [Downloads](docs/DOWNLOADS.md) · [Quick start](docs/GETTING_STARTED.md) · [9.0 scope and limits](docs/RELEASE_NOTES.md)
+[简体中文](README.md) · [Website](https://zhanry.github.io/home-tunnel/en/) · [Downloads](docs/DOWNLOADS.md) · [Quick start](docs/GETTING_STARTED.md) · [Architecture](docs/ARCHITECTURE.md) · [Feature matrix](docs/FEATURE_MATRIX.md)
 
-Reach your NAS, Home Assistant, Immich, Jellyfin and other local services through
-your own public server. A desktop/NAS Agent runs the tunnels; Web and Android
-manage them. Supports HTTP/HTTPS, TCP/UDP and SSH/RDP/RTSP presets.
-Version 9.0 separates remote desktop from tunnels and adds three connection modes:
-host-approved request, fixed password and single-use temporary password. Remote
-payloads use direct UDP P2P and fail explicitly without a direct path.
+The development line is **10.0.0**. The installable stable release remains **9.0.0**. 10.0.0 acceptance is pending, and there is no stable package. FRP stays at its own **0.70.1**. Both channels live in [`distribution.json`](distribution.json). Promote by editing that file and running `python scripts/sync-distribution.py`.
 
-| Start here | Link |
+## Start here
+
+| Goal | Entry |
 | --- | --- |
-| Deploy a public Linux server | [Server guide](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/SELF_HOSTING.md) · [Server 9.0.0](https://github.com/ZHanry/home-tunnel-server/releases/tag/v9.0.0) |
-| Connect a computer or NAS | [Desktop/CLI 9.0.0](https://github.com/ZHanry/home-tunnel-client/releases/tag/v9.0.0) · [NAS template](https://github.com/ZHanry/home-tunnel-client/tree/main/packaging/nas) |
-| Manage several deployments from your phone | [Android 9.0.0 APK](https://github.com/ZHanry/home-tunnel-android/releases/tag/v9.0.0) |
-| Configure a home application | [Scenario guide](docs/SCENARIOS.md) |
+| Control an authorized Windows host | [Quick start · remote](docs/GETTING_STARTED.md) · [9.0 scope](docs/RELEASE_NOTES.md) |
+| Publish a service from home | [Quick start · FRP](docs/GETTING_STARTED.md) · [Deployment](docs/SELF_HOSTING.md) · [Recipes](docs/SCENARIOS.md) |
+| Install what is available now | [9.0.0 downloads and checksums](docs/DOWNLOADS.md) |
+| Something failed | [Troubleshooting](docs/TROUBLESHOOTING.md) · [Upgrade](docs/UPGRADING.md) |
 
-## What's included in 9.0.0
+## Keep the two paths separate
 
-- **Windows and browsers:** separate remote window; host-approved requests, fixed passwords and single-use temporary passwords; signed authorization, leases and immediate revocation. Consult the component Release for exact final-package video, input and file evidence.
-- **Linux x64 X11:** view, keyboard and pointer only. Isolated Xvfb checks passed; physical desktops and lock/unlock remain unverified. Text, clipboard and files are unavailable in this profile. Linux arm64, NAS and CLI packages continue to provide tunnels.
-- **Android:** existing multi-server management, three connection modes and a separate remote viewer. API 35 x86_64 emulator checks do not validate the arm64 APK or a physical phone. Clipboard interoperability remains unverified; audio and files are unavailable.
-- **Existing management and operations:** one-time enrollment, TOTP/recovery codes, session revocation, tags/favorites, batch operations, deployment preflight, redacted diagnostics, encrypted off-host backup and monitoring.
-- **Shared interfaces and evidence:** REST remains at `/api/v1`; the contract is pinned to `api-v1.3.0`. Component Releases retain actual packages, checksums and verification records.
+Remote control requires both sides to sign in to the same self-hosted server. The host can approve a request, set a fixed password, or create a one-time password. Picture and input use direct UDP only. A failed path stays failed: there is no TURN, ICE-TCP, FRP, HTTP, or WSS payload fallback.
 
-Windows pre-login, locked-screen and UAC secure-desktop control are incomplete.
-Audio, macOS/Wayland hosting and AV1/HEVC are not delivered. Clipboard
-interoperability, arm64 APK runtime, cross-network traversal, full upgrade/restore
-drills and long-running acceptance remain outstanding.
+Service publishing uses the home Agent and FRP 0.70.1. HTTP/HTTPS, TCP, and UDP use that tunnel. Raw TCP/UDP does not add HTTP sign-in; the target application authenticates itself.
 
-**A stable version number does not mean every remote-control feature has passed acceptance.**
-Read the [release notes](docs/RELEASE_NOTES.md) and component Release evidence.
-The [8.0 acceptance record](docs/8.0/ACCEPTANCE.md) is historical, not 9.0 artifact verification.
+## 9.0.0 is published. 10.0.0 is not accepted
 
-All four repositories and the managed Agent use **9.0.0**. Upstream FRP stays at
-**0.70.1**. Windows/macOS packages have no Authenticode / Developer ID
-release signature; SHA-256 and Sigstore build evidence are provided. Android
-preserves its application ID and established release certificate.
-[Verification details](https://github.com/ZHanry/home-tunnel-client/blob/main/docs/PLATFORM_SECURITY.md).
+9.0.0 includes those remote-control entries, a separate window, and the existing account, device, backup, and monitoring tools. Windows pre-login, lock-screen, and UAC secure-desktop control are not done. Audio is not delivered. Clipboard interoperability, arm64 APK device runtime, cross-network use, and long-running sessions are not accepted.
 
-## Connect in three steps
+10.0.0 plans a Windows service/session broker, explicitly enabled unattended access, system audio, bidirectional files with progress and checksums, and an FRP publishing wizard. None of that is supported yet. Secure desktop, audio, and file-transfer acceptance is pending. `api-v1.4.0` is not frozen. The stable contract remains `api-v1.3.0`.
 
-1. Deploy the server on a public Linux host with your domain and Docker Compose.
-2. Install the client on a home host and enroll with an account or one-time code.
-3. Add a reachable local service and verify its public address from another network.
+Windows and macOS packages have no Authenticode or Developer ID certificate. Android keeps its applicationId and release certificate. SHA-256 and Sigstore build provenance are not publisher signatures.
 
-Android does not run the home tunnels; keep the home Agent running. Administrators
-enable TCP/UDP pools and permissions; the server assigns public ports. Raw
-transports rely on the target application's authentication and encryption.
+The [8.0 acceptance record](docs/8.0/ACCEPTANCE.md) is historical. It does not verify 9.0.0 or 10.0.0 bytes.
 
-Remote desktop requires both parties to sign in to the same server. The host can
-approve a request, enable a fixed password in advance, or generate a one-use
-temporary password. The server handles identity, authorization and signaling; session video,
-input and files travel directly between peers over UDP with no TURN or tunnel
-fallback. See the [quick start](docs/GETTING_STARTED.md).
+```mermaid
+flowchart LR
+  Controller[Windows / Web / Android controller] <-->|direct UDP| Host[Windows host]
+  Controller -->|signaling| Control[Your control plane]
+  Host -->|signaling| Control
+  Visitor[Visitor] --> FRP[FRP 0.70.1]
+  FRP <--> Agent[Home Agent]
+  Agent --> App[Local service]
+```
 
-The image below is the original 7.0.0 console with sample data, retained as a
-historical screenshot. It is not a 9.0 remote-desktop demonstration.
+The picture below is a historical 7.0.0 console screenshot with example data. It is not a 10.0 remote window or wizard. Empty 10.0 slots are listed in [screenshot-slots.json](docs/site/screenshot-slots.json).
 
-![Home Tunnel 7.0.0 console, historical screenshot with sample data](docs/site/assets/admin-dashboard-7.jpg)
+![Historical Home Tunnel 7.0.0 console screenshot with example data](docs/site/assets/admin-dashboard-7.jpg)
 
-[Downloads/compatibility](docs/DOWNLOADS.md) · [API](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/API.md) · [Recovery](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/disaster-recovery.md) · [Monitoring](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/MONITORING.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
+## Contributing
 
-Historical 7.0.0 and 8.0.0 packages remain available. Back up before upgrading; older servers do not provide the 9.0 remote-access modes.
-
-Help with a reproducible issue, a real deployment story, documentation or code.
-Never publish credentials or private network details in an issue.
+Read [CONTRIBUTING.md](CONTRIBUTING.md). Say whether a report is remote control or FRP, and include the component version plus redacted steps. Security issues follow [SECURITY.md](SECURITY.md) in private.
