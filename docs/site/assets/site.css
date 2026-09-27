@@ -239,6 +239,7 @@ summary { cursor: pointer; font-weight: 700; min-height: 44px; padding: 8px 0; }
 table { width: 100%; max-width: 100%; border-collapse: collapse; background: var(--surface); table-layout: fixed; }
 caption { text-align: left; padding: 12px; font-weight: 700; }
 th, td { padding: 10px 12px; border-top: 1px solid var(--line); text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+.cell-label { display: none; }
 code { overflow-wrap: anywhere; }
 .site-footer {
   display: flex;
@@ -265,6 +266,18 @@ code { overflow-wrap: anywhere; }
   html.js #site-nav { display: none; flex-basis: 100%; }
   html.js #site-nav.is-open { display: flex; flex-direction: column; align-items: flex-start; }
   h1 { font-size: clamp(32px, 9vw, 44px); }
+}
+@media (max-width: 480px) {
+  table, caption, tbody, tr, td { display: block; width: 100%; }
+  thead { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  tr { border-top: 1px solid var(--line); }
+  td { border: 0; }
+  td + td { padding-top: 0; }
+  .cell-label { display: block; margin-bottom: 4px; color: var(--muted); font-size: 14px; font-weight: 700; }
+}
+@media (max-width: 280px) {
+  .theme { display: grid; grid-template-columns: 1fr; width: 100%; border-radius: 12px; }
+  .theme button { border-radius: 8px; text-align: left; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

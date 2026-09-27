@@ -55,12 +55,12 @@
 <h1>9.0.0 是稳定版，10.0.0 还在开发。</h1>
 <p class="lede">正式版本号不表示每一项远控能力都已验收。10.0.0 的安全桌面、音频、文件传输和稳定下载都还没有验收结果。契约仍是已发布的 api-v1.3.0；api-v1.4.0 尚未冻结。</p>
 <h2>两条路径</h2>
-<table>
+<table role="table">
 <caption>不要把计划中的 10.0 能力写成已经可用。</caption>
-<thead><tr><th>路径</th><th>9.0.0 已发布行为</th><th>10.0.0 计划</th></tr></thead>
-<tbody>
-<tr><td>远程控制</td><td>同一服务器上的本机批准、固定密码、一次性密码。设备码不是接入码。载荷只走 UDP 直连。</td><td>仍只走 UDP。无人值守、安全桌面、音频和双向文件都待验收。</td></tr>
-<tr><td>FRP 发布</td><td>HTTP/HTTPS、TCP、UDP，由家里的 Agent 连接 FRP 0.70.1。</td><td>向导和 NAS、Home Assistant、Immich、Jellyfin、SSH、RDP、RTSP 模板待验收。</td></tr>
+<thead role="rowgroup"><tr role="row"><th role="columnheader" scope="col">路径</th><th role="columnheader" scope="col">9.0.0 已发布行为</th><th role="columnheader" scope="col">10.0.0 计划</th></tr></thead>
+<tbody role="rowgroup">
+<tr role="row"><td role="cell"><span class="cell-label" aria-hidden="true">路径</span>远程控制</td><td role="cell"><span class="cell-label" aria-hidden="true">9.0.0 已发布行为</span>同一服务器上的本机批准、固定密码、一次性密码。设备码不是接入码。载荷只走 UDP 直连。</td><td role="cell"><span class="cell-label" aria-hidden="true">10.0.0 计划</span>仍只走 UDP。无人值守、安全桌面、音频和双向文件都待验收。</td></tr>
+<tr role="row"><td role="cell"><span class="cell-label" aria-hidden="true">路径</span>FRP 发布</td><td role="cell"><span class="cell-label" aria-hidden="true">9.0.0 已发布行为</span>HTTP/HTTPS、TCP、UDP，由家里的 Agent 连接 FRP 0.70.1。</td><td role="cell"><span class="cell-label" aria-hidden="true">10.0.0 计划</span>向导和 NAS、Home Assistant、Immich、Jellyfin、SSH、RDP、RTSP 模板待验收。</td></tr>
 </tbody>
 </table>
 <h2>9.0.0 不能忽略的限制</h2>
@@ -71,12 +71,12 @@
 <li>Linux x64 X11 的证据来自隔离环境，不等于实体桌面。</li>
 <li>8.0 验收记录是历史材料，不能代替 9.0 或 10.0 的产物验证。</li>
 </ul>
-<figure class="shot-slot" data-shot-slot="v10-remote-window" data-slot-status="awaiting-v10-capture">
-<figcaption><strong>10.0 远控窗口</strong><span>槽位 v10-remote-window。替换文件 assets/v10/remote-window.png。</span></figcaption>
+<figure data-shot-file="assets/v10/remote-window.png" class="shot-slot" data-shot-slot="v10-remote-window" data-slot-status="awaiting-v10-capture">
+<figcaption><strong>10.0 远控窗口</strong><span>连接状态、授权和显示器操作将在完成验收后展示。</span></figcaption>
 <p class="slot-empty">等待实际产品截图</p>
 </figure>
-<figure class="shot-slot" data-shot-slot="v10-tunnel-wizard" data-slot-status="awaiting-v10-capture">
-<figcaption><strong>10.0 隧道向导</strong><span>槽位 v10-tunnel-wizard。替换文件 assets/v10/tunnel-wizard.png。</span></figcaption>
+<figure data-shot-file="assets/v10/tunnel-wizard.png" class="shot-slot" data-shot-slot="v10-tunnel-wizard" data-slot-status="awaiting-v10-capture">
+<figcaption><strong>10.0 隧道向导</strong><span>服务发布的完整步骤将在完成验收后展示。</span></figcaption>
 <p class="slot-empty">等待实际产品截图</p>
 </figure>
 <figure class="shot-slot" data-shot-slot="history-console-7" data-slot-status="historical-labeled">

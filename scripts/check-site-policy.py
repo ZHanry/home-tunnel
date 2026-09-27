@@ -119,8 +119,10 @@ def audit(root=ROOT):
             path = target.split("#", 1)[0].split("?", 1)[0]
             if path and not (page.parent / path).exists():
                 errors.append(f"{relative} -> {path}")
-        for slot_id, figure in re.findall(r'<figure\b[^>]*data-shot-slot="([^"]+)"[^>]*>([\s\S]*?)</figure>', text):
-            seen_slots.setdefault(slot_id, []).append((relative, figure))
+        for figure in re.findall(r'<figure\b[^>]*>[\s\S]*?</figure>', text):
+            slot_id = re.search(r'data-shot-slot="([^"]+)"', figure)
+            if slot_id:
+                seen_slots.setdefault(slot_id.group(1), []).append((relative, figure))
         if relative in STATUS_PAGES and 'id="download-status"' not in text:
             errors.append(relative + " needs a download status region")
         if relative in LANDING_PAGES:
@@ -149,8 +151,8 @@ def audit(root=ROOT):
             if slot["status"] == "awaiting-v10-capture":
                 if "<img" in figure:
                     errors.append(f"empty slot {slot['id']} on {page_name} contains an image")
-                if slot["replacement_file"] not in figure:
-                    errors.append(f"slot {slot['id']} must name {slot['replacement_file']}")
+                if f'data-shot-file="{slot["replacement_file"]}"' not in figure:
+                    errors.append(f"slot {slot['id']} must bind its replacement in data-shot-file")
             else:
                 asset = slot["asset"].split("/")[-1]
                 if asset not in figure:
