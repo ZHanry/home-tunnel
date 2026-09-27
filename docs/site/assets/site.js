@@ -72,7 +72,7 @@
     status.textContent = lang.indexOf("zh") === 0 ? view.zh : view.en;
   }
   var forced = params.get("state");
-  if (forced === "offline" || forced === "error") {
+  if (forced === "offline" || forced === "error" || forced === "loading") {
     paintStatus(globalThis.HomeTunnelDownloadState.view({
       transport: forced,
       stable: null,
@@ -81,30 +81,39 @@
     }));
     return;
   }
-  if (navigator.onLine === false) {
+  var requestEpoch = 0;
+  var requestController = null;
+  function offline() {
+    requestEpoch += 1;
+    if (requestController) requestController.abort();
     paintStatus(globalThis.HomeTunnelDownloadState.view({ transport: "offline", fallbackStable: fallback }));
-    return;
   }
-  Promise.all([
-    fetch(root + "releases.json", { cache: "no-store" }).then(function (response) {
-      if (!response.ok) throw new Error("stable");
-      return response.json();
-    }),
-    fetch(root + "candidate.json", { cache: "no-store" }).then(function (response) {
-      if (!response.ok) throw new Error("candidate");
-      return response.json();
-    })
-  ]).then(function (pair) {
-    paintStatus(globalThis.HomeTunnelDownloadState.view({
-      transport: "ok",
-      stable: pair[0],
-      candidate: pair[1],
-      fallbackStable: fallback
-    }));
-  }).catch(function () {
-    paintStatus(globalThis.HomeTunnelDownloadState.view({
-      transport: navigator.onLine === false ? "offline" : "error",
-      fallbackStable: fallback
-    }));
-  });
+  function refreshDownloads() {
+    if (navigator.onLine === false) { offline(); return; }
+    var epoch = ++requestEpoch;
+    if (requestController) requestController.abort();
+    var controller = new AbortController();
+    requestController = controller;
+    var timeout = setTimeout(function () { controller.abort(); }, 15000);
+    paintStatus(globalThis.HomeTunnelDownloadState.view({ transport: "loading", fallbackStable: fallback }));
+    Promise.all(["releases.json", "candidate.json"].map(function (name) {
+      return fetch(root + name, { cache: "no-store", signal: controller.signal }).then(function (response) {
+        if (!response.ok) throw new Error("download manifest");
+        return response.json();
+      });
+    })).then(function (pair) {
+      if (epoch !== requestEpoch) return;
+      paintStatus(globalThis.HomeTunnelDownloadState.view({
+        transport: "ok", stable: pair[0], candidate: pair[1], fallbackStable: fallback
+      }));
+    }).catch(function () {
+      if (epoch !== requestEpoch) return;
+      paintStatus(globalThis.HomeTunnelDownloadState.view({
+        transport: navigator.onLine === false ? "offline" : "error", fallbackStable: fallback
+      }));
+    }).finally(function () { clearTimeout(timeout); });
+  }
+  window.addEventListener("offline", offline);
+  window.addEventListener("online", refreshDownloads);
+  refreshDownloads();
 })();

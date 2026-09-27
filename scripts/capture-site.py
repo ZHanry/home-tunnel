@@ -1,4 +1,8 @@
-"""Capture rendered hub pages with an already installed browser.
+"""Legacy viewport sampler. Acceptance captures use capture-site-matrix.mjs.
+
+The headless --screenshot flag records only the first viewport, so it cannot
+prove sections below the fold. Full-page matrix evidence lives outside this
+12-image sampler.
 
 Writes PNG files and a manifest. A missing browser is an error result, not a
 synthetic screenshot. This does not mark Gemini review or VM acceptance.

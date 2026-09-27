@@ -12,18 +12,25 @@
   function view(input) {
     var fallback = input.fallbackStable || "9.0.0";
     var candidateVersion = (input.candidate && input.candidate.version) || "10.0.0";
+    if (input.transport === "loading") {
+      return {
+        tone: "loading",
+        zh: "正在读取下载清单。下方提供当前稳定版 " + fallback + " 的下载链接。",
+        en: "Reading the download manifest. The links below provide the current stable version, " + fallback + "."
+      };
+    }
     if (input.transport === "offline") {
       return {
         tone: "offline",
-        zh: "当前离线。网络恢复后仍可使用本页的 " + fallback + " 稳定链接。10.0.0 没有稳定包，验收尚未完成。",
-        en: "You are offline. The " + fallback + " links on this page work again when the network returns. 10.0.0 has no stable packages; acceptance is pending."
+        zh: "当前离线。网络恢复后，可从下方下载稳定版 " + fallback + "。",
+        en: "You are offline. When the network returns, use the links below to download stable version " + fallback + "."
       };
     }
     if (input.transport !== "ok" || !input.stable || !input.candidate) {
       return {
         tone: "error",
-        zh: "下载清单没有读到。不要把开发分支当成 10.0.0 稳定包。请使用本页已经写出的 " + fallback + " 链接，验收尚未完成。",
-        en: "The download manifest could not be read. Do not treat the development branch as a 10.0.0 stable package. Use the " + fallback + " links already listed on this page. Acceptance is pending."
+        zh: "下载清单没有读到。可继续使用下方稳定版 " + fallback + " 的链接，或稍后刷新页面。",
+        en: "The download manifest could not be read. Use the stable " + fallback + " links below, or refresh this page later."
       };
     }
     var stable = input.stable;

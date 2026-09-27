@@ -47,12 +47,12 @@ def audit(root=ROOT):
     releases = json.loads((site / "releases.json").read_text(encoding="utf-8"))
     css = (site / "assets" / "site.css").read_text(encoding="utf-8")
     script = (site / "assets" / "site.js").read_text(encoding="utf-8")
-    for token in ("focus-visible", "prefers-color-scheme", "prefers-reduced-motion", "max-width: 800px", 'data-theme="dark"', "nav-toggle"):
+    for token in ("focus-visible", "prefers-color-scheme", "prefers-reduced-motion", "max-width: 800px", 'data-theme="dark"', "nav-toggle", "table-layout: fixed", "minmax(min(100%, 240px)", 'data-tone="loading"'):
         if token not in css:
             errors.append("site.css missing " + token)
     if re.search(r"outline\s*:\s*none", css):
         errors.append("site.css removes the focus outline")
-    for token in ("Escape", "ArrowRight", "aria-expanded", "localStorage", "download-status"):
+    for token in ("Escape", "ArrowRight", "aria-expanded", "localStorage", "download-status", 'forced === "loading"'):
         if token not in script:
             errors.append("site.js missing " + token)
     download_urls = [
