@@ -49,7 +49,7 @@ def browser_path():
 
 def capture(browser, url, destination: Path, width, height):
     destination.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix="home-tunnel-capture-") as profile:
+    with tempfile.TemporaryDirectory(prefix="home-tunnel-capture-", ignore_cleanup_errors=True) as profile:
         cwd = Path(profile)
         command = [
             browser,
