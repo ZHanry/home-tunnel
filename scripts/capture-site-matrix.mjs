@@ -1,6 +1,6 @@
 /**
  * Full-page Home Tunnel site matrix.
- * Uses the installed Edge DevTools protocol. Does not invent screenshots.
+ * Requires Node 22+ and uses installed Edge DevTools. Does not invent screenshots.
  *
  *   node scripts/capture-site-matrix.mjs --base-url http://127.0.0.1:8766 --out <dir>
  */
@@ -196,6 +196,8 @@ async function launchEdge(profileRoot) {
     `--user-data-dir=${profile}`,
     "about:blank",
   ], { stdio: "ignore", windowsHide: true });
+  let ws;
+  try {
   let version;
   let port;
   for (let attempt = 0; attempt < 50; attempt += 1) {
@@ -207,12 +209,11 @@ async function launchEdge(profileRoot) {
     } catch { await sleep(200); }
   }
   if (!version) {
-    child.kill();
     throw new Error("Edge DevTools did not start");
   }
   const targets = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json();
   const page = targets.find((target) => target.type === "page");
-  const ws = new WebSocket(page.webSocketDebuggerUrl);
+  ws = new WebSocket(page.webSocketDebuggerUrl);
   await new Promise((resolve, reject) => { ws.onopen = resolve; ws.onerror = reject; });
   let seq = 0;
   const pending = new Map();
@@ -239,10 +240,14 @@ async function launchEdge(profileRoot) {
   };
   const session = { child, profile, profileRoot, port, version, ws, send, set onEvent(fn) { onEvent = fn; } };
   return session;
+  } catch (error) {
+    await closeEdge({ child, profile, profileRoot, ws });
+    throw error;
+  }
 }
 
 async function closeEdge(session) {
-  session.ws.close();
+  session.ws?.close();
   if (session.child.exitCode === null) {
     await new Promise((done) => {
       const cleanup = spawn("taskkill", ["/PID", String(session.child.pid), "/T", "/F"], { stdio: "ignore", windowsHide: true });
@@ -281,6 +286,7 @@ async function main() {
     return;
   }
   if (!out) throw new Error("--out is required");
+  if (typeof globalThis.WebSocket !== "function") throw new Error("Capture requires Node 22 or newer with native WebSocket support");
   if (!selected.length) throw new Error("Filter selected no cases");
   const source = gitValue(repo, ["rev-parse", "HEAD"]);
   const tree = gitValue(repo, ["rev-parse", "HEAD^{tree}"]);
