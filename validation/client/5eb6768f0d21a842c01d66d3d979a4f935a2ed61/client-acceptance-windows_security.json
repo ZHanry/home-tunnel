@@ -44,7 +44,7 @@
     },
     {
       "location": "hub validation receipt windows-final-defender-scan.json",
-      "sha256": "793fd7cbd867fd63b0feb5af20dcff02db74fc348f0d143eea15244fe79c0d8f"
+      "sha256": "f88af9bd7e3b6e73248fc82750c3f10509b5c80f268c536ca963311da3dd5276"
     }
   ],
   "repository": "ZHanry/home-tunnel-client",

@@ -98,11 +98,11 @@
     },
     "client-acceptance-windows_security.json": {
       "bytes": 2247,
-      "sha256": "d642239e8506593151db4f063985fbe38c9e19061258c424c880741a120799c3"
+      "sha256": "ce22ffa4ee071711dab567aaf0c57c8dea331848d90d070d08c1fe13cc445649"
     },
     "windows-final-defender-scan.json": {
-      "bytes": 1899,
-      "sha256": "793fd7cbd867fd63b0feb5af20dcff02db74fc348f0d143eea15244fe79c0d8f"
+      "bytes": 1856,
+      "sha256": "f88af9bd7e3b6e73248fc82750c3f10509b5c80f268c536ca963311da3dd5276"
     },
     "windows-remote-native-acceptance.json": {
       "bytes": 773,
