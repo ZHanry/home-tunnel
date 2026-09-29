@@ -26,9 +26,9 @@
 <link rel="alternate" hreflang="en" href="https://zhanry.github.io/home-tunnel/en/privacy.html">
 <link rel="alternate" hreflang="zh-CN" href="https://zhanry.github.io/home-tunnel/privacy.html">
 <link rel="icon" type="image/svg+xml" href="../assets/HomeTunnel.svg">
-<link rel="stylesheet" href="../assets/site.css?v=10.0.0-dev">
+<link rel="stylesheet" href="../assets/site.css?v=10.0.0">
 </head>
-<body data-root="../" data-stable-version="9.0.0" data-development-version="10.0.0">
+<body data-root="../" data-stable-version="10.0.0">
 <a class="skip" href="#content">Skip to content</a>
 <div class="wrap">
 <header class="site-header">
@@ -57,7 +57,7 @@
 <p>The repository leaves page analytics empty. Only a configured GoatCounter HTTPS /count endpoint on the GitHub Pages production host loads the counter from gc.zgo.at. That counter covers visits to this website, not Home Tunnel accounts, remote-desktop pictures, or tunnel credentials. See <a href="https://www.goatcounter.com/privacy">goatcounter.com/privacy</a>.</p>
 <h2>Self-hosted service</h2>
 <p>Accounts, devices, connections, traffic statistics, and audit records are stored on the server you deploy and are managed by that deployment's administrator. Device credentials authorize connections. Android sign-in manages your own server and is not stored on this website.</p>
-<p>Remote-control pictures, input, and planned file or audio payloads do not pass through this website. Your server handles identity, authorization, and signaling. Direct UDP runs between the two endpoints. FRP publishes the local services you configure, and that traffic crosses your server rather than this documentation site.</p>
+<p>Remote-control pictures, input, files, and audio do not pass through this website. Your server handles identity, authorization, and signaling. Encrypted UDP runs directly between the two endpoints when it can; a browser viewer may instead use the optional TURN relay on your own server, which cannot read the payload. FRP publishes the local services you configure, and that traffic crosses your server rather than this documentation site.</p>
 <h2>Feedback</h2>
 <p>Remove passwords, tokens, private keys, enrollment codes, and personal information before opening a GitHub issue. Report security problems through <a href="https://github.com/ZHanry/home-tunnel/security/advisories/new">private vulnerability reports</a>, not a public issue. SECURITY.md in the repository points to the same place.</p>
 </main>

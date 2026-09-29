@@ -4,12 +4,12 @@
 
 ## 远控失败
 
-1. 确认两边都登录了同一台 9.0.0 服务器，并且被控端是已登录、未锁屏的 Windows 图形会话。
+1. 确认两边都登录了同一台 10.0.0 服务器，并且被控端是已登录、未锁屏的 Windows 图形会话。
 2. 确认授权还在：临时批准、固定密码或一次性临时密码。固定密码不是账号密码。
-3. 等 UDP 直连。失败时记下界面上的直连错误。不要期待它改走 FRP、HTTP 或 TURN。
+3. 等 UDP 连接。浏览器控制端在直连失败时可以走服务器的 UDP TURN 中继，前提是服务器部署了 `deploy/compose.turn.yaml`；Android 控制端和 9.x 被控端只走直连。UDP 被封时会失败，不会改走 TCP、FRP 或 HTTP。记下界面上的错误。
 4. 被控端可以用本机快捷键断开。不需要的配对和授权应当撤销。
 
-锁屏、登录前和 UAC 安全桌面在 9.0.0 里还不能控制。音频也不可用。这些限制不是配置错误。
+锁屏、登录前和 UAC 安全桌面在 10.0.0 里不能控制，也没有麦克风回传。这些限制不是配置错误。
 
 ## FRP 发布失败
 
@@ -28,7 +28,7 @@
 ## 升级后
 
 如果设备或连接不见了，先停止继续升级，按备份文档做恢复，而不是在生产数据上反复试验。
-10.0.0 迁移还没有验收，开发构建不能当作这次恢复的替代品。
+9→10 安装器升级和备份恢复没有验证（负责人豁免），恢复前先在隔离环境演练。
 
 ## 报告问题时
 
@@ -36,4 +36,4 @@
 
 ## English
 
-Decide whether the failure is remote control or FRP. Remote control fails closed when direct UDP is unavailable. FRP failures should name DNS, HTTPS, FRPS, authorization, or the local target. `doctor` does not upload its report. Do not treat a 10.0.0 development build as a fix for a 9.0.0 outage.
+Decide whether the failure is remote control or FRP. Remote control uses UDP only: browser viewers can use the optional TURN relay, Android and 9.x hosts are direct-only, and blocked UDP fails closed. FRP failures should name DNS, HTTPS, FRPS, authorization, or the local target. `doctor` does not upload its report. The 9-to-10 upgrade and restore were waived, so rehearse a restore before relying on it.

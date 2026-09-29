@@ -20,15 +20,15 @@
   document.documentElement.classList.add("js");
 })();
 </script>
-<title>Home Tunnel scope and the 10.0 plan</title>
-<meta name="description" content="What 9.0.0 ships, its known limits, and the 10.0.0 work whose acceptance is pending.">
+<title>Home Tunnel 10.0.0 scope and limits</title>
+<meta name="description" content="What 10.0.0 ships, what was tested, the owner-waived items that were not verified, and known limits.">
 <link rel="canonical" href="https://zhanry.github.io/home-tunnel/en/preview.html">
 <link rel="alternate" hreflang="en" href="https://zhanry.github.io/home-tunnel/en/preview.html">
 <link rel="alternate" hreflang="zh-CN" href="https://zhanry.github.io/home-tunnel/preview.html">
 <link rel="icon" type="image/svg+xml" href="../assets/HomeTunnel.svg">
-<link rel="stylesheet" href="../assets/site.css?v=10.0.0-dev">
+<link rel="stylesheet" href="../assets/site.css?v=10.0.0">
 </head>
-<body data-root="../" data-stable-version="9.0.0" data-development-version="10.0.0">
+<body data-root="../" data-stable-version="10.0.0">
 <a class="skip" href="#content">Skip to content</a>
 <div class="wrap">
 <header class="site-header">
@@ -52,31 +52,46 @@
 <main id="content">
 <section class="section">
 <p class="eyebrow">Scope</p>
-<h1>9.0.0 is stable. 10.0.0 is still in development.</h1>
-<p class="lede">A version number does not mean every remote-control feature has been accepted. Secure desktop, audio, file transfer, and stable downloads for 10.0.0 have no acceptance result. The published contract remains api-v1.3.0. api-v1.4.0 is not frozen.</p>
+<h1>10.0.0 is stable, published with owner waivers.</h1>
+<p class="lede">A version number does not mean everything was verified. This page separates what was tested, what was waived, and what is unavailable. A waiver is a gate that was not run; it is not a pass. The contract is the frozen api-v1.4.0. The <a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">release notes</a> have the full list.</p>
 <h2>Two paths</h2>
 <table role="table">
-<caption>Planned 10.0 work is not available behavior.</caption>
-<thead role="rowgroup"><tr role="row"><th role="columnheader" scope="col">Path</th><th role="columnheader" scope="col">Published 9.0.0 behavior</th><th role="columnheader" scope="col">10.0.0 plan</th></tr></thead>
+<caption>10.0.0 behavior and how it differs from 9.0.0.</caption>
+<thead role="rowgroup"><tr role="row"><th role="columnheader" scope="col">Path</th><th role="columnheader" scope="col">10.0.0</th><th role="columnheader" scope="col">9.0.0 (previous)</th></tr></thead>
 <tbody role="rowgroup">
-<tr role="row"><td role="cell"><span class="cell-label" aria-hidden="true">Path</span>Remote control</td><td role="cell"><span class="cell-label" aria-hidden="true">Published 9.0.0 behavior</span>Local approval, a fixed password, or a one-time password on the same server. A device code is not an enrollment code. Payloads use direct UDP only.</td><td role="cell"><span class="cell-label" aria-hidden="true">10.0.0 plan</span>UDP-only remains. Unattended access, secure desktop, audio, and bidirectional files are not accepted.</td></tr>
-<tr role="row"><td role="cell"><span class="cell-label" aria-hidden="true">Path</span>FRP publishing</td><td role="cell"><span class="cell-label" aria-hidden="true">Published 9.0.0 behavior</span>HTTP/HTTPS, TCP, and UDP through a home Agent and FRP 0.70.1.</td><td role="cell"><span class="cell-label" aria-hidden="true">10.0.0 plan</span>A wizard and NAS, Home Assistant, Immich, Jellyfin, SSH, RDP, and RTSP templates are not accepted.</td></tr>
+<tr role="row"><td role="cell"><span class="cell-label" aria-hidden="true">Path</span>Remote control</td><td role="cell"><span class="cell-label" aria-hidden="true">10.0.0</span>End-to-end DTLS-encrypted UDP, direct first. When direct fails, a browser viewer can reach a 10.0.0 host through the optional UDP TURN relay, which cannot read payloads; there is no TCP fallback. Android controllers and 9.x hosts are direct-only. Hosting on after sign-in, bottom-right approval, grouped 9-digit device ID; accepting grants screen, input, clipboard, files, and system audio, and the microphone is never auto-approved.</td><td role="cell"><span class="cell-label" aria-hidden="true">9.0.0 (previous)</span>Local approval, a fixed password, or a one-time password. Direct UDP only, no relay.</td></tr>
+<tr role="row"><td role="cell"><span class="cell-label" aria-hidden="true">Path</span>FRP publishing</td><td role="cell"><span class="cell-label" aria-hidden="true">10.0.0</span>HTTP/HTTPS, TCP, and UDP with FRP 0.70.1, plus guided service publishing.</td><td role="cell"><span class="cell-label" aria-hidden="true">9.0.0 (previous)</span>HTTP/HTTPS, TCP, and UDP with FRP 0.70.1.</td></tr>
 </tbody>
 </table>
-<h2>9.0.0 limits that still apply</h2>
+<h2>What was tested</h2>
+<p>A Web viewer controlled a Windows 10.0.0 host through the production server (upgraded from 9.0.0), over direct UDP and the TURN relay: screen, keyboard, mouse, Chinese text, clipboard both ways, viewer-to-host files with a SHA-256 check, system audio, the approval popup, and the temporary password. These were development builds of the same feature code, not re-run on the final bytes.</p>
+<h2>Owner waivers (not verified)</h2>
 <ul class="plain">
-<li>Windows pre-login, lock-screen, and UAC secure-desktop control are not done.</li>
-<li>Audio, macOS/Wayland hosting, and AV1/HEVC are not delivered.</li>
-<li>Clipboard interoperability, arm64 APK runtime, cross-network use, full upgrade recovery, and long-running sessions are not accepted.</li>
-<li>Linux x64 X11 evidence comes from an isolated environment, not a physical desktop.</li>
-<li>The 8.0 acceptance record is historical. It does not verify 9.0 or 10.0 bytes.</li>
+<li>Host-to-viewer file transfer</li>
+<li>Fixed-password mode on the final build</li>
+<li>Android controlling a Windows host; Windows-to-Windows</li>
+<li>Physical arm64 phones; API 26/35 emulator runs of the final APK</li>
+<li>Multiple monitors and DPI</li>
+<li>9-to-10 installer upgrade and backup restore</li>
+<li>30-connection repeat, 2-hour and 24-hour soaks</li>
+<li>NAT, IPv6, blocked-UDP, and network-recovery matrix</li>
+<li>Performance comparison and the tunnel runtime matrix</li>
+<li>Linux and macOS runtime</li>
+<li>A full Gemini review of the final UI</li>
+</ul>
+<h2>Not available</h2>
+<ul class="plain">
+<li>Lock screen, pre-login, and UAC secure-desktop control.</li>
+<li>Microphone return.</li>
+<li>Windows/macOS publisher signatures; SHA-256 and Sigstore are not publisher signatures. Android keeps its release certificate.</li>
+<li>The 8.0 acceptance record is historical. It does not verify 10.0 bytes.</li>
 </ul>
 <figure data-shot-file="assets/v10/remote-window.png" class="shot-slot" data-shot-slot="v10-remote-window" data-slot-status="awaiting-v10-capture">
-<figcaption><strong>10.0 remote window</strong><span>Connection status, permissions, and display controls will be shown after validation.</span></figcaption>
+<figcaption><strong>10.0 remote window</strong><span>The actual screenshot has not been added yet. No mock-up is shown here.</span></figcaption>
 <p class="slot-empty">Waiting for an actual product screenshot</p>
 </figure>
 <figure data-shot-file="assets/v10/tunnel-wizard.png" class="shot-slot" data-shot-slot="v10-tunnel-wizard" data-slot-status="awaiting-v10-capture">
-<figcaption><strong>10.0 tunnel wizard</strong><span>The service publishing steps will be shown after validation.</span></figcaption>
+<figcaption><strong>10.0 publishing wizard</strong><span>The actual screenshot has not been added yet. No mock-up is shown here.</span></figcaption>
 <p class="slot-empty">Waiting for an actual product screenshot</p>
 </figure>
 <figure class="shot-slot" data-shot-slot="history-console-7" data-slot-status="historical-labeled">

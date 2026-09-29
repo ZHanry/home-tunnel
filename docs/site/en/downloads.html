@@ -20,15 +20,15 @@
   document.documentElement.classList.add("js");
 })();
 </script>
-<title>Download Home Tunnel 9.0.0</title>
-<meta name="description" content="Home Tunnel 9.0.0 stable downloads and SHA-256 checksums. 10.0.0 has no stable package and acceptance is pending.">
+<title>Download Home Tunnel 10.0.0</title>
+<meta name="description" content="Home Tunnel 10.0.0 stable downloads. Checksums come from the release manifest. Published with owner waivers; the release notes list what was not verified.">
 <link rel="canonical" href="https://zhanry.github.io/home-tunnel/en/downloads.html">
 <link rel="alternate" hreflang="en" href="https://zhanry.github.io/home-tunnel/en/downloads.html">
 <link rel="alternate" hreflang="zh-CN" href="https://zhanry.github.io/home-tunnel/downloads.html">
 <link rel="icon" type="image/svg+xml" href="../assets/HomeTunnel.svg">
-<link rel="stylesheet" href="../assets/site.css?v=10.0.0-dev">
+<link rel="stylesheet" href="../assets/site.css?v=10.0.0">
 </head>
-<body data-root="../" data-stable-version="9.0.0" data-development-version="10.0.0">
+<body data-root="../" data-stable-version="10.0.0">
 <a class="skip" href="#content">Skip to content</a>
 <div class="wrap">
 <header class="site-header">
@@ -52,17 +52,50 @@
 <main id="content">
 <section class="section">
 <p class="eyebrow">Stable channel</p>
-<h1>Download 9.0.0</h1>
-<p class="lede">These files come from the published 9.0.0 Releases. 10.0.0 is not promoted, has no stable package, and acceptance is pending. Windows and macOS packages have no Authenticode or Developer ID certificate. The Android release certificate SHA-256 is <code>d7779e338be1039acee6dda9a43417cbf2baf4b0c9995578d9708501e95af702</code>.</p>
-<p id="download-status" class="notice" role="status" aria-live="polite" data-tone="ready">Stable downloads are 9.0.0. 10.0.0 is not promoted and has no stable packages; acceptance is pending. If the manifest cannot be refreshed, use the 9.0.0 links on this page.</p>
-<noscript><p class="notice" data-tone="ready">Scripts are off. The download links and checksums are already on this page.</p></noscript>
+<h1>Download 10.0.0</h1>
+<p class="lede">These files come from the 10.0.0 Releases. This release was published with owner waivers: some acceptance gates were not run, a waiver is not a pass, and the <a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">release notes</a> list them. Lock screen, pre-login, UAC secure desktop, and microphone return are not available. Windows and macOS packages have no Authenticode or Developer ID certificate. The Android release certificate SHA-256 is <code>d7779e338be1039acee6dda9a43417cbf2baf4b0c9995578d9708501e95af702</code>.</p>
+<p id="download-status" class="notice" role="status" aria-live="polite" data-tone="ready">Stable downloads are 10.0.0, published with owner waivers; a waiver is not a pass. If the manifest cannot be refreshed, use the 10.0.0 links on this page and check them against the Release SHA256SUMS.txt.</p>
+<noscript><p class="notice" data-tone="ready">Scripts are off. The download links are on this page; checksums are in each Release SHA256SUMS.txt.</p></noscript>
 <div class="actions" aria-label="Common downloads">
-<a class="button" href="https://github.com/ZHanry/home-tunnel-client/releases/download/v9.0.0/HomeTunnel-Setup-9.0.0-x64.exe">Download for Windows</a>
-<a class="button secondary" href="https://github.com/ZHanry/home-tunnel-android/releases/download/v9.0.0/HomeTunnel-Android-9.0.0-arm64-v8a.apk">Download Android APK · arm64</a>
+<a class="button" href="https://github.com/ZHanry/home-tunnel-client/releases/download/v10.0.0/HomeTunnel-Setup-10.0.0-x64.exe">Download for Windows</a>
+<a class="button secondary" href="https://github.com/ZHanry/home-tunnel-android/releases/download/v10.0.0/HomeTunnel-Android-10.0.0-arm64-v8a.apk">Download Android APK · arm64</a>
 <a class="button secondary" href="#server-downloads">Server deployment files</a>
 </div>
 <h2 id="server-downloads">Server</h2>
 <table role="table" class="download-table">
+<caption>10.0.0 server packages. The optional browser relay uses deploy/compose.turn.yaml from the server repository. FRP stays at its own 0.70.1 release.</caption>
+<thead role="rowgroup"><tr role="row"><th role="columnheader" scope="col">File</th><th role="columnheader" scope="col">SHA-256</th></tr></thead>
+<tbody role="rowgroup">
+<tr role="row"><td role="cell"><span class="cell-label" aria-hidden="true">File</span><a href="https://github.com/ZHanry/home-tunnel-server/releases/download/v10.0.0/home-tunnel-server-10.0.0.tar.gz">home-tunnel-server-10.0.0.tar.gz</a></td><td role="cell"><span class="cell-label" aria-hidden="true">SHA-256</span><code data-sha256-for="https://github.com/ZHanry/home-tunnel-server/releases/download/v10.0.0/home-tunnel-server-10.0.0.tar.gz">See the Release SHA256SUMS.txt</code></td></tr>
+<tr role="row"><td role="cell"><span class="cell-label" aria-hidden="true">File</span><a href="https://github.com/ZHanry/home-tunnel-server/releases/download/v10.0.0/compose.release.yaml">compose.release.yaml</a></td><td role="cell"><span class="cell-label" aria-hidden="true">SHA-256</span><code data-sha256-for="https://github.com/ZHanry/home-tunnel-server/releases/download/v10.0.0/compose.release.yaml">See the Release SHA256SUMS.txt</code></td></tr>
+</tbody>
+</table>
+<h2>Desktop and CLI</h2>
+<table role="table">
+<caption>10.0.0 client packages, unsigned. Check the digest before you install.</caption>
+<thead role="rowgroup"><tr role="row"><th role="columnheader" scope="col">File</th><th role="columnheader" scope="col">SHA-256</th></tr></thead>
+<tbody role="rowgroup">
+<tr role="row"><td role="cell"><span class="cell-label" aria-hidden="true">File</span><a href="https://github.com/ZHanry/home-tunnel-client/releases/download/v10.0.0/HomeTunnel-Setup-10.0.0-x64.exe">HomeTunnel-Setup-10.0.0-x64.exe</a></td><td role="cell"><span class="cell-label" aria-hidden="true">SHA-256</span><code data-sha256-for="https://github.com/ZHanry/home-tunnel-client/releases/download/v10.0.0/HomeTunnel-Setup-10.0.0-x64.exe">See the Release SHA256SUMS.txt</code></td></tr>
+<tr role="row"><td role="cell"><span class="cell-label" aria-hidden="true">File</span><a href="https://github.com/ZHanry/home-tunnel-client/releases/download/v10.0.0/HomeTunnel-Windows-10.0.0-x64.zip">HomeTunnel-Windows-10.0.0-x64.zip</a></td><td role="cell"><span class="cell-label" aria-hidden="true">SHA-256</span><code data-sha256-for="https://github.com/ZHanry/home-tunnel-client/releases/download/v10.0.0/HomeTunnel-Windows-10.0.0-x64.zip">See the Release SHA256SUMS.txt</code></td></tr>
+<tr role="row"><td role="cell"><span class="cell-label" aria-hidden="true">File</span><a href="https://github.com/ZHanry/home-tunnel-client/releases/download/v10.0.0/home-tunnel-linux-10.0.0-amd64.tar.gz">home-tunnel-linux-10.0.0-amd64.tar.gz</a></td><td role="cell"><span class="cell-label" aria-hidden="true">SHA-256</span><code data-sha256-for="https://github.com/ZHanry/home-tunnel-client/releases/download/v10.0.0/home-tunnel-linux-10.0.0-amd64.tar.gz">See the Release SHA256SUMS.txt</code></td></tr>
+<tr role="row"><td role="cell"><span class="cell-label" aria-hidden="true">File</span><a href="https://github.com/ZHanry/home-tunnel-client/releases/download/v10.0.0/home-tunnel-linux-10.0.0-arm64.tar.gz">home-tunnel-linux-10.0.0-arm64.tar.gz</a></td><td role="cell"><span class="cell-label" aria-hidden="true">SHA-256</span><code data-sha256-for="https://github.com/ZHanry/home-tunnel-client/releases/download/v10.0.0/home-tunnel-linux-10.0.0-arm64.tar.gz">See the Release SHA256SUMS.txt</code></td></tr>
+<tr role="row"><td role="cell"><span class="cell-label" aria-hidden="true">File</span><a href="https://github.com/ZHanry/home-tunnel-client/releases/download/v10.0.0/home-tunnel-macos-10.0.0-amd64.tar.gz">home-tunnel-macos-10.0.0-amd64.tar.gz</a></td><td role="cell"><span class="cell-label" aria-hidden="true">SHA-256</span><code data-sha256-for="https://github.com/ZHanry/home-tunnel-client/releases/download/v10.0.0/home-tunnel-macos-10.0.0-amd64.tar.gz">See the Release SHA256SUMS.txt</code></td></tr>
+<tr role="row"><td role="cell"><span class="cell-label" aria-hidden="true">File</span><a href="https://github.com/ZHanry/home-tunnel-client/releases/download/v10.0.0/home-tunnel-macos-10.0.0-arm64.tar.gz">home-tunnel-macos-10.0.0-arm64.tar.gz</a></td><td role="cell"><span class="cell-label" aria-hidden="true">SHA-256</span><code data-sha256-for="https://github.com/ZHanry/home-tunnel-client/releases/download/v10.0.0/home-tunnel-macos-10.0.0-arm64.tar.gz">See the Release SHA256SUMS.txt</code></td></tr>
+</tbody>
+</table>
+<h2>Android</h2>
+<table role="table">
+<caption>10.0.0 APKs for arm64-v8a and x86_64. Physical arm64 phones were not verified; the owner waived that gate.</caption>
+<thead role="rowgroup"><tr role="row"><th role="columnheader" scope="col">File</th><th role="columnheader" scope="col">SHA-256</th></tr></thead>
+<tbody role="rowgroup">
+<tr role="row"><td role="cell"><span class="cell-label" aria-hidden="true">File</span><a href="https://github.com/ZHanry/home-tunnel-android/releases/download/v10.0.0/HomeTunnel-Android-10.0.0-arm64-v8a.apk">HomeTunnel-Android-10.0.0-arm64-v8a.apk</a></td><td role="cell"><span class="cell-label" aria-hidden="true">SHA-256</span><code data-sha256-for="https://github.com/ZHanry/home-tunnel-android/releases/download/v10.0.0/HomeTunnel-Android-10.0.0-arm64-v8a.apk">See the Release SHA256SUMS.txt</code></td></tr>
+<tr role="row"><td role="cell"><span class="cell-label" aria-hidden="true">File</span><a href="https://github.com/ZHanry/home-tunnel-android/releases/download/v10.0.0/HomeTunnel-Android-10.0.0-x86_64.apk">HomeTunnel-Android-10.0.0-x86_64.apk</a></td><td role="cell"><span class="cell-label" aria-hidden="true">SHA-256</span><code data-sha256-for="https://github.com/ZHanry/home-tunnel-android/releases/download/v10.0.0/HomeTunnel-Android-10.0.0-x86_64.apk">See the Release SHA256SUMS.txt</code></td></tr>
+</tbody>
+</table>
+<h2>Previous release: 9.0.0</h2>
+<p>The 9.0.0 files and digests remain below. Do not check a 10.0.0 package with a 9.0.0 digest.</p>
+<h3>Server · 9.0.0</h3>
+<table role="table">
 <caption>9.0.0 server packages. FRP stays at its own 0.70.1 release.</caption>
 <thead role="rowgroup"><tr role="row"><th role="columnheader" scope="col">File</th><th role="columnheader" scope="col">SHA-256</th></tr></thead>
 <tbody role="rowgroup">
@@ -70,7 +103,7 @@
 <tr role="row"><td role="cell"><span class="cell-label" aria-hidden="true">File</span><a href="https://github.com/ZHanry/home-tunnel-server/releases/download/v9.0.0/compose.release.yaml">compose.release.yaml</a></td><td role="cell"><span class="cell-label" aria-hidden="true">SHA-256</span><code>44019ca07116a76dd6c1d25ec9266ebcc06239ee800213b6a995ac28cd62c0a2</code></td></tr>
 </tbody>
 </table>
-<h2>Desktop and CLI</h2>
+<h3>Desktop and CLI · 9.0.0</h3>
 <table role="table">
 <caption>9.0.0 client packages. Check the digest before you install.</caption>
 <thead role="rowgroup"><tr role="row"><th role="columnheader" scope="col">File</th><th role="columnheader" scope="col">SHA-256</th></tr></thead>
@@ -83,7 +116,7 @@
 <tr role="row"><td role="cell"><span class="cell-label" aria-hidden="true">File</span><a href="https://github.com/ZHanry/home-tunnel-client/releases/download/v9.0.0/home-tunnel-macos-9.0.0-arm64.tar.gz">home-tunnel-macos-9.0.0-arm64.tar.gz</a></td><td role="cell"><span class="cell-label" aria-hidden="true">SHA-256</span><code>73b8e838dbc6bdcd3dad09dfc96d4949ac585a43bb313ab5fa8b1915e7395123</code></td></tr>
 </tbody>
 </table>
-<h2>Android</h2>
+<h3>Android · 9.0.0</h3>
 <table role="table">
 <caption>Published 9.0.0 arm64 APK. An emulator run does not replace device acceptance for this package.</caption>
 <thead role="rowgroup"><tr role="row"><th role="columnheader" scope="col">File</th><th role="columnheader" scope="col">SHA-256</th></tr></thead>
@@ -92,15 +125,15 @@
 </tbody>
 </table>
 <h2>Older stable releases</h2>
-<p>The 7.0.0 and 8.0.0 release pages remain available. Do not check an older package with a 9.0.0 digest.</p>
-<p><a href="https://github.com/ZHanry/home-tunnel/releases/tag/v8.0.0">8.0.0</a> · <a href="https://github.com/ZHanry/home-tunnel/releases/tag/v7.0.0">7.0.0</a></p>
+<p>The 7.0.0 and 8.0.0 release pages remain available.</p>
+<p><a href="https://github.com/ZHanry/home-tunnel/releases/tag/v9.0.0">9.0.0</a> · <a href="https://github.com/ZHanry/home-tunnel/releases/tag/v8.0.0">8.0.0</a> · <a href="https://github.com/ZHanry/home-tunnel/releases/tag/v7.0.0">7.0.0</a></p>
 </section>
 </main>
 <footer class="site-footer">
 <span>© 2026 Home Tunnel · Apache-2.0</span>
 <nav aria-label="Footer">
 <a href="privacy.html">Privacy</a>
-<a href="preview.html">Scope and plan</a>
+<a href="preview.html">Scope and limits</a>
 <a href="index.html">Home</a>
 </nav>
 </footer>

@@ -9,8 +9,11 @@
     };
   }
 
+  // A waived gate is disclosed, never counted as passed; both states claim a release.
+  var ACCEPTED = ["accepted", "accepted_with_waivers"];
+
   function view(input) {
-    var fallback = input.fallbackStable || "9.0.0";
+    var fallback = input.fallbackStable || "10.0.0";
     var candidateVersion = (input.candidate && input.candidate.version) || "10.0.0";
     if (input.transport === "loading") {
       return {
@@ -33,7 +36,7 @@
         typeof stableVersion !== "string" || !versionPattern.test(stableVersion) || stableVersion.indexOf("-rc.") !== -1 ||
         input.stable.stage !== "stable" || typeof candidateTag !== "string" || !versionPattern.test(candidateTag) ||
         ["not_promoted", "promoted"].indexOf(input.candidate.promotion_status) === -1 ||
-        ["pending", "not_submitted", "accepted"].indexOf(input.candidate.acceptance_status) === -1 ||
+        ["pending", "not_submitted"].concat(ACCEPTED).indexOf(input.candidate.acceptance_status) === -1 ||
         typeof input.candidate.downloads_published !== "boolean") {
       return {
         tone: "error",
@@ -44,7 +47,7 @@
     var stable = input.stable;
     var candidate = input.candidate;
     if (candidate.promotion_status !== "promoted") {
-      if (candidate.downloads_published !== false || candidate.acceptance_status === "accepted") {
+      if (candidate.downloads_published !== false || ACCEPTED.indexOf(candidate.acceptance_status) !== -1) {
         return {
           tone: "error",
           zh: "清单冲突：开发线被标成已有下载或已验收，但晋升状态不是已发布。本页只保留已发布的稳定链接。验收尚未完成。",
@@ -54,11 +57,18 @@
       var pending = text(stable.version, candidate.version || candidateVersion);
       return { tone: "ready", zh: pending.zh, en: pending.en };
     }
-    if (candidate.acceptance_status !== "accepted" || candidate.downloads_published !== true || stable.stage !== "stable" || stable.version !== candidate.version) {
+    if (ACCEPTED.indexOf(candidate.acceptance_status) === -1 || candidate.downloads_published !== true || stable.stage !== "stable" || stable.version !== candidate.version) {
       return {
         tone: "error",
-        zh: "清单冲突：晋升标记和稳定版本不一致。不要安装来源不明的 10.0.0 包。",
-        en: "The download manifest conflicts with itself: promotion does not match the stable version. Do not install an unverified 10.0.0 package."
+        zh: "清单冲突：晋升标记和稳定版本不一致。不要安装来源不明的 " + candidate.version + " 包。",
+        en: "The download manifest conflicts with itself: promotion does not match the stable version. Do not install an unverified " + candidate.version + " package."
+      };
+    }
+    if (candidate.acceptance_status === "accepted_with_waivers") {
+      return {
+        tone: "ready",
+        zh: "稳定下载是 " + stable.version + "。部分验收项目未运行，由负责人豁免；豁免不等于通过，清单见发布说明。请核对校验值后再安装。",
+        en: "Stable downloads are " + stable.version + ". Some acceptance gates were not run and were waived by the owner; a waiver is not a pass, and the release notes list them. Check the checksum before you install."
       };
     }
     return {

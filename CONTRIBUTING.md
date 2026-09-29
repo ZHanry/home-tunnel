@@ -9,13 +9,13 @@
 3. 改文档时同步中英文、链接和网站元数据。
 4. 不要提交密钥、诊断包、测试机配置或安装包。
 
-稳定下载和开发线只改 [`distribution.json`](distribution.json)，然后运行：
+稳定通道和候选记录只改 [`distribution.json`](distribution.json)，然后运行：
 
 ```bash
 python scripts/sync-distribution.py
 ```
 
-不要手改 `releases.json` 或 `docs/site/releases.json`。未晋升时，稳定通道必须保持已发布的 9.0.0 快照。
+不要手改 `releases.json` 或 `docs/site/releases.json`。候选未晋升时，稳定通道保持上一份已发布快照；10.0.0 晋升后，9.0.0 快照留在 `docs/release/stable-9.0.0.json`。
 
 ## 本地检查
 

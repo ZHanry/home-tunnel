@@ -1,10 +1,67 @@
-# Home Tunnel 10.0.0 development line
+# Home Tunnel 10.0.0
 
-10.0.0 is not a release. Acceptance is pending. There is no stable download.
-Secure desktop, system audio, and bidirectional file transfer are planned and
-are not accepted. The installable set remains 9.0.0 with FRP 0.70.1.
-`api-v1.4.0` is not frozen. The notes below describe the published 9.0.0 and
-the historical 8.0.0 record.
+2026-09-29 发布。服务端/Web、桌面/CLI、Android 与自有 Agent 统一为 10.0.0，FRP 独立保持 0.70.1。REST 路径仍是 `/api/v1`，冻结契约为 `api-v1.4.0`（服务端提交 `74e140da43c88043d0db2aad7505ba75fd3a9a49`）；`api-v1.3.0` 及更早的契约标签不变。
+
+本版经负责人批准，带**负责人豁免**发布：下方列出的项目没有运行，豁免不等于通过，也不能写成已验收。
+
+## 新内容
+
+- 远控载荷（画面、声音、输入、剪贴板、文件）走经过认证、端到端 DTLS 加密的 UDP，优先 P2P 直连。
+- 服务端可选部署 UDP TURN 中继（coturn，`deploy/compose.turn.yaml`）。直连失败时，浏览器控制端可经中继连接 10.0.0 被控端；载荷仍端到端加密，中继读不到内容。没有 TCP 回退。Android 控制端和 9.x 被控端只走直连。
+- 登录即开启被控。陌生连接在右下角弹出置顶、不抢焦点的审批框；连接期间显示"正在被远程控制 · 断开"条。设备 ID 显示为分组的 9 位数字。
+- 一次性临时密码使用固定设备 ID，生成新密码会撤销旧密码。固定密码跳过审批。
+- 接受请求或临时密码后，本次连接放行画面、键鼠、剪贴板、文件和系统声音。麦克风从不自动放行。9.x 被控端仍只有画面/键鼠/剪贴板。
+- 授权后的系统声音（普通桌面上的 WASAPI 回环），不采集麦克风。
+- 重做的浏览器控制端：浮动工具栏、单一开始/停止按钮、后台剪贴板同步、快捷键与"更多"菜单、延迟标记。
+- 引导式服务发布（本机目标检查、设备上报验证），以及本地化、主题、移动端导航和无障碍修复。
+- Android：arm64-v8a 与 x86_64 使用同源生产远控 SDK；新增系统声音播放、授权文件传输、显示器选择、有界重连和视口手势；软键盘弹出时登录、MFA、改密和隧道编辑保持可见。沿用原 applicationId 与发行证书，versionCode `10000000`。
+- 服务端迁移 020、021 为增量迁移，9.0 数据仍可读取。稳定发布晋升已验收、已封存的候选字节与镜像摘要，不重新构建。
+
+## 验证范围
+
+在从 9.0.0 升级的生产服务器上，Web 控制端经 10.0.0 服务端控制 Windows 10.0.0 被控端，直连 UDP 和 TURN 中继两种路径都实测可用：
+
+- 画面、键盘、鼠标和中文输入
+- 双向剪贴板
+- 控制端到被控端的文件传输，SHA-256 校验一致
+- 系统声音
+- 审批弹窗与临时密码模式
+
+这些结果来自同一功能代码的开发构建，没有在最终发布字节上重跑。Android 的 Gemini 界面审查针对模拟器上的开发构建截图。
+
+## 负责人豁免（未验证）
+
+以下项目没有运行，在各组件附带的验收记录中标为 `waived`，不计为通过：
+
+- 被控端到控制端的文件传输
+- 最终构建上的固定密码模式
+- Android 控制 Windows 被控端
+- Windows 控制 Windows
+- arm64 实体手机
+- 最终 APK 的 API 26/35 模拟器运行
+- 多显示器与 DPI
+- 9→10 安装器升级与备份恢复
+- 30 次连续连接、2 小时活动和 24 小时在线
+- NAT、IPv6、UDP 被封与网络恢复矩阵
+- 性能对比
+- 隧道运行矩阵
+- Linux 与 macOS 运行
+- 最终界面的完整 Gemini 审查
+
+## 限制
+
+- 不支持锁屏、登录前和 UAC 安全桌面控制；无人值守就是已登录桌面上的固定密码。
+- 没有麦克风回传。
+- Windows/macOS 可执行文件没有发行商签名（Authenticode / Developer ID）；SHA-256、Sigstore 和恶意软件扫描不是系统签名。Android 保持原发行证书。
+- 远控默认关闭。部署前确认加密备份能恢复，并用 Release 的 `compose.release.yaml` 固定镜像摘要。见 [升级](UPGRADING.md)。
+
+文件与校验值见 [下载](DOWNLOADS.md)。组件说明：[Server](https://github.com/ZHanry/home-tunnel-server/releases/tag/v10.0.0) · [Client](https://github.com/ZHanry/home-tunnel-client/releases/tag/v10.0.0) · [Android](https://github.com/ZHanry/home-tunnel-android/releases/tag/v10.0.0)。
+
+## English summary
+
+Home Tunnel 10.0.0 is published for all four repositories with owner waivers. FRP stays at 0.70.1; the API stays `/api/v1` with frozen contract `api-v1.4.0`. Remote payloads use end-to-end DTLS-encrypted UDP, direct P2P first; an optional UDP TURN relay lets browser viewers reach 10.0.0 hosts when direct fails, the relay cannot read payloads, and there is no TCP fallback. Android controllers and 9.x hosts are direct-only. A Web viewer controlled a Windows 10.0.0 host through the production server over direct UDP and the relay (development builds of the same code, not re-run on the final bytes). The items listed under 负责人豁免 were not verified; a waiver is not a pass. Lock screen, pre-login, UAC secure desktop and microphone return are not available, and desktop packages carry no publisher signature.
+
+## Previous release: 9.0.0
 
 # Home Tunnel 9.0.0
 

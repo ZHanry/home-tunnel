@@ -21,21 +21,21 @@
 })();
 </script>
 <title>Home Tunnel · 远控走 UDP，服务发布走 FRP</title>
-<meta name="description" content="自托管的 Home Tunnel。授权后的远程桌面只走 UDP 直连；家里的服务通过 FRP 发布。当前稳定下载是 9.0.0，10.0.0 验收尚未完成。">
+<meta name="description" content="自托管的 Home Tunnel。授权后的远程桌面走端到端加密的 UDP，优先直连；家里的服务通过 FRP 发布。当前稳定版是 10.0.0，带负责人豁免发布。">
 <link rel="canonical" href="https://zhanry.github.io/home-tunnel/">
 <link rel="alternate" hreflang="zh-CN" href="https://zhanry.github.io/home-tunnel/">
 <link rel="alternate" hreflang="en" href="https://zhanry.github.io/home-tunnel/en/">
 <meta property="og:title" content="Home Tunnel · 远控走 UDP，服务发布走 FRP">
-<meta property="og:description" content="当前稳定下载是 9.0.0。10.0.0 正在开发，验收尚未完成，没有稳定安装包。">
+<meta property="og:description" content="当前稳定版是 10.0.0。远控走加密 UDP，浏览器可经可选中继连接。未验证的项目由负责人豁免，并在发布说明中列出。">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://zhanry.github.io/home-tunnel/">
 <meta property="og:image" content="https://zhanry.github.io/home-tunnel/assets/share-card.svg">
 <meta property="og:image:alt" content="Home Tunnel 品牌分享图，说明 UDP 远控和 FRP 发布，不是产品界面截图">
 <link rel="icon" type="image/svg+xml" href="assets/HomeTunnel.svg">
-<link rel="stylesheet" href="assets/site.css?v=10.0.0-dev">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Home Tunnel","applicationCategory":"UtilitiesApplication","operatingSystem":"Windows, macOS, Linux, Android","softwareVersion": "9.0.0","license":"https://www.apache.org/licenses/LICENSE-2.0","url":"https://zhanry.github.io/home-tunnel/"}</script>
+<link rel="stylesheet" href="assets/site.css?v=10.0.0">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Home Tunnel","applicationCategory":"UtilitiesApplication","operatingSystem":"Windows, macOS, Linux, Android","softwareVersion": "10.0.0","license":"https://www.apache.org/licenses/LICENSE-2.0","url":"https://zhanry.github.io/home-tunnel/"}</script>
 </head>
-<body data-root="" data-stable-version="9.0.0" data-development-version="10.0.0">
+<body data-root="" data-stable-version="10.0.0">
 <a class="skip" href="#content">跳到主要内容</a>
 <div class="wrap">
 <header class="site-header">
@@ -58,53 +58,54 @@
 </header>
 <main id="content">
 <section class="section">
-<p class="eyebrow">Home Tunnel 10.0.0 开发线 · 稳定版 9.0.0</p>
+<p class="eyebrow">Home Tunnel 稳定版 10.0.0</p>
 <h1>远控走 UDP，服务发布走 FRP。</h1>
-<p class="lede">用自己的服务器连接家里的电脑和服务。远程桌面在授权后只走两端 UDP 直连；NAS、Home Assistant 和其他本地服务通过 FRP 发布。当前可以下载的稳定版是 9.0.0。10.0.0 正在开发，验收尚未完成，没有稳定安装包。</p>
+<p class="lede">用自己的服务器连接家里的电脑和服务。远程桌面在授权后走端到端 DTLS 加密的 UDP，优先直连；NAS、Home Assistant 和其他本地服务通过 FRP 发布。当前稳定版是 10.0.0。部分验收项目没有运行，由负责人豁免，豁免不等于通过，清单见<a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">发布说明</a>。</p>
 <div class="choice-grid">
-<a class="choice" href="#remote"><span class="eyebrow">远程控制</span><strong>控制其他设备</strong><span>在 Windows、Web 或 Android 上选择设备。画面和输入只走 UDP，连不上就停，不改走 FRP。</span></a>
+<a class="choice" href="#remote"><span class="eyebrow">远程控制</span><strong>控制其他设备</strong><span>在 Windows、Web 或 Android 上选择设备。画面和输入走加密 UDP，不改走 FRP 或 TCP。</span></a>
 <a class="choice" href="#host"><span class="eyebrow">远程控制</span><strong>允许控制本机</strong><span>只在 Windows 被控端上操作。这个网站不能把本机开放给别人。</span></a>
 <a class="choice" href="#tunnel"><span class="eyebrow">内网穿透</span><strong>发布家里的服务</strong><span>用 FRP 发布 HTTP/HTTPS、TCP 和 UDP。电脑或 NAS 运行隧道。</span></a>
 </div>
 <div class="actions">
-<a class="button" href="downloads.html">下载 9.0.0</a>
-<a class="button secondary" href="preview.html">查看 10.0 计划与限制</a>
+<a class="button" href="downloads.html">下载 10.0.0</a>
+<a class="button secondary" href="preview.html">查看 10.0 范围与限制</a>
 </div>
 </section>
 <section id="remote" class="section">
 <div class="split">
 <div>
-<p class="eyebrow">已发布的 9.0.0 远控</p>
+<p class="eyebrow">10.0.0 远控</p>
 <h2>双方登录同一台服务器，再建立直连。</h2>
-<p>用设备码找到设备。授权方式是本机批准、固定密码或一次性密码。固定密码和一次性密码都不是账号密码，设备码也不是接入码。服务器负责身份、授权和信令；画面和输入不经过 FRP。</p>
+<p>被控端登录即开启被控。用分组显示的 9 位设备 ID 找到设备。陌生连接在被控端右下角弹出审批框；固定密码跳过审批；一次性临时密码使用同一个设备 ID。固定密码和临时密码都不是账号密码，设备 ID 也不是接入码。接受后本次连接放行画面、键鼠、剪贴板、文件和系统声音，麦克风不会自动放行。画面和输入不经过 FRP。</p>
 <ul class="plain">
 <li>Windows、Web 和 Android 可以控制其他设备。允许控制本机只出现在 Windows 被控端。</li>
-<li>Linux x64 X11 只提供观看、键盘和鼠标，证据来自隔离环境。Android 的模拟器结果不能代替已发布的 arm64 APK。</li>
-<li>无法建立 UDP 直连时会失败。没有 TURN、ICE-TCP、FRP、HTTP 或 WSS 载荷回退。</li>
+<li>直连失败时，浏览器控制端可以经服务器可选的 UDP TURN 中继连接 10.0.0 被控端。载荷端到端加密，中继读不到内容。没有 TCP 回退。</li>
+<li>Android 控制端和 9.x 被控端只走直连。UDP 被封时连接失败。</li>
 </ul>
 </div>
 <div class="board">
-<p class="eyebrow">10.0.0 计划，验收尚未完成</p>
-<h2>这些能力还不能当成可用。</h2>
-<p>计划中的 Windows 服务会处理开机、锁屏、登录和 UAC 安全桌面。系统音频、双向多文件，以及必须单独开启的无人值守也在计划里。安全桌面、音频和文件传输验收都还没有结果，本页不把它们写成已经支持。</p>
+<p class="eyebrow">验证范围与负责人豁免</p>
+<h2>哪些测过，哪些没有。</h2>
+<p>Web 控制端经生产服务器控制 Windows 10.0.0 被控端，直连和中继都测过画面、键鼠、中文、双向剪贴板、控制端到被控端的文件、系统声音、审批弹窗和临时密码。这些是同一功能代码的开发构建，没有在最终字节上重跑。</p>
+<p>被控端到控制端的文件、最终构建上的固定密码、Android 控制 Windows、实体 arm64 手机、多显示器、升级恢复、长时间运行和网络矩阵没有运行，由负责人豁免，验收尚未完成。锁屏、登录前和 UAC 安全桌面控制不可用，也没有麦克风回传。</p>
 </div>
 </div>
 </section>
 <section id="host" class="section">
 <p class="eyebrow">仅 Windows 被控端</p>
 <h2>允许控制本机</h2>
-<p>本机批准、固定密码、一次性密码，以及计划中的无人值守，都在被控的 Windows 电脑上设置。设备码用来识别那台电脑。一次性接入码只用来把电脑登记到服务器，不能当作远控密码。</p>
+<p>审批、固定密码和一次性临时密码都在被控的 Windows 电脑上设置。无人值守就是已登录桌面上的固定密码。连接期间被控端显示"正在被远程控制 · 断开"条。设备 ID 用来识别那台电脑。一次性接入码只用来把电脑登记到服务器，不能当作远控密码。</p>
 </section>
 <section id="tunnel" class="section">
 <p class="eyebrow">FRP 0.70.1</p>
 <h2>发布本地服务时，走原来的隧道。</h2>
 <p>家庭电脑或 NAS 上的 Agent 连接你的 FRP 服务。HTTP/HTTPS 经过你自己的边缘和网关；TCP/UDP 使用管理员分配的端口，不附带 HTTP 登录保护。目标应用自己负责认证和加密。</p>
 <ol class="steps">
-<li>部署 9.0.0 服务端，改掉初始管理员密码，并打开 MFA。</li>
+<li>部署 10.0.0 服务端，改掉初始管理员密码，并打开 MFA。</li>
 <li>在家里的电脑或 NAS 安装同版客户端，用账号或一次性接入码登记设备。</li>
 <li>先确认本机能打开目标服务，再创建连接，然后从另一张网络访问公网地址。</li>
 </ol>
-<p class="muted">10.0.0 计划的步骤是：设备与模板、本地目标、访问方式、验证与地址。模板只填入可编辑的初始值，不表示服务已经通。公网 TCP/UDP 端口由服务器分配。向导验收尚未完成。</p>
+<p class="muted">10.0.0 的引导式发布会检查本机目标，并用设备上报核对结果。模板只填入可编辑的初始值，不表示服务已经通。公网 TCP/UDP 端口由服务器分配。隧道运行矩阵没有运行，由负责人豁免。</p>
 </section>
 <section class="section" aria-label="架构图与界面预览">
 <h2>图示只表示已经说清楚的事实。</h2>
@@ -113,11 +114,11 @@
 <img src="assets/architecture.svg" alt="Home Tunnel 架构矢量图：控制中心、SQLite、Caddy、流量网关、FRP 和家庭 Agent" width="1440" height="900">
 </figure>
 <figure data-shot-file="assets/v10/remote-window.png" class="shot-slot" data-shot-slot="v10-remote-window" data-slot-status="awaiting-v10-capture">
-<figcaption><strong>10.0 远控窗口</strong><span>连接状态、授权和显示器操作将在完成验收后展示。</span></figcaption>
+<figcaption><strong>10.0 远控窗口</strong><span>实际截图还没有补上。这里不放示意图。</span></figcaption>
 <p class="slot-empty">等待实际产品截图</p>
 </figure>
 <figure data-shot-file="assets/v10/tunnel-wizard.png" class="shot-slot" data-shot-slot="v10-tunnel-wizard" data-slot-status="awaiting-v10-capture">
-<figcaption><strong>10.0 隧道向导</strong><span>服务发布的完整步骤将在完成验收后展示。</span></figcaption>
+<figcaption><strong>10.0 服务发布向导</strong><span>实际截图还没有补上。这里不放示意图。</span></figcaption>
 <p class="slot-empty">等待实际产品截图</p>
 </figure>
 <figure class="shot-slot" data-shot-slot="history-console-7" data-slot-status="historical-labeled">
@@ -127,13 +128,13 @@
 </section>
 <section id="download" class="section">
 <p class="eyebrow">下载</p>
-<h2>现在安装 9.0.0。</h2>
-<p id="download-status" class="notice" role="status" aria-live="polite" data-tone="ready">稳定下载是 9.0.0。10.0.0 尚未晋升，没有稳定包，验收尚未完成。若清单无法刷新，仍使用下载页列出的 9.0.0 链接。</p>
+<h2>现在安装 10.0.0。</h2>
+<p id="download-status" class="notice" role="status" aria-live="polite" data-tone="ready">稳定下载是 10.0.0，带负责人豁免发布，豁免不等于通过。若清单无法刷新，仍使用下载页列出的 10.0.0 链接。</p>
 <div class="actions">
-<a class="button" href="downloads.html">打开 9.0.0 下载页</a>
-<a class="button secondary" href="https://github.com/ZHanry/home-tunnel-server/releases/tag/v9.0.0">Server 9.0.0</a>
-<a class="button secondary" href="https://github.com/ZHanry/home-tunnel-client/releases/tag/v9.0.0">Client 9.0.0</a>
-<a class="button secondary" href="https://github.com/ZHanry/home-tunnel-android/releases/tag/v9.0.0">Android 9.0.0</a>
+<a class="button" href="downloads.html">打开 10.0.0 下载页</a>
+<a class="button secondary" href="https://github.com/ZHanry/home-tunnel-server/releases/tag/v10.0.0">Server 10.0.0</a>
+<a class="button secondary" href="https://github.com/ZHanry/home-tunnel-client/releases/tag/v10.0.0">Client 10.0.0</a>
+<a class="button secondary" href="https://github.com/ZHanry/home-tunnel-android/releases/tag/v10.0.0">Android 10.0.0</a>
 </div>
 </section>
 <section id="faq" class="section">
@@ -148,15 +149,15 @@
 </details>
 <details>
 <summary>UDP 连不上会自动改走隧道吗？</summary>
-<p>不会。远控载荷没有中继回退。失败时界面应给出可操作的直连错误，而不是悄悄改用 FRP。</p>
+<p>不会。远控载荷从不走 FRP 或 TCP。浏览器控制端在直连失败时可以走服务器可选的 UDP TURN 中继，中继读不到加密内容；Android 控制端和 9.x 被控端只走直连。UDP 被封时连接失败，界面给出错误。</p>
 </details>
 <details>
 <summary>可以下载 10.0.0 吗？</summary>
-<p>不可以。10.0.0 还在开发，验收尚未完成，没有稳定包。请继续使用 9.0.0。</p>
+<p>可以。10.0.0 是当前稳定版，带负责人豁免发布：被控端到控制端的文件、Android 控制 Windows、实体 arm64 手机、升级恢复、长时间运行和网络矩阵等没有验证。锁屏、登录前、UAC 安全桌面和麦克风回传不可用。完整清单见<a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">发布说明</a>。上一版本 9.0.0 的发布页仍然保留。</p>
 </details>
 <details>
-<summary>安全桌面、音频和文件已经可用吗？</summary>
-<p>还没有验收结果，不能当成 10.0 已支持的能力。9.0 的已知限制见范围页。</p>
+<summary>安全桌面、声音和文件可以用吗？</summary>
+<p>安全桌面不可用。系统声音（WASAPI 回环）和控制端到被控端的文件在 Web → Windows 上实测过；被控端到控制端的文件没有验证。麦克风回传不可用。见范围页。</p>
 </details>
 <details>
 <summary>Windows 安装包有发行签名吗？</summary>
@@ -168,8 +169,8 @@
 <span>© 2026 Home Tunnel · Apache-2.0</span>
 <nav aria-label="页脚">
 <a href="privacy.html">隐私说明</a>
-<a href="preview.html">范围与计划</a>
-<a href="downloads.html">9.0.0 下载</a>
+<a href="preview.html">范围与限制</a>
+<a href="downloads.html">10.0.0 下载</a>
 <a href="https://github.com/ZHanry/home-tunnel/blob/main/SECURITY.md">安全报告</a>
 </nav>
 </footer>

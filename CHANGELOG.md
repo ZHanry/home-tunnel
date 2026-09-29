@@ -1,11 +1,17 @@
 # Changelog
 
-## Unreleased · 10.0.0 development
+## 10.0.0 — 2026-09-29
 
-- Document the UDP remote-control path and the FRP publishing path separately.
-- Keep installable downloads on published 9.0.0 while 10.0.0 acceptance is pending.
-- Record stable and candidate channels in one `distribution.json` source.
-- 10.0.0 secure desktop, audio, file transfer, and stable packages are not accepted.
+All four repositories and the managed Agent use 10.0.0; FRP stays at 0.70.1. The API stays `/api/v1` and freezes contract `api-v1.4.0`.
+
+- Remote payloads use end-to-end DTLS-encrypted UDP, direct P2P first. An optional UDP TURN relay (coturn, `deploy/compose.turn.yaml`) lets browser viewers reach 10.0.0 hosts when direct fails; the relay cannot read payloads and there is no TCP fallback. Android controllers and 9.x hosts are direct-only.
+- Hosting is on after sign-in, with a bottom-right approval popup, a "being remotely controlled · disconnect" bar and a grouped 9-digit device ID. The one-time temporary password uses the fixed device ID; a fixed password skips approval.
+- An accepted connection gets screen, input, clipboard, files and system audio (WASAPI loopback). The microphone is never auto-approved.
+- Redesigned browser viewer with a floating toolbar and background clipboard sync; guided service publishing; localization, theme and accessibility fixes.
+- Android uses the same-source SDK for arm64-v8a and x86_64 and adds audio playback, file transfer, monitor selection and keyboard-safe layouts (versionCode 10000000).
+- The hub records stable and candidate channels in one `distribution.json` and documents owner waivers for gates that were not run.
+
+Published with owner waivers: a waiver is not a pass. Lock screen, pre-login and UAC secure-desktop control and microphone return are not available; Windows/macOS packages are unsigned. See [release notes](docs/RELEASE_NOTES.md) for what was verified and what was waived.
 
 ## 9.0.0 — 2026-09-24
 

@@ -1,8 +1,12 @@
 # Roadmap
 
-10.0.0 plans authorized UDP-only remote control improvements and a clearer FRP
-publishing wizard. Secure desktop, audio, bidirectional files, migration, and
-stable 10.0.0 downloads are not accepted. No date is attached to that work.
+10.0.0 shipped on 2026-09-29 with owner waivers. The waived gates are the first
+follow-up: host-to-viewer files, fixed password on final bytes, Android controlling
+Windows, physical arm64 phones, multi-monitor/DPI, 9-to-10 installer upgrade and
+restore, the 30-repeat/2-hour/24-hour soaks, the NAT/IPv6/blocked-UDP matrix,
+performance, the tunnel runtime matrix, Linux/macOS runtime and a full UI review.
+Lock screen, pre-login and UAC secure-desktop control and microphone return are
+not available. No date is attached to that work.
 
 7.0.0 ships the audit fixes, unified releases, API contract, diagnostics, host-only
 recovery, encrypted backup/restore, preflight/NAS recipes, enrollment codes, MFA,

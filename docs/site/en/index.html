@@ -21,21 +21,21 @@
 })();
 </script>
 <title>Home Tunnel · UDP remote control and FRP publishing</title>
-<meta name="description" content="Self-hosted Home Tunnel. Authorized remote control uses direct UDP only. Home services are published with FRP. Stable downloads are 9.0.0. 10.0.0 acceptance is pending.">
+<meta name="description" content="Self-hosted Home Tunnel. Authorized remote control uses end-to-end encrypted UDP, direct first. Home services are published with FRP. The stable release is 10.0.0, published with owner waivers.">
 <link rel="canonical" href="https://zhanry.github.io/home-tunnel/en/">
 <link rel="alternate" hreflang="en" href="https://zhanry.github.io/home-tunnel/en/">
 <link rel="alternate" hreflang="zh-CN" href="https://zhanry.github.io/home-tunnel/">
 <meta property="og:title" content="Home Tunnel · UDP remote control and FRP publishing">
-<meta property="og:description" content="Stable downloads are 9.0.0. 10.0.0 is in development, acceptance is pending, and there is no stable package.">
+<meta property="og:description" content="The stable release is 10.0.0. Remote control uses encrypted UDP, with an optional relay for browser viewers. Unverified items are owner waivers listed in the release notes.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://zhanry.github.io/home-tunnel/en/">
 <meta property="og:image" content="https://zhanry.github.io/home-tunnel/assets/share-card.svg">
 <meta property="og:image:alt" content="Home Tunnel brand card describing UDP remote control and FRP publishing, not a product screenshot">
 <link rel="icon" type="image/svg+xml" href="../assets/HomeTunnel.svg">
-<link rel="stylesheet" href="../assets/site.css?v=10.0.0-dev">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Home Tunnel","applicationCategory":"UtilitiesApplication","operatingSystem":"Windows, macOS, Linux, Android","softwareVersion": "9.0.0","license":"https://www.apache.org/licenses/LICENSE-2.0","url":"https://zhanry.github.io/home-tunnel/en/"}</script>
+<link rel="stylesheet" href="../assets/site.css?v=10.0.0">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Home Tunnel","applicationCategory":"UtilitiesApplication","operatingSystem":"Windows, macOS, Linux, Android","softwareVersion": "10.0.0","license":"https://www.apache.org/licenses/LICENSE-2.0","url":"https://zhanry.github.io/home-tunnel/en/"}</script>
 </head>
-<body data-root="../" data-stable-version="9.0.0" data-development-version="10.0.0">
+<body data-root="../" data-stable-version="10.0.0">
 <a class="skip" href="#content">Skip to content</a>
 <div class="wrap">
 <header class="site-header">
@@ -58,53 +58,54 @@
 </header>
 <main id="content">
 <section class="section">
-<p class="eyebrow">Home Tunnel 10.0.0 development line · stable 9.0.0</p>
+<p class="eyebrow">Home Tunnel stable 10.0.0</p>
 <h1>Remote control uses UDP. Publishing uses FRP.</h1>
-<p class="lede">Reach a home computer and its services through a server you run. Authorized remote desktop stays on a direct UDP path. NAS, Home Assistant, and other local services are published with FRP. The installable stable release is 9.0.0. 10.0.0 is in development, acceptance is pending, and there is no stable package.</p>
+<p class="lede">Reach a home computer and its services through a server you run. Authorized remote desktop uses end-to-end DTLS-encrypted UDP, direct first. NAS, Home Assistant, and other local services are published with FRP. The stable release is 10.0.0. Some acceptance gates were not run and were waived by the owner; a waiver is not a pass, and the <a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">release notes</a> list them.</p>
 <div class="choice-grid">
-<a class="choice" href="#remote"><span class="eyebrow">Remote control</span><strong>Control another device</strong><span>Choose the device from Windows, Web, or Android. Picture and input use UDP only and stop when that path fails.</span></a>
+<a class="choice" href="#remote"><span class="eyebrow">Remote control</span><strong>Control another device</strong><span>Choose the device from Windows, Web, or Android. Picture and input use encrypted UDP and never switch to FRP or TCP.</span></a>
 <a class="choice" href="#host"><span class="eyebrow">Remote control</span><strong>Allow control of this device</strong><span>This action belongs on the Windows host. This website cannot expose your computer.</span></a>
 <a class="choice" href="#tunnel"><span class="eyebrow">Tunnels</span><strong>Publish a home service</strong><span>FRP publishes HTTP/HTTPS, TCP, and UDP. A computer or NAS runs the tunnel.</span></a>
 </div>
 <div class="actions">
-<a class="button" href="downloads.html">Download 9.0.0</a>
-<a class="button secondary" href="preview.html">10.0 plan and limits</a>
+<a class="button" href="downloads.html">Download 10.0.0</a>
+<a class="button secondary" href="preview.html">10.0 scope and limits</a>
 </div>
 </section>
 <section id="remote" class="section">
 <div class="split">
 <div>
-<p class="eyebrow">Remote control in stable 9.0.0</p>
+<p class="eyebrow">Remote control in 10.0.0</p>
 <h2>Both sides sign in to the same server, then connect directly.</h2>
-<p>Find the computer with its device code. Grant access by local approval, a fixed password, or a one-time password. Those passwords are not the account password, and a device code is not an enrollment code. The server handles identity, authorization, and signaling. Picture and input do not travel through FRP.</p>
+<p>Hosting is on after sign-in. Find the computer by its grouped 9-digit device ID. A stranger's request pops up a bottom-right approval card on the host; a fixed password skips approval; a one-time temporary password uses the same device ID. Those passwords are not the account password, and a device ID is not an enrollment code. Accepting grants screen, input, clipboard, files, and system audio for that connection; the microphone is never auto-approved. Picture and input do not travel through FRP.</p>
 <ul class="plain">
 <li>Windows, Web, and Android can control another device. Allowing control of this device is a Windows host action.</li>
-<li>Linux x64 X11 is view, keyboard, and pointer only, with isolated-environment evidence. An Android emulator run does not validate the published arm64 APK.</li>
-<li>A missing direct UDP path is a failure. There is no TURN, ICE-TCP, FRP, HTTP, or WSS payload fallback.</li>
+<li>When direct fails, a browser viewer can reach a 10.0.0 host through the server's optional UDP TURN relay. Payloads stay end-to-end encrypted, so the relay cannot read them. There is no TCP fallback.</li>
+<li>Android controllers and 9.x hosts are direct-only. Blocked UDP is a failure.</li>
 </ul>
 </div>
 <div class="board">
-<p class="eyebrow">Planned for 10.0.0; acceptance is pending</p>
-<h2>Do not treat these as available.</h2>
-<p>A Windows service for startup, the lock screen, sign-in, and the UAC secure desktop is planned. So are system audio, bidirectional files, and unattended access that must be turned on explicitly. Secure desktop, audio, and file transfer have no acceptance result, so this site does not call them supported.</p>
+<p class="eyebrow">Verification scope and owner waivers</p>
+<h2>What was tested, and what was not.</h2>
+<p>A Web viewer controlled a Windows 10.0.0 host through the production server, over direct UDP and the relay: screen, keyboard, mouse, Chinese text, clipboard both ways, viewer-to-host files, system audio, the approval popup, and the temporary password. These were development builds of the same feature code, not re-run on the final bytes.</p>
+<p>Host-to-viewer files, the fixed password on the final build, Android controlling Windows, physical arm64 phones, multiple monitors, upgrade and restore, long-running soaks, and the network matrix were not run. The owner waived them, so their acceptance is pending. Lock screen, pre-login, and UAC secure-desktop control are not available, and there is no microphone return.</p>
 </div>
 </div>
 </section>
 <section id="host" class="section">
 <p class="eyebrow">Windows host only</p>
 <h2>Allow control of this device</h2>
-<p>Local approval, a fixed password, a one-time password, and planned unattended access are set on the Windows computer being controlled. A device code identifies that computer. A one-time enrollment code only registers it with the server and is not a remote-control password.</p>
+<p>Approval, the fixed password, and the one-time temporary password are set on the Windows computer being controlled. Unattended access is the fixed password on the signed-in desktop. While connected, the host shows a "being remotely controlled · disconnect" bar. A device ID identifies that computer. A one-time enrollment code only registers it with the server and is not a remote-control password.</p>
 </section>
 <section id="tunnel" class="section">
 <p class="eyebrow">FRP 0.70.1</p>
 <h2>Publish a local service on the existing tunnel.</h2>
 <p>The Agent on a home computer or NAS connects to your FRP service. HTTP/HTTPS crosses your own edge and gateway. TCP/UDP uses a port an administrator assigns and does not add HTTP sign-in. The target application keeps its own authentication and encryption.</p>
 <ol class="steps">
-<li>Deploy the 9.0.0 server, replace the bootstrap admin password, and turn on MFA.</li>
+<li>Deploy the 10.0.0 server, replace the bootstrap admin password, and turn on MFA.</li>
 <li>Install the same client version on the home computer or NAS and enroll it with an account or a one-time code.</li>
 <li>Open the target on that machine first, create the connection, then visit the public address from another network.</li>
 </ol>
-<p class="muted">The planned 10.0.0 steps are device and template, local target, access, then verify and share. A template fills editable fields and does not mean the service is reachable. The server assigns public TCP/UDP ports. Wizard acceptance is pending.</p>
+<p class="muted">10.0.0 guided publishing checks the local target and confirms it against the device report. A template fills editable fields and does not mean the service is reachable. The server assigns public TCP/UDP ports. The tunnel runtime matrix was waived, not run.</p>
 </section>
 <section class="section" aria-label="Diagram and screenshot slots">
 <h2>Pictures show only what is already labeled.</h2>
@@ -113,11 +114,11 @@
 <img src="../assets/architecture.svg" alt="Home Tunnel architecture diagram showing the control center, SQLite, Caddy, traffic gateway, FRP, and a home Agent" width="1440" height="900">
 </figure>
 <figure data-shot-file="assets/v10/remote-window.png" class="shot-slot" data-shot-slot="v10-remote-window" data-slot-status="awaiting-v10-capture">
-<figcaption><strong>10.0 remote window</strong><span>Connection status, permissions, and display controls will be shown after validation.</span></figcaption>
+<figcaption><strong>10.0 remote window</strong><span>The actual screenshot has not been added yet. No mock-up is shown here.</span></figcaption>
 <p class="slot-empty">Waiting for an actual product screenshot</p>
 </figure>
 <figure data-shot-file="assets/v10/tunnel-wizard.png" class="shot-slot" data-shot-slot="v10-tunnel-wizard" data-slot-status="awaiting-v10-capture">
-<figcaption><strong>10.0 tunnel wizard</strong><span>The service publishing steps will be shown after validation.</span></figcaption>
+<figcaption><strong>10.0 publishing wizard</strong><span>The actual screenshot has not been added yet. No mock-up is shown here.</span></figcaption>
 <p class="slot-empty">Waiting for an actual product screenshot</p>
 </figure>
 <figure class="shot-slot" data-shot-slot="history-console-7" data-slot-status="historical-labeled">
@@ -127,13 +128,13 @@
 </section>
 <section id="download" class="section">
 <p class="eyebrow">Downloads</p>
-<h2>Install 9.0.0 today.</h2>
-<p id="download-status" class="notice" role="status" aria-live="polite" data-tone="ready">Stable downloads are 9.0.0. 10.0.0 is not promoted and has no stable packages; acceptance is pending. If the manifest cannot be refreshed, use the 9.0.0 links on the download page.</p>
+<h2>Install 10.0.0 today.</h2>
+<p id="download-status" class="notice" role="status" aria-live="polite" data-tone="ready">Stable downloads are 10.0.0, published with owner waivers; a waiver is not a pass. If the manifest cannot be refreshed, use the 10.0.0 links on the download page.</p>
 <div class="actions">
-<a class="button" href="downloads.html">Open 9.0.0 downloads</a>
-<a class="button secondary" href="https://github.com/ZHanry/home-tunnel-server/releases/tag/v9.0.0">Server 9.0.0</a>
-<a class="button secondary" href="https://github.com/ZHanry/home-tunnel-client/releases/tag/v9.0.0">Client 9.0.0</a>
-<a class="button secondary" href="https://github.com/ZHanry/home-tunnel-android/releases/tag/v9.0.0">Android 9.0.0</a>
+<a class="button" href="downloads.html">Open 10.0.0 downloads</a>
+<a class="button secondary" href="https://github.com/ZHanry/home-tunnel-server/releases/tag/v10.0.0">Server 10.0.0</a>
+<a class="button secondary" href="https://github.com/ZHanry/home-tunnel-client/releases/tag/v10.0.0">Client 10.0.0</a>
+<a class="button secondary" href="https://github.com/ZHanry/home-tunnel-android/releases/tag/v10.0.0">Android 10.0.0</a>
 </div>
 </section>
 <section id="faq" class="section">
@@ -148,15 +149,15 @@
 </details>
 <details>
 <summary>If UDP fails, does remote control switch to the tunnel?</summary>
-<p>No. Remote payloads have no relay fallback. The failure should say that the direct path did not connect.</p>
+<p>No. Remote payloads never use FRP or TCP. When direct fails, a browser viewer can use the server's optional UDP TURN relay, which cannot read the encrypted payload. Android controllers and 9.x hosts are direct-only. Blocked UDP fails with an error.</p>
 </details>
 <details>
 <summary>Can I download 10.0.0?</summary>
-<p>No. 10.0.0 is still in development, acceptance is pending, and there is no stable package. Keep using 9.0.0.</p>
+<p>Yes. 10.0.0 is the stable release, published with owner waivers: host-to-viewer files, Android controlling Windows, physical arm64 phones, upgrade and restore, long-running soaks, and the network matrix were not verified. Lock screen, pre-login, UAC secure desktop, and microphone return are not available. The <a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">release notes</a> have the full list. The previous 9.0.0 release pages remain available.</p>
 </details>
 <details>
-<summary>Are secure desktop, audio, and files available?</summary>
-<p>They have no acceptance result, so they are not 10.0 features you can rely on. See the scope page for the 9.0 limits.</p>
+<summary>Can I use secure desktop, audio, and files?</summary>
+<p>Secure desktop is not available. System audio (WASAPI loopback) and viewer-to-host files were tested from Web to Windows; host-to-viewer files were not verified. There is no microphone return. See the scope page.</p>
 </details>
 <details>
 <summary>Are the Windows packages publisher-signed?</summary>
@@ -168,8 +169,8 @@
 <span>© 2026 Home Tunnel · Apache-2.0</span>
 <nav aria-label="Footer">
 <a href="privacy.html">Privacy</a>
-<a href="preview.html">Scope and plan</a>
-<a href="downloads.html">9.0.0 downloads</a>
+<a href="preview.html">Scope and limits</a>
+<a href="downloads.html">10.0.0 downloads</a>
 <a href="https://github.com/ZHanry/home-tunnel/blob/main/SECURITY.md">Security</a>
 </nav>
 </footer>

@@ -65,11 +65,27 @@
   var status = document.getElementById("download-status");
   if (!status || !globalThis.HomeTunnelDownloadState) return;
   var lang = document.documentElement.lang || "zh-CN";
-  var fallback = document.body.getAttribute("data-stable-version") || "9.0.0";
+  var fallback = document.body.getAttribute("data-stable-version") || "10.0.0";
   var root = document.body.getAttribute("data-root") || "";
   function paintStatus(view) {
     status.dataset.tone = view.tone;
     status.textContent = lang.indexOf("zh") === 0 ? view.zh : view.en;
+  }
+  // Fill checksum cells from the stable manifest. Cells keep their static text (a pointer
+  // to the Release SHA256SUMS.txt) when the manifest is stale, missing, or has no match.
+  function fillChecksums(stable) {
+    if (typeof document.querySelectorAll !== "function" || !stable || !stable.components || typeof stable.components !== "object") return;
+    var byUrl = {};
+    Object.keys(stable.components).forEach(function (name) {
+      var downloads = stable.components[name] && stable.components[name].downloads;
+      (Array.isArray(downloads) ? downloads : []).forEach(function (item) {
+        if (item && typeof item.url === "string" && /^[0-9a-f]{64}$/.test(item.sha256 || "")) byUrl[item.url] = item.sha256;
+      });
+    });
+    Array.prototype.forEach.call(document.querySelectorAll("[data-sha256-for]"), function (cell) {
+      var value = byUrl[cell.getAttribute("data-sha256-for")];
+      if (value) cell.textContent = value;
+    });
   }
   var forced = params.get("state");
   if (forced === "offline" || forced === "error" || forced === "loading") {
@@ -103,9 +119,11 @@
       });
     })).then(function (pair) {
       if (epoch !== requestEpoch) return;
-      paintStatus(globalThis.HomeTunnelDownloadState.view({
+      var view = globalThis.HomeTunnelDownloadState.view({
         transport: "ok", stable: pair[0], candidate: pair[1], fallbackStable: fallback
-      }));
+      });
+      paintStatus(view);
+      if (view.tone === "ready") fillChecksums(pair[0]);
     }).catch(function () {
       if (epoch !== requestEpoch) return;
       paintStatus(globalThis.HomeTunnelDownloadState.view({

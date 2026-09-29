@@ -26,9 +26,9 @@
 <link rel="alternate" hreflang="zh-CN" href="https://zhanry.github.io/home-tunnel/privacy.html">
 <link rel="alternate" hreflang="en" href="https://zhanry.github.io/home-tunnel/en/privacy.html">
 <link rel="icon" type="image/svg+xml" href="assets/HomeTunnel.svg">
-<link rel="stylesheet" href="assets/site.css?v=10.0.0-dev">
+<link rel="stylesheet" href="assets/site.css?v=10.0.0">
 </head>
-<body data-root="" data-stable-version="9.0.0" data-development-version="10.0.0">
+<body data-root="" data-stable-version="10.0.0">
 <a class="skip" href="#content">跳到主要内容</a>
 <div class="wrap">
 <header class="site-header">
@@ -57,7 +57,7 @@
 <p>仓库里的访问统计默认是空的。只有在 GitHub Pages 生产主机配置了 GoatCounter 的 HTTPS /count 地址时，页面才会从 gc.zgo.at 加载计数脚本。计数只针对这个网站的访问，不包含 Home Tunnel 账号、远控画面或隧道凭据。GoatCounter 的说明见 <a href="https://www.goatcounter.com/privacy">goatcounter.com/privacy</a>。</p>
 <h2>自托管服务</h2>
 <p>账号、设备、连接、流量统计和审计记录存储在你部署的服务器上，由部署管理员管理。设备凭据用于连接授权。Android 登录用于管理你自己的服务器，不在这个项目网站上保存。</p>
-<p>远控的画面、输入和计划中的文件或音频不经过本网站。自托管服务器负责身份、授权和信令；UDP 直连发生在两端之间。FRP 发布的是你配置的本地服务，流量经过你自己的服务器，而不是这个文档站。</p>
+<p>远控的画面、输入、文件和声音不经过本网站。自托管服务器负责身份、授权和信令；加密 UDP 优先在两端之间直连，浏览器控制端也可以经你自己服务器上的可选 TURN 中继，中继读不到内容。FRP 发布的是你配置的本地服务，流量经过你自己的服务器，而不是这个文档站。</p>
 <h2>反馈与联系</h2>
 <p>通过 GitHub 提交问题时，请去掉密码、令牌、私钥、接入码和个人信息。安全问题使用 <a href="https://github.com/ZHanry/home-tunnel/security/advisories/new">私密漏洞报告</a>，不要发到公开 Issue。仓库里的 SECURITY.md 有同样的入口。</p>
 </main>

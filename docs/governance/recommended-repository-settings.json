@@ -2,7 +2,7 @@
   "apply": false,
   "note": "Recommendation only. Do not apply branch protection, topics, or the description until the release gates pass. This file changes nothing on GitHub.",
   "repository": "ZHanry/home-tunnel",
-  "description": "Self-hosted home access: authorized UDP-only remote control and FRP service publishing. Stable downloads remain 9.0.0 while 10.0.0 acceptance is pending.",
+  "description": "Self-hosted home access: authorized encrypted-UDP remote control and FRP service publishing. Stable 10.0.0.",
   "homepage": "https://zhanry.github.io/home-tunnel/",
   "topics": [
     "self-hosted",

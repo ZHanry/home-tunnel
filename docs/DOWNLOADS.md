@@ -1,13 +1,49 @@
 # 下载 / Downloads
 
-可安装的稳定版是 **9.0.0**。开发线 **10.0.0** 没有稳定包，验收尚未完成。
+当前稳定版是 **10.0.0**，带负责人豁免发布：部分验收项目没有运行，豁免不等于通过，清单见 [发布说明](RELEASE_NOTES.md)。
 机器可读的唯一通道来源是 [distribution.json](../distribution.json)。
-下面的链接和 SHA-256 是已发布 Release 的记录，网站上的 [下载页](site/downloads.html) 使用同一份稳定通道。
 
-FRP 保持 **0.70.1**。Windows 锁屏、登录前和 UAC 安全桌面以及音频尚未交付。
-Android API 35 x86_64 模拟器不能代替已发布的 arm64 APK 或真机。剪贴板跨端、跨网、长期在线和完整升级恢复仍未验收。
+FRP 保持 **0.70.1**。锁屏、登录前和 UAC 安全桌面控制不可用，没有麦克风回传。
+远控的 TURN 中继只服务浏览器控制端；Android 控制端和 9.x 被控端只走直连。升级前先读 [升级](UPGRADING.md)。
 
-## 9.0.0 文件
+## 10.0.0 文件
+
+| 平台 | 文件 |
+| --- | --- |
+| Windows x64 安装器 | [HomeTunnel-Setup-10.0.0-x64.exe](https://github.com/ZHanry/home-tunnel-client/releases/download/v10.0.0/HomeTunnel-Setup-10.0.0-x64.exe) |
+| Windows x64 便携包 | [HomeTunnel-Windows-10.0.0-x64.zip](https://github.com/ZHanry/home-tunnel-client/releases/download/v10.0.0/HomeTunnel-Windows-10.0.0-x64.zip) |
+| Linux amd64 | [home-tunnel-linux-10.0.0-amd64.tar.gz](https://github.com/ZHanry/home-tunnel-client/releases/download/v10.0.0/home-tunnel-linux-10.0.0-amd64.tar.gz) |
+| Linux arm64 | [home-tunnel-linux-10.0.0-arm64.tar.gz](https://github.com/ZHanry/home-tunnel-client/releases/download/v10.0.0/home-tunnel-linux-10.0.0-arm64.tar.gz) |
+| macOS amd64 | [home-tunnel-macos-10.0.0-amd64.tar.gz](https://github.com/ZHanry/home-tunnel-client/releases/download/v10.0.0/home-tunnel-macos-10.0.0-amd64.tar.gz) |
+| macOS arm64 | [home-tunnel-macos-10.0.0-arm64.tar.gz](https://github.com/ZHanry/home-tunnel-client/releases/download/v10.0.0/home-tunnel-macos-10.0.0-arm64.tar.gz) |
+| Android arm64-v8a | [HomeTunnel-Android-10.0.0-arm64-v8a.apk](https://github.com/ZHanry/home-tunnel-android/releases/download/v10.0.0/HomeTunnel-Android-10.0.0-arm64-v8a.apk) |
+| Android x86_64 | [HomeTunnel-Android-10.0.0-x86_64.apk](https://github.com/ZHanry/home-tunnel-android/releases/download/v10.0.0/HomeTunnel-Android-10.0.0-x86_64.apk) |
+| 服务端部署包 | [home-tunnel-server-10.0.0.tar.gz](https://github.com/ZHanry/home-tunnel-server/releases/download/v10.0.0/home-tunnel-server-10.0.0.tar.gz) |
+| 服务端 Compose | [compose.release.yaml](https://github.com/ZHanry/home-tunnel-server/releases/download/v10.0.0/compose.release.yaml) |
+
+SHA-256 和文件大小以 [releases.json](../releases.json) 与各 Release 的 `SHA256SUMS.txt` 为准，网站 [下载页](site/downloads.html) 从同一份清单读取。
+
+## 源码身份
+
+| 组件 | Release |
+| --- | --- |
+| hub | [v10.0.0](https://github.com/ZHanry/home-tunnel/releases/tag/v10.0.0) |
+| server | [v10.0.0](https://github.com/ZHanry/home-tunnel-server/releases/tag/v10.0.0) |
+| client | [v10.0.0](https://github.com/ZHanry/home-tunnel-client/releases/tag/v10.0.0) |
+| android | [v10.0.0](https://github.com/ZHanry/home-tunnel-android/releases/tag/v10.0.0) |
+
+各组件的源提交记录在 [releases.json](../releases.json)。API 契约 [`api-v1.4.0`](https://github.com/ZHanry/home-tunnel-server/tree/api-v1.4.0)，提交 `74e140da43c88043d0db2aad7505ba75fd3a9a49`。
+
+## 签名
+
+组件 Release 保留 `SHA256SUMS.txt`、Sigstore bundle 和构建证据。
+Windows/macOS 没有 Authenticode 或 Developer ID 发行证书，10.0.0 仍未签名。
+Android 发行证书 SHA-256：`d7779e338be1039acee6dda9a43417cbf2baf4b0c9995578d9708501e95af702`。
+入口仓库的汇总清单本身不带 Sigstore 签名。
+
+## 上一版本：9.0.0
+
+9.0.0 的文件和摘要保留如下。不要用 9.0.0 的摘要去校验 10.0.0 的包。已发布的 9.0.0 快照在 [docs/release/stable-9.0.0.json](release/stable-9.0.0.json)。
 
 | 平台 | 文件 | SHA-256 |
 | --- | --- | --- |
@@ -21,7 +57,7 @@ Android API 35 x86_64 模拟器不能代替已发布的 arm64 APK 或真机。�
 | 服务端部署包 | [home-tunnel-server-9.0.0.tar.gz](https://github.com/ZHanry/home-tunnel-server/releases/download/v9.0.0/home-tunnel-server-9.0.0.tar.gz) | `55c5d92743691ddb57f6f359b8f3e3f7f86a608cf555b943071cc906d6353183` |
 | 服务端 Compose | [compose.release.yaml](https://github.com/ZHanry/home-tunnel-server/releases/download/v9.0.0/compose.release.yaml) | `44019ca07116a76dd6c1d25ec9266ebcc06239ee800213b6a995ac28cd62c0a2` |
 
-## 源码身份
+### 9.0.0 源码身份
 
 | 组件 | Release | 源提交 |
 | --- | --- | --- |
@@ -33,18 +69,10 @@ Android API 35 x86_64 模拟器不能代替已发布的 arm64 APK 或真机。�
 API 契约 [`api-v1.3.0`](https://github.com/ZHanry/home-tunnel-server/tree/api-v1.3.0)，提交 `82b30aa2dc169e141bc5a4ae8c653aabb74fd96c`。
 OpenAPI SHA-256：`a0892fb0263cb20fdb66f2d1d7497fa30d0a0ca7b8a5b28d46829cdfa83ba2fd`。
 
-## 签名
+## 更早的版本
 
-组件 Release 保留 `SHA256SUMS.txt`、Sigstore bundle 和构建证据。
-Windows/macOS 没有 Authenticode 或 Developer ID 发行证书。
-Android 发行证书 SHA-256：`d7779e338be1039acee6dda9a43417cbf2baf4b0c9995578d9708501e95af702`。
-入口仓库的汇总清单本身不带 Sigstore 签名。
-
-## 历史版本
-
-[8.0.0](https://github.com/ZHanry/home-tunnel/releases/tag/v8.0.0) · [7.0.0](https://github.com/ZHanry/home-tunnel/releases/tag/v7.0.0)。
-旧包使用各自 Release 的摘要。已发布的 9.0.0 快照在 [docs/release/stable-9.0.0.json](release/stable-9.0.0.json)。
+[8.0.0](https://github.com/ZHanry/home-tunnel/releases/tag/v8.0.0) · [7.0.0](https://github.com/ZHanry/home-tunnel/releases/tag/v7.0.0)。旧包使用各自 Release 的摘要。
 
 ## English
 
-Install 9.0.0 and check every file against the SHA-256 above. 10.0.0 has no stable download. Windows and macOS builds have no publisher certificate. The 8.0 and 7.0 release pages remain available.
+Install 10.0.0 and check each file against the SHA-256 in `releases.json` or the Release `SHA256SUMS.txt`. 10.0.0 was published with owner waivers; the release notes list what was not verified. Windows and macOS builds have no publisher certificate. The 9.0.0, 8.0 and 7.0 release pages remain available.

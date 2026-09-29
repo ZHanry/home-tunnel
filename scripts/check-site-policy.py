@@ -24,8 +24,9 @@ BANNED = (
     "Developer ID signed",
     "已通过 Gemini",
     "Gemini review passed",
-    "releases/download/v10.0.0",
 )
+# Only while 10.0.0 is unpromoted: its download links must not appear anywhere.
+UNPROMOTED_BANNED = ("releases/download/v10.0.0",)
 ALLOWED_IMAGES = {
     "assets/hometunnel.svg",
     "assets/architecture.svg",
@@ -45,6 +46,9 @@ def audit(root=ROOT):
         errors.append("expected zh/en landing, privacy, preview, and download pages")
     slots = json.loads((site / "screenshot-slots.json").read_text(encoding="utf-8"))
     releases = json.loads((site / "releases.json").read_text(encoding="utf-8"))
+    candidate = json.loads((site / "candidate.json").read_text(encoding="utf-8"))
+    promoted = candidate.get("promotion_status") == "promoted"
+    banned = BANNED if promoted else BANNED + UNPROMOTED_BANNED
     css = (site / "assets" / "site.css").read_text(encoding="utf-8")
     script = (site / "assets" / "site.js").read_text(encoding="utf-8")
     for token in ("focus-visible", "prefers-color-scheme", "prefers-reduced-motion", "max-width: 800px", 'data-theme="dark"', "nav-toggle", "table-layout: fixed", "minmax(min(100%, 240px)", 'data-tone="loading"'):
@@ -64,7 +68,7 @@ def audit(root=ROOT):
     for page in pages:
         text = page.read_text(encoding="utf-8")
         relative = page.relative_to(site).as_posix()
-        for phrase in BANNED:
+        for phrase in banned:
             if phrase in text:
                 errors.append(f"{relative} contains banned claim: {phrase}")
         required = (
@@ -126,15 +130,23 @@ def audit(root=ROOT):
         if relative in STATUS_PAGES and 'id="download-status"' not in text:
             errors.append(relative + " needs a download status region")
         if relative in LANDING_PAGES:
-            for token in ('"softwareVersion": "9.0.0"', "rel=\"canonical\"", 'hreflang="en"', 'hreflang="zh-CN"', 'id="faq"', 'id="remote"', 'id="tunnel"', "FRP", "UDP", "9.0.0", "10.0.0"):
+            software = f'"softwareVersion": "{releases["version"]}"'
+            for token in (software, "rel=\"canonical\"", 'hreflang="en"', 'hreflang="zh-CN"', 'id="faq"', 'id="remote"', 'id="tunnel"', "FRP", "UDP", "9.0.0", "10.0.0"):
                 if token not in text:
                     errors.append(relative + " missing " + token)
             if text.count("<details") < 4:
                 errors.append(relative + " needs a real FAQ")
-            if relative == "index.html" and "验收尚未完成" not in text:
-                errors.append("Chinese landing must say acceptance is unfinished")
-            if relative == "en/index.html" and "acceptance is pending" not in text:
-                errors.append("English landing must say acceptance is pending")
+            if promoted and candidate.get("waived"):
+                # A release with owner waivers must say so where people decide to download.
+                if relative == "index.html" and "负责人豁免" not in text:
+                    errors.append("Chinese landing must disclose the owner waivers")
+                if relative == "en/index.html" and "owner waiver" not in text.lower():
+                    errors.append("English landing must disclose the owner waivers")
+            elif not promoted:
+                if relative == "index.html" and "验收尚未完成" not in text:
+                    errors.append("Chinese landing must say acceptance is unfinished")
+                if relative == "en/index.html" and "acceptance is pending" not in text:
+                    errors.append("English landing must say acceptance is pending")
         if relative in DOWNLOAD_PAGES:
             for url in download_urls:
                 if url not in text:
@@ -169,7 +181,7 @@ def audit(root=ROOT):
         if "docs/8.0/" in path.as_posix().replace("\\", "/") or "/8.0/" in path.as_posix().replace("\\", "/"):
             continue
         text = path.read_text(encoding="utf-8")
-        for phrase in BANNED:
+        for phrase in banned:
             if phrase in text:
                 errors.append(f"{path.relative_to(root)} contains banned claim: {phrase}")
     return errors

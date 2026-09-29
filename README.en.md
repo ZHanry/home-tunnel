@@ -8,36 +8,40 @@
 
 [简体中文](README.md) · [Website](https://zhanry.github.io/home-tunnel/en/) · [Downloads](docs/DOWNLOADS.md) · [Quick start](docs/GETTING_STARTED.md) · [Architecture](docs/ARCHITECTURE.md) · [Feature matrix](docs/FEATURE_MATRIX.md)
 
-The development line is **10.0.0**. The installable stable release remains **9.0.0**. 10.0.0 acceptance is pending, and there is no stable package. FRP stays at its own **0.70.1**. Both channels live in [`distribution.json`](distribution.json). Promote by editing that file and running `python scripts/sync-distribution.py`.
+The stable release is **10.0.0**, published with owner waivers: some acceptance gates were not run, a waiver is not a pass, and the [release notes](docs/RELEASE_NOTES.md) list them. FRP stays at its own **0.70.1**; the API contract is `api-v1.4.0`. Stable and candidate records live in [`distribution.json`](distribution.json). Edit that file and run `python scripts/sync-distribution.py`.
 
 ## Start here
 
 | Goal | Entry |
 | --- | --- |
-| Control an authorized Windows host | [Quick start · remote](docs/GETTING_STARTED.md) · [9.0 scope](docs/RELEASE_NOTES.md) |
+| Control an authorized Windows host | [Quick start · remote](docs/GETTING_STARTED.md) · [10.0 scope](docs/RELEASE_NOTES.md) |
 | Publish a service from home | [Quick start · FRP](docs/GETTING_STARTED.md) · [Deployment](docs/SELF_HOSTING.md) · [Recipes](docs/SCENARIOS.md) |
-| Install what is available now | [9.0.0 downloads and checksums](docs/DOWNLOADS.md) |
+| Install what is available now | [10.0.0 downloads and checksums](docs/DOWNLOADS.md) |
 | Something failed | [Troubleshooting](docs/TROUBLESHOOTING.md) · [Upgrade](docs/UPGRADING.md) |
 
 ## Keep the two paths separate
 
-Remote control requires both sides to sign in to the same self-hosted server. The host can approve a request, set a fixed password, or create a one-time password. Picture and input use direct UDP only. A failed path stays failed: there is no TURN, ICE-TCP, FRP, HTTP, or WSS payload fallback.
+Remote control requires both sides to sign in to the same self-hosted server. Hosting is on after sign-in; the host approves a request in a bottom-right popup, sets a fixed password, or creates a one-time password. Payloads use end-to-end DTLS-encrypted UDP, direct first. When direct fails, a browser viewer can reach a 10.0.0 host through the server's optional UDP TURN relay, which cannot read the payload. There is no TCP, FRP, HTTP, or WSS fallback. Android controllers and 9.x hosts are direct-only.
 
 Service publishing uses the home Agent and FRP 0.70.1. HTTP/HTTPS, TCP, and UDP use that tunnel. Raw TCP/UDP does not add HTTP sign-in; the target application authenticates itself.
 
-## 9.0.0 is published. 10.0.0 is not accepted
+## What 10.0.0 covers
 
-9.0.0 includes those remote-control entries, a separate window, and the existing account, device, backup, and monitoring tools. Windows pre-login, lock-screen, and UAC secure-desktop control are not done. Audio is not delivered. Clipboard interoperability, arm64 APK device runtime, cross-network use, and long-running sessions are not accepted.
+10.0.0 adds authorized system audio, file transfer with SHA-256 checks, a grouped 9-digit device ID, a redesigned browser viewer (floating toolbar, background clipboard sync) and guided service publishing. Android uses the same-source SDK on arm64-v8a and x86_64.
 
-10.0.0 plans a Windows service/session broker, explicitly enabled unattended access, system audio, bidirectional files with progress and checksums, and an FRP publishing wizard. None of that is supported yet. Secure desktop, audio, and file-transfer acceptance is pending. `api-v1.4.0` is not frozen. The stable contract remains `api-v1.3.0`.
+Verified: a Web viewer controlled a Windows 10.0.0 host through the production server, over direct UDP and the relay, with screen, input, Chinese text, clipboard both ways, viewer-to-host files, system audio, the approval popup and the temporary password. These were development builds of the same feature code, not re-run on the final bytes. Host-to-viewer files, Android controlling Windows, physical arm64 phones, upgrade and restore, long-running soaks and the network matrix were waived by the owner and are not verified.
+
+Lock screen, pre-login and UAC secure-desktop control are not available, and there is no microphone return.
 
 Windows and macOS packages have no Authenticode or Developer ID certificate. Android keeps its applicationId and release certificate. SHA-256 and Sigstore build provenance are not publisher signatures.
 
-The [8.0 acceptance record](docs/8.0/ACCEPTANCE.md) is historical. It does not verify 9.0.0 or 10.0.0 bytes.
+The [8.0 acceptance record](docs/8.0/ACCEPTANCE.md) is historical. It does not verify 9.0.0 or 10.0.0 bytes. The 9.0.0 notes remain in the release-notes history.
 
 ```mermaid
 flowchart LR
-  Controller[Windows / Web / Android controller] <-->|direct UDP| Host[Windows host]
+  Controller[Windows / Web / Android controller] <-->|encrypted UDP, direct first| Host[Windows host]
+  Controller -.->|optional TURN relay, browser only| Relay[UDP TURN]
+  Relay -.-> Host
   Controller -->|signaling| Control[Your control plane]
   Host -->|signaling| Control
   Visitor[Visitor] --> FRP[FRP 0.70.1]
@@ -45,7 +49,7 @@ flowchart LR
   Agent --> App[Local service]
 ```
 
-The picture below is a historical 7.0.0 console screenshot with example data. It is not a 10.0 remote window or wizard. Empty 10.0 slots are listed in [screenshot-slots.json](docs/site/screenshot-slots.json).
+The picture below is a historical 7.0.0 console screenshot with example data. It is not a 10.0 remote window or wizard. 10.0 screenshots have not been added yet; the empty slots are listed in [screenshot-slots.json](docs/site/screenshot-slots.json).
 
 ![Historical Home Tunnel 7.0.0 console screenshot with example data](docs/site/assets/admin-dashboard-7.jpg)
 
