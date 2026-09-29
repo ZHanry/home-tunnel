@@ -1,0 +1,8 @@
+# Reviewed false positives in history (full-history scans only).
+# PEM headers wrap keys generated at runtime; the WebSocket keys and passwords are test fixtures.
+f5945fe698532ab9c1609852073b3c01652b3a6e:control-center/src/experience.test.ts:generic-api-key:84
+f5945fe698532ab9c1609852073b3c01652b3a6e:control-center/src/experience.test.ts:generic-api-key:90
+6a1ce267b58a1cbe979830ed6433ebf2b9c5fdc1:deploy/scripts/new-selfhost-config.ps1:private-key:85
+3294fd537df4b1a27c1d6214fae0b910bad268a2:traffic-gateway/src/server.e2e.test.ts:generic-api-key:709
+6a1ce267b58a1cbe979830ed6433ebf2b9c5fdc1:tests/run-compose-smoke.ps1:private-key:51
+6a1ce267b58a1cbe979830ed6433ebf2b9c5fdc1:traffic-gateway/src/server.e2e.test.ts:generic-api-key:448
