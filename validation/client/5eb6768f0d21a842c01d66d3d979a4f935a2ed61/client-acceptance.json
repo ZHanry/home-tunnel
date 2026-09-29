@@ -1,0 +1,148 @@
+{
+  "acceptance_complete": true,
+  "candidate_sha256": "c4721f2d9eb366e2b076409b97eb32be65d76804cc19075ecafcf88108a86eaf",
+  "coverage": {
+    "desktop_service": {
+      "evidence": "client-acceptance-desktop_service.json",
+      "status": "waived"
+    },
+    "files_clipboard_audio": {
+      "evidence": "client-acceptance-files_clipboard_audio.json",
+      "status": "waived"
+    },
+    "gemini_screenshots": {
+      "evidence": "client-acceptance-gemini_screenshots.json",
+      "status": "waived"
+    },
+    "media_input": {
+      "evidence": "client-acceptance-media_input.json",
+      "status": "waived"
+    },
+    "other_desktop_builds": {
+      "evidence": "client-acceptance-other_desktop_builds.json",
+      "status": "waived"
+    },
+    "performance": {
+      "evidence": "client-acceptance-performance.json",
+      "status": "waived"
+    },
+    "remote_sessions": {
+      "evidence": "client-acceptance-remote_sessions.json",
+      "status": "waived"
+    },
+    "stability": {
+      "evidence": "client-acceptance-stability.json",
+      "status": "waived"
+    },
+    "tunnel_management": {
+      "evidence": "client-acceptance-tunnel_management.json",
+      "status": "waived"
+    },
+    "udp_network": {
+      "evidence": "client-acceptance-udp_network.json",
+      "status": "waived"
+    },
+    "upgrade_recovery": {
+      "evidence": "client-acceptance-upgrade_recovery.json",
+      "status": "waived"
+    },
+    "windows_security": {
+      "evidence": "client-acceptance-windows_security.json",
+      "status": "passed"
+    }
+  },
+  "files": {
+    "client-acceptance-desktop_service.json": {
+      "bytes": 2110,
+      "sha256": "308bddec3173b1366e4ced8f8f6a4c61e6d437d6bf5badae54771d3e2dbc3e7a"
+    },
+    "client-acceptance-files_clipboard_audio.json": {
+      "bytes": 2247,
+      "sha256": "ec70d16c8e235c7c7dc6f95c27a78858229c5fa81e76fb17edec5dc1f68887b3"
+    },
+    "client-acceptance-gemini_screenshots.json": {
+      "bytes": 1951,
+      "sha256": "6b6bd432ff71f18f7addcfbbadce7cba32435c2c8478c4cf3b4b23258bc65030"
+    },
+    "client-acceptance-media_input.json": {
+      "bytes": 2131,
+      "sha256": "40a3f9a1a1b7e1f9ed9acae8cb589c181870d7dbb597fbdfdb1eae305395ea2d"
+    },
+    "client-acceptance-other_desktop_builds.json": {
+      "bytes": 1896,
+      "sha256": "cef811cc68dba32a535ac03f5f7894633cba9a4fbe5d62d81361390f2a7780e9"
+    },
+    "client-acceptance-performance.json": {
+      "bytes": 1890,
+      "sha256": "67dd37be1c7c51c29e880e2e638756fdfe481b7b4a772387f131a32684fd782a"
+    },
+    "client-acceptance-remote_sessions.json": {
+      "bytes": 2390,
+      "sha256": "f03ece61be544242c0d59cf79a642bc3f52009aeedf1cab066e124f7db950463"
+    },
+    "client-acceptance-stability.json": {
+      "bytes": 1936,
+      "sha256": "21bec75ab5435546633197b1e809ed3bac203525be6a3e3bc5daaf8fe4aaeec8"
+    },
+    "client-acceptance-tunnel_management.json": {
+      "bytes": 2218,
+      "sha256": "8d1f76bf4699f5d906487c27064d8fb4fa1b080f04453931c39d700e2c98d4a5"
+    },
+    "client-acceptance-udp_network.json": {
+      "bytes": 2001,
+      "sha256": "5a4a4c2f72fce3e20df9419ac18b3033ef482423d04b471352719efe9a24bb40"
+    },
+    "client-acceptance-upgrade_recovery.json": {
+      "bytes": 1952,
+      "sha256": "1bb2b1b9725b3a6363b4282c185d6536da784562caae90d7fc9bec79d43e36df"
+    },
+    "client-acceptance-windows_security.json": {
+      "bytes": 2247,
+      "sha256": "d642239e8506593151db4f063985fbe38c9e19061258c424c880741a120799c3"
+    },
+    "windows-final-defender-scan.json": {
+      "bytes": 1899,
+      "sha256": "793fd7cbd867fd63b0feb5af20dcff02db74fc348f0d143eea15244fe79c0d8f"
+    },
+    "windows-remote-native-acceptance.json": {
+      "bytes": 773,
+      "sha256": "5baa461eb531afa071196417c65e2cb8528fbcbae4e6a7505729b733604dfc8b"
+    }
+  },
+  "note": "Owner waivers are recorded as waived, never as passed. Only windows_security passed on these bytes.",
+  "packages": {
+    "HomeTunnel-Setup-10.0.0-x64.exe": {
+      "bytes": 17054265,
+      "sha256": "4291686b198aee6a324061c70abe6b995f8c9f42e8580ac33e5409814f57a46d"
+    },
+    "HomeTunnel-Windows-10.0.0-x64.zip": {
+      "bytes": 22783389,
+      "sha256": "54dd75d7261000eab6e01c747e5e4545790f006b13646d892c01cb169ce85e34"
+    },
+    "home-tunnel-linux-10.0.0-amd64.tar.gz": {
+      "bytes": 22681551,
+      "sha256": "e95d022aeed5bb5e94f3d2584df9f072187f972fb83d9a09b188204765dceb70"
+    },
+    "home-tunnel-linux-10.0.0-arm64.tar.gz": {
+      "bytes": 12027147,
+      "sha256": "7ec7ce200fdb0334f9a3ee35ba30db69f9801314abf59fac418920243af313c3"
+    },
+    "home-tunnel-macos-10.0.0-amd64.tar.gz": {
+      "bytes": 12711364,
+      "sha256": "a218d880242e0daa23b89d679d973ce7af9299fb2e2f011cba493d224cc60b50"
+    },
+    "home-tunnel-macos-10.0.0-arm64.tar.gz": {
+      "bytes": 11600385,
+      "sha256": "4ae810d8f861a66a1d9c43a53bd7a436cd670ec68ce2bb5ec12b034a6a1271c4"
+    }
+  },
+  "repository": "ZHanry/home-tunnel-client",
+  "revision": "5eb6768f0d21a842c01d66d3d979a4f935a2ed61",
+  "schema_version": 1,
+  "server": {
+    "repository": "ZHanry/home-tunnel-server",
+    "revision": "74e140da43c88043d0db2aad7505ba75fd3a9a49",
+    "schema_version": 1
+  },
+  "status": "accepted_with_waivers"
+}

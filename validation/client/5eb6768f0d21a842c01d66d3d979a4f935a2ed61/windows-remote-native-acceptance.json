@@ -1,0 +1,13 @@
+{
+  "repository_revision": "5eb6768f0d21a842c01d66d3d979a4f935a2ed61",
+  "schema_version": 1,
+  "status": "waived",
+  "version": "10.0.0",
+  "waiver": {
+    "approved_at": "2026-09-29T00:40:00+00:00",
+    "approved_by": "owner",
+    "disclosed_in": "ZHanry/home-tunnel-client v10.0.0 release notes (docs/RELEASE_NOTES.md) and the hub 10.0.0 release notes",
+    "reason": "A Web viewer controlled a Windows 10.0.0 host through the production 10.0.0 server over direct UDP and the TURN relay on development builds of the same feature code; that run is not re-executed on these final bytes. The isolated native video/input acceptance harness was not run on the final signed worker."
+  },
+  "worker_sha256": "2ef380cd7e757355ebb7e4b45ebe15be4dd9a4ab875d8cbeb146f7a8f6ba7ca8"
+}

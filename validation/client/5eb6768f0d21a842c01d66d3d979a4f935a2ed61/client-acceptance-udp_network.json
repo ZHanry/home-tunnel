@@ -1,0 +1,55 @@
+{
+  "candidate_sha256": "c4721f2d9eb366e2b076409b97eb32be65d76804cc19075ecafcf88108a86eaf",
+  "cases": {
+    "double_nat": "waived",
+    "ipv6": "waived",
+    "lan": "waived",
+    "latency_loss": "waived",
+    "payload_capture": "waived",
+    "reconnect": "waived",
+    "traversable_nat": "waived",
+    "udp_blocked": "waived"
+  },
+  "gate": "udp_network",
+  "packages": {
+    "HomeTunnel-Setup-10.0.0-x64.exe": {
+      "bytes": 17054265,
+      "sha256": "4291686b198aee6a324061c70abe6b995f8c9f42e8580ac33e5409814f57a46d"
+    },
+    "HomeTunnel-Windows-10.0.0-x64.zip": {
+      "bytes": 22783389,
+      "sha256": "54dd75d7261000eab6e01c747e5e4545790f006b13646d892c01cb169ce85e34"
+    },
+    "home-tunnel-linux-10.0.0-amd64.tar.gz": {
+      "bytes": 22681551,
+      "sha256": "e95d022aeed5bb5e94f3d2584df9f072187f972fb83d9a09b188204765dceb70"
+    },
+    "home-tunnel-linux-10.0.0-arm64.tar.gz": {
+      "bytes": 12027147,
+      "sha256": "7ec7ce200fdb0334f9a3ee35ba30db69f9801314abf59fac418920243af313c3"
+    },
+    "home-tunnel-macos-10.0.0-amd64.tar.gz": {
+      "bytes": 12711364,
+      "sha256": "a218d880242e0daa23b89d679d973ce7af9299fb2e2f011cba493d224cc60b50"
+    },
+    "home-tunnel-macos-10.0.0-arm64.tar.gz": {
+      "bytes": 11600385,
+      "sha256": "4ae810d8f861a66a1d9c43a53bd7a436cd670ec68ce2bb5ec12b034a6a1271c4"
+    }
+  },
+  "repository": "ZHanry/home-tunnel-client",
+  "reviewed_by": "release coordinator (Claude Code) for the owner",
+  "revision": "5eb6768f0d21a842c01d66d3d979a4f935a2ed61",
+  "server": {
+    "repository": "ZHanry/home-tunnel-server",
+    "revision": "74e140da43c88043d0db2aad7505ba75fd3a9a49",
+    "schema_version": 1
+  },
+  "status": "waived",
+  "waiver": {
+    "approved_at": "2026-09-29T00:40:00+00:00",
+    "approved_by": "owner",
+    "disclosed_in": "ZHanry/home-tunnel-client v10.0.0 release notes (docs/RELEASE_NOTES.md) and the hub 10.0.0 release notes",
+    "reason": "The NAT, double-NAT, blocked-UDP, IPv6, loss and reconnect matrix was not run."
+  }
+}
