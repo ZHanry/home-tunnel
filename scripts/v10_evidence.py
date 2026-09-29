@@ -38,6 +38,8 @@ REQUIRED_GATES = (
 # results. The owner waived the unrun 10.0.0 matrix on 2026-09-29; see docs/RELEASE_NOTES.md.
 WAIVABLE_GATES = REQUIRED_GATES
 VERSION = "10.0.0"
+# acceptance-status.json states that claim a release; each needs a clean evidence record.
+ACCEPTED_STATES = {"passed", "accepted", "accepted_with_waivers"}
 CONTRACT_REF = "api-v1.4.0"
 FRP = "0.70.1"
 SHA40 = re.compile(r"^[0-9a-f]{40}$")
@@ -273,7 +275,7 @@ def assess_status(status, *, evidence_errors=None, evidence_path=None):
         if "not evidence" not in reason.lower() and "不是验收证据" not in reason:
             errors.append("unsubmitted acceptance must say it is not evidence")
         return errors
-    if state in {"passed", "accepted"}:
+    if state in ACCEPTED_STATES:
         if evidence_path is None:
             return ["accepted status is missing an evidence file"]
         name = Path(str(evidence_path)).name.lower()
@@ -286,3 +288,28 @@ def assess_status(status, *, evidence_errors=None, evidence_path=None):
             errors.extend(evidence_errors)
         return errors
     return [f"unsupported or unrun acceptance status: {state}"]
+
+
+def load_status(root, *, now=None):
+    """Read docs/release/acceptance-status.json and evaluate the record it names.
+
+    Returns (status, errors, record). errors is [] only for an unsubmitted development
+    status or for an accepted claim backed by a clean record whose own status agrees.
+    """
+    import json
+
+    status = json.loads((Path(root) / "docs" / "release" / "acceptance-status.json").read_text(encoding="utf-8"))
+    state = status.get("status") if isinstance(status, dict) else None
+    if state not in ACCEPTED_STATES:
+        return status, assess_status(status), None
+    relative = status.get("evidence_file")
+    if not relative:
+        return status, assess_status(status), None
+    path = (Path(root) / str(relative)).resolve()
+    if not path.is_file() or not path.is_relative_to(Path(root).resolve()):
+        return status, assess_status(status, evidence_errors=["evidence file is missing"], evidence_path=path), None
+    record = json.loads(path.read_text(encoding="utf-8"))
+    evidence_errors = evaluate(record, now=now)
+    if isinstance(record, dict) and record.get("status") != state:
+        evidence_errors.append("acceptance status must match the evidence record status")
+    return status, assess_status(status, evidence_errors=evidence_errors, evidence_path=path), record

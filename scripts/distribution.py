@@ -19,6 +19,8 @@ REQUIRED_UNVERIFIED = {
     "bidirectional-file-acceptance",
     "10.0.0-stable-downloads",
 }
+# Channel acceptance_status -> the evidence record status it must match.
+PROMOTED_ACCEPTANCE = {"accepted": "passed", "accepted_with_waivers": "accepted_with_waivers"}
 
 
 def load(root=ROOT):
@@ -37,7 +39,7 @@ def _anchor_present(stable):
     return False
 
 
-def validate_distribution(dist, *, root=ROOT, evidence_errors=None):
+def validate_distribution(dist, *, root=ROOT, evidence_errors=None, evidence_record=None):
     errors = []
 
     def bad(message):
@@ -100,14 +102,49 @@ def validate_distribution(dist, *, root=ROOT, evidence_errors=None):
             bad("evidence errors were supplied while the candidate is not promoted")
         return errors
     if promotion == "promoted":
-        if candidate.get("acceptance_status") != "accepted" or candidate.get("downloads_published") is not True:
+        accepted = candidate.get("acceptance_status")
+        if accepted not in PROMOTED_ACCEPTANCE or candidate.get("downloads_published") is not True:
             bad("promotion requires accepted evidence and published downloads")
-        if stable.get("version") != candidate.get("version") or stable.get("stage") != "stable":
+        version = candidate.get("version")
+        if stable.get("version") != version or stable.get("stage") != "stable":
             bad("promotion must move the same version into the stable channel")
-        if evidence_errors is None:
+        if candidate.get("tag") != f"v{version}" or candidate.get("prerelease") is not False:
+            bad("promoted candidate must name its stable tag")
+        if candidate.get("frp") != "0.70.1" or stable.get("upstream", {}).get("frp") != "0.70.1":
+            bad("FRP must remain 0.70.1")
+        if stable.get("signing", {}).get("android_certificate_sha256") != frozen.get("signing", {}).get("android_certificate_sha256"):
+            bad("Android certificate identity drifted")
+        if evidence_errors is None or evidence_record is None:
             bad("promotion is fail-closed without an evidence evaluation")
-        elif evidence_errors:
+            return errors
+        if evidence_errors:
             bad("promotion evidence failed: " + "; ".join(evidence_errors))
+        if PROMOTED_ACCEPTANCE.get(accepted) != evidence_record.get("status"):
+            bad("candidate acceptance_status differs from the evidence record")
+        # Every waiver in the record must be disclosed on the channel; a waiver is never a pass.
+        import v10_evidence
+
+        waived = sorted(name for name, _ in v10_evidence.waived_items(evidence_record))
+        if sorted(candidate.get("waived") or []) != waived:
+            bad("promoted channel must list exactly the waived gates of the evidence record")
+        if accepted == "accepted_with_waivers" and not waived:
+            bad("accepted_with_waivers requires at least one waived gate")
+        record_sources = evidence_record.get("sources") or {}
+        record_components = evidence_record.get("components") or {}
+        components = stable.get("components") if isinstance(stable.get("components"), dict) else {}
+        if set(components) != set(COMPONENTS):
+            bad("stable channel needs all four components")
+        for name in COMPONENTS:
+            component = components.get(name) if isinstance(components.get(name), dict) else {}
+            if component.get("version") != version or component.get("tag") != f"v{version}" or component.get("prerelease") is not False:
+                bad(f"stable component identity differs: {name}")
+            # The hub manifest omits its own revision to avoid a self-reference.
+            if name != "hub" and component.get("release_revision") != (record_sources.get(name) or {}).get("sha"):
+                bad(f"stable {name} revision differs from the accepted source")
+            sealed = {item.get("filename"): item.get("sha256") for item in (record_components.get(name) or {}).get("artifacts") or []}
+            for item in component.get("downloads", []) or []:
+                if sealed.get(item.get("filename")) != item.get("sha256"):
+                    bad(f"stable {name} download is not an accepted artifact: {item.get('filename')}")
         return errors
     bad("unknown promotion_status")
     return errors
@@ -136,7 +173,13 @@ def projection_errors(dist, *, root=ROOT):
 
 def project(root=ROOT):
     dist = load(root)
-    errors = validate_distribution(dist, root=root)
+    if dist.get("channels", {}).get("candidate", {}).get("promotion_status") == "promoted":
+        import v10_evidence
+
+        _status, status_errors, record = v10_evidence.load_status(root)
+        errors = validate_distribution(dist, root=root, evidence_errors=status_errors, evidence_record=record)
+    else:
+        errors = validate_distribution(dist, root=root)
     if errors:
         raise ValueError("\n".join(errors))
     for relative, value in projected_files(dist).items():

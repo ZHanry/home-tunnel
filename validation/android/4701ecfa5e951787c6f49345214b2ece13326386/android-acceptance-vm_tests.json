@@ -1,0 +1,36 @@
+{
+  "app_revision": "4701ecfa5e951787c6f49345214b2ece13326386",
+  "candidate_sha256": "1b0aed751f1731e68e182eda25aa5a4647f3f8e9147a0550b49b075d73d73e69",
+  "cases": {
+    "android_controls_windows_host": "waived",
+    "physical_arm64_phone": "waived"
+  },
+  "gate": "vm_tests",
+  "packages": {
+    "aab": {
+      "bytes": 12250588,
+      "name": "HomeTunnel-Android-10.0.0.aab",
+      "sha256": "3afa3f43b136b24459ef53d3532c58d3356addf8ff518664a9d74027b1fda1d8"
+    },
+    "arm64-v8a": {
+      "bytes": 16387499,
+      "name": "HomeTunnel-Android-10.0.0-arm64-v8a.apk",
+      "sha256": "c37a64cfec83e45c3d4e03671d5a994053385b5533f2f8575ff7783b323c674d"
+    },
+    "x86_64": {
+      "bytes": 20385493,
+      "name": "HomeTunnel-Android-10.0.0-x86_64.apk",
+      "sha256": "b18550736aea2f0a21068bde53c27f899af5b8f38ad2ef8460ee86bda2b86922"
+    }
+  },
+  "repository": "ZHanry/home-tunnel-android",
+  "reviewed_by": "release coordinator (Claude Code) for the owner",
+  "sdk_revision": "d10c04bd1d6a70d67384ff099cef85d95935ce43",
+  "status": "waived",
+  "waiver": {
+    "approved_at": "2026-09-29T00:40:00+00:00",
+    "approved_by": "owner",
+    "disclosed_in": "ZHanry/home-tunnel-android v10.0.0 release notes (docs/RELEASE_NOTES.md) and the hub 10.0.0 release notes",
+    "reason": "Android controlling a real Windows host and physical arm64 phones were not tested for this release."
+  }
+}

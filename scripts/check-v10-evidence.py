@@ -24,23 +24,17 @@ def main():
     if args.status and args.record:
         raise SystemExit("Pass either a record or --status")
     if args.status:
-        status = json.loads(args.status.read_text(encoding="utf-8"))
-        evidence_errors = None
-        evidence_path = None
-        if status.get("status") in {"passed", "accepted"}:
-            relative = status.get("evidence_file")
-            if not relative:
-                evidence_path = None
-            else:
-                evidence_path = (ROOT / relative).resolve()
-                if not evidence_path.is_file():
-                    evidence_errors = ["evidence file is missing"]
-                else:
-                    evidence_errors = v10_evidence.evaluate(json.loads(evidence_path.read_text(encoding="utf-8")))
-        errors = v10_evidence.assess_status(status, evidence_errors=evidence_errors, evidence_path=evidence_path)
+        if args.status.resolve() != (ROOT / "docs" / "release" / "acceptance-status.json").resolve():
+            raise SystemExit("--status must be docs/release/acceptance-status.json")
+        status, errors, record = v10_evidence.load_status(ROOT)
         if errors:
             raise SystemExit("\n".join(errors))
-        print(f"Acceptance status {status.get('status')}: not claimed as passing evidence")
+        if record is None:
+            print(f"Acceptance status {status.get('status')}: not claimed as passing evidence")
+        else:
+            waived = [name for name, _ in v10_evidence.waived_items(record)]
+            print(f"Acceptance status {status.get('status')}: evidence record is internally consistent; "
+                  f"{len(waived)} owner waivers are not passes: {', '.join(waived) or 'none'}")
         return
     if not args.record:
         raise SystemExit("Provide an evidence record or --status")

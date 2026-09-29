@@ -1,0 +1,103 @@
+{
+  "acceptance_complete": true,
+  "app_revision": "4701ecfa5e951787c6f49345214b2ece13326386",
+  "candidate_sha256": "1b0aed751f1731e68e182eda25aa5a4647f3f8e9147a0550b49b075d73d73e69",
+  "coverage": {
+    "arm64_build_signature": {
+      "evidence": "android-acceptance-arm64_build_signature.json",
+      "status": "passed"
+    },
+    "gemini_screenshots": {
+      "evidence": "android-acceptance-gemini_screenshots.json",
+      "status": "waived"
+    },
+    "performance": {
+      "evidence": "android-acceptance-performance.json",
+      "status": "waived"
+    },
+    "stability": {
+      "evidence": "android-acceptance-stability.json",
+      "status": "waived"
+    },
+    "udp_network": {
+      "evidence": "android-acceptance-udp_network.json",
+      "status": "waived"
+    },
+    "v9_x64_migration": {
+      "evidence": "android-acceptance-v9_x64_migration.json",
+      "status": "waived"
+    },
+    "vm_tests": {
+      "evidence": "android-acceptance-vm_tests.json",
+      "status": "waived"
+    },
+    "x64_api26": {
+      "evidence": "android-acceptance-x64_api26.json",
+      "status": "waived"
+    },
+    "x64_api35": {
+      "evidence": "android-acceptance-x64_api35.json",
+      "status": "waived"
+    }
+  },
+  "files": {
+    "android-acceptance-arm64_build_signature.json": {
+      "bytes": 2632,
+      "sha256": "05b7ad94920230ded9b4df4d44abca8d27c415cb5e528d207928c6bdd32da590"
+    },
+    "android-acceptance-gemini_screenshots.json": {
+      "bytes": 1367,
+      "sha256": "51accfd8ea5bfcc42c9d0e9807335ab079ab9d9d578678337f02c237af8b428f"
+    },
+    "android-acceptance-performance.json": {
+      "bytes": 1297,
+      "sha256": "43ac63f6c99b5bd5b095200b839718e375335b24bb371efd6dc9182a320b23e8"
+    },
+    "android-acceptance-stability.json": {
+      "bytes": 1389,
+      "sha256": "cca49da0a939e1cf730962efed575c356eb27b92767d724336e4735ad6189aa1"
+    },
+    "android-acceptance-udp_network.json": {
+      "bytes": 1405,
+      "sha256": "cfba8cf08a5554245ed3713206b44034574841002438682925d443bac79a7653"
+    },
+    "android-acceptance-v9_x64_migration.json": {
+      "bytes": 1302,
+      "sha256": "0701d0306e0bf18f8f70ed3b67cddbbbe8cd86a920e910ff984a81b5c67574dd"
+    },
+    "android-acceptance-vm_tests.json": {
+      "bytes": 1388,
+      "sha256": "4d5545bd4cf486a1cf73d23b5589f55b766dd884118ca4e433c73c7b232c2125"
+    },
+    "android-acceptance-x64_api26.json": {
+      "bytes": 1365,
+      "sha256": "5059b8bf2c6c508ceab89336a7f510144406c38fac904668bb65167020177618"
+    },
+    "android-acceptance-x64_api35.json": {
+      "bytes": 1402,
+      "sha256": "dbc2227c1844f4f7b01f96db1b8527232c8451ef6d5f49112bb871c078ca15e0"
+    }
+  },
+  "note": "Owner waivers are recorded as waived, never as passed. Only the CI build/signature gate passed.",
+  "packages": {
+    "aab": {
+      "bytes": 12250588,
+      "name": "HomeTunnel-Android-10.0.0.aab",
+      "sha256": "3afa3f43b136b24459ef53d3532c58d3356addf8ff518664a9d74027b1fda1d8"
+    },
+    "arm64-v8a": {
+      "bytes": 16387499,
+      "name": "HomeTunnel-Android-10.0.0-arm64-v8a.apk",
+      "sha256": "c37a64cfec83e45c3d4e03671d5a994053385b5533f2f8575ff7783b323c674d"
+    },
+    "x86_64": {
+      "bytes": 20385493,
+      "name": "HomeTunnel-Android-10.0.0-x86_64.apk",
+      "sha256": "b18550736aea2f0a21068bde53c27f899af5b8f38ad2ef8460ee86bda2b86922"
+    }
+  },
+  "repository": "ZHanry/home-tunnel-android",
+  "schema_version": 1,
+  "sdk_revision": "d10c04bd1d6a70d67384ff099cef85d95935ce43",
+  "status": "accepted_with_waivers"
+}

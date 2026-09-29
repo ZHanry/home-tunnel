@@ -12,7 +12,8 @@ import distribution
 def main():
     dist = distribution.project()
     stable = dist["channels"]["stable"]["version"]
-    print(f"Projected stable {stable} and the unpromoted candidate from distribution.json")
+    state = dist["channels"]["candidate"]["promotion_status"]
+    print(f"Projected stable {stable} and the {state.replace('_', ' ')} candidate from distribution.json")
 
 
 if __name__ == "__main__":

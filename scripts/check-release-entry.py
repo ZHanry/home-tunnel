@@ -17,13 +17,15 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def main():
     dist = distribution.load(ROOT)
-    errors = distribution.validate_distribution(dist, root=ROOT)
-    errors.extend(distribution.projection_errors(dist, root=ROOT))
-    status_path = ROOT / "docs" / "release" / "acceptance-status.json"
-    status = json.loads(status_path.read_text(encoding="utf-8"))
-    errors.extend(v10_evidence.assess_status(status))
+    status, status_errors, record = v10_evidence.load_status(ROOT)
+    errors = list(status_errors)
     if dist["channels"]["candidate"]["promotion_status"] == "promoted":
-        errors.extend(distribution.validate_distribution(dist, root=ROOT, evidence_errors=["promotion was not given a clean evidence record"]))
+        # Promotion is only as good as the evidence record acceptance-status.json names.
+        evidence_errors = list(status_errors) if record is not None else ["promotion was not given a clean evidence record"]
+        errors.extend(distribution.validate_distribution(dist, root=ROOT, evidence_errors=evidence_errors, evidence_record=record))
+    else:
+        errors.extend(distribution.validate_distribution(dist, root=ROOT))
+    errors.extend(distribution.projection_errors(dist, root=ROOT))
     for path in [ROOT / "README.md", ROOT / "README.en.md", *ROOT.joinpath("docs").rglob("*.md")]:
         text = path.read_text(encoding="utf-8")
         for target in re.findall(r"!?\[[^\]]*\]\(([^)]+)\)", text):
@@ -35,8 +37,11 @@ def main():
     if errors:
         raise SystemExit("Release entry check failed:\n" + "\n".join(errors))
     stable = dist["channels"]["stable"]["version"]
-    candidate = dist["channels"]["candidate"]["version"]
-    print(f"Channel source passed. Stable downloads remain {stable}. {candidate} is not promoted.")
+    candidate = dist["channels"]["candidate"]
+    if candidate["promotion_status"] == "promoted":
+        print(f"Channel source passed. Stable downloads are {stable} ({candidate['acceptance_status']}, status {status.get('status')}).")
+    else:
+        print(f"Channel source passed. Stable downloads remain {stable}. {candidate['version']} is not promoted.")
 
 
 if __name__ == "__main__":

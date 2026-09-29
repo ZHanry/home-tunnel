@@ -1,0 +1,58 @@
+{
+  "app_revision": "4701ecfa5e951787c6f49345214b2ece13326386",
+  "candidate_sha256": "1b0aed751f1731e68e182eda25aa5a4647f3f8e9147a0550b49b075d73d73e69",
+  "cases": {
+    "arm64_apk_release_signature": "passed",
+    "persistent_certificate_sha256": "passed",
+    "sealed_package_digests": "passed",
+    "version_code_10000000": "passed",
+    "x86_64_apk_release_signature": "passed"
+  },
+  "environment": "GitHub Actions run 36505758744 (ci.yml -> android-candidate.yml), apksigner verify on the sealed candidate bytes",
+  "gate": "arm64_build_signature",
+  "metrics": {
+    "runtime_scope": "not_run",
+    "signing_certificate_sha256": "d7779e338be1039acee6dda9a43417cbf2baf4b0c9995578d9708501e95af702",
+    "version_code": 10000000
+  },
+  "note": "Build and signature only. arm64 runtime was not run and is not claimed.",
+  "packages": {
+    "aab": {
+      "bytes": 12250588,
+      "name": "HomeTunnel-Android-10.0.0.aab",
+      "sha256": "3afa3f43b136b24459ef53d3532c58d3356addf8ff518664a9d74027b1fda1d8"
+    },
+    "arm64-v8a": {
+      "bytes": 16387499,
+      "name": "HomeTunnel-Android-10.0.0-arm64-v8a.apk",
+      "sha256": "c37a64cfec83e45c3d4e03671d5a994053385b5533f2f8575ff7783b323c674d"
+    },
+    "x86_64": {
+      "bytes": 20385493,
+      "name": "HomeTunnel-Android-10.0.0-x86_64.apk",
+      "sha256": "b18550736aea2f0a21068bde53c27f899af5b8f38ad2ef8460ee86bda2b86922"
+    }
+  },
+  "raw_evidence": [
+    {
+      "location": "https://github.com/ZHanry/home-tunnel-android/actions/runs/36505758744 artifact android-release-candidate/android-signature-arm64-v8a.txt",
+      "sha256": "a087dbb8d4af31da63080841cb37b3ab9582ec60ba8b1babda712be34f26ecf2"
+    },
+    {
+      "location": "https://github.com/ZHanry/home-tunnel-android/actions/runs/36505758744 artifact android-release-candidate/android-signature-x86_64.txt",
+      "sha256": "a087dbb8d4af31da63080841cb37b3ab9582ec60ba8b1babda712be34f26ecf2"
+    },
+    {
+      "location": "https://github.com/ZHanry/home-tunnel-android/actions/runs/36505758744 artifact android-release-candidate/android-release-evidence.json",
+      "sha256": "541314f148df602fab8bd7e7b90202eeae388e28259e963017794be73f71a442"
+    },
+    {
+      "location": "https://github.com/ZHanry/home-tunnel-android/actions/runs/36505758744 artifact android-release-candidate/android-release-candidate.json",
+      "sha256": "1b0aed751f1731e68e182eda25aa5a4647f3f8e9147a0550b49b075d73d73e69"
+    }
+  ],
+  "repository": "ZHanry/home-tunnel-android",
+  "reviewed_by": "release coordinator (Claude Code) for the owner",
+  "sdk_revision": "d10c04bd1d6a70d67384ff099cef85d95935ce43",
+  "status": "passed"
+}
