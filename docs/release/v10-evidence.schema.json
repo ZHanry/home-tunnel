@@ -15,7 +15,21 @@
     "active_2h",
     "online_24h"
   ],
-  "description": "Fail closed unless all four source SHAs, artifact digests, the immutable api-v1.4.0 contract, full Gemini UI coverage, and every required VM, network, migration, 30-repeat, recovery, 2h, and 24h gate are present and matched. Do not store a fixture in this shape as acceptance evidence.",
+  "x-owner-waivable-gates": [
+    "vm_windows_pair",
+    "vm_web_to_windows",
+    "vm_android_x64",
+    "network_direct_udp",
+    "network_blocked_udp",
+    "network_ipv6",
+    "migration_9_to_10",
+    "repeat_30",
+    "input_release_2s",
+    "network_restore_30s",
+    "active_2h",
+    "online_24h"
+  ],
+  "description": "A gate or ui_coverage may instead be {status: waived, waiver: {approved_by: owner, approved_at, reason, disclosed_in}} with no measured result; a waiver is not a pass. The record status is passed with no waivers and accepted_with_waivers otherwise. Non-waived gates fail closed unless all four source SHAs, artifact digests, the immutable api-v1.4.0 contract, full Gemini UI coverage, and every required VM, network, migration, 30-repeat, recovery, 2h, and 24h gate are present and matched. Do not store a fixture in this shape as acceptance evidence.",
   "type": "object",
   "required": [
     "schema_version",

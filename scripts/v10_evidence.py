@@ -33,6 +33,10 @@ REQUIRED_GATES = (
     "active_2h",
     "online_24h",
 )
+# The owner may waive a gate that was not run on these exact sources, with a dated reason
+# that is disclosed in the release notes. A waiver is not a pass and must not carry measured
+# results. The owner waived the unrun 10.0.0 matrix on 2026-09-29; see docs/RELEASE_NOTES.md.
+WAIVABLE_GATES = REQUIRED_GATES
 VERSION = "10.0.0"
 CONTRACT_REF = "api-v1.4.0"
 FRP = "0.70.1"
@@ -68,6 +72,31 @@ def bad_digest(value):
     )
 
 
+def waiver_problem(name, gate):
+    """Return an error for an invalid owner waiver, or None."""
+    waiver = gate.get("waiver") if isinstance(gate.get("waiver"), dict) else {}
+    if (waiver.get("approved_by") != "owner" or parse_time(waiver.get("approved_at")) is None
+            or not str(waiver.get("reason", "")).strip() or not str(waiver.get("disclosed_in", "")).strip()):
+        return f"{name} waiver needs owner approval, time, reason and release-note disclosure"
+    if any(key in gate for key in ("measured_result", "evidence_sha256", "observed_at")) or gate.get("result") == "passed":
+        return f"{name} waiver must not claim measured results"
+    return None
+
+
+def waived_items(record):
+    """(name, reason) for every waived gate and a waived UI review."""
+    items = []
+    ui = record.get("ui_coverage") if isinstance(record.get("ui_coverage"), dict) else {}
+    if ui.get("status") == "waived":
+        items.append(("ui_coverage", str((ui.get("waiver") or {}).get("reason", ""))))
+    gates = record.get("gates") if isinstance(record.get("gates"), dict) else {}
+    for name in REQUIRED_GATES:
+        gate = gates.get(name)
+        if isinstance(gate, dict) and gate.get("status") == "waived":
+            items.append((name, str((gate.get("waiver") or {}).get("reason", ""))))
+    return items
+
+
 def evaluate(record, *, now=None):
     """Return a list of failures. An empty list means the record is internally consistent."""
     errors = []
@@ -88,6 +117,8 @@ def evaluate(record, *, now=None):
         bad("source_frozen_at must be a timezone-aware timestamp")
     if record.get("frp") != FRP:
         bad("FRP must stay at its independent 0.70.1 identity")
+    if record.get("status") != ("accepted_with_waivers" if waived_items(record) else "passed"):
+        bad("record status must be passed without waivers, or accepted_with_waivers with them")
 
     sources = record.get("sources") if isinstance(record.get("sources"), dict) else {}
     if set(sources) != set(COMPONENTS):
@@ -139,22 +170,29 @@ def evaluate(record, *, now=None):
                 artifacts[(name, filename)] = digest
 
     ui = record.get("ui_coverage") if isinstance(record.get("ui_coverage"), dict) else {}
-    if ui.get("status") != "passed" or ui.get("reviewer") != "gemini" or ui.get("blocking_findings") != 0:
-        bad("full UI coverage requires a passed Gemini review and zero blocking findings")
-    applicable = ui.get("applicable_cases")
-    cases = ui.get("cases")
-    if type(applicable) is not int or applicable <= 0 or ui.get("reviewed_cases") != applicable or not isinstance(cases, list) or len(cases) != applicable:
-        bad("UI coverage is incomplete")
-    elif isinstance(cases, list):
-        seen_cases = set()
-        for case in cases:
-            if not isinstance(case, dict) or not str(case.get("id", "")).strip() or case.get("result") != "passed" or case.get("id") in seen_cases or bad_digest(case.get("screenshot_sha256")):
-                bad("every applicable UI case must pass with its own screenshot digest")
-                break
-            seen_cases.add(case["id"])
     hub_sha = (sources.get("hub") or {}).get("sha") if isinstance(sources.get("hub"), dict) else None
-    if ui.get("source_sha") != hub_sha or bad_digest(ui.get("screenshot_manifest_sha256")):
-        bad("UI coverage is not bound to the hub source and a manifest digest")
+    if ui.get("status") == "waived":
+        problem = waiver_problem("ui_coverage", ui)
+        if problem:
+            bad(problem)
+        if ui.get("source_sha") != hub_sha:
+            bad("UI coverage is not bound to the hub source")
+    else:
+        if ui.get("status") != "passed" or ui.get("reviewer") != "gemini" or ui.get("blocking_findings") != 0:
+            bad("full UI coverage requires a passed Gemini review and zero blocking findings")
+        applicable = ui.get("applicable_cases")
+        cases = ui.get("cases")
+        if type(applicable) is not int or applicable <= 0 or ui.get("reviewed_cases") != applicable or not isinstance(cases, list) or len(cases) != applicable:
+            bad("UI coverage is incomplete")
+        elif isinstance(cases, list):
+            seen_cases = set()
+            for case in cases:
+                if not isinstance(case, dict) or not str(case.get("id", "")).strip() or case.get("result") != "passed" or case.get("id") in seen_cases or bad_digest(case.get("screenshot_sha256")):
+                    bad("every applicable UI case must pass with its own screenshot digest")
+                    break
+                seen_cases.add(case["id"])
+        if ui.get("source_sha") != hub_sha or bad_digest(ui.get("screenshot_manifest_sha256")):
+            bad("UI coverage is not bound to the hub source and a manifest digest")
 
     gates = record.get("gates") if isinstance(record.get("gates"), dict) else {}
     missing = [name for name in REQUIRED_GATES if name not in gates]
@@ -165,6 +203,14 @@ def evaluate(record, *, now=None):
         bad("unknown gates are present: " + ", ".join(extra))
     for name in REQUIRED_GATES:
         gate = gates.get(name)
+        if isinstance(gate, dict) and gate.get("status") == "waived":
+            if name not in WAIVABLE_GATES:
+                bad(f"{name} cannot be waived")
+            else:
+                problem = waiver_problem(name, gate)
+                if problem:
+                    bad(problem)
+            continue
         if not isinstance(gate, dict) or gate.get("status") in UNRUN or gate.get("status") is None:
             bad(f"{name} was not run")
             continue

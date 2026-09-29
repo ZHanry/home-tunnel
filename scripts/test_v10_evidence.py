@@ -58,6 +58,7 @@ def valid_record():
     gates["migration_9_to_10"].update(from_version="9.0.0", to_version="10.0.0")
     return {
         "schema_version": 1,
+        "status": "passed",
         "product": "Home Tunnel",
         "version": "10.0.0",
         "stage": "candidate",
@@ -126,6 +127,34 @@ class EvidenceTests(unittest.TestCase):
         restore["gates"]["network_restore_30s"]["restore_seconds"] = 31
         self.assertTrue(any("network_restore_30s" in item for item in v10_evidence.evaluate(restore)))
 
+    def test_owner_waivers_are_disclosed_and_never_passes(self):
+        waiver = {"approved_by": "owner", "approved_at": "2026-09-29T00:40:00Z",
+                  "reason": "owner shipped without the matrix", "disclosed_in": "docs/RELEASE_NOTES.md"}
+        waived = valid_record()
+        for name in v10_evidence.WAIVABLE_GATES:
+            waived["gates"][name] = {"status": "waived", "waiver": dict(waiver)}
+        waived["ui_coverage"] = {"status": "waived", "waiver": dict(waiver), "source_sha": waived["sources"]["hub"]["sha"]}
+        self.assertTrue(any("record status" in item for item in v10_evidence.evaluate(waived)))
+        waived["status"] = "accepted_with_waivers"
+        self.assertEqual(v10_evidence.evaluate(waived), [])
+        self.assertEqual(len(v10_evidence.waived_items(waived)), len(v10_evidence.REQUIRED_GATES) + 1)
+        clean = valid_record()
+        clean["status"] = "accepted_with_waivers"
+        self.assertTrue(any("record status" in item for item in v10_evidence.evaluate(clean)))
+        for key in ("approved_by", "approved_at", "reason", "disclosed_in"):
+            incomplete = valid_record()
+            incomplete["status"] = "accepted_with_waivers"
+            incomplete["gates"]["online_24h"] = {"status": "waived", "waiver": {k: v for k, v in waiver.items() if k != key}}
+            self.assertTrue(any("online_24h" in item for item in v10_evidence.evaluate(incomplete)))
+        claimed = valid_record()
+        claimed["status"] = "accepted_with_waivers"
+        claimed["gates"]["active_2h"] = {"status": "waived", "waiver": dict(waiver), "measured_result": "7200 s"}
+        self.assertTrue(any("active_2h" in item for item in v10_evidence.evaluate(claimed)))
+        unbound = valid_record()
+        unbound["status"] = "accepted_with_waivers"
+        unbound["ui_coverage"] = {"status": "waived", "waiver": dict(waiver), "source_sha": "a" * 40}
+        self.assertTrue(any("UI coverage" in item for item in v10_evidence.evaluate(unbound)))
+
     def test_ui_and_contract_gaps_fail(self):
         ui = valid_record()
         ui["ui_coverage"]["blocking_findings"] = 1
@@ -140,6 +169,7 @@ class EvidenceTests(unittest.TestCase):
     def test_schema_gate_list_matches_the_validator(self):
         schema = json.loads((ROOT / "docs" / "release" / "v10-evidence.schema.json").read_text(encoding="utf-8"))
         self.assertEqual(tuple(schema["x-required-gates"]), v10_evidence.REQUIRED_GATES)
+        self.assertEqual(tuple(schema["x-owner-waivable-gates"]), v10_evidence.WAIVABLE_GATES)
 
     def test_repository_has_no_submitted_evidence(self):
         status = json.loads((ROOT / "docs" / "release" / "acceptance-status.json").read_text(encoding="utf-8"))
