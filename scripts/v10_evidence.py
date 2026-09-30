@@ -290,6 +290,52 @@ def assess_status(status, *, evidence_errors=None, evidence_path=None):
     return [f"unsupported or unrun acceptance status: {state}"]
 
 
+def receipt_errors(record, root):
+    """Verify cited historical waivers without extending or re-approving them.
+
+    A reconstructed record preserves the exact existing waiver and records which
+    waived receipt cases it represents. It is not a new measurement or approval.
+    Other evidence records retain the normal fail-closed evaluator above.
+    """
+    import json
+
+    errors = []
+    root = Path(root).resolve()
+    gates = record.get("gates") if isinstance(record.get("gates"), dict) else {}
+    entries = {"ui_coverage": record.get("ui_coverage", {}), **gates}
+    for name, gate in entries.items():
+        if not isinstance(gate, dict):
+            continue  # The normal evaluator reports malformed gates.
+        provenance = gate.get("waiver_receipt")
+        if not provenance:
+            if record.get("reconstructed_from_published_receipts") and gate.get("status") == "waived":
+                errors.append(f"{name} reconstructed waiver is missing its receipt")
+            continue
+        if not isinstance(provenance, dict):
+            errors.append(f"{name} waiver receipt must be an object")
+            continue
+        path = (root / str(provenance.get("path", ""))).resolve()
+        if not path.is_relative_to(root) or not path.is_file():
+            errors.append(f"{name} waiver receipt is missing or outside the repository")
+            continue
+        content = path.read_bytes()
+        if hashlib.sha256(content).hexdigest() != provenance.get("sha256"):
+            errors.append(f"{name} waiver receipt digest differs")
+            continue
+        receipt = json.loads(content)
+        if gate.get("status") != "waived" or receipt.get("status") != "waived" or gate.get("waiver") != receipt.get("waiver"):
+            errors.append(f"{name} must preserve its existing waiver exactly")
+        cases = provenance.get("cases")
+        if not isinstance(cases, list) or not cases or any(receipt.get("cases", {}).get(case) != "waived" for case in cases):
+            errors.append(f"{name} must cite existing waived receipt cases")
+        component = provenance.get("component")
+        source = record.get("sources", {}).get(component, {})
+        if (receipt.get("repository") != source.get("repository") or
+                (receipt.get("revision") or receipt.get("app_revision")) != source.get("sha")):
+            errors.append(f"{name} waiver receipt source differs")
+    return errors
+
+
 def load_status(root, *, now=None):
     """Read docs/release/acceptance-status.json and evaluate the record it names.
 
@@ -310,6 +356,8 @@ def load_status(root, *, now=None):
         return status, assess_status(status, evidence_errors=["evidence file is missing"], evidence_path=path), None
     record = json.loads(path.read_text(encoding="utf-8"))
     evidence_errors = evaluate(record, now=now)
+    if isinstance(record, dict):
+        evidence_errors.extend(receipt_errors(record, root))
     if isinstance(record, dict) and record.get("status") != state:
         evidence_errors.append("acceptance status must match the evidence record status")
     return status, assess_status(status, evidence_errors=evidence_errors, evidence_path=path), record

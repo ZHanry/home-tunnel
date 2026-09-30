@@ -171,19 +171,35 @@ class EvidenceTests(unittest.TestCase):
         self.assertEqual(tuple(schema["x-required-gates"]), v10_evidence.REQUIRED_GATES)
         self.assertEqual(tuple(schema["x-owner-waivable-gates"]), v10_evidence.WAIVABLE_GATES)
 
-    def test_repository_has_no_submitted_evidence(self):
-        status = json.loads((ROOT / "docs" / "release" / "acceptance-status.json").read_text(encoding="utf-8"))
-        self.assertEqual(v10_evidence.assess_status(status), [])
-        self.assertEqual(status["status"], "not_submitted")
-        for path in (ROOT / "docs" / "release").glob("*.json"):
-            if path.name == "v10-evidence.schema.json":
-                continue
-            data = json.loads(path.read_text(encoding="utf-8"))
-            self.assertNotIn("gates", data)
+    def test_repository_reconstructs_waivers_without_pass_claims(self):
+        status, errors, record = v10_evidence.load_status(ROOT)
+        self.assertEqual(errors, [])
+        self.assertEqual(status["status"], "accepted_with_waivers")
+        self.assertTrue(record["reconstructed_from_published_receipts"])
+        self.assertEqual(len(v10_evidence.waived_items(record)), len(v10_evidence.REQUIRED_GATES) + 1)
+        for gate in [record["ui_coverage"], *record["gates"].values()]:
+            self.assertEqual(gate["status"], "waived")
+            self.assertIn("waiver_receipt", gate)
+            self.assertNotIn("measured_result", gate)
         claimed = copy.deepcopy(status)
         claimed["status"] = "passed"
         claimed["evidence_file"] = "docs/release/example-evidence.json"
         self.assertTrue(v10_evidence.assess_status(claimed, evidence_errors=[], evidence_path=claimed["evidence_file"]))
+
+    def test_reconstructed_waivers_are_bound_to_original_receipts(self):
+        _, _, record = v10_evidence.load_status(ROOT)
+        for mutation, expected in (
+            (lambda gate: gate["waiver"].update(reason="new approval invented today"), "preserve"),
+            (lambda gate: gate["waiver_receipt"].update(sha256="0" * 64), "digest"),
+            (lambda gate: gate["waiver_receipt"].update(cases=["not-an-approved-case"]), "cases"),
+            (lambda gate: gate["waiver_receipt"].update(component="android"), "source"),
+            (lambda gate: gate["waiver_receipt"].update(path="../outside.json"), "outside"),
+            (lambda gate: gate.pop("waiver_receipt"), "missing"),
+        ):
+            with self.subTest(expected=expected):
+                changed = copy.deepcopy(record)
+                mutation(changed["gates"]["vm_windows_pair"])
+                self.assertTrue(any(expected in error for error in v10_evidence.receipt_errors(changed, ROOT)))
 
 
 if __name__ == "__main__":

@@ -21,7 +21,7 @@ FRP 保持 **0.70.1**。锁屏、登录前和 UAC 安全桌面控制不可用，
 | 服务端部署包 | [home-tunnel-server-10.0.0.tar.gz](https://github.com/ZHanry/home-tunnel-server/releases/download/v10.0.0/home-tunnel-server-10.0.0.tar.gz) |
 | 服务端 Compose | [compose.release.yaml](https://github.com/ZHanry/home-tunnel-server/releases/download/v10.0.0/compose.release.yaml) |
 
-SHA-256 和文件大小以 [releases.json](../releases.json) 与各 Release 的 `SHA256SUMS.txt` 为准，网站 [下载页](site/downloads.html) 从同一份清单读取。
+SHA-256 和文件大小以 [releases.json](../releases.json) 为准，网站 [下载页](site/downloads.html) 从同一份清单读取。服务端和 Android Release 提供 `SHA256SUMS.txt`；桌面 Release 提供逐文件 `.sha256` 校验文件与 `client-candidate.json`，没有汇总 `SHA256SUMS.txt`。
 
 ## 源码身份
 
@@ -36,7 +36,7 @@ SHA-256 和文件大小以 [releases.json](../releases.json) 与各 Release 的 
 
 ## 签名
 
-组件 Release 保留 `SHA256SUMS.txt`、Sigstore bundle 和构建证据。
+组件 Release 保留校验文件、Sigstore bundle 和构建证据；文件名按上一节区分。
 Windows/macOS 没有 Authenticode 或 Developer ID 发行证书，10.0.0 仍未签名。
 Android 发行证书 SHA-256：`d7779e338be1039acee6dda9a43417cbf2baf4b0c9995578d9708501e95af702`。
 入口仓库的汇总清单本身不带 Sigstore 签名。
@@ -75,4 +75,4 @@ OpenAPI SHA-256：`a0892fb0263cb20fdb66f2d1d7497fa30d0a0ca7b8a5b28d46829cdfa83ba
 
 ## English
 
-Install 10.0.0 and check each file against the SHA-256 in `releases.json` or the Release `SHA256SUMS.txt`. 10.0.0 was published with owner waivers; the release notes list what was not verified. Windows and macOS builds have no publisher certificate. The 9.0.0, 8.0 and 7.0 release pages remain available.
+Install 10.0.0 and check each file against the SHA-256 in `releases.json`. Server and Android Releases have `SHA256SUMS.txt`; the desktop Release has per-file `.sha256` files and `client-candidate.json`. 10.0.0 was published with owner waivers; the release notes list what was not verified. Windows and macOS builds have no publisher certificate. The 9.0.0, 8.0 and 7.0 release pages remain available.

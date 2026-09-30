@@ -32,6 +32,8 @@ ALLOWED_IMAGES = {
     "assets/architecture.svg",
     "assets/share-card.svg",
     "assets/admin-dashboard-7.jpg",
+    "assets/v10/admin-console.png",
+    "assets/v10/tunnel-wizard.png",
 }
 DOWNLOAD_PAGES = {"downloads.html", "en/downloads.html"}
 LANDING_PAGES = {"index.html", "en/index.html"}

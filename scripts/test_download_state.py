@@ -92,6 +92,14 @@ const promoted = state.view({
   fallbackStable: '9.0.0'
 });
 if (promoted.tone !== 'ready' || !promoted.en.includes('10.0.0')) process.exit(6);
+const waived = state.view({
+  transport: 'ok',
+  stable: require('./docs/site/releases.json'),
+  candidate: require('./docs/site/candidate.json'),
+  fallbackStable: '10.0.0'
+});
+if (waived.tone !== 'ready' || !waived.en.includes('Stable downloads are 10.0.0') ||
+    !waived.en.includes('waiver is not a pass') || !waived.zh.includes('豁免不等于通过')) process.exit(10);
 for (const pair of [[{}, candidate], [stable, {}], [[], candidate],
   [{...stable, version: null}, candidate], [{...stable, version: '9.0.0-rc.1'}, candidate],
   [stable, {...candidate, promotion_status: 'unknown'}]]) {
