@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "component_version": "10.0.0",
+  "workflow_run_url": "https://github.com/ZHanry/home-tunnel-android/actions/runs/36653765208",
+  "workflow_run_id": 36653765208,
+  "artifact_id": 11070704569,
+  "artifact_name": "android-runtime-api-35",
+  "artifact_sha256": "135a2b87158414f62fea68ea2ea7e00835174eae04f847a0ebeb402e7bdd1aa4",
+  "head_revision": "e333d8734e8988d4155ad3de1ab9d4deed2ecfe8",
+  "repository_revision": "d84682d706a467b4a09741fd75afa62b340e5399",
+  "source_dirty": false,
+  "source_manifest_sha256": "7c71a5a8a73e7d19bb800379adff9126ffe112bdfb7d3463e22baa0c8a65c428",
+  "api_level": 35,
+  "variant": "debug",
+  "system_fingerprint": "google/sdk_gphone64_x86_64/emu64xa:15/AE3A.240806.043/12960925:userdebug/dev-keys",
+  "fixture": "ManagementUiTest.navigationFiltersByDeviceAndSearchesServices; synthetic account and devices; production Compose screens",
+  "ui_language": "en",
+  "theme": "light",
+  "width": 1080,
+  "height": 2400,
+  "instrumentation": {
+    "status": "passed",
+    "tests": 23,
+    "passed_tests": 21,
+    "failed_tests": 0,
+    "skipped_tests": 2,
+    "full_app_acceptance": false,
+    "remote_media_acceptance": "not_run"
+  },
+  "packages": {
+    "app/build/outputs/apk/debug/app-debug.apk": {
+      "sha256": "e9035112051349ae4c2f55d3549823024dcbcf389c676d94d003cbb0da0eeada",
+      "bytes": 22713110
+    },
+    "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": {
+      "sha256": "5bc37a211768782cd6de0f039a3840f0efc1e16c8694683171ee04e95b029e30",
+      "bytes": 1066108
+    }
+  },
+  "screenshots": [
+    {
+      "path": "docs/assets/overview.png",
+      "source_path": "screenshots/overview.png",
+      "sha256": "b7c305d013a1b54ea154cd4d3d04a4f539ed65a48d4bc3b1b9d8d6d9dea6b43f",
+      "edited": false
+    },
+    {
+      "path": "docs/assets/devices.png",
+      "source_path": "screenshots/devices.png",
+      "sha256": "e1a4a49aa96aa7ced76b9beb87a66be81abafdd45e8639d9c61b492c4f35eea6",
+      "edited": false
+    }
+  ],
+  "captured_on": "2026-09-30"
+}

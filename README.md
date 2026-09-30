@@ -49,9 +49,15 @@ flowchart LR
   Agent --> App[本地服务]
 ```
 
-下图是 7.0.0 控制台的历史截图，使用示例数据。它不是 10.0 的远控或向导界面。10.0 截图还没有补上，槽位见 [screenshot-slots.json](docs/site/screenshot-slots.json)。
+## 10.0.0 界面
 
-![Home Tunnel 7.0.0 控制台历史截图，示例数据](docs/site/assets/admin-dashboard-7.jpg)
+以下为实际运行的 10.0.0 Web 界面，使用本地示例数据，未发布服务或建立远控会话。
+[完整界面预览](docs/site/preview.html)还包含 Android API 35 模拟器的 debug 截图；它们不能代替最终 APK 或真实 Windows 远控验收。
+[截图来源、环境与校验值](docs/site/assets/v10/README.md)。
+
+![Home Tunnel 10.0.0 Web 控制台，示例数据](docs/site/assets/v10/admin-console.png)
+
+![Home Tunnel 10.0.0 Web 服务发布向导，示例数据，尚未发布服务](docs/site/assets/v10/tunnel-wizard.png)
 
 ## 参与项目
 

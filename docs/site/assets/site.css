@@ -218,6 +218,7 @@ img, svg { max-width: 100%; height: auto; }
 .brand img { width: 36px; height: 36px; }
 .shot-slot figcaption { display: grid; gap: 6px; margin-bottom: 12px; }
 .shot-slot img, .shot-slot svg { width: 100%; height: auto; }
+.shot-phone img { display: block; max-width: 360px; margin-inline: auto; }
 .slot-empty {
   display: grid;
   min-height: 180px;

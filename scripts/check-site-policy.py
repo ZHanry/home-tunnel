@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import re
 import sys
 from pathlib import Path
@@ -34,10 +35,49 @@ ALLOWED_IMAGES = {
     "assets/admin-dashboard-7.jpg",
     "assets/v10/admin-console.png",
     "assets/v10/tunnel-wizard.png",
+    "assets/v10/remote-entry.png",
+    "assets/v10/android-overview.png",
+    "assets/v10/android-devices.png",
 }
 DOWNLOAD_PAGES = {"downloads.html", "en/downloads.html"}
 LANDING_PAGES = {"index.html", "en/index.html"}
 STATUS_PAGES = LANDING_PAGES | DOWNLOAD_PAGES
+
+
+def audit_capture(site, slot):
+    """Bind published product pixels to an original capture manifest."""
+    errors = []
+    slot_id = slot["id"]
+    try:
+        asset = site / slot["asset"]
+        manifest_path = site / slot["capture_manifest"]
+        if not asset.resolve().is_relative_to(site.resolve()) or not manifest_path.resolve().is_relative_to(site.resolve()):
+            return [f"slot {slot_id} capture paths must stay inside the site"]
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        version = manifest.get("product_version", manifest.get("component_version"))
+        if version != slot.get("captured_product_version") or version != "10.0.0":
+            errors.append(f"slot {slot_id} capture version must match 10.0.0")
+        revision = manifest.get("source_sha", manifest.get("repository_revision", ""))
+        if not re.fullmatch(r"[a-f0-9]{40}", revision):
+            errors.append(f"slot {slot_id} capture needs its exact source revision")
+        entries = manifest.get("captures", manifest.get("screenshots", []))
+        matches = [entry for entry in entries if Path(entry.get("file", entry.get("source_path", ""))).name == slot["source_file"]]
+        if len(matches) != 1:
+            return errors + [f"slot {slot_id} must identify one original captured file"]
+        entry = matches[0]
+        data = asset.read_bytes()
+        if hashlib.sha256(data).hexdigest() != entry.get("sha256"):
+            errors.append(f"slot {slot_id} image digest does not match capture")
+        if len(data) < 24 or data[:8] != b"\x89PNG\r\n\x1a\n":
+            errors.append(f"slot {slot_id} must contain actual PNG bytes")
+        else:
+            dimensions = (int.from_bytes(data[16:20], "big"), int.from_bytes(data[20:24], "big"))
+            expected = (entry.get("width", manifest.get("width")), entry.get("height", manifest.get("height")))
+            if dimensions != expected:
+                errors.append(f"slot {slot_id} image dimensions do not match capture")
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        errors.append(f"slot {slot_id} has invalid capture provenance: {error}")
+    return errors
 
 
 def audit(root=ROOT):
@@ -156,12 +196,16 @@ def audit(root=ROOT):
             if "Authenticode" not in text:
                 errors.append(relative + " must keep the desktop signing fact")
     for slot in slots["slots"]:
+        if slot["status"] == "captured-v10-ui":
+            errors.extend(audit_capture(site, slot))
         pages_for_slot = seen_slots.get(slot["id"], [])
         found_on = {item[0] for item in pages_for_slot}
         for expected in slot["pages"]:
             if expected not in found_on:
                 errors.append(f"slot {slot['id']} missing on {expected}")
         for page_name, figure in pages_for_slot:
+            if f'data-slot-status="{slot["status"]}"' not in figure:
+                errors.append(f"slot {slot['id']} on {page_name} has a mismatched status")
             if slot["status"] == "awaiting-v10-capture":
                 if "<img" in figure:
                     errors.append(f"empty slot {slot['id']} on {page_name} contains an image")
@@ -174,6 +218,10 @@ def audit(root=ROOT):
                 for label in slot.get("label_must_include", []):
                     if label not in figure:
                         errors.append(f"slot {slot['id']} on {page_name} must include {label}")
+                if slot["status"] == "captured-v10-ui" and slot.get("fixture_data"):
+                    label = "example data" if page_name.startswith("en/") else "示例数据"
+                    if label not in figure:
+                        errors.append(f"slot {slot['id']} on {page_name} must disclose {label}")
     blob = "\n".join(page.read_text(encoding="utf-8") for page in pages)
     for historical in slots["historical_assets_not_for_v10"]:
         name = historical.split("/")[-1]

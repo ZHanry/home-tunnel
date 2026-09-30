@@ -49,9 +49,15 @@ flowchart LR
   Agent --> App[Local service]
 ```
 
-The picture below is a historical 7.0.0 console screenshot with example data. It is not a 10.0 remote window or wizard. 10.0 screenshots have not been added yet; the empty slots are listed in [screenshot-slots.json](docs/site/screenshot-slots.json).
+## 10.0.0 interface
 
-![Historical Home Tunnel 7.0.0 console screenshot with example data](docs/site/assets/admin-dashboard-7.jpg)
+These are actual running 10.0.0 Web screens with local example data. No service was published or remote session established.
+The [full gallery](docs/site/en/preview.html) also includes Android API 35 emulator debug captures; these do not establish final APK or real Windows remote-session acceptance.
+See [capture sources, environments and hashes](docs/site/assets/v10/README.md).
+
+![Home Tunnel 10.0.0 Web console with example data](docs/site/assets/v10/admin-console.png)
+
+![Home Tunnel 10.0.0 Web publishing wizard with example data, before publishing](docs/site/assets/v10/tunnel-wizard.png)
 
 ## Contributing
 
