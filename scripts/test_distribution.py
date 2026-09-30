@@ -6,18 +6,48 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import distribution
+import v10_evidence
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def unpromoted_distribution():
+    """Keep the pre-promotion safety regression independent of the live channel."""
+    dist = distribution.load(ROOT)
+    stable = json.loads((ROOT / "docs/release/stable-9.0.0.json").read_text(encoding="utf-8"))
+    dist["channels"] = {
+        "stable": stable,
+        "candidate": {
+            "version": "10.0.0", "stage": "development", "promotion_status": "not_promoted",
+            "downloads_published": False, "acceptance_status": "pending", "prerelease": False,
+            "tag": None, "frp": "0.70.1",
+            "contract": {"current_stable_ref": "api-v1.3.0", "planned_ref": "api-v1.4.0", "frozen": False},
+            "components": {name: {"repository": item["repository"], "version": "10.0.0", "source_sha": None, "artifacts": []}
+                           for name, item in stable["components"].items()},
+            "not_verified": sorted(distribution.REQUIRED_UNVERIFIED), "signing": copy.deepcopy(stable["signing"]),
+        },
+    }
+    return dist
+
+
 class DistributionTests(unittest.TestCase):
     def test_unpromoted_channel_matches_published_9_0_0(self):
-        dist = distribution.load(ROOT)
+        dist = unpromoted_distribution()
         self.assertEqual(distribution.validate_distribution(dist, root=ROOT), [])
-        self.assertEqual(distribution.projection_errors(dist, root=ROOT), [])
         self.assertEqual(dist["channels"]["stable"]["version"], "9.0.0")
         self.assertFalse(dist["channels"]["candidate"]["downloads_published"])
         self.assertEqual(dist["development_line"], "10.0.0")
+
+    def test_current_channel_matches_the_published_waived_release(self):
+        dist = distribution.load(ROOT)
+        status, errors, record = v10_evidence.load_status(ROOT)
+        self.assertEqual(errors, [])
+        self.assertEqual(status["status"], "accepted_with_waivers")
+        self.assertEqual(distribution.validate_distribution(dist, root=ROOT, evidence_errors=errors, evidence_record=record), [])
+        self.assertEqual(distribution.projection_errors(dist, root=ROOT), [])
+        self.assertEqual(dist["channels"]["stable"]["version"], "10.0.0")
+        self.assertEqual(dist["channels"]["candidate"]["acceptance_status"], "accepted_with_waivers")
+        self.assertTrue(dist["channels"]["candidate"]["downloads_published"])
 
     def test_projection_is_idempotent(self):
         before = (ROOT / "releases.json").read_text(encoding="utf-8")
@@ -29,7 +59,7 @@ class DistributionTests(unittest.TestCase):
         )
 
     def test_promotion_and_invented_downloads_fail_closed(self):
-        dist = distribution.load(ROOT)
+        dist = unpromoted_distribution()
         promoted = copy.deepcopy(dist)
         promoted["channels"]["candidate"]["promotion_status"] = "promoted"
         self.assertTrue(distribution.validate_distribution(promoted, root=ROOT))

@@ -2,19 +2,19 @@
 
 四仓正式标签为 `v10.0.0`。FRP 保持自己的 0.70.1。共享契约先冻结为不可移动的 `api-v1.4.0`（服务端提交 `74e140da43c88043d0db2aad7505ba75fd3a9a49`）。候选和稳定通道只写在 `distribution.json`，用 `python scripts/sync-distribution.py` 投影到 `releases.json` 与网站清单。
 
-## 负责人豁免
+## 验证状态与记录
 
-各组件稳定流水线失败关闭。没有运行的门禁不能伪造结果，只能由负责人豁免：
+发布记录必须区分已运行的测试和未验证项目。各组件稳定流水线对缺失、过期或不匹配的证据失败关闭：
 
-- 在验收记录里写成 `status: "waived"`，并带 `approved_by: "owner"`、`approved_at`（带时区）、`reason` 和 `disclosed_in`（公开披露的位置，通常是发布说明）。
-- 豁免项不能带实测字段，也不能写成 `passed`。校验器 `scripts/v10_evidence.py` 从不把豁免计为通过。
-- 晋升后的候选记录 `acceptance_status` 为 `accepted_with_waivers`，`waived` 必须与验收记录里的豁免项完全一致。
-- 实际测过的核心远控门禁仍然必须通过，不能豁免成通过。
-- 每个豁免项都列在 [发布说明](RELEASE_NOTES.md) 的"负责人豁免（未验证）"里。
+- 已运行的项目保存真实结果；未运行的项目不能带实测字段，也不能写成 `passed`。
+- 10.0.0 的既有记录保留 `status: "waived"` 及原始回执字段，以兼容校验器；公开文档将这些项目明确列为“未验证”。原始回执不能改写成新的运行结果。
+- 晋升后的候选记录保留 `acceptance_status: "accepted_with_waivers"`；其中的 `waived` 列表必须与验收记录里的未运行项目完全一致。该状态不表示全部验收通过。
+- 核心远控功能的通过声明必须有相应实测证据。校验器 `scripts/v10_evidence.py` 不把未运行项目计为通过。
+- 每个未验证项目都列在 [发布说明](RELEASE_NOTES.md) 的“未验证项目”中；开发构建、模拟器与最终发布字节的结果分别说明。
 
 ## 顺序
 
-1. 客户端/共享 SDK：标签构建封存候选附件；验收回执（含豁免）存在入口仓库 `validation/client/<rev>/`，再用同一标签的发布工作流公开原始字节。
+1. 客户端/共享 SDK：标签构建封存候选附件；验收回执（含未运行项目记录）存在入口仓库 `validation/client/<rev>/`，再用同一标签的发布工作流公开原始字节。
 2. Android：锁定客户端正式 Release 的 SDK，回执存在 `validation/android/<rev>/`，保持发行证书和递增 versionCode 后发布。
 3. 服务端：用 `publish-stable.yml` 并传入 `acceptance_json`，晋升已封存的候选字节和镜像摘要，不重新构建。
 4. 入口仓库：按实际附件的文件名、大小和 SHA-256 更新 `distribution.json`，同步清单、文档和网站，最后发布自身 `v10.0.0`，并再次核对四个公开 Release。

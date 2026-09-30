@@ -21,12 +21,12 @@
 })();
 </script>
 <title>Home Tunnel · UDP remote control and FRP publishing</title>
-<meta name="description" content="Self-hosted Home Tunnel. Authorized remote control uses end-to-end encrypted UDP, direct first. Home services are published with FRP. The stable release is 10.0.0, published with owner waivers.">
+<meta name="description" content="Self-hosted Home Tunnel. Authorized remote control uses end-to-end encrypted UDP, direct first. Home services are published with FRP. The stable release is 10.0.0. Verification remains incomplete.">
 <link rel="canonical" href="https://zhanry.github.io/home-tunnel/en/">
 <link rel="alternate" hreflang="en" href="https://zhanry.github.io/home-tunnel/en/">
 <link rel="alternate" hreflang="zh-CN" href="https://zhanry.github.io/home-tunnel/">
 <meta property="og:title" content="Home Tunnel · UDP remote control and FRP publishing">
-<meta property="og:description" content="The stable release is 10.0.0. Remote control uses encrypted UDP, with an optional relay for browser viewers. Unverified items are owner waivers listed in the release notes.">
+<meta property="og:description" content="The stable release is 10.0.0. Remote control uses encrypted UDP, with an optional relay for browser viewers. The release notes list unverified items.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://zhanry.github.io/home-tunnel/en/">
 <meta property="og:image" content="https://zhanry.github.io/home-tunnel/assets/share-card.svg">
@@ -60,7 +60,7 @@
 <section class="section">
 <p class="eyebrow">Home Tunnel stable 10.0.0</p>
 <h1>Remote control uses UDP. Publishing uses FRP.</h1>
-<p class="lede">Reach a home computer and its services through a server you run. Authorized remote desktop uses end-to-end DTLS-encrypted UDP, direct first. NAS, Home Assistant, and other local services are published with FRP. The stable release is 10.0.0. Some acceptance gates were not run and were waived by the owner; a waiver is not a pass, and the <a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">release notes</a> list them.</p>
+<p class="lede">Reach a home computer and its services through a server you run. Authorized remote desktop uses end-to-end DTLS-encrypted UDP, direct first. NAS, Home Assistant, and other local services are published with FRP. The stable release is 10.0.0. Some acceptance gates were not run and remain unverified; the <a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">release notes</a> list them.</p>
 <div class="choice-grid">
 <a class="choice" href="#remote"><span class="eyebrow">Remote control</span><strong>Control another device</strong><span>Choose the device from Windows, Web, or Android. Picture and input use encrypted UDP and never switch to FRP or TCP.</span></a>
 <a class="choice" href="#host"><span class="eyebrow">Remote control</span><strong>Allow control of this device</strong><span>This action belongs on the Windows host. This website cannot expose your computer.</span></a>
@@ -84,10 +84,10 @@
 </ul>
 </div>
 <div class="board">
-<p class="eyebrow">Verification scope and owner waivers</p>
+<p class="eyebrow">Verified scope and unverified items</p>
 <h2>What was tested, and what was not.</h2>
 <p>A Web viewer controlled a Windows 10.0.0 host through the production server, over direct UDP and the relay: screen, keyboard, mouse, Chinese text, clipboard both ways, viewer-to-host files, system audio, the approval popup, and the temporary password. These were development builds of the same feature code, not re-run on the final bytes.</p>
-<p>Host-to-viewer files, the fixed password on the final build, Android controlling Windows, physical arm64 phones, multiple monitors, upgrade and restore, long-running soaks, and the network matrix were not run. The owner waived them, so their acceptance is pending. Lock screen, pre-login, and UAC secure-desktop control are not available, and there is no microphone return.</p>
+<p>Host-to-viewer files, the fixed password on the final build, Android controlling Windows, physical arm64 phones, multiple monitors, upgrade and restore, long-running soaks, and the network matrix were not run. Their verification remains incomplete. Lock screen, pre-login, and UAC secure-desktop control are not available, and there is no microphone return.</p>
 </div>
 </div>
 </section>
@@ -105,7 +105,7 @@
 <li>Install the same client version on the home computer or NAS and enroll it with an account or a one-time code.</li>
 <li>Open the target on that machine first, create the connection, then visit the public address from another network.</li>
 </ol>
-<p class="muted">10.0.0 guided publishing checks the local target and confirms it against the device report. A template fills editable fields and does not mean the service is reachable. The server assigns public TCP/UDP ports. The tunnel runtime matrix was waived, not run.</p>
+<p class="muted">10.0.0 guided publishing checks the local target and confirms it against the device report. A template fills editable fields and does not mean the service is reachable. The server assigns public TCP/UDP ports. The tunnel runtime matrix was not run and remains unverified.</p>
 </section>
 <section class="section" aria-label="Diagram and screenshot slots">
 <h2>Pictures show only what is already labeled.</h2>
@@ -113,23 +113,43 @@
 <figcaption><strong>Control plane and FRP data plane</strong><span>Vector diagram, not an application screenshot. Remote UDP does not use this FRP path.</span></figcaption>
 <img src="../assets/architecture.svg" alt="Home Tunnel architecture diagram showing the control center, SQLite, Caddy, traffic gateway, FRP, and a home Agent" width="1440" height="900">
 </figure>
+<figure class="shot-slot" data-shot-slot="v10-admin-console" data-slot-status="captured-v10-ui">
+<figcaption><strong>10.0.0 Web console</strong><span>Captured from the released UI on 2026-09-30 with local example data. Status and traffic are preview fixtures.</span></figcaption>
+<img src="../assets/v10/admin-console.png" alt="Home Tunnel 10.0.0 Web console with example data, navigation, device status and traffic" width="1440" height="1132" loading="lazy">
+</figure>
+<figure class="shot-slot" data-shot-slot="v10-tunnel-wizard" data-slot-status="captured-v10-ui">
+<figcaption><strong>10.0.0 Web publishing wizard</strong><span>Actual device-and-template step with example data. No service had been created or published.</span></figcaption>
+<img src="../assets/v10/tunnel-wizard.png" alt="Home Tunnel 10.0.0 Web publishing wizard with the Home Assistant template selected and example data" width="1440" height="960" loading="lazy">
+</figure>
+<figure class="shot-slot" data-shot-slot="v10-web-remote-entry" data-slot-status="captured-v10-ui">
+<figcaption><strong>10.0.0 Web remote entry, disconnected</strong><span>Actual empty-device state with example data. No Windows host or remote session was connected or verified.</span></figcaption>
+<img src="../assets/v10/remote-entry.png" alt="Home Tunnel 10.0.0 Web remote entry with an empty device list, disconnected" width="1440" height="960" loading="lazy">
+</figure>
+<figure class="shot-slot" data-shot-slot="v10-windows-signin" data-slot-status="captured-v10-ui">
+<figcaption><strong>10.0.0 Windows native client, sign-in</strong><span>Official portable app in a real Windows Server 2022 native WebView2 window. Empty isolated state; no account sign-in or remote session.</span></figcaption>
+<img src="../assets/v10/windows-signin.png" alt="Home Tunnel 10.0.0 native Windows sign-in window, with its real titlebar and empty username/password fields" width="946" height="665" loading="lazy">
+</figure>
+<div class="split">
+<figure class="shot-slot shot-phone" data-shot-slot="v10-android-overview" data-slot-status="captured-v10-ui">
+<figcaption><strong>10.0.0 Android remote entry</strong><span>API 35 x86_64 emulator, debug build and example data. This is not an active remote session or final APK acceptance.</span></figcaption>
+<img src="../assets/v10/android-overview.png" alt="Home Tunnel 10.0.0 Android remote entry on an API 35 emulator, English UI and Chinese example device names" width="1080" height="2400" loading="lazy">
+</figure>
+<figure class="shot-slot shot-phone" data-shot-slot="v10-android-devices" data-slot-status="captured-v10-ui">
+<figcaption><strong>10.0.0 Android device list</strong><span>API 35 x86_64 emulator, debug build and example data. This is not physical-device or final APK acceptance.</span></figcaption>
+<img src="../assets/v10/android-devices.png" alt="Home Tunnel 10.0.0 Android device list on an API 35 emulator with search, tunnel and remote controls" width="1080" height="2400" loading="lazy">
+</figure>
+</div>
+<p class="muted"><a href="../assets/v10/README.md">Capture sources and image hashes</a></p>
 <figure data-shot-file="assets/v10/remote-window.png" class="shot-slot" data-shot-slot="v10-remote-window" data-slot-status="awaiting-v10-capture">
-<figcaption><strong>10.0 remote window</strong><span>The actual screenshot has not been added yet. No mock-up is shown here.</span></figcaption>
+<figcaption><strong>10.0 Windows remote window</strong><span>A real Windows capture is still needed. The Web and Android entry screens above do not replace it.</span></figcaption>
 <p class="slot-empty">Waiting for an actual product screenshot</p>
 </figure>
-<figure data-shot-file="assets/v10/tunnel-wizard.png" class="shot-slot" data-shot-slot="v10-tunnel-wizard" data-slot-status="awaiting-v10-capture">
-<figcaption><strong>10.0 publishing wizard</strong><span>The actual screenshot has not been added yet. No mock-up is shown here.</span></figcaption>
-<p class="slot-empty">Waiting for an actual product screenshot</p>
-</figure>
-<figure class="shot-slot" data-shot-slot="history-console-7" data-slot-status="historical-labeled">
-<figcaption><strong>7.0.0 console, historical example</strong><span>This is a real 7.0.0 console screenshot with example data. It is not a 9.0 or 10.0 remote-control screen.</span></figcaption>
-<img src="../assets/admin-dashboard-7.jpg" alt="Historical Home Tunnel 7.0.0 console screenshot with example data, navigation, online devices, and connection counts" width="1440" height="1195">
-</figure>
+
 </section>
 <section id="download" class="section">
 <p class="eyebrow">Downloads</p>
 <h2>Install 10.0.0 today.</h2>
-<p id="download-status" class="notice" role="status" aria-live="polite" data-tone="ready">Stable downloads are 10.0.0, published with owner waivers; a waiver is not a pass. If the manifest cannot be refreshed, use the 10.0.0 links on the download page.</p>
+<p id="download-status" class="notice" role="status" aria-live="polite" data-tone="ready">Stable downloads are 10.0.0. Some acceptance gates were not run and remain unverified; see the release notes. If the manifest cannot be refreshed, use the 10.0.0 links on the download page.</p>
 <div class="actions">
 <a class="button" href="downloads.html">Open 10.0.0 downloads</a>
 <a class="button secondary" href="https://github.com/ZHanry/home-tunnel-server/releases/tag/v10.0.0">Server 10.0.0</a>
@@ -153,7 +173,7 @@
 </details>
 <details>
 <summary>Can I download 10.0.0?</summary>
-<p>Yes. 10.0.0 is the stable release, published with owner waivers: host-to-viewer files, Android controlling Windows, physical arm64 phones, upgrade and restore, long-running soaks, and the network matrix were not verified. Lock screen, pre-login, UAC secure desktop, and microphone return are not available. The <a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">release notes</a> have the full list. The previous 9.0.0 release pages remain available.</p>
+<p>Yes. 10.0.0 is the stable release. Verification remains incomplete: host-to-viewer files, Android controlling Windows, physical arm64 phones, upgrade and restore, long-running soaks, and the network matrix were not verified. Lock screen, pre-login, UAC secure desktop, and microphone return are not available. The <a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">release notes</a> have the full list. The previous 9.0.0 release pages remain available.</p>
 </details>
 <details>
 <summary>Can I use secure desktop, audio, and files?</summary>

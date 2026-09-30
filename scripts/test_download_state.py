@@ -92,6 +92,16 @@ const promoted = state.view({
   fallbackStable: '9.0.0'
 });
 if (promoted.tone !== 'ready' || !promoted.en.includes('10.0.0')) process.exit(6);
+const incomplete = state.view({
+  transport: 'ok',
+  stable: require('./docs/site/releases.json'),
+  candidate: require('./docs/site/candidate.json'),
+  fallbackStable: '10.0.0'
+});
+if (incomplete.tone !== 'ready' || !incomplete.en.includes('Stable downloads are 10.0.0') ||
+    !incomplete.en.includes('were not run and remain unverified') ||
+    !incomplete.zh.includes('部分验收项目未运行，验证尚未完成')) process.exit(10);
+if (/waiv|owner|豁免|负责人/i.test(incomplete.en + incomplete.zh)) process.exit(11);
 for (const pair of [[{}, candidate], [stable, {}], [[], candidate],
   [{...stable, version: null}, candidate], [{...stable, version: '9.0.0-rc.1'}, candidate],
   [stable, {...candidate, promotion_status: 'unknown'}]]) {

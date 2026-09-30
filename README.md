@@ -8,7 +8,7 @@
 
 [English](README.en.md) · [网站](https://zhanry.github.io/home-tunnel/) · [下载](docs/DOWNLOADS.md) · [快速开始](docs/GETTING_STARTED.md) · [架构](docs/ARCHITECTURE.md) · [功能矩阵](docs/FEATURE_MATRIX.md)
 
-当前稳定版是 **10.0.0**，带负责人豁免发布：部分验收项目没有运行，豁免不等于通过，清单见 [发布说明](docs/RELEASE_NOTES.md)。FRP 保持独立的 **0.70.1**，API 契约为 `api-v1.4.0`。稳定通道和候选记录写在同一个 [`distribution.json`](distribution.json) 里；改这一份后运行 `python scripts/sync-distribution.py`。
+当前稳定版是 **10.0.0**。部分验收项目未运行，验证尚未完成，清单见 [发布说明](docs/RELEASE_NOTES.md)。FRP 保持独立的 **0.70.1**，API 契约为 `api-v1.4.0`。稳定通道和候选记录写在同一个 [`distribution.json`](distribution.json) 里；改这一份后运行 `python scripts/sync-distribution.py`。
 
 ## 从这里开始
 
@@ -29,7 +29,7 @@
 
 10.0.0 增加授权后的系统声音、带 SHA-256 校验的文件传输、分组 9 位设备 ID、重做的浏览器控制端（浮动工具栏、后台剪贴板同步）和引导式服务发布。Android 的 arm64-v8a 与 x86_64 使用同源 SDK。
 
-实测范围：Web 控制端经生产服务器控制 Windows 10.0.0 被控端，直连和中继都通过了画面、键鼠、中文、双向剪贴板、控制端到被控端的文件、系统声音、审批弹窗和临时密码。这是同一功能代码的开发构建，没有在最终字节上重跑。被控端到控制端的文件、Android 控制 Windows、实体 arm64 手机、升级恢复、长时间运行和网络矩阵等由负责人豁免，没有验证。
+实测范围：Web 控制端经生产服务器控制 Windows 10.0.0 被控端，直连和中继都通过了画面、键鼠、中文、双向剪贴板、控制端到被控端的文件、系统声音、审批弹窗和临时密码。这是同一功能代码的开发构建，没有在最终字节上重跑。被控端到控制端的文件、Android 控制 Windows、实体 arm64 手机、升级恢复、长时间运行和网络矩阵等尚未验证。
 
 锁屏、登录前和 UAC 安全桌面控制不可用，也没有麦克风回传。
 
@@ -49,9 +49,19 @@ flowchart LR
   Agent --> App[本地服务]
 ```
 
-下图是 7.0.0 控制台的历史截图，使用示例数据。它不是 10.0 的远控或向导界面。10.0 截图还没有补上，槽位见 [screenshot-slots.json](docs/site/screenshot-slots.json)。
+## 10.0.0 界面
 
-![Home Tunnel 7.0.0 控制台历史截图，示例数据](docs/site/assets/admin-dashboard-7.jpg)
+以下为实际运行的 10.0.0 Web 界面，使用本地示例数据，未发布服务或建立远控会话。
+[完整界面预览](docs/site/preview.html)还包含 Android API 35 模拟器的 debug 截图；它们不能代替最终 APK 或真实 Windows 远控验收。
+[截图来源、环境与校验值](docs/site/assets/v10/README.md)。
+
+![Home Tunnel 10.0.0 Web 控制台，示例数据](docs/site/assets/v10/admin-console.png)
+
+![Home Tunnel 10.0.0 Web 服务发布向导，示例数据，尚未发布服务](docs/site/assets/v10/tunnel-wizard.png)
+
+正式 Windows 便携版的原生 WebView2 登录窗口，空白隔离状态，未登录或建立远控会话：
+
+![Home Tunnel 10.0.0 Windows 原生客户端登录窗口，真实标题栏和空白账号密码框](docs/site/assets/v10/windows-signin.png)
 
 ## 参与项目
 

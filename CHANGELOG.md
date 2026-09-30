@@ -9,9 +9,9 @@ All four repositories and the managed Agent use 10.0.0; FRP stays at 0.70.1. The
 - An accepted connection gets screen, input, clipboard, files and system audio (WASAPI loopback). The microphone is never auto-approved.
 - Redesigned browser viewer with a floating toolbar and background clipboard sync; guided service publishing; localization, theme and accessibility fixes.
 - Android uses the same-source SDK for arm64-v8a and x86_64 and adds audio playback, file transfer, monitor selection and keyboard-safe layouts (versionCode 10000000).
-- The hub records stable and candidate channels in one `distribution.json` and documents owner waivers for gates that were not run.
+- The hub records stable and candidate channels in one `distribution.json` and documents unverified gates that were not run.
 
-Published with owner waivers: a waiver is not a pass. Lock screen, pre-login and UAC secure-desktop control and microphone return are not available; Windows/macOS packages are unsigned. See [release notes](docs/RELEASE_NOTES.md) for what was verified and what was waived.
+Verification remains incomplete; tests that were not run are not counted as passed. Lock screen, pre-login and UAC secure-desktop control and microphone return are not available; Windows/macOS packages are unsigned. See [release notes](docs/RELEASE_NOTES.md) for verified coverage and unverified items.
 
 ## 9.0.0 — 2026-09-24
 

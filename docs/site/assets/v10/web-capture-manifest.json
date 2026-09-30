@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "product_version": "10.0.0",
+  "source_repository": "https://github.com/ZHanry/home-tunnel-server",
+  "source_sha": "9e5b4ff4e6381a42317c94618d1805b7398c558e",
+  "source_tag": "v10.0.0",
+  "fixture_sha256": "5fceebfd81914168840ed0f35882482ab3a14f811fd24fa76b18503c915384c3",
+  "lockfile_sha256": "99bbde306fa8b12ac7a27c428a45f7f28cd0905fe605844fc4e9325ededa9140",
+  "capture_script_sha256": "473a006bbf0fd449aef439a0e792d8180354641b91d27247ae2db2c2c4b2f483",
+  "captured_at": "2026-09-30T01:31:23.746Z",
+  "browser": "145.0.7632.6",
+  "viewport": [
+    1440,
+    960
+  ],
+  "full_page": true,
+  "locale": "zh-CN",
+  "fixture": "Unmodified control-center/scripts/ui-preview.mjs plus an enabled remote capability and empty remote endpoint list",
+  "actual_product_ui": true,
+  "synthetic_data": true,
+  "ui_source_modified": false,
+  "remote_session_verified": false,
+  "windows_capture": false,
+  "capture_status": "captured-awaiting-visual-review",
+  "ci": {
+    "repository": "ZHanry/home-tunnel",
+    "run_id": "36655463870",
+    "run_attempt": "1",
+    "workflow_sha": "90e96494bc554f476d8103b598989d35a3a555db"
+  },
+  "captures": [
+    {
+      "file": "admin-console.png",
+      "description": "10.0.0 Web console; first-party local preview example data",
+      "sha256": "6f4809bd4a2a67f43d02237916615666db1f943605d4322f5303af51acb1131a",
+      "bytes": 184218,
+      "width": 1440,
+      "height": 1132
+    },
+    {
+      "file": "tunnel-wizard.png",
+      "description": "10.0.0 Web publishing wizard; device and template step; example data; nothing published",
+      "sha256": "a436d258efe6acc3445103c4a146c21d8c108ebe76dbc48a3160deb63716e419",
+      "bytes": 127578,
+      "width": 1440,
+      "height": 960
+    },
+    {
+      "file": "remote-entry.png",
+      "description": "10.0.0 Web remote entry; empty device fixture; no Windows host or remote session",
+      "sha256": "64eba9e5912f48d808503ac6302cd3b115586c9033c5b505ce51f810fa7f6e02",
+      "bytes": 192347,
+      "width": 1440,
+      "height": 960
+    }
+  ]
+}

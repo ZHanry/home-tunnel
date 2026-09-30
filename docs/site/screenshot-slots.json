@@ -1,39 +1,167 @@
 {
   "schema_version": 1,
-  "note": "Replace only a slot whose status is awaiting-v10-capture, using its replacement_file. Do not point a 10.0 slot at a historical image.",
+  "note": "Current product captures use original PNG bytes and a source/hash manifest. Historical images keep their original version labels. The Windows remote-window slot remains empty until a real Windows capture exists.",
   "slots": [
     {
       "id": "history-console-7",
       "status": "historical-labeled",
-      "pages": ["index.html", "en/index.html", "preview.html", "en/preview.html"],
+      "pages": [
+        "preview.html",
+        "en/preview.html"
+      ],
       "asset": "assets/admin-dashboard-7.jpg",
       "captured_product_version": "7.0.0",
-      "label_must_include": ["7.0.0"],
+      "label_must_include": [
+        "7.0.0"
+      ],
       "replacement": "Keep this historical figure. Add a new slot for a later capture."
     },
     {
       "id": "vector-architecture",
       "status": "vector-diagram",
-      "pages": ["index.html", "en/index.html"],
+      "pages": [
+        "index.html",
+        "en/index.html"
+      ],
       "asset": "assets/architecture.svg",
-      "label_must_include": ["FRP"],
+      "label_must_include": [
+        "FRP"
+      ],
       "replacement": "Vector diagram of the control plane and FRP path. It is not a remote-desktop screenshot."
     },
     {
       "id": "v10-remote-window",
       "status": "awaiting-v10-capture",
-      "pages": ["index.html", "en/index.html", "preview.html", "en/preview.html"],
+      "pages": [
+        "index.html",
+        "en/index.html",
+        "preview.html",
+        "en/preview.html"
+      ],
       "asset": null,
       "replacement_file": "assets/v10/remote-window.png",
       "replacement_rules": "Actual Windows remote-window screenshot after a real capture. Do not use admin-dashboard-7.jpg or social-preview.jpg."
     },
     {
+      "status": "captured-v10-ui",
+      "pages": [
+        "index.html",
+        "en/index.html",
+        "preview.html",
+        "en/preview.html"
+      ],
+      "captured_product_version": "10.0.0",
+      "fixture_data": true,
+      "id": "v10-admin-console",
+      "asset": "assets/v10/admin-console.png",
+      "capture_manifest": "assets/v10/web-capture-manifest.json",
+      "source_file": "admin-console.png",
+      "label_must_include": [
+        "10.0.0",
+        "Web"
+      ]
+    },
+    {
+      "status": "captured-v10-ui",
+      "pages": [
+        "index.html",
+        "en/index.html",
+        "preview.html",
+        "en/preview.html"
+      ],
+      "captured_product_version": "10.0.0",
+      "fixture_data": true,
       "id": "v10-tunnel-wizard",
-      "status": "awaiting-v10-capture",
-      "pages": ["index.html", "en/index.html", "preview.html", "en/preview.html"],
-      "asset": null,
-      "replacement_file": "assets/v10/tunnel-wizard.png",
-      "replacement_rules": "Actual FRP tunnel wizard screenshot. Not a decorative mock."
+      "asset": "assets/v10/tunnel-wizard.png",
+      "capture_manifest": "assets/v10/web-capture-manifest.json",
+      "source_file": "tunnel-wizard.png",
+      "label_must_include": [
+        "10.0.0",
+        "Web"
+      ]
+    },
+    {
+      "status": "captured-v10-ui",
+      "pages": [
+        "index.html",
+        "en/index.html",
+        "preview.html",
+        "en/preview.html"
+      ],
+      "captured_product_version": "10.0.0",
+      "fixture_data": true,
+      "id": "v10-web-remote-entry",
+      "asset": "assets/v10/remote-entry.png",
+      "capture_manifest": "assets/v10/web-capture-manifest.json",
+      "source_file": "remote-entry.png",
+      "label_must_include": [
+        "10.0.0",
+        "Web"
+      ]
+    },
+    {
+      "status": "captured-v10-ui",
+      "pages": [
+        "index.html",
+        "en/index.html",
+        "preview.html",
+        "en/preview.html"
+      ],
+      "captured_product_version": "10.0.0",
+      "fixture_data": true,
+      "id": "v10-android-overview",
+      "asset": "assets/v10/android-overview.png",
+      "capture_manifest": "assets/v10/android-capture-manifest.json",
+      "source_file": "overview.png",
+      "label_must_include": [
+        "10.0.0",
+        "Android",
+        "API 35",
+        "debug"
+      ]
+    },
+    {
+      "status": "captured-v10-ui",
+      "pages": [
+        "index.html",
+        "en/index.html",
+        "preview.html",
+        "en/preview.html"
+      ],
+      "captured_product_version": "10.0.0",
+      "fixture_data": true,
+      "id": "v10-android-devices",
+      "asset": "assets/v10/android-devices.png",
+      "capture_manifest": "assets/v10/android-capture-manifest.json",
+      "source_file": "devices.png",
+      "label_must_include": [
+        "10.0.0",
+        "Android",
+        "API 35",
+        "debug"
+      ]
+    },
+    {
+      "id": "v10-windows-signin",
+      "status": "captured-v10-ui",
+      "pages": [
+        "index.html",
+        "en/index.html",
+        "preview.html",
+        "en/preview.html"
+      ],
+      "asset": "assets/v10/windows-signin.png",
+      "captured_product_version": "10.0.0",
+      "fixture_data": false,
+      "capture_kind": "native-windows",
+      "capture_manifest": "assets/v10/windows-capture-manifest.json",
+      "source_file": "windows-v10-signin.png",
+      "product_source_revision": "5eb6768f0d21a842c01d66d3d979a4f935a2ed61",
+      "label_must_include": [
+        "10.0.0",
+        "Windows",
+        "WebView2"
+      ]
     }
   ],
   "historical_assets_not_for_v10": [

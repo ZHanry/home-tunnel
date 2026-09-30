@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import re
 import sys
 from pathlib import Path
@@ -10,6 +11,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SITE = ROOT / "docs" / "site"
 BANNED = (
+    "负责人豁免",
+    "owner waiver",
+    "waived by the owner",
     "10.0.0 稳定版已发布",
     "10.0.0 stable release is available",
     "10.0.0 已通过验收",
@@ -32,10 +36,59 @@ ALLOWED_IMAGES = {
     "assets/architecture.svg",
     "assets/share-card.svg",
     "assets/admin-dashboard-7.jpg",
+    "assets/v10/admin-console.png",
+    "assets/v10/tunnel-wizard.png",
+    "assets/v10/remote-entry.png",
+    "assets/v10/android-overview.png",
+    "assets/v10/android-devices.png",
+    "assets/v10/windows-signin.png",
 }
 DOWNLOAD_PAGES = {"downloads.html", "en/downloads.html"}
 LANDING_PAGES = {"index.html", "en/index.html"}
 STATUS_PAGES = LANDING_PAGES | DOWNLOAD_PAGES
+
+
+def audit_capture(site, slot):
+    """Bind published product pixels to an original capture manifest."""
+    errors = []
+    slot_id = slot["id"]
+    try:
+        asset = site / slot["asset"]
+        manifest_path = site / slot["capture_manifest"]
+        if not asset.resolve().is_relative_to(site.resolve()) or not manifest_path.resolve().is_relative_to(site.resolve()):
+            return [f"slot {slot_id} capture paths must stay inside the site"]
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        version = manifest.get("product_version", manifest.get("component_version", manifest.get("version")))
+        if version != slot.get("captured_product_version") or version != "10.0.0":
+            errors.append(f"slot {slot_id} capture version must match 10.0.0")
+        revision = manifest.get("source_sha", manifest.get("repository_revision", manifest.get("capture_revision", "")))
+        if not re.fullmatch(r"[a-f0-9]{40}", revision):
+            errors.append(f"slot {slot_id} capture needs its exact source revision")
+        entries = manifest.get("captures", manifest.get("screenshots", []))
+        if slot.get("capture_kind") == "native-windows":
+            if manifest.get("interactive") is not True:
+                errors.append(f"slot {slot_id} needs an interactive native Windows capture")
+            for key in ("package_sha256", "gui_sha256"):
+                if not re.fullmatch(r"[a-f0-9]{64}", manifest.get(key, "")):
+                    errors.append(f"slot {slot_id} needs the actual Windows {key}")
+            entries = [{"file": slot["source_file"], "sha256": manifest.get("screenshot_sha256")}]
+        matches = [entry for entry in entries if Path(entry.get("file", entry.get("source_path", ""))).name == slot["source_file"]]
+        if len(matches) != 1:
+            return errors + [f"slot {slot_id} must identify one original captured file"]
+        entry = matches[0]
+        data = asset.read_bytes()
+        if hashlib.sha256(data).hexdigest() != entry.get("sha256"):
+            errors.append(f"slot {slot_id} image digest does not match capture")
+        if len(data) < 24 or data[:8] != b"\x89PNG\r\n\x1a\n":
+            errors.append(f"slot {slot_id} must contain actual PNG bytes")
+        else:
+            dimensions = (int.from_bytes(data[16:20], "big"), int.from_bytes(data[20:24], "big"))
+            expected = (entry.get("width", manifest.get("width")), entry.get("height", manifest.get("height")))
+            if dimensions != expected:
+                errors.append(f"slot {slot_id} image dimensions do not match capture")
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        errors.append(f"slot {slot_id} has invalid capture provenance: {error}")
+    return errors
 
 
 def audit(root=ROOT):
@@ -69,7 +122,7 @@ def audit(root=ROOT):
         text = page.read_text(encoding="utf-8")
         relative = page.relative_to(site).as_posix()
         for phrase in banned:
-            if phrase in text:
+            if phrase.lower() in text.lower():
                 errors.append(f"{relative} contains banned claim: {phrase}")
         required = (
             "<!doctype html>",
@@ -137,11 +190,12 @@ def audit(root=ROOT):
             if text.count("<details") < 4:
                 errors.append(relative + " needs a real FAQ")
             if promoted and candidate.get("waived"):
-                # A release with owner waivers must say so where people decide to download.
-                if relative == "index.html" and "负责人豁免" not in text:
-                    errors.append("Chinese landing must disclose the owner waivers")
-                if relative == "en/index.html" and "owner waiver" not in text.lower():
-                    errors.append("English landing must disclose the owner waivers")
+                # Machine evidence retains original statuses; public prose must
+                # plainly disclose incomplete verification at the download entry.
+                if relative == "index.html" and ("未运行" not in text or "验证尚未完成" not in text):
+                    errors.append("Chinese landing must disclose incomplete verification")
+                if relative == "en/index.html" and ("not run" not in text.lower() or "unverified" not in text.lower()):
+                    errors.append("English landing must disclose incomplete verification")
             elif not promoted:
                 if relative == "index.html" and "验收尚未完成" not in text:
                     errors.append("Chinese landing must say acceptance is unfinished")
@@ -154,12 +208,16 @@ def audit(root=ROOT):
             if "Authenticode" not in text:
                 errors.append(relative + " must keep the desktop signing fact")
     for slot in slots["slots"]:
+        if slot["status"] == "captured-v10-ui":
+            errors.extend(audit_capture(site, slot))
         pages_for_slot = seen_slots.get(slot["id"], [])
         found_on = {item[0] for item in pages_for_slot}
         for expected in slot["pages"]:
             if expected not in found_on:
                 errors.append(f"slot {slot['id']} missing on {expected}")
         for page_name, figure in pages_for_slot:
+            if f'data-slot-status="{slot["status"]}"' not in figure:
+                errors.append(f"slot {slot['id']} on {page_name} has a mismatched status")
             if slot["status"] == "awaiting-v10-capture":
                 if "<img" in figure:
                     errors.append(f"empty slot {slot['id']} on {page_name} contains an image")
@@ -172,6 +230,10 @@ def audit(root=ROOT):
                 for label in slot.get("label_must_include", []):
                     if label not in figure:
                         errors.append(f"slot {slot['id']} on {page_name} must include {label}")
+                if slot["status"] == "captured-v10-ui" and slot.get("fixture_data"):
+                    label = "example data" if page_name.startswith("en/") else "示例数据"
+                    if label not in figure:
+                        errors.append(f"slot {slot['id']} on {page_name} must disclose {label}")
     blob = "\n".join(page.read_text(encoding="utf-8") for page in pages)
     for historical in slots["historical_assets_not_for_v10"]:
         name = historical.split("/")[-1]
@@ -182,7 +244,7 @@ def audit(root=ROOT):
             continue
         text = path.read_text(encoding="utf-8")
         for phrase in banned:
-            if phrase in text:
+            if phrase.lower() in text.lower():
                 errors.append(f"{path.relative_to(root)} contains banned claim: {phrase}")
     return errors
 

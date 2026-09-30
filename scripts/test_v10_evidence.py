@@ -1,8 +1,11 @@
 import copy
 import hashlib
 import json
+import subprocess
 import sys
+import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -171,19 +174,103 @@ class EvidenceTests(unittest.TestCase):
         self.assertEqual(tuple(schema["x-required-gates"]), v10_evidence.REQUIRED_GATES)
         self.assertEqual(tuple(schema["x-owner-waivable-gates"]), v10_evidence.WAIVABLE_GATES)
 
-    def test_repository_has_no_submitted_evidence(self):
-        status = json.loads((ROOT / "docs" / "release" / "acceptance-status.json").read_text(encoding="utf-8"))
-        self.assertEqual(v10_evidence.assess_status(status), [])
-        self.assertEqual(status["status"], "not_submitted")
-        for path in (ROOT / "docs" / "release").glob("*.json"):
-            if path.name == "v10-evidence.schema.json":
-                continue
-            data = json.loads(path.read_text(encoding="utf-8"))
-            self.assertNotIn("gates", data)
+    def test_repository_reconstructs_waivers_without_pass_claims(self):
+        status, errors, record = v10_evidence.load_status(ROOT)
+        self.assertEqual(errors, [])
+        self.assertEqual(status["status"], "accepted_with_waivers")
+        self.assertTrue(record["reconstructed_from_published_receipts"])
+        self.assertEqual(len(v10_evidence.waived_items(record)), len(v10_evidence.REQUIRED_GATES) + 1)
+        for gate in [record["ui_coverage"], *record["gates"].values()]:
+            self.assertEqual(gate["status"], "waived")
+            self.assertIn("waiver_receipt", gate)
+            self.assertNotIn("measured_result", gate)
         claimed = copy.deepcopy(status)
         claimed["status"] = "passed"
         claimed["evidence_file"] = "docs/release/example-evidence.json"
         self.assertTrue(v10_evidence.assess_status(claimed, evidence_errors=[], evidence_path=claimed["evidence_file"]))
+
+    def test_reconstructed_waivers_are_bound_to_original_receipts(self):
+        _, _, record = v10_evidence.load_status(ROOT)
+        for mutation, expected in (
+            (lambda gate: gate["waiver"].update(reason="new approval invented today"), "preserve"),
+            (lambda gate: gate["waiver_receipt"].update(sha256="0" * 64), "digest"),
+            (lambda gate: gate["waiver_receipt"].update(cases=["not-an-approved-case"]), "cases"),
+            (lambda gate: gate["waiver_receipt"].update(component="android"), "source"),
+            (lambda gate: gate["waiver_receipt"].update(path="../outside.json"), "outside"),
+            (lambda gate: gate.pop("waiver_receipt"), "missing"),
+        ):
+            with self.subTest(expected=expected):
+                changed = copy.deepcopy(record)
+                mutation(changed["gates"]["vm_windows_pair"])
+                self.assertTrue(any(expected in error for error in v10_evidence.receipt_errors(changed, ROOT)))
+
+    def test_reconstructed_waiver_cannot_change_its_gate_scope(self):
+        _, _, record = v10_evidence.load_status(ROOT)
+        swapped = copy.deepcopy(record)
+        swapped["gates"]["vm_windows_pair"] = copy.deepcopy(swapped["gates"]["active_2h"])
+        self.assertTrue(any("scope" in error for error in v10_evidence.receipt_errors(swapped, ROOT)))
+        partial_ui = copy.deepcopy(record)
+        partial_ui["ui_coverage"]["waiver_receipt"]["cases"] = ["keyboard_focus"]
+        self.assertTrue(any("scope" in error for error in v10_evidence.receipt_errors(partial_ui, ROOT)))
+        partial_network = copy.deepcopy(record)
+        partial_network["gates"]["network_direct_udp"]["waiver_receipt"]["cases"] = ["lan"]
+        self.assertTrue(any("scope" in error for error in v10_evidence.receipt_errors(partial_network, ROOT)))
+        duplicate_case = copy.deepcopy(record)
+        duplicate_case["gates"]["vm_windows_pair"]["waiver_receipt"]["cases"] *= 2
+        self.assertTrue(any("scope" in error for error in v10_evidence.receipt_errors(duplicate_case, ROOT)))
+
+    def test_reconstructed_waivers_bind_exact_component_package_bytes(self):
+        _, _, record = v10_evidence.load_status(ROOT)
+        for component in ("client", "android"):
+            for field, value in (("sha256", digest("different published bytes")), ("size_bytes", 1),
+                                 ("filename", "not-an-approved-package.bin")):
+                with self.subTest(component=component, field=field):
+                    changed = copy.deepcopy(record)
+                    changed["components"][component]["artifacts"][0][field] = value
+                    self.assertTrue(any("artifact bytes" in error for error in v10_evidence.receipt_errors(changed, ROOT)))
+
+    def test_reconstructed_ui_preserves_android_and_aggregate_disclosure(self):
+        _, _, record = v10_evidence.load_status(ROOT)
+        for mutation, expected in (
+            (lambda ui: ui.pop("additional_waivers"), "Android"),
+            (lambda ui: ui["additional_waivers"]["android"]["waiver"].update(reason="new broader approval"), "preserve"),
+            (lambda ui: ui["additional_waivers"]["android"].update(measured_result="new UI pass"), "measured"),
+            (lambda ui: ui["additional_waivers"]["android"]["waiver_receipt"].update(cases=["all_applicable_states"]), "cases"),
+            (lambda ui: ui.pop("release_disclosure"), "disclosure"),
+            (lambda ui: ui["release_disclosure"].update(sha256="0" * 64), "digest"),
+            (lambda ui: ui["release_disclosure"].update(quote="some unrelated text"), "full final UI"),
+            (lambda ui: ui["release_disclosure"].update(source_url="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md"), "original hub source"),
+        ):
+            with self.subTest(expected=expected):
+                changed = copy.deepcopy(record)
+                mutation(changed["ui_coverage"])
+                self.assertTrue(any(expected in error for error in v10_evidence.receipt_errors(changed, ROOT)))
+
+    def test_direct_record_command_checks_waiver_provenance(self):
+        _, _, record = v10_evidence.load_status(ROOT)
+        record["gates"]["vm_windows_pair"]["waiver_receipt"]["sha256"] = "0" * 64
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "record.json"
+            path.write_text(json.dumps(record), encoding="utf-8")
+            completed = subprocess.run(
+                [sys.executable, str(ROOT / "scripts/check-v10-evidence.py"), str(path)],
+                cwd=ROOT, capture_output=True, text=True,
+            )
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertIn("waiver receipt digest", completed.stderr)
+
+    def test_public_wording_can_change_without_rewriting_historical_disclosure(self):
+        _, errors, record = v10_evidence.load_status(ROOT)
+        self.assertEqual(errors, [])
+        current = (ROOT / "docs/RELEASE_NOTES.md").read_bytes()
+        self.assertNotEqual(hashlib.sha256(current).hexdigest(), record["ui_coverage"]["release_disclosure"]["sha256"])
+        self.assertEqual(v10_evidence.receipt_errors(record, ROOT), [])
+
+    def test_missing_original_git_disclosure_fails_closed(self):
+        _, _, record = v10_evidence.load_status(ROOT)
+        with patch.object(v10_evidence.subprocess, "run", return_value=subprocess.CompletedProcess([], 128, b"", b"missing")):
+            self.assertTrue(any("original release disclosure is unavailable" in error
+                                for error in v10_evidence.receipt_errors(record, ROOT)))
 
 
 if __name__ == "__main__":
