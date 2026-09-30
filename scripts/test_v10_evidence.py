@@ -1,7 +1,9 @@
 import copy
 import hashlib
 import json
+import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -200,6 +202,60 @@ class EvidenceTests(unittest.TestCase):
                 changed = copy.deepcopy(record)
                 mutation(changed["gates"]["vm_windows_pair"])
                 self.assertTrue(any(expected in error for error in v10_evidence.receipt_errors(changed, ROOT)))
+
+    def test_reconstructed_waiver_cannot_change_its_gate_scope(self):
+        _, _, record = v10_evidence.load_status(ROOT)
+        swapped = copy.deepcopy(record)
+        swapped["gates"]["vm_windows_pair"] = copy.deepcopy(swapped["gates"]["active_2h"])
+        self.assertTrue(any("scope" in error for error in v10_evidence.receipt_errors(swapped, ROOT)))
+        partial_ui = copy.deepcopy(record)
+        partial_ui["ui_coverage"]["waiver_receipt"]["cases"] = ["keyboard_focus"]
+        self.assertTrue(any("scope" in error for error in v10_evidence.receipt_errors(partial_ui, ROOT)))
+        partial_network = copy.deepcopy(record)
+        partial_network["gates"]["network_direct_udp"]["waiver_receipt"]["cases"] = ["lan"]
+        self.assertTrue(any("scope" in error for error in v10_evidence.receipt_errors(partial_network, ROOT)))
+        duplicate_case = copy.deepcopy(record)
+        duplicate_case["gates"]["vm_windows_pair"]["waiver_receipt"]["cases"] *= 2
+        self.assertTrue(any("scope" in error for error in v10_evidence.receipt_errors(duplicate_case, ROOT)))
+
+    def test_reconstructed_waivers_bind_exact_component_package_bytes(self):
+        _, _, record = v10_evidence.load_status(ROOT)
+        for component in ("client", "android"):
+            for field, value in (("sha256", digest("different published bytes")), ("size_bytes", 1),
+                                 ("filename", "not-an-approved-package.bin")):
+                with self.subTest(component=component, field=field):
+                    changed = copy.deepcopy(record)
+                    changed["components"][component]["artifacts"][0][field] = value
+                    self.assertTrue(any("artifact bytes" in error for error in v10_evidence.receipt_errors(changed, ROOT)))
+
+    def test_reconstructed_ui_preserves_android_and_aggregate_disclosure(self):
+        _, _, record = v10_evidence.load_status(ROOT)
+        for mutation, expected in (
+            (lambda ui: ui.pop("additional_waivers"), "Android"),
+            (lambda ui: ui["additional_waivers"]["android"]["waiver"].update(reason="new broader approval"), "preserve"),
+            (lambda ui: ui["additional_waivers"]["android"]["waiver_receipt"].update(cases=["all_applicable_states"]), "cases"),
+            (lambda ui: ui.pop("release_disclosure"), "disclosure"),
+            (lambda ui: ui["release_disclosure"].update(sha256="0" * 64), "digest"),
+            (lambda ui: ui["release_disclosure"].update(quote="some unrelated text"), "full final UI"),
+            (lambda ui: ui["release_disclosure"].update(source_url="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md"), "original hub source"),
+        ):
+            with self.subTest(expected=expected):
+                changed = copy.deepcopy(record)
+                mutation(changed["ui_coverage"])
+                self.assertTrue(any(expected in error for error in v10_evidence.receipt_errors(changed, ROOT)))
+
+    def test_direct_record_command_checks_waiver_provenance(self):
+        _, _, record = v10_evidence.load_status(ROOT)
+        record["gates"]["vm_windows_pair"]["waiver_receipt"]["sha256"] = "0" * 64
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "record.json"
+            path.write_text(json.dumps(record), encoding="utf-8")
+            completed = subprocess.run(
+                [sys.executable, str(ROOT / "scripts/check-v10-evidence.py"), str(path)],
+                cwd=ROOT, capture_output=True, text=True,
+            )
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertIn("waiver receipt digest", completed.stderr)
 
 
 if __name__ == "__main__":

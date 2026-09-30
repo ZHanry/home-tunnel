@@ -38,7 +38,10 @@ def main():
         return
     if not args.record:
         raise SystemExit("Provide an evidence record or --status")
-    errors = v10_evidence.evaluate(json.loads(args.record.read_text(encoding="utf-8")))
+    record = json.loads(args.record.read_text(encoding="utf-8"))
+    errors = v10_evidence.evaluate(record)
+    if isinstance(record, dict):
+        errors.extend(v10_evidence.receipt_errors(record, ROOT))
     if errors:
         raise SystemExit("\n".join(errors))
     print("10.0.0 candidate evidence record is internally consistent")

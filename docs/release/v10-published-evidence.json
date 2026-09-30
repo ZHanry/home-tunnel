@@ -154,7 +154,32 @@
       ]
     },
     "source_sha": "71b259d13711e17bb2195bbec5829a1ceb8f2c22",
-    "scope_note": "The hub release notes disclose the incomplete final UI review for 10.0.0. This preserves the dated original component waiver; new documentation captures do not count as acceptance or Gemini approval."
+    "scope_note": "The original hub release notes disclose the incomplete final UI review across 10.0.0. Both desktop and Android dated component waivers are preserved verbatim. New documentation captures do not count as acceptance or Gemini approval.",
+    "additional_waivers": {
+      "android": {
+        "status": "waived",
+        "waiver": {
+          "approved_at": "2026-09-29T00:40:00+00:00",
+          "approved_by": "owner",
+          "disclosed_in": "ZHanry/home-tunnel-android v10.0.0 release notes (docs/RELEASE_NOTES.md) and the hub 10.0.0 release notes",
+          "reason": "Gemini reviewed emulator screenshots of development builds only; the final APK screens were not re-reviewed."
+        },
+        "waiver_receipt": {
+          "component": "android",
+          "path": "validation/android/4701ecfa5e951787c6f49345214b2ece13326386/android-acceptance-gemini_screenshots.json",
+          "sha256": "51accfd8ea5bfcc42c9d0e9807335ab079ab9d9d578678337f02c237af8b428f",
+          "cases": [
+            "final_apk_screenshot_review"
+          ]
+        }
+      }
+    },
+    "release_disclosure": {
+      "path": "docs/RELEASE_NOTES.md",
+      "sha256": "3b1bef43664be9caa9716bd2379d4c5feecd2168a0b6f937f913787b82ca5205",
+      "quote": "- 最终界面的完整 Gemini 审查",
+      "source_url": "https://github.com/ZHanry/home-tunnel/blob/71b259d13711e17bb2195bbec5829a1ceb8f2c22/docs/RELEASE_NOTES.md"
+    }
   },
   "gates": {
     "vm_windows_pair": {

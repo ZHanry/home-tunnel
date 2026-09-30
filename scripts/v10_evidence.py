@@ -37,6 +37,24 @@ REQUIRED_GATES = (
 # that is disclosed in the release notes. A waiver is not a pass and must not carry measured
 # results. The owner waived the unrun 10.0.0 matrix on 2026-09-29; see docs/RELEASE_NOTES.md.
 WAIVABLE_GATES = REQUIRED_GATES
+# These are mappings of the existing 10.0.0 receipt cases, not new waiver scope.
+# A receipt for one waived test must never authorize a different aggregate gate.
+RECONSTRUCTED_RECEIPT_SCOPE = {
+    "ui_coverage": ("client", "gemini_screenshots", ("all_applicable_states",)),
+    "ui_coverage.android": ("android", "gemini_screenshots", ("final_apk_screenshot_review",)),
+    "vm_windows_pair": ("client", "remote_sessions", ("windows_to_windows",)),
+    "vm_web_to_windows": ("client", "remote_sessions", ("web_to_windows",)),
+    "vm_android_x64": ("android", "x64_api35", ("final_apk_remote_session",)),
+    "network_direct_udp": ("client", "udp_network", ("lan", "traversable_nat")),
+    "network_blocked_udp": ("client", "udp_network", ("udp_blocked",)),
+    "network_ipv6": ("client", "udp_network", ("ipv6",)),
+    "migration_9_to_10": ("client", "upgrade_recovery", ("real_9_to_10_install", "backup", "restore")),
+    "repeat_30": ("client", "stability", ("thirty_connections",)),
+    "input_release_2s": ("client", "stability", ("input_release",)),
+    "network_restore_30s": ("client", "udp_network", ("reconnect",)),
+    "active_2h": ("client", "stability", ("two_hour_active",)),
+    "online_24h": ("client", "stability", ("twenty_four_hour_online",)),
+}
 VERSION = "10.0.0"
 # acceptance-status.json states that claim a release; each needs a clean evidence record.
 ACCEPTED_STATES = {"passed", "accepted", "accepted_with_waivers"}
@@ -302,10 +320,39 @@ def receipt_errors(record, root):
     errors = []
     root = Path(root).resolve()
     gates = record.get("gates") if isinstance(record.get("gates"), dict) else {}
-    entries = {"ui_coverage": record.get("ui_coverage", {}), **gates}
+    ui = record.get("ui_coverage") if isinstance(record.get("ui_coverage"), dict) else {}
+    entries = {"ui_coverage": ui, **gates}
+    additional = ui.get("additional_waivers", {})
+    if record.get("reconstructed_from_published_receipts") and ui.get("status") == "waived":
+        if not isinstance(additional, dict) or set(additional) != {"android"}:
+            errors.append("ui_coverage must preserve the separate original Android UI waiver")
+        elif not isinstance(additional["android"], dict) or additional["android"].get("status") != "waived":
+            errors.append("ui_coverage.android must remain an original waived receipt")
+        disclosure = ui.get("release_disclosure")
+        if not isinstance(disclosure, dict):
+            errors.append("ui_coverage is missing the original aggregate release disclosure")
+        else:
+            relative = "docs/RELEASE_NOTES.md"
+            path = root / relative
+            hub = (record.get("sources") or {}).get("hub", {})
+            url = f"https://github.com/{REPOSITORIES['hub']}/blob/{hub.get('sha')}/{relative}"
+            quote = "- 最终界面的完整 Gemini 审查"
+            if disclosure.get("path") != relative or disclosure.get("source_url") != url:
+                errors.append("ui_coverage release disclosure must identify the original hub source")
+            if not path.is_file() or not path.resolve().is_relative_to(root):
+                errors.append("ui_coverage release disclosure is missing or outside the repository")
+            else:
+                content = path.read_bytes()
+                if hashlib.sha256(content).hexdigest() != disclosure.get("sha256"):
+                    errors.append("ui_coverage release disclosure digest differs")
+                if disclosure.get("quote") != quote or quote.encode("utf-8") not in content:
+                    errors.append("ui_coverage release disclosure must retain the full final UI review waiver")
+    if isinstance(additional, dict):
+        entries.update({f"ui_coverage.{component}": gate for component, gate in additional.items()})
     for name, gate in entries.items():
         if not isinstance(gate, dict):
-            continue  # The normal evaluator reports malformed gates.
+            errors.append(f"{name} waiver must be an object")
+            continue
         provenance = gate.get("waiver_receipt")
         if not provenance:
             if record.get("reconstructed_from_published_receipts") and gate.get("status") == "waived":
@@ -322,17 +369,61 @@ def receipt_errors(record, root):
         if hashlib.sha256(content).hexdigest() != provenance.get("sha256"):
             errors.append(f"{name} waiver receipt digest differs")
             continue
-        receipt = json.loads(content)
+        try:
+            receipt = json.loads(content)
+        except (UnicodeDecodeError, ValueError):
+            errors.append(f"{name} waiver receipt is not valid JSON")
+            continue
+        if not isinstance(receipt, dict):
+            errors.append(f"{name} waiver receipt must contain an object")
+            continue
         if gate.get("status") != "waived" or receipt.get("status") != "waived" or gate.get("waiver") != receipt.get("waiver"):
             errors.append(f"{name} must preserve its existing waiver exactly")
         cases = provenance.get("cases")
-        if not isinstance(cases, list) or not cases or any(receipt.get("cases", {}).get(case) != "waived" for case in cases):
+        receipt_cases = receipt.get("cases") if isinstance(receipt.get("cases"), dict) else {}
+        if (not isinstance(cases, list) or not cases or
+                any(not isinstance(case, str) or receipt_cases.get(case) != "waived" for case in cases)):
             errors.append(f"{name} must cite existing waived receipt cases")
         component = provenance.get("component")
-        source = record.get("sources", {}).get(component, {})
+        sources = record.get("sources") if isinstance(record.get("sources"), dict) else {}
+        source = sources.get(component, {}) if isinstance(component, str) else {}
+        source = source if isinstance(source, dict) else {}
         if (receipt.get("repository") != source.get("repository") or
                 (receipt.get("revision") or receipt.get("app_revision")) != source.get("sha")):
             errors.append(f"{name} waiver receipt source differs")
+        scope = RECONSTRUCTED_RECEIPT_SCOPE.get(name)
+        if scope is None:
+            errors.append(f"{name} has no historical waiver receipt scope")
+            continue
+        expected_component, expected_gate, expected_cases = scope
+        expected_path = f"validation/{expected_component}/{source.get('sha')}/{expected_component}-acceptance-{expected_gate}.json"
+        if component != expected_component:
+            errors.append(f"{name} waiver receipt source component is outside its original scope")
+        if provenance.get("path") != expected_path or receipt.get("gate") != expected_gate:
+            errors.append(f"{name} waiver receipt gate or path is outside its original scope")
+        if not isinstance(cases, list) or sorted(str(case) for case in cases) != sorted(expected_cases):
+            errors.append(f"{name} waiver receipt cases must preserve the exact original gate scope")
+
+        # The owner waived these exact published packages. A source commit alone
+        # cannot extend that approval to rebuilt or otherwise different bytes.
+        packages = receipt.get("packages") if isinstance(receipt.get("packages"), dict) else {}
+        by_filename = {
+            package.get("name", key): package
+            for key, package in packages.items() if isinstance(package, dict)
+        }
+        components = record.get("components") if isinstance(record.get("components"), dict) else {}
+        component_record = components.get(expected_component)
+        artifacts = component_record.get("artifacts", []) if isinstance(component_record, dict) else []
+        if not isinstance(artifacts, list) or not artifacts:
+            errors.append(f"{name} waiver receipt has no component artifacts to bind")
+            continue
+        for artifact in artifacts:
+            if not isinstance(artifact, dict):
+                continue  # The normal evaluator reports malformed artifacts.
+            package = by_filename.get(artifact.get("filename"), {})
+            if (package.get("sha256") != artifact.get("sha256") or
+                    package.get("bytes") != artifact.get("size_bytes")):
+                errors.append(f"{name} artifact bytes differ from its original waiver receipt: {artifact.get('filename')}")
     return errors
 
 
