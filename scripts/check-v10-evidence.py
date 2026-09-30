@@ -34,7 +34,7 @@ def main():
         else:
             waived = [name for name, _ in v10_evidence.waived_items(record)]
             print(f"Acceptance status {status.get('status')}: evidence record is internally consistent; "
-                  f"{len(waived)} owner waivers are not passes: {', '.join(waived) or 'none'}")
+                  f"{len(waived)} unverified gates retain their original records: {', '.join(waived) or 'none'}")
         return
     if not args.record:
         raise SystemExit("Provide an evidence record or --status")

@@ -14,7 +14,7 @@
 
 ## 验证到哪里
 
-10.0.0 的远控实测是在从 9.0.0 升级的生产服务器上做的。9→10 安装器升级、备份恢复、30 次连续连接、2 小时和 24 小时运行都没有运行，由负责人豁免，不能当作已验证。升级前务必自己确认备份能恢复。清单见 [发布说明](RELEASE_NOTES.md) 和 [发布证据](release/README.md)。
+10.0.0 的远控实测是在从 9.0.0 升级的生产服务器上做的。9→10 安装器升级、备份恢复、30 次连续连接、2 小时和 24 小时运行的验收项目均未运行，不能当作已验证。升级前务必自己确认备份能恢复。清单见 [发布说明](RELEASE_NOTES.md) 和 [发布证据](release/README.md)。
 
 ## 回滚
 
@@ -22,4 +22,4 @@
 
 ## English
 
-Upgrade server, desktop and Android together from 9.0.0 to 10.0.0; FRP stays 0.70.1. Back up and prove a restore first, end remote sessions, then follow the server upgrade guide with the release `compose.release.yaml`. Deploy `deploy/compose.turn.yaml` only if browser viewers need the relay. The installer upgrade, backup restore and long-running soaks were waived by the owner and are not verified.
+Upgrade server, desktop and Android together from 9.0.0 to 10.0.0; FRP stays 0.70.1. Back up and prove a restore first, end remote sessions, then follow the server upgrade guide with the release `compose.release.yaml`. Deploy `deploy/compose.turn.yaml` only if browser viewers need the relay. The installer upgrade, backup restore and long-running soaks were not run and remain unverified.

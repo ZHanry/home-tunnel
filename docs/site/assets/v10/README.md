@@ -42,7 +42,8 @@ on 2026-09-30; that original provenance file remains unchanged.
 identical hashes. They show the current remote-control entry and device list with
 synthetic accounts and devices. Instrumentation reported 21 passed, 0 failed and
 2 skipped tests. This is not final signed-APK, physical-device, remote-media or
-full-app acceptance, and it does not change the published owner waivers.
+full-app acceptance. The unverified release items remain listed in the
+[release notes](../../../RELEASE_NOTES.md).
 
 ## Native Windows client
 

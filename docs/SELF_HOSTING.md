@@ -10,7 +10,7 @@
 
 部署包和摘要在 [下载](DOWNLOADS.md)。装完后改掉初始管理员密码，打开 MFA，再按 [快速开始](GETTING_STARTED.md) 登记家庭 Agent。
 
-10.0.0 带负责人豁免发布，备份恢复和长时间运行没有验证，见 [发布说明](RELEASE_NOTES.md)。用 Release 的 `compose.release.yaml` 固定镜像摘要，不要用开发分支的源码树当生产安装介质。
+10.0.0 的备份恢复和长时间运行尚未验证，见 [发布说明](RELEASE_NOTES.md)。用 Release 的 `compose.release.yaml` 固定镜像摘要，不要用开发分支的源码树当生产安装介质。
 
 备份、监控和账号安全仍使用服务端文档：
 
@@ -21,4 +21,4 @@
 
 ## English
 
-Deploy 10.0.0 from the server guide. The host runs the control plane and FRP, plus an optional UDP TURN relay (`deploy/compose.turn.yaml`) for browser viewers. Remote-control payloads are never carried by FRP, and the relay cannot read them. Backup restore and soaks were waived, not verified.
+Deploy 10.0.0 from the server guide. The host runs the control plane and FRP, plus an optional UDP TURN relay (`deploy/compose.turn.yaml`) for browser viewers. Remote-control payloads are never carried by FRP, and the relay cannot read them. Backup restore and soaks were not run and remain unverified.

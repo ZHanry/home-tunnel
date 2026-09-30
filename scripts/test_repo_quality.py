@@ -17,6 +17,7 @@ class RepoQualityTests(unittest.TestCase):
         pages = (ROOT / ".github" / "workflows" / "pages.yml").read_text(encoding="utf-8")
         codeql = (ROOT / ".github" / "workflows" / "codeql.yml").read_text(encoding="utf-8")
         self.assertIn("persist-credentials: false", pages)
+        self.assertIn("fetch-depth: 0", pages)
         self.assertIn("check-v10-evidence.py --status", pages)
         self.assertIn("fonts-noto-cjk", pages)
         self.assertIn("fc-list :lang=zh family", pages)

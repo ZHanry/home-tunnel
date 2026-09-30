@@ -21,7 +21,7 @@
 })();
 </script>
 <title>Home Tunnel 10.0.0 范围与限制</title>
-<meta name="description" content="10.0.0 的功能、实测范围、负责人豁免（未验证）项目和已知限制。">
+<meta name="description" content="10.0.0 的功能、实测范围、未验证项目和已知限制。">
 <link rel="canonical" href="https://zhanry.github.io/home-tunnel/preview.html">
 <link rel="alternate" hreflang="zh-CN" href="https://zhanry.github.io/home-tunnel/preview.html">
 <link rel="alternate" hreflang="en" href="https://zhanry.github.io/home-tunnel/en/preview.html">
@@ -52,8 +52,8 @@
 <main id="content">
 <section class="section">
 <p class="eyebrow">范围</p>
-<h1>10.0.0 是稳定版，带负责人豁免发布。</h1>
-<p class="lede">正式版本号不表示每一项都验证过。下面区分实测、豁免和不可用。豁免是没有运行的项目，不等于通过。契约是已冻结的 api-v1.4.0。完整清单见<a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">发布说明</a>。</p>
+<h1>10.0.0 是稳定版，部分项目尚未验证。</h1>
+<p class="lede">本版的验证尚未完成。下面分别列出实测范围、未验证项目和不可用功能。未运行的项目不计为通过。契约是已冻结的 api-v1.4.0。完整清单见<a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">发布说明</a>。</p>
 <h2>两条路径</h2>
 <table role="table">
 <caption>10.0.0 的行为，以及和 9.0.0 的差别。</caption>
@@ -65,7 +65,7 @@
 </table>
 <h2>实测范围</h2>
 <p>Web 控制端经从 9.0.0 升级的生产服务器控制 Windows 10.0.0 被控端，直连 UDP 和 TURN 中继都测过：画面、键鼠、中文、双向剪贴板、控制端到被控端的文件（SHA-256 校验）、系统声音、审批弹窗和临时密码。这些是同一功能代码的开发构建，没有在最终字节上重跑。</p>
-<h2>负责人豁免（未验证）</h2>
+<h2>未验证项目</h2>
 <ul class="plain">
 <li>被控端到控制端的文件传输</li>
 <li>最终构建上的固定密码模式</li>

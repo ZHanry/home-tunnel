@@ -37,7 +37,7 @@ python -m http.server 8765 --directory docs/site
 
 Pages 工作流还会跑 Lighthouse。本仓库没有应用依赖清单，不对空仓库做 npm 或 Go 漏洞扫描。CodeQL 只覆盖这里的 JavaScript 和 Python。密钥扫描在 CI 使用 Gitleaks。
 
-10.0.0 验收记录不能用夹具冒充。`docs/release/acceptance-status.json` 记录既有发布的 `accepted_with_waivers`；未运行的虚拟机、网络、迁移和长时间门禁保留原始豁免及收据，不能改写为通过。新的通过声明必须绑定真正的最终产物实测。
+10.0.0 验收记录不能用夹具冒充。`docs/release/acceptance-status.json` 记录既有发布的 `accepted_with_waivers`；未运行的虚拟机、网络、迁移和长时间门禁保留原始状态及回执，公开文档标为未验证，不能改写为通过。新的通过声明必须绑定真正的最终产物实测。
 
 推荐的仓库描述、主题和分支保护写在 [docs/governance/recommended-repository-settings.json](docs/governance/recommended-repository-settings.json)。`apply` 为 false，本批不调用 GitHub 去改远程设置。
 

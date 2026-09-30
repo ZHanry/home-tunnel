@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import re
+import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -333,16 +334,28 @@ def receipt_errors(record, root):
             errors.append("ui_coverage is missing the original aggregate release disclosure")
         else:
             relative = "docs/RELEASE_NOTES.md"
-            path = root / relative
             hub = (record.get("sources") or {}).get("hub", {})
             url = f"https://github.com/{REPOSITORIES['hub']}/blob/{hub.get('sha')}/{relative}"
             quote = "- 最终界面的完整 Gemini 审查"
             if disclosure.get("path") != relative or disclosure.get("source_url") != url:
                 errors.append("ui_coverage release disclosure must identify the original hub source")
-            if not path.is_file() or not path.resolve().is_relative_to(root):
-                errors.append("ui_coverage release disclosure is missing or outside the repository")
+            # Public explanations may be clarified without rewriting their
+            # historical evidence. Read the original, immutable source commit,
+            # not today's editable release-notes document.
+            content = None
+            if SHA40.fullmatch(str(hub.get("sha", ""))):
+                try:
+                    historical = subprocess.run(
+                        ["git", "show", f"{hub['sha']}:{relative}"], cwd=root,
+                        capture_output=True, timeout=10, check=False,
+                    )
+                    if historical.returncode == 0:
+                        content = historical.stdout
+                except (OSError, subprocess.TimeoutExpired):
+                    pass
+            if content is None:
+                errors.append("ui_coverage original release disclosure is unavailable; fetch the repository history")
             else:
-                content = path.read_bytes()
                 if hashlib.sha256(content).hexdigest() != disclosure.get("sha256"):
                     errors.append("ui_coverage release disclosure digest differs")
                 if disclosure.get("quote") != quote or quote.encode("utf-8") not in content:

@@ -28,7 +28,7 @@
 ## 升级后
 
 如果设备或连接不见了，先停止继续升级，按备份文档做恢复，而不是在生产数据上反复试验。
-9→10 安装器升级和备份恢复没有验证（负责人豁免），恢复前先在隔离环境演练。
+9→10 安装器升级和备份恢复尚未验证，恢复前先在隔离环境演练。
 
 ## 报告问题时
 
@@ -36,4 +36,4 @@
 
 ## English
 
-Decide whether the failure is remote control or FRP. Remote control uses UDP only: browser viewers can use the optional TURN relay, Android and 9.x hosts are direct-only, and blocked UDP fails closed. FRP failures should name DNS, HTTPS, FRPS, authorization, or the local target. `doctor` does not upload its report. The 9-to-10 upgrade and restore were waived, so rehearse a restore before relying on it.
+Decide whether the failure is remote control or FRP. Remote control uses UDP only: browser viewers can use the optional TURN relay, Android and 9.x hosts are direct-only, and blocked UDP fails closed. FRP failures should name DNS, HTTPS, FRPS, authorization, or the local target. `doctor` does not upload its report. The 9-to-10 upgrade and restore remain unverified, so rehearse a restore before relying on it.

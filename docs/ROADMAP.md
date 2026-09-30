@@ -1,8 +1,9 @@
 # Roadmap
 
-10.0.0 shipped on 2026-09-29 with owner waivers. The waived gates are the first
-follow-up: host-to-viewer files, fixed password on final bytes, Android controlling
-Windows, physical arm64 phones, multi-monitor/DPI, 9-to-10 installer upgrade and
+10.0.0 shipped on 2026-09-29 with incomplete verification. The unverified gates
+are the first follow-up: host-to-viewer files, fixed password on final bytes,
+Android controlling Windows, physical arm64 phones, multi-monitor/DPI,
+9-to-10 installer upgrade and
 restore, the 30-repeat/2-hour/24-hour soaks, the NAT/IPv6/blocked-UDP matrix,
 performance, the tunnel runtime matrix, Linux/macOS runtime and a full UI review.
 Lock screen, pre-login and UAC secure-desktop control and microphone return are

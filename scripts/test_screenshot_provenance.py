@@ -85,6 +85,14 @@ class ScreenshotProvenanceTests(unittest.TestCase):
         path.write_text(json.dumps(manifest))
         self.assertTrue(any("actual Windows package_sha256" in error for error in self.errors()))
 
+    def test_public_release_copy_keeps_objective_verification_scope(self):
+        path = self.site / "index.html"
+        text = path.read_text()
+        path.write_text(text.replace("未运行", ""))
+        self.assertTrue(any("incomplete verification" in error for error in self.errors()))
+        path.write_text(text + "<p>负责人豁免</p>")
+        self.assertTrue(any("banned claim" in error for error in self.errors()))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -21,7 +21,7 @@
 })();
 </script>
 <title>Home Tunnel 10.0.0 scope and limits</title>
-<meta name="description" content="What 10.0.0 ships, what was tested, the owner-waived items that were not verified, and known limits.">
+<meta name="description" content="What 10.0.0 ships, what was tested, what remains unverified, and known limits.">
 <link rel="canonical" href="https://zhanry.github.io/home-tunnel/en/preview.html">
 <link rel="alternate" hreflang="en" href="https://zhanry.github.io/home-tunnel/en/preview.html">
 <link rel="alternate" hreflang="zh-CN" href="https://zhanry.github.io/home-tunnel/preview.html">
@@ -52,8 +52,8 @@
 <main id="content">
 <section class="section">
 <p class="eyebrow">Scope</p>
-<h1>10.0.0 is stable, published with owner waivers.</h1>
-<p class="lede">A version number does not mean everything was verified. This page separates what was tested, what was waived, and what is unavailable. A waiver is a gate that was not run; it is not a pass. The contract is the frozen api-v1.4.0. The <a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">release notes</a> have the full list.</p>
+<h1>10.0.0 is stable. Verification remains incomplete.</h1>
+<p class="lede">Verification of this release remains incomplete. This page lists what was tested, what remains unverified, and what is unavailable. Tests that were not run are not counted as passed. The contract is the frozen api-v1.4.0. The <a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">release notes</a> have the full list.</p>
 <h2>Two paths</h2>
 <table role="table">
 <caption>10.0.0 behavior and how it differs from 9.0.0.</caption>
@@ -65,7 +65,7 @@
 </table>
 <h2>What was tested</h2>
 <p>A Web viewer controlled a Windows 10.0.0 host through the production server (upgraded from 9.0.0), over direct UDP and the TURN relay: screen, keyboard, mouse, Chinese text, clipboard both ways, viewer-to-host files with a SHA-256 check, system audio, the approval popup, and the temporary password. These were development builds of the same feature code, not re-run on the final bytes.</p>
-<h2>Owner waivers (not verified)</h2>
+<h2>Unverified items</h2>
 <ul class="plain">
 <li>Host-to-viewer file transfer</li>
 <li>Fixed-password mode on the final build</li>

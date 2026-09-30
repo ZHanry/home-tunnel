@@ -1,6 +1,6 @@
 # 快速开始 / Quick start
 
-安装稳定版 **10.0.0**。它带负责人豁免发布，没验证的项目见 [发布说明](RELEASE_NOTES.md)。两条路径分开做。
+安装稳定版 **10.0.0**。部分项目尚未验证，清单见 [发布说明](RELEASE_NOTES.md)。两条路径分开做。
 
 ## 远控：授权后的 UDP 直连
 
@@ -11,7 +11,7 @@
 3. 等连接和画面就绪后再输入。被控端会显示"正在被远程控制 · 断开"条，可以随时断开。配对和授权可以撤销。
 4. 载荷走端到端加密的 UDP，优先直连。直连失败时，浏览器控制端可以经服务器可选的 UDP TURN 中继连接 10.0.0 被控端，中继读不到内容；Android 控制端只走直连。没有 TCP / FRP / HTTP / WSS 回退。
 
-接受连接后，本次放行画面、键鼠、剪贴板、文件和系统声音，麦克风不会自动放行。锁屏、登录前和 UAC 安全桌面控制不可用。Android 控制 Windows 和实体 arm64 手机没有验证，由负责人豁免。
+接受连接后，本次放行画面、键鼠、剪贴板、文件和系统声音，麦克风不会自动放行。锁屏、登录前和 UAC 安全桌面控制不可用。Android 控制 Windows 和实体 arm64 手机尚未验证。
 
 ## 内网穿透：用 FRP 发布家里的服务
 
@@ -31,10 +31,10 @@ TCP/UDP 不附带 HTTP 白名单或 Basic Auth。不要把 NAS 管理口或没�
 
 ## English
 
-Install 10.0.0. It was published with owner waivers; the release notes list what was not verified.
+Install 10.0.0. Some acceptance gates were not run; the release notes list what remains unverified.
 
 For remote control, use an unlocked Windows x64 host and the same server account on both sides. Find it by its grouped 9-digit device ID, then use the approval popup, a fixed password, or a one-time password. An enrollment code is not a device code or a remote password. Payloads use encrypted UDP, direct first; browser viewers can fall back to the optional UDP TURN relay, Android is direct-only, and there is no TCP fallback.
 
 For FRP, deploy the server, enroll the home Agent, confirm the local target, then open the public address from another network. Use `doctor` when a layer fails. Raw TCP/UDP relies on the target application's own authentication.
 
-Back up before upgrading. The 9-to-10 installer upgrade and restore were waived, not verified.
+Back up before upgrading. The 9-to-10 installer upgrade and restore were not run and remain unverified.

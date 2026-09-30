@@ -1,6 +1,6 @@
 # 下载 / Downloads
 
-当前稳定版是 **10.0.0**，带负责人豁免发布：部分验收项目没有运行，豁免不等于通过，清单见 [发布说明](RELEASE_NOTES.md)。
+当前稳定版是 **10.0.0**。部分验收项目未运行，验证尚未完成，清单见 [发布说明](RELEASE_NOTES.md)。
 机器可读的唯一通道来源是 [distribution.json](../distribution.json)。
 
 FRP 保持 **0.70.1**。锁屏、登录前和 UAC 安全桌面控制不可用，没有麦克风回传。
@@ -75,4 +75,4 @@ OpenAPI SHA-256：`a0892fb0263cb20fdb66f2d1d7497fa30d0a0ca7b8a5b28d46829cdfa83ba
 
 ## English
 
-Install 10.0.0 and check each file against the SHA-256 in `releases.json`. Server and Android Releases have `SHA256SUMS.txt`; the desktop Release has per-file `.sha256` files and `client-candidate.json`. 10.0.0 was published with owner waivers; the release notes list what was not verified. Windows and macOS builds have no publisher certificate. The 9.0.0, 8.0 and 7.0 release pages remain available.
+Install 10.0.0 and check each file against the SHA-256 in `releases.json`. Server and Android Releases have `SHA256SUMS.txt`; the desktop Release has per-file `.sha256` files and `client-candidate.json`. Some 10.0.0 acceptance gates were not run; the release notes list what remains unverified. Windows and macOS builds have no publisher certificate. The 9.0.0, 8.0 and 7.0 release pages remain available.

@@ -121,5 +121,5 @@
   },
   "contract_revision": "74e140da43c88043d0db2aad7505ba75fd3a9a49",
   "contract_sha256": "080e508814ce5c29c2a0c7dc847ebc11cf9e50f26a24d9e47110ce724d76676b",
-  "verification_note": "10.0.0 is published with owner waivers. This combination records component identities, not final-byte runtime acceptance. The Web-to-Windows development-build results were not rerun on the final bytes; the waived runtime/UI matrix is preserved in docs/release/v10-published-evidence.json and docs/RELEASE_NOTES.md. Download SHA-256 and sizes were independently verified on 2026-09-30."
+  "verification_note": "10.0.0 is published. This combination records component identities, not final-byte runtime acceptance. Web-to-Windows development-build results were not rerun on the final bytes; runtime/UI checks that were not run remain unverified in the original records and docs/RELEASE_NOTES.md. Download SHA-256 and sizes were independently verified on 2026-09-30."
 }

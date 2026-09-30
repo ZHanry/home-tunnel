@@ -8,7 +8,7 @@
 
 [English](README.en.md) · [网站](https://zhanry.github.io/home-tunnel/) · [下载](docs/DOWNLOADS.md) · [快速开始](docs/GETTING_STARTED.md) · [架构](docs/ARCHITECTURE.md) · [功能矩阵](docs/FEATURE_MATRIX.md)
 
-当前稳定版是 **10.0.0**，带负责人豁免发布：部分验收项目没有运行，豁免不等于通过，清单见 [发布说明](docs/RELEASE_NOTES.md)。FRP 保持独立的 **0.70.1**，API 契约为 `api-v1.4.0`。稳定通道和候选记录写在同一个 [`distribution.json`](distribution.json) 里；改这一份后运行 `python scripts/sync-distribution.py`。
+当前稳定版是 **10.0.0**。部分验收项目未运行，验证尚未完成，清单见 [发布说明](docs/RELEASE_NOTES.md)。FRP 保持独立的 **0.70.1**，API 契约为 `api-v1.4.0`。稳定通道和候选记录写在同一个 [`distribution.json`](distribution.json) 里；改这一份后运行 `python scripts/sync-distribution.py`。
 
 ## 从这里开始
 
@@ -29,7 +29,7 @@
 
 10.0.0 增加授权后的系统声音、带 SHA-256 校验的文件传输、分组 9 位设备 ID、重做的浏览器控制端（浮动工具栏、后台剪贴板同步）和引导式服务发布。Android 的 arm64-v8a 与 x86_64 使用同源 SDK。
 
-实测范围：Web 控制端经生产服务器控制 Windows 10.0.0 被控端，直连和中继都通过了画面、键鼠、中文、双向剪贴板、控制端到被控端的文件、系统声音、审批弹窗和临时密码。这是同一功能代码的开发构建，没有在最终字节上重跑。被控端到控制端的文件、Android 控制 Windows、实体 arm64 手机、升级恢复、长时间运行和网络矩阵等由负责人豁免，没有验证。
+实测范围：Web 控制端经生产服务器控制 Windows 10.0.0 被控端，直连和中继都通过了画面、键鼠、中文、双向剪贴板、控制端到被控端的文件、系统声音、审批弹窗和临时密码。这是同一功能代码的开发构建，没有在最终字节上重跑。被控端到控制端的文件、Android 控制 Windows、实体 arm64 手机、升级恢复、长时间运行和网络矩阵等尚未验证。
 
 锁屏、登录前和 UAC 安全桌面控制不可用，也没有麦克风回传。
 

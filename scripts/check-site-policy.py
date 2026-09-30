@@ -11,6 +11,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SITE = ROOT / "docs" / "site"
 BANNED = (
+    "负责人豁免",
+    "owner waiver",
+    "waived by the owner",
     "10.0.0 稳定版已发布",
     "10.0.0 stable release is available",
     "10.0.0 已通过验收",
@@ -119,7 +122,7 @@ def audit(root=ROOT):
         text = page.read_text(encoding="utf-8")
         relative = page.relative_to(site).as_posix()
         for phrase in banned:
-            if phrase in text:
+            if phrase.lower() in text.lower():
                 errors.append(f"{relative} contains banned claim: {phrase}")
         required = (
             "<!doctype html>",
@@ -187,11 +190,12 @@ def audit(root=ROOT):
             if text.count("<details") < 4:
                 errors.append(relative + " needs a real FAQ")
             if promoted and candidate.get("waived"):
-                # A release with owner waivers must say so where people decide to download.
-                if relative == "index.html" and "负责人豁免" not in text:
-                    errors.append("Chinese landing must disclose the owner waivers")
-                if relative == "en/index.html" and "owner waiver" not in text.lower():
-                    errors.append("English landing must disclose the owner waivers")
+                # Machine evidence retains original statuses; public prose must
+                # plainly disclose incomplete verification at the download entry.
+                if relative == "index.html" and ("未运行" not in text or "验证尚未完成" not in text):
+                    errors.append("Chinese landing must disclose incomplete verification")
+                if relative == "en/index.html" and ("not run" not in text.lower() or "unverified" not in text.lower()):
+                    errors.append("English landing must disclose incomplete verification")
             elif not promoted:
                 if relative == "index.html" and "验收尚未完成" not in text:
                     errors.append("Chinese landing must say acceptance is unfinished")
@@ -240,7 +244,7 @@ def audit(root=ROOT):
             continue
         text = path.read_text(encoding="utf-8")
         for phrase in banned:
-            if phrase in text:
+            if phrase.lower() in text.lower():
                 errors.append(f"{path.relative_to(root)} contains banned claim: {phrase}")
     return errors
 

@@ -136,5 +136,5 @@
     "android_certificate_sha256": "d7779e338be1039acee6dda9a43417cbf2baf4b0c9995578d9708501e95af702"
   },
   "evidence_file": "docs/release/v10-published-evidence.json",
-  "note": "Historical release synchronization only. Owner waivers are not passes; no final-package runtime acceptance was added."
+  "note": "Historical release synchronization only. Runtime and UI checks that were not run remain unverified; no final-package runtime acceptance was added."
 }

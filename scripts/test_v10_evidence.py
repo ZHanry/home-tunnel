@@ -5,6 +5,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -257,6 +258,19 @@ class EvidenceTests(unittest.TestCase):
             )
         self.assertNotEqual(completed.returncode, 0)
         self.assertIn("waiver receipt digest", completed.stderr)
+
+    def test_public_wording_can_change_without_rewriting_historical_disclosure(self):
+        _, errors, record = v10_evidence.load_status(ROOT)
+        self.assertEqual(errors, [])
+        current = (ROOT / "docs/RELEASE_NOTES.md").read_bytes()
+        self.assertNotEqual(hashlib.sha256(current).hexdigest(), record["ui_coverage"]["release_disclosure"]["sha256"])
+        self.assertEqual(v10_evidence.receipt_errors(record, ROOT), [])
+
+    def test_missing_original_git_disclosure_fails_closed(self):
+        _, _, record = v10_evidence.load_status(ROOT)
+        with patch.object(v10_evidence.subprocess, "run", return_value=subprocess.CompletedProcess([], 128, b"", b"missing")):
+            self.assertTrue(any("original release disclosure is unavailable" in error
+                                for error in v10_evidence.receipt_errors(record, ROOT)))
 
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@
 
 [简体中文](README.md) · [Website](https://zhanry.github.io/home-tunnel/en/) · [Downloads](docs/DOWNLOADS.md) · [Quick start](docs/GETTING_STARTED.md) · [Architecture](docs/ARCHITECTURE.md) · [Feature matrix](docs/FEATURE_MATRIX.md)
 
-The stable release is **10.0.0**, published with owner waivers: some acceptance gates were not run, a waiver is not a pass, and the [release notes](docs/RELEASE_NOTES.md) list them. FRP stays at its own **0.70.1**; the API contract is `api-v1.4.0`. Stable and candidate records live in [`distribution.json`](distribution.json). Edit that file and run `python scripts/sync-distribution.py`.
+The stable release is **10.0.0**. Some acceptance gates were not run and remain unverified; the [release notes](docs/RELEASE_NOTES.md) list them. FRP stays at its own **0.70.1**; the API contract is `api-v1.4.0`. Stable and candidate records live in [`distribution.json`](distribution.json). Edit that file and run `python scripts/sync-distribution.py`.
 
 ## Start here
 
@@ -29,7 +29,7 @@ Service publishing uses the home Agent and FRP 0.70.1. HTTP/HTTPS, TCP, and UDP 
 
 10.0.0 adds authorized system audio, file transfer with SHA-256 checks, a grouped 9-digit device ID, a redesigned browser viewer (floating toolbar, background clipboard sync) and guided service publishing. Android uses the same-source SDK on arm64-v8a and x86_64.
 
-Verified: a Web viewer controlled a Windows 10.0.0 host through the production server, over direct UDP and the relay, with screen, input, Chinese text, clipboard both ways, viewer-to-host files, system audio, the approval popup and the temporary password. These were development builds of the same feature code, not re-run on the final bytes. Host-to-viewer files, Android controlling Windows, physical arm64 phones, upgrade and restore, long-running soaks and the network matrix were waived by the owner and are not verified.
+Verified: a Web viewer controlled a Windows 10.0.0 host through the production server, over direct UDP and the relay, with screen, input, Chinese text, clipboard both ways, viewer-to-host files, system audio, the approval popup and the temporary password. These were development builds of the same feature code, not re-run on the final bytes. Host-to-viewer files, Android controlling Windows, physical arm64 phones, upgrade and restore, long-running soaks and the network matrix were not run and remain unverified.
 
 Lock screen, pre-login and UAC secure-desktop control are not available, and there is no microphone return.
 

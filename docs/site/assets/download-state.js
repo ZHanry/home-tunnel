@@ -9,7 +9,7 @@
     };
   }
 
-  // A waived gate is disclosed, never counted as passed; both states claim a release.
+  // Both states describe published releases; unrun gates remain unverified.
   var ACCEPTED = ["accepted", "accepted_with_waivers"];
 
   function view(input) {
@@ -67,8 +67,8 @@
     if (candidate.acceptance_status === "accepted_with_waivers") {
       return {
         tone: "ready",
-        zh: "稳定下载是 " + stable.version + "。部分验收项目未运行，由负责人豁免；豁免不等于通过，清单见发布说明。请核对校验值后再安装。",
-        en: "Stable downloads are " + stable.version + ". Some acceptance gates were not run and were waived by the owner; a waiver is not a pass, and the release notes list them. Check the checksum before you install."
+        zh: "稳定下载是 " + stable.version + "。部分验收项目未运行，验证尚未完成，清单见发布说明。请核对校验值后再安装。",
+        en: "Stable downloads are " + stable.version + ". Some acceptance gates were not run and remain unverified; the release notes list them. Check the checksum before you install."
       };
     }
     return {

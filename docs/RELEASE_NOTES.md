@@ -2,7 +2,7 @@
 
 2026-09-29 发布。服务端/Web、桌面/CLI、Android 与自有 Agent 统一为 10.0.0，FRP 独立保持 0.70.1。REST 路径仍是 `/api/v1`，冻结契约为 `api-v1.4.0`（服务端提交 `74e140da43c88043d0db2aad7505ba75fd3a9a49`）；`api-v1.3.0` 及更早的契约标签不变。
 
-本版经负责人批准，带**负责人豁免**发布：下方列出的项目没有运行，豁免不等于通过，也不能写成已验收。
+本版的验证尚未完成。下方列出的项目未运行，不计为通过，也不能写成已验收。
 
 ## 新内容
 
@@ -15,7 +15,7 @@
 - 重做的浏览器控制端：浮动工具栏、单一开始/停止按钮、后台剪贴板同步、快捷键与"更多"菜单、延迟标记。
 - 引导式服务发布（本机目标检查、设备上报验证），以及本地化、主题、移动端导航和无障碍修复。
 - Android：arm64-v8a 与 x86_64 使用同源生产远控 SDK；新增系统声音播放、授权文件传输、显示器选择、有界重连和视口手势；软键盘弹出时登录、MFA、改密和隧道编辑保持可见。沿用原 applicationId 与发行证书，versionCode `10000000`。
-- 服务端迁移 020、021 为增量迁移，9.0 数据仍可读取。稳定发布晋升已验收、已封存的候选字节与镜像摘要，不重新构建。
+- 服务端迁移 020、021 为增量迁移，9.0 数据仍可读取。稳定发布使用已封存的候选字节与镜像摘要，不重新构建；验证范围见下文。
 
 ## 验证范围
 
@@ -29,7 +29,7 @@
 
 这些结果来自同一功能代码的开发构建，没有在最终发布字节上重跑。Android 的 Gemini 界面审查针对模拟器上的开发构建截图。
 
-## 负责人豁免（未验证）
+## 未验证项目
 
 以下项目没有运行，在各组件附带的验收记录中标为 `waived`，不计为通过：
 
@@ -59,7 +59,7 @@
 
 ## English summary
 
-Home Tunnel 10.0.0 is published for all four repositories with owner waivers. FRP stays at 0.70.1; the API stays `/api/v1` with frozen contract `api-v1.4.0`. Remote payloads use end-to-end DTLS-encrypted UDP, direct P2P first; an optional UDP TURN relay lets browser viewers reach 10.0.0 hosts when direct fails, the relay cannot read payloads, and there is no TCP fallback. Android controllers and 9.x hosts are direct-only. A Web viewer controlled a Windows 10.0.0 host through the production server over direct UDP and the relay (development builds of the same code, not re-run on the final bytes). The items listed under 负责人豁免 were not verified; a waiver is not a pass. Lock screen, pre-login, UAC secure desktop and microphone return are not available, and desktop packages carry no publisher signature.
+Home Tunnel 10.0.0 is published for all four repositories. Verification remains incomplete. FRP stays at 0.70.1; the API stays `/api/v1` with frozen contract `api-v1.4.0`. Remote payloads use end-to-end DTLS-encrypted UDP, direct P2P first; an optional UDP TURN relay lets browser viewers reach 10.0.0 hosts when direct fails, the relay cannot read payloads, and there is no TCP fallback. Android controllers and 9.x hosts are direct-only. A Web viewer controlled a Windows 10.0.0 host through the production server over direct UDP and the relay (development builds of the same code, not re-run on the final bytes). The [unverified items](#未验证项目) were not run and are not counted as passed. Lock screen, pre-login, UAC secure desktop and microphone return are not available, and desktop packages carry no publisher signature.
 
 ## Previous release: 9.0.0
 
