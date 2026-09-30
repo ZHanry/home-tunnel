@@ -30,7 +30,7 @@ jobs:
         with:
           repository: ZHanry/home-tunnel-server
           ref: 9e5b4ff4e6381a42317c94618d1805b7398c558e
-          path: .capture-source/server
+          path: capture-source/server
           persist-credentials: false
       - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86
         with:
@@ -39,17 +39,17 @@ jobs:
         with:
           node-version: 24.19.0
           cache: pnpm
-          cache-dependency-path: .capture-source/server/control-center/pnpm-lock.yaml
+          cache-dependency-path: capture-source/server/control-center/pnpm-lock.yaml
       - name: Install locked preview and capture dependencies
-        working-directory: .capture-source/server/control-center
+        working-directory: capture-source/server/control-center
         run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Install Chromium headless shell and required system fonts
-        working-directory: .capture-source/server/control-center
+        working-directory: capture-source/server/control-center
         run: |
           pnpm exec playwright install --with-deps --only-shell chromium
           test -n "$(fc-list :lang=zh family)"
       - name: Capture genuine Web UI and record provenance
-        run: node docs/screenshots/capture-product.mjs .capture-source/server product-captures-v10
+        run: node docs/screenshots/capture-product.mjs capture-source/server product-captures-v10
       - name: Upload screenshots for visual review
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
