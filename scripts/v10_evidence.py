@@ -379,6 +379,9 @@ def receipt_errors(record, root):
             continue
         if gate.get("status") != "waived" or receipt.get("status") != "waived" or gate.get("waiver") != receipt.get("waiver"):
             errors.append(f"{name} must preserve its existing waiver exactly")
+        problem = waiver_problem(name, gate)
+        if problem:
+            errors.append(problem)
         cases = provenance.get("cases")
         receipt_cases = receipt.get("cases") if isinstance(receipt.get("cases"), dict) else {}
         if (not isinstance(cases, list) or not cases or

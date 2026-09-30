@@ -233,6 +233,7 @@ class EvidenceTests(unittest.TestCase):
         for mutation, expected in (
             (lambda ui: ui.pop("additional_waivers"), "Android"),
             (lambda ui: ui["additional_waivers"]["android"]["waiver"].update(reason="new broader approval"), "preserve"),
+            (lambda ui: ui["additional_waivers"]["android"].update(measured_result="new UI pass"), "measured"),
             (lambda ui: ui["additional_waivers"]["android"]["waiver_receipt"].update(cases=["all_applicable_states"]), "cases"),
             (lambda ui: ui.pop("release_disclosure"), "disclosure"),
             (lambda ui: ui["release_disclosure"].update(sha256="0" * 64), "digest"),
