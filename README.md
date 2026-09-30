@@ -59,6 +59,10 @@ flowchart LR
 
 ![Home Tunnel 10.0.0 Web 服务发布向导，示例数据，尚未发布服务](docs/site/assets/v10/tunnel-wizard.png)
 
+正式 Windows 便携版的原生 WebView2 登录窗口，空白隔离状态，未登录或建立远控会话：
+
+![Home Tunnel 10.0.0 Windows 原生客户端登录窗口，真实标题栏和空白账号密码框](docs/site/assets/v10/windows-signin.png)
+
 ## 参与项目
 
 先看 [贡献指南](CONTRIBUTING.md)。反馈时写明是远控还是 FRP、组件版本和脱敏后的复现步骤。安全问题按 [SECURITY.md](SECURITY.md) 私下报告。

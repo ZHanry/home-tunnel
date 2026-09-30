@@ -74,6 +74,11 @@ jobs:
           grep -q 'hreflang="en"' _site/index.html
           grep -q 'application/ld+json' _site/index.html
           grep -q 'og:image' _site/index.html
+      - name: Install Chinese fonts for meaningful visual checks
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y fonts-noto-cjk
+          test -n "$(fc-list :lang=zh family)"
       - name: Enforce Lighthouse score gates
         run: npx --yes --package=@lhci/cli@0.15.1 lhci autorun --config=lighthouserc.json
       - name: Upload Lighthouse reports

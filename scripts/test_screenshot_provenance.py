@@ -71,6 +71,20 @@ class ScreenshotProvenanceTests(unittest.TestCase):
         for name in ("preview.html", "en/preview.html"):
             self.assertIn("admin-dashboard-7.jpg", (self.site / name).read_text())
 
+    def test_windows_native_capture_requires_interactive_session(self):
+        path = self.site / "assets/v10/windows-capture-manifest.json"
+        manifest = json.loads(path.read_text())
+        manifest["interactive"] = False
+        path.write_text(json.dumps(manifest))
+        self.assertTrue(any("interactive native Windows" in error for error in self.errors()))
+
+    def test_windows_native_capture_requires_package_digest(self):
+        path = self.site / "assets/v10/windows-capture-manifest.json"
+        manifest = json.loads(path.read_text())
+        manifest["package_sha256"] = "unknown"
+        path.write_text(json.dumps(manifest))
+        self.assertTrue(any("actual Windows package_sha256" in error for error in self.errors()))
+
 
 if __name__ == "__main__":
     unittest.main()

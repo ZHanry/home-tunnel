@@ -44,3 +44,6 @@
 *.keystore binary
 *.tar binary
 *.gz binary
+
+# Preserve the original native Windows capture manifest bytes for provenance.
+docs/site/assets/v10/windows-capture-manifest.json -text

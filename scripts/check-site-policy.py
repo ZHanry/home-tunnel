@@ -38,6 +38,7 @@ ALLOWED_IMAGES = {
     "assets/v10/remote-entry.png",
     "assets/v10/android-overview.png",
     "assets/v10/android-devices.png",
+    "assets/v10/windows-signin.png",
 }
 DOWNLOAD_PAGES = {"downloads.html", "en/downloads.html"}
 LANDING_PAGES = {"index.html", "en/index.html"}
@@ -54,13 +55,20 @@ def audit_capture(site, slot):
         if not asset.resolve().is_relative_to(site.resolve()) or not manifest_path.resolve().is_relative_to(site.resolve()):
             return [f"slot {slot_id} capture paths must stay inside the site"]
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        version = manifest.get("product_version", manifest.get("component_version"))
+        version = manifest.get("product_version", manifest.get("component_version", manifest.get("version")))
         if version != slot.get("captured_product_version") or version != "10.0.0":
             errors.append(f"slot {slot_id} capture version must match 10.0.0")
-        revision = manifest.get("source_sha", manifest.get("repository_revision", ""))
+        revision = manifest.get("source_sha", manifest.get("repository_revision", manifest.get("capture_revision", "")))
         if not re.fullmatch(r"[a-f0-9]{40}", revision):
             errors.append(f"slot {slot_id} capture needs its exact source revision")
         entries = manifest.get("captures", manifest.get("screenshots", []))
+        if slot.get("capture_kind") == "native-windows":
+            if manifest.get("interactive") is not True:
+                errors.append(f"slot {slot_id} needs an interactive native Windows capture")
+            for key in ("package_sha256", "gui_sha256"):
+                if not re.fullmatch(r"[a-f0-9]{64}", manifest.get(key, "")):
+                    errors.append(f"slot {slot_id} needs the actual Windows {key}")
+            entries = [{"file": slot["source_file"], "sha256": manifest.get("screenshot_sha256")}]
         matches = [entry for entry in entries if Path(entry.get("file", entry.get("source_path", ""))).name == slot["source_file"]]
         if len(matches) != 1:
             return errors + [f"slot {slot_id} must identify one original captured file"]

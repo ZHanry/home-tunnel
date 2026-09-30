@@ -44,6 +44,28 @@ synthetic accounts and devices. Instrumentation reported 21 passed, 0 failed and
 2 skipped tests. This is not final signed-APK, physical-device, remote-media or
 full-app acceptance, and it does not change the published owner waivers.
 
+## Native Windows client
+
+- [Successful native capture run](https://github.com/ZHanry/home-tunnel-client/actions/runs/36656765227)
+- Artifact: `11073165358`, ZIP SHA-256 `fa5badf03bdd6dfb5fc22f656e89b1420361920b386e1ff6f36958bf2ddd1a5d`
+- Product: official [10.0.0 Windows portable release](https://github.com/ZHanry/home-tunnel-client/releases/tag/v10.0.0)
+- Product release source: `5eb6768f0d21a842c01d66d3d979a4f935a2ed61`
+- Capture-helper source: `347e8d5e39456b9e39f29a39a32490929c9a4a34`
+- Environment: Windows Server 2022, interactive session 2, native WebView2 window
+- [Original capture manifest](windows-capture-manifest.json): release ZIP, EXE and screenshot hashes
+- [Original WebView2 readiness result](windows-readiness.json)
+
+`windows-signin.png` preserves the original `windows-v10-signin.png` bytes
+(946 × 665). It includes the actual native Windows titlebar and the rendered
+sign-in interface of the official EXE. It was captured on 2026-09-30 only after
+the actual WebView2 document reported ready, then visually reviewed. The manifest's
+pending-review status is preserved as original capture output. The earlier blank
+capture was rejected and is not published.
+
+The app used empty isolated state. No account credentials were entered, no
+server sign-in occurred, and no remote session was created. This native sign-in
+screen does not establish remote-control or final multi-platform acceptance.
+
 ## Still awaiting capture
 
 The Windows remote-window slot remains empty until a real, authorized Windows

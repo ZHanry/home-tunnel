@@ -140,6 +140,28 @@
         "API 35",
         "debug"
       ]
+    },
+    {
+      "id": "v10-windows-signin",
+      "status": "captured-v10-ui",
+      "pages": [
+        "index.html",
+        "en/index.html",
+        "preview.html",
+        "en/preview.html"
+      ],
+      "asset": "assets/v10/windows-signin.png",
+      "captured_product_version": "10.0.0",
+      "fixture_data": false,
+      "capture_kind": "native-windows",
+      "capture_manifest": "assets/v10/windows-capture-manifest.json",
+      "source_file": "windows-v10-signin.png",
+      "product_source_revision": "5eb6768f0d21a842c01d66d3d979a4f935a2ed61",
+      "label_must_include": [
+        "10.0.0",
+        "Windows",
+        "WebView2"
+      ]
     }
   ],
   "historical_assets_not_for_v10": [

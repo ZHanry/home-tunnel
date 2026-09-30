@@ -18,6 +18,8 @@ class RepoQualityTests(unittest.TestCase):
         codeql = (ROOT / ".github" / "workflows" / "codeql.yml").read_text(encoding="utf-8")
         self.assertIn("persist-credentials: false", pages)
         self.assertIn("check-v10-evidence.py --status", pages)
+        self.assertIn("fonts-noto-cjk", pages)
+        self.assertIn("fc-list :lang=zh family", pages)
         self.assertIn("github.event_name == 'push'", pages)
         self.assertNotIn("contents: write", pages)
         self.assertIn("javascript-typescript", codeql)

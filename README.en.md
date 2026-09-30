@@ -59,6 +59,10 @@ See [capture sources, environments and hashes](docs/site/assets/v10/README.md).
 
 ![Home Tunnel 10.0.0 Web publishing wizard with example data, before publishing](docs/site/assets/v10/tunnel-wizard.png)
 
+The official Windows portable app in its native WebView2 sign-in window, with empty isolated state and no account or remote session:
+
+![Home Tunnel 10.0.0 native Windows sign-in window with its real titlebar and empty account fields](docs/site/assets/v10/windows-signin.png)
+
 ## Contributing
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md). Say whether a report is remote control or FRP, and include the component version plus redacted steps. Security issues follow [SECURITY.md](SECURITY.md) in private.
