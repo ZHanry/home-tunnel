@@ -1,3 +1,51 @@
+# Home Tunnel 10.1.0
+
+2026-10-01。稳定组合为 Server / Client（含 CLI 与自有 Agent）10.1.0，以及兼容保留的 Android 10.0.0。Android 不重新打包、不改版本号或下载摘要。FRP 独立保持 0.70.1；REST 路径仍为 `/api/v1`，Server / Client 使用冻结的增量契约 `api-v1.5.0`（Server 提交 `194ae805f3569dc16d94b7fda71367e5d68fdff5`），历史 `api-v1.4.0` 与更早契约保持不变。
+
+## 10.1 新内容
+
+- 修复 Windows 审批弹窗底色，并等内容就绪后再显示原生窗口。
+- 桌面与绑定来源设备的服务端远控授权阻止连接本机设备。
+- 原生登录通过短时、单次交接复用到远控窗口；子会话只限远控、绑定原设备会话，随父会话撤销，可重复使用的凭据不进入导航 URL。
+- 合并软件设置与更新，立即显示配置的服务器，将当前设备改名放到“我的设备”；移除设备标签、本地服务返回控制和设置中的外观选项。
+- 改善登录字段空间、窄窗口滚动、重试与键盘行为。登录交接和当前设备改名需要 Server 10.1.0。
+
+## 10.1 实测范围
+
+10.1.0 的原始 Windows worker 字节在同机 Chromium 与生产源码 QA host 的隔离回环环境中通过 30 次连接、7202.463 秒活动和 1391 次采样；显式重启 QA host 后，新配对恢复输入耗时 3507.7 ms。
+
+报告绑定 Client 源提交 `41c0e21fbb3a4c634fbc9d63fcd7453337e4d029`、Server 源提交 `194ae805f3569dc16d94b7fda71367e5d68fdff5`，以及原始 worker SHA-256 `bd04a279fa178cdc5662565fb5946d98afc314f3137d409a0f0011f0d4557da9`。实测包含原生画面、可信键鼠/中文输入、UDP/DTLS、签名配对、会话关闭和输入释放检查。心跳失联释放为 1539.1 ms；worker 崩溃后按键/鼠标释放为 11.5/12 ms。
+
+QA host 使用生产源码与隔离测试覆盖配置；该次服务端由锁定源码本地构建，不是对部署中生产服务器或最终容器镜像的验收。QA 账号令牌和单次授权使用 10800 秒测试有效期，生产远控租约与信令令牌续期逻辑未修改。
+
+## 10.1 未验证项目
+
+这些结果不代表完整安装版 GUI、Windows 服务、两台独立 Windows 终端、Android、断网恢复、24 小时在线或 Linux/macOS 运行验收。完整验收尚未完成；未运行的项目不计为通过。
+
+- 完整安装版 GUI 与 Windows 服务的端到端运行；独立 Windows → Windows 终端组合
+- 最终构建上完整的审批、固定密码与临时密码交互流程；本轮未覆盖的音频、剪贴板与双向文件传输
+- Android 控制 Windows、实体 arm64 手机、最终 APK 的 API 26/35 运行
+- 多显示器与 DPI、完整安装器升级与备份恢复
+- NAT、IPv6、UDP 被封及断网恢复矩阵；显式 QA host 重启不能证明自动服务重启或断网恢复
+- 24 小时在线与账号令牌刷新；本轮没有运行 24 小时测试
+- 性能对比、隧道运行矩阵、Linux/macOS 运行及完整最终界面审查
+
+## 10.1 限制与下载
+
+锁屏、登录前、UAC 安全桌面和麦克风回传仍不可用。Windows Authenticode 与 macOS Developer ID 发行签名仍未配置；校验值、构建证明和恶意软件扫描不等于发行商签名。Android 保留 10.0.0 原发行证书。
+
+远控载荷继续使用端到端 DTLS 加密 UDP；浏览器可使用可选 UDP TURN 中继，Android 仍只走直连，不新增 TCP/FRP/HTTP/WSS 载荷回退。
+
+[下载与校验](DOWNLOADS.md) · [升级](UPGRADING.md) · [Server 10.1.0](https://github.com/ZHanry/home-tunnel-server/releases/tag/v10.1.0) · [Client 10.1.0](https://github.com/ZHanry/home-tunnel-client/releases/tag/v10.1.0) · [Android 10.0.0](https://github.com/ZHanry/home-tunnel-android/releases/tag/v10.0.0)
+
+## 10.1 English summary
+
+Server and Client use 10.1.0 with frozen additive contract `api-v1.5.0`. Compatible Android 10.0.0 files, versions, signing identity and hashes are retained unchanged; FRP remains 0.70.1. Changes cover the Windows approval popup, self-device connection blocking, a single-use remote-only native sign-in handoff, current-device rename, settings and sign-in layout.
+
+The original 10.1.0 Windows worker bytes passed 30 connections and 7202.463 seconds of activity with 1391 samples, using same-machine Chromium and a production-source QA host in an isolated loopback environment. After an explicit QA host restart, a new pairing restored input in 3507.7 ms. This does not establish full installed-GUI, Windows service, independent Windows-endpoint, Android, network-outage recovery, 24-hour online, or Linux/macOS runtime acceptance. The QA host uses production source with isolated test configuration; the server was built from locked source, not verified as the final deployed container. The disposable account token and one-session grant use a 10800-second test lifetime. Account-token refresh, audio, clipboard, files, full authorization UI flows, multi-display, upgrade/restore and network-matrix acceptance are not established by this run. The 24-hour test was not run. Desktop packages remain unsigned; secure desktop and microphone return remain unavailable. Historical 10.0.0 development-build results and screenshots do not become 10.1.0 final-artifact evidence.
+
+## Previous release: 10.0.0
+
 # Home Tunnel 10.0.0
 
 2026-09-29 发布。服务端/Web、桌面/CLI、Android 与自有 Agent 统一为 10.0.0，FRP 独立保持 0.70.1。REST 路径仍是 `/api/v1`，冻结契约为 `api-v1.4.0`（服务端提交 `74e140da43c88043d0db2aad7505ba75fd3a9a49`）；`api-v1.3.0` 及更早的契约标签不变。
