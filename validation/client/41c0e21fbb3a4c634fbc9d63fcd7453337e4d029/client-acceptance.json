@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/home-tunnel-client",
+  "revision": "41c0e21fbb3a4c634fbc9d63fcd7453337e4d029",
+  "candidate_sha256": "0e3a17f725baae4bee4dc3776023511bbc155c331be4edc647bf0cd73590931b",
+  "packages": {
+    "HomeTunnel-Setup-10.1.0-x64.exe": {
+      "bytes": 17463072,
+      "sha256": "58340bcd7d799ab7e5deaccc6d284fb4313b322ac869bdfd2ad2368b03b13eb5"
+    },
+    "HomeTunnel-Windows-10.1.0-x64.zip": {
+      "bytes": 22861344,
+      "sha256": "e1c04b5cd06dcd5ac4548bac0e1611d9a996e70ba71307bb05fdb82350b98df7"
+    },
+    "home-tunnel-linux-10.1.0-amd64.tar.gz": {
+      "bytes": 22729875,
+      "sha256": "208aa80e574af12e51ca650792d45a8c3ae35e7e815d6f69ec04f8f6a90e0624"
+    },
+    "home-tunnel-linux-10.1.0-arm64.tar.gz": {
+      "bytes": 12071626,
+      "sha256": "2562fc313130b937a230dd004cb11bc2a88bcc541aa2041ddf0b9bb85576470f"
+    },
+    "home-tunnel-macos-10.1.0-amd64.tar.gz": {
+      "bytes": 12757661,
+      "sha256": "dc7066139287d1fdf9411da9a6ae3b09209c7c7682534ab6eeb6d7390cc40fce"
+    },
+    "home-tunnel-macos-10.1.0-arm64.tar.gz": {
+      "bytes": 11645377,
+      "sha256": "6ba70b3d49c22ce4c47cc09685d252d7026c5ce3ac24cba3dae6fd8a13f13293"
+    }
+  },
+  "server": {
+    "schema_version": 1,
+    "repository": "ZHanry/home-tunnel-server",
+    "revision": "194ae805f3569dc16d94b7fda71367e5d68fdff5"
+  },
+  "acceptance_complete": true,
+  "status": "accepted_with_waivers",
+  "coverage": {
+    "remote_sessions": {
+      "status": "waived",
+      "evidence": "client-acceptance-remote_sessions.json"
+    },
+    "desktop_service": {
+      "status": "waived",
+      "evidence": "client-acceptance-desktop_service.json"
+    },
+    "media_input": {
+      "status": "waived",
+      "evidence": "client-acceptance-media_input.json"
+    },
+    "files_clipboard_audio": {
+      "status": "waived",
+      "evidence": "client-acceptance-files_clipboard_audio.json"
+    },
+    "udp_network": {
+      "status": "waived",
+      "evidence": "client-acceptance-udp_network.json"
+    },
+    "tunnel_management": {
+      "status": "waived",
+      "evidence": "client-acceptance-tunnel_management.json"
+    },
+    "gemini_screenshots": {
+      "status": "waived",
+      "evidence": "client-acceptance-gemini_screenshots.json"
+    },
+    "stability": {
+      "status": "waived",
+      "evidence": "client-acceptance-stability.json"
+    },
+    "upgrade_recovery": {
+      "status": "waived",
+      "evidence": "client-acceptance-upgrade_recovery.json"
+    },
+    "performance": {
+      "status": "waived",
+      "evidence": "client-acceptance-performance.json"
+    },
+    "other_desktop_builds": {
+      "status": "passed",
+      "evidence": "client-acceptance-other_desktop_builds.json"
+    },
+    "windows_security": {
+      "status": "passed",
+      "evidence": "client-acceptance-windows_security.json"
+    }
+  },
+  "files": {
+    "windows-final-defender-scan.json": {
+      "bytes": 1383,
+      "sha256": "3b0df7c6dc46359a153f6302637d3d899fbc09c1161cb907bbb0e9aaed7cbbeb"
+    },
+    "windows-remote-native-acceptance.json": {
+      "bytes": 131854,
+      "sha256": "98136e040bb98482f03d08c81891eedc2cf33002a124fa26750ea74fb9505102"
+    },
+    "client-acceptance-tunnel_management.json": {
+      "bytes": 2374,
+      "sha256": "15a3e62053e5a69315f8560715bce8de1315e57fd65359e264d8c680ce3d9872"
+    },
+    "client-acceptance-remote_sessions.json": {
+      "bytes": 2937,
+      "sha256": "bd2fdf45182aaad71be7a4b7ccf03b76adc0b0bdaaff6cbc9ffce952fb72ed1e"
+    },
+    "client-acceptance-udp_network.json": {
+      "bytes": 2515,
+      "sha256": "fbe1797d57040d5c6734fbec1f6987b7fea77b476c5d1eceb2f6f99420f25059"
+    },
+    "client-acceptance-stability.json": {
+      "bytes": 2841,
+      "sha256": "a5ecbf8401b91fc253faa6a9b054b0bf49e4b9edf483998648d89395135f10ca"
+    },
+    "client-acceptance-files_clipboard_audio.json": {
+      "bytes": 2186,
+      "sha256": "a1cc1cc7c7df5adf98c6888296c01094fbda545220f9b6757cfabcb2f768f5af"
+    },
+    "client-acceptance-media_input.json": {
+      "bytes": 2726,
+      "sha256": "4be100cad207278a72f86b79c2f3bbf499227db1d7c7fd3b8abe472296c81161"
+    },
+    "client-acceptance-gemini_screenshots.json": {
+      "bytes": 2094,
+      "sha256": "b8aed9e8b695dd4520d9e68f26d664c23ebc7cc2ba113bd615d7d0d3012b2629"
+    },
+    "client-acceptance-upgrade_recovery.json": {
+      "bytes": 2124,
+      "sha256": "584b0fa01019e5ed1194fabf65285fd0c9c3bcfbc861df0b32dce87b54d8d932"
+    },
+    "client-acceptance-desktop_service.json": {
+      "bytes": 2287,
+      "sha256": "87dcd4432323db389c297ee20bec04e24103cf0edcb5e86ec3e6770880945f82"
+    },
+    "client-acceptance-performance.json": {
+      "bytes": 2037,
+      "sha256": "183327a48e1016b6957b7fee0f3f9ed9141b21460e0030e2a0eec73fd3a79ac2"
+    },
+    "client-acceptance-other_desktop_builds.json": {
+      "bytes": 2394,
+      "sha256": "619aa7c3142906c7c2992f07bef913f80b30d861010156e9ca5105dbfb99a213"
+    },
+    "client-acceptance-windows_security.json": {
+      "bytes": 2544,
+      "sha256": "d152461954f92795c71eb9b0979298575ecec1bb2e6e1440a7212445ec6a645b"
+    }
+  },
+  "scope": "Publication acceptance preserves measured native and security evidence while explicitly identifying unverified runtime coverage. It does not assert full installed-application or independent-device acceptance."
+}

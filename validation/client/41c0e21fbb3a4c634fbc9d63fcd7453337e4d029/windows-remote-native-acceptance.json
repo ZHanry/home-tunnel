@@ -1,0 +1,4001 @@
+{
+  "schema": 1,
+  "started_at": "2026-10-01T01:24:08.481Z",
+  "status": "passed",
+  "scope": "Windows native desktop capture to Chromium on the same machine, same-account, view and input confined to a dedicated test browser process",
+  "source_policy": "frozen clean server revision",
+  "release_eligible": true,
+  "transport": "isolated HTTP/WS IPv4 loopback fixture; production HTTPS policy unchanged",
+  "checks": {
+    "isolated_real_server": true,
+    "native_backend_ready": true,
+    "real_browser_identity": true,
+    "signed_pairing_and_code_match": true,
+    "session_approval_verified": true,
+    "one_time_grant_auto_approval": true,
+    "real_continuing_video": true,
+    "selected_udp_and_dtls": true,
+    "clean_session_shutdown": true
+  },
+  "limitations": [
+    "Cross-network traversal, Android, audio, clipboard, files are not established by this run.",
+    "Stability covers the original Windows worker with a disposable single-machine controller and QA host; full GUI, independent Windows endpoints, account-token refresh, network-outage recovery and 24-hour idle stability are not established.",
+    "The disposable account token and one-session test grant expire after 10800 seconds; production remote lease and signaling-token renewal logic remains unchanged."
+  ],
+  "input": {
+    "status": "passed",
+    "target_created": true,
+    "native_process_confinement": true,
+    "target_window_found": true,
+    "target_window_activated": true,
+    "target_event_probe": true,
+    "window_diagnostics": {
+      "focus_is_foreground_frame": true,
+      "focus_matches_target_pid": true,
+      "foreground_matches_target": true,
+      "gui_thread_info": true,
+      "target_focus_class": "Chrome_WidgetWin_1"
+    },
+    "os_foreground_verified": true,
+    "target_point": {
+      "client_height": 692,
+      "client_left": 48,
+      "client_top": 40,
+      "client_width": 884,
+      "display_origin_x": 0,
+      "display_origin_y": 0,
+      "height": 768,
+      "hit_class": "Chrome_RenderWidgetHostHWND",
+      "hit_matches_target_pid": true,
+      "hit_matches_target_root": true,
+      "hit_owner_class": "",
+      "hit_owner_process_id": 0,
+      "hit_process_id": 7892,
+      "target_cloaked": 0,
+      "target_extended_style": 264,
+      "width": 1024,
+      "window_bottom": 740,
+      "window_left": 40,
+      "window_right": 940,
+      "window_top": 40,
+      "x": 490,
+      "y": 386
+    },
+    "pointer_down_up": true,
+    "keyboard_sender": {
+      "frames_sent": 4,
+      "held_keys": 0
+    },
+    "keyboard_down_up": true,
+    "unicode_text": true,
+    "trusted_event_count": 14,
+    "stale_epoch_rejected": true,
+    "heartbeat_watchdog": {
+      "passed": true,
+      "release_ms": 1539.0999999996275,
+      "measured_from": "trusted_keydown"
+    },
+    "released": true,
+    "worker_crash": {
+      "passed": true,
+      "key_release_ms": 11.5,
+      "button_release_ms": 12
+    }
+  },
+  "privacy": {
+    "screenshots": false,
+    "recordings": false,
+    "sdp": false,
+    "network_addresses": false,
+    "credentials": false
+  },
+  "requested_codec": null,
+  "worker_sha256": "bd04a279fa178cdc5662565fb5946d98afc314f3137d409a0f0011f0d4557da9",
+  "sources": {
+    "client": {
+      "commit": "41c0e21fbb3a4c634fbc9d63fcd7453337e4d029",
+      "modified": false
+    },
+    "server": {
+      "commit": "194ae805f3569dc16d94b7fda71367e5d68fdff5",
+      "modified": false
+    }
+  },
+  "harness": {
+    "source": {
+      "commit": "595f0ecdeaf73cb1165aecaa0178bdc5c1571caf",
+      "modified": false
+    },
+    "script_sha256": "28c960a998665a826445134bb44e514b11c22edc6b35909e3e633ef241a2972f",
+    "website_predicates_sha256": "b4a0547ed0b4756bc22777c63cc51b27f9111200be04ddd978d8b728b8b7499f",
+    "stability_sources": {
+      "tests/remote-native/stability.mjs": "7ca4fee1e187b1b3e32890bf44873101eaa1a1f2de0425c5907c4759864671c7",
+      "tests/remote-native/failure-metadata.mjs": "188648fbaa526f2651153194eee94d3e3fd5ecf05efe2984d02b517b370300f4",
+      "tests/remote-native/host/main.go": "5b07c4e87cfa9d09de8783c3b5beed20147e8b23bc9d02bd1d342d1caaf69f02",
+      "tests/remote-native/fixture.mjs": "64204d8825468031a7843e04695b26edb76cd7fd44f4d67790ecd4f4a1cbd4d6",
+      "tests/remote-native/controller.mjs": "a8c983035b5b05c59986428651c18eb672bd91048b84ef80c5213df0e0a83b3a",
+      "tests/remote-native/target.html": "e748187dbcdfdcf2ee1bab375b8a90a2f635f6b41b79a0457fb717eed1a8823d"
+    },
+    "host_overlay": {
+      "purpose": "QA-only timeout and one-session grant duration",
+      "production_source_modified": false,
+      "source": "tests/remote-native/host/main.go",
+      "reuses_disposable_identity_after_owned_restart": true,
+      "sha256": "5b07c4e87cfa9d09de8783c3b5beed20147e8b23bc9d02bd1d342d1caaf69f02"
+    }
+  },
+  "stability": {
+    "status": "passed",
+    "target_sessions": 30,
+    "target_active_seconds": 7200,
+    "sessions": [
+      {
+        "ordinal": 1,
+        "pairing_started_elapsed_ms": 0.059600000000500586,
+        "session_id_sha256": "d5b4b5d9a3129171d182268d23a19f8378de77158e7108a572d3de1636241ee0",
+        "signed_pairing": true,
+        "live_media": true,
+        "trusted_input": true,
+        "fresh_pairing_to_media_ms": 1369.6641999999993,
+        "fresh_pairing_to_input_ms": 3405.1215999999986,
+        "activity": {
+          "first": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 218.22780000000057,
+            "wall_ms": 1790817866006,
+            "target_ms": 3272.7999999999884,
+            "frames_decoded": 17,
+            "frames_presented": 15,
+            "bytes_received": 110667,
+            "video_time": 0.975,
+            "input_frames_sent": 4,
+            "native_input_accepted": 4,
+            "native_frames_encoded": 13,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 38.5
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 40.40000000002328
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 18.70000000001164
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 19
+              }
+            ]
+          },
+          "second": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 1634.8342000000011,
+            "wall_ms": 1790817867423,
+            "target_ms": 4690,
+            "frames_decoded": 41,
+            "frames_presented": 40,
+            "bytes_received": 274023,
+            "video_time": 2.403,
+            "input_frames_sent": 8,
+            "native_input_accepted": 8,
+            "native_frames_encoded": 39,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 8.599999999976717
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 9.599999999976717
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 7.899999999965075
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 8.399999999965075
+              }
+            ]
+          }
+        },
+        "clean_close": true
+      },
+      {
+        "ordinal": 2,
+        "pairing_started_elapsed_ms": 15014.0046,
+        "session_id_sha256": "2ed572a96018f2f9abe7b0c5d5ee2ccdb6c2132e4c8e318159858510f58cdccc",
+        "signed_pairing": true,
+        "live_media": true,
+        "trusted_input": true,
+        "fresh_pairing_to_media_ms": 891.2698000000019,
+        "fresh_pairing_to_input_ms": 2867.9082000000017,
+        "activity": {
+          "first": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 215.69830000000002,
+            "wall_ms": 1790817880479,
+            "target_ms": 17746.70000000001,
+            "frames_decoded": 16,
+            "frames_presented": 16,
+            "bytes_received": 97010,
+            "video_time": 0.967,
+            "input_frames_sent": 4,
+            "native_input_accepted": 4,
+            "native_frames_encoded": 14,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 16
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 17.20000000001164
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 15.5
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 15.900000000023283
+              }
+            ]
+          },
+          "second": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 1636.007800000003,
+            "wall_ms": 1790817881900,
+            "target_ms": 19167.099999999977,
+            "frames_decoded": 41,
+            "frames_presented": 41,
+            "bytes_received": 214730,
+            "video_time": 2.4,
+            "input_frames_sent": 8,
+            "native_input_accepted": 8,
+            "native_frames_encoded": 41,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 6.300000000046566
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 6.800000000046566
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.100000000034925
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.600000000034925
+              }
+            ]
+          }
+        },
+        "clean_close": true
+      },
+      {
+        "ordinal": 3,
+        "pairing_started_elapsed_ms": 30015.688700000002,
+        "session_id_sha256": "d63d95cee150c06191a3a876834b346b8fc18ebefcd7ee68eec22438a74cff48",
+        "signed_pairing": true,
+        "live_media": true,
+        "trusted_input": true,
+        "fresh_pairing_to_media_ms": 900.3678,
+        "fresh_pairing_to_input_ms": 2653.4301999999952,
+        "activity": {
+          "first": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 213.71479999999428,
+            "wall_ms": 1790817895272,
+            "target_ms": 32539.099999999977,
+            "frames_decoded": 13,
+            "frames_presented": 13,
+            "bytes_received": 73674,
+            "video_time": 0.758,
+            "input_frames_sent": 4,
+            "native_input_accepted": 4,
+            "native_frames_encoded": 11,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 9.699999999953434
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 10.199999999953434
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 9.099999999976717
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 9.5
+              }
+            ]
+          },
+          "second": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 1629.0025999999998,
+            "wall_ms": 1790817896687,
+            "target_ms": 33954.29999999999,
+            "frames_decoded": 37,
+            "frames_presented": 37,
+            "bytes_received": 235079,
+            "video_time": 2.172,
+            "input_frames_sent": 8,
+            "native_input_accepted": 8,
+            "native_frames_encoded": 36,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 19.300000000046566
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 20.20000000001164
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 18.800000000046566
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 19.100000000034925
+              }
+            ]
+          }
+        },
+        "clean_close": true
+      },
+      {
+        "ordinal": 4,
+        "pairing_started_elapsed_ms": 45016.8677,
+        "session_id_sha256": "240923d82f0e2f7e09c44be38afea31dd6e6f082a6b1d555e009ad019a37f72f",
+        "signed_pairing": true,
+        "live_media": true,
+        "trusted_input": true,
+        "fresh_pairing_to_media_ms": 893.2698000000019,
+        "fresh_pairing_to_input_ms": 2655.4207000000024,
+        "activity": {
+          "first": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 215.32219999999506,
+            "wall_ms": 1790817910286,
+            "target_ms": 47540.69999999995,
+            "frames_decoded": 12,
+            "frames_presented": 12,
+            "bytes_received": 70408,
+            "video_time": 0.757,
+            "input_frames_sent": 4,
+            "native_input_accepted": 4,
+            "native_frames_encoded": 10,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 18.599999999976717
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 19
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 18.099999999976717
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 18.400000000023283
+              }
+            ]
+          },
+          "second": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 1632.2695999999996,
+            "wall_ms": 1790817911703,
+            "target_ms": 48957.40000000002,
+            "frames_decoded": 36,
+            "frames_presented": 36,
+            "bytes_received": 202102,
+            "video_time": 2.156,
+            "input_frames_sent": 8,
+            "native_input_accepted": 8,
+            "native_frames_encoded": 36,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.300000000046566
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 6.5
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.900000000023283
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.099999999976717
+              }
+            ]
+          }
+        },
+        "clean_close": true
+      },
+      {
+        "ordinal": 5,
+        "pairing_started_elapsed_ms": 60018.5687,
+        "session_id_sha256": "f2501cedebc03d040b56b133709aa6283bb976981a61ce4c164a1e26643deb22",
+        "signed_pairing": true,
+        "live_media": true,
+        "trusted_input": true,
+        "fresh_pairing_to_media_ms": 881.6916999999958,
+        "fresh_pairing_to_input_ms": 2450.977899999998,
+        "activity": {
+          "first": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 214.16709999999148,
+            "wall_ms": 1790817925285,
+            "target_ms": 62539.40000000002,
+            "frames_decoded": 13,
+            "frames_presented": 13,
+            "bytes_received": 81345,
+            "video_time": 0.773,
+            "input_frames_sent": 4,
+            "native_input_accepted": 4,
+            "native_frames_encoded": 11,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 11.70000000006985
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 12.100000000093132
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 11.20000000006985
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 11.5
+              }
+            ]
+          },
+          "second": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 1429.4295999999886,
+            "wall_ms": 1790817926500,
+            "target_ms": 63754.59999999998,
+            "frames_decoded": 35,
+            "frames_presented": 34,
+            "bytes_received": 178234,
+            "video_time": 1.959,
+            "input_frames_sent": 8,
+            "native_input_accepted": 8,
+            "native_frames_encoded": 33,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.5
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.5
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.800000000046566
+              }
+            ]
+          }
+        },
+        "clean_close": true
+      },
+      {
+        "ordinal": 6,
+        "pairing_started_elapsed_ms": 75019.3871,
+        "session_id_sha256": "dc8f6b3ebcd470637d5fe1921c410e83de1c05a6bcc96ed494720d63b0c83b5c",
+        "signed_pairing": true,
+        "live_media": true,
+        "trusted_input": true,
+        "fresh_pairing_to_media_ms": 886.2284999999974,
+        "fresh_pairing_to_input_ms": 2450.290500000003,
+        "activity": {
+          "first": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 212.33610000000044,
+            "wall_ms": 1790817940282,
+            "target_ms": 77537.40000000002,
+            "frames_decoded": 13,
+            "frames_presented": 13,
+            "bytes_received": 73782,
+            "video_time": 0.761,
+            "input_frames_sent": 4,
+            "native_input_accepted": 4,
+            "native_frames_encoded": 11,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 14.300000000046566
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 14.699999999953434
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 13.699999999953434
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 14.099999999976717
+              }
+            ]
+          },
+          "second": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 1429.937300000005,
+            "wall_ms": 1790817941500,
+            "target_ms": 78754.5,
+            "frames_decoded": 35,
+            "frames_presented": 34,
+            "bytes_received": 194282,
+            "video_time": 1.946,
+            "input_frames_sent": 8,
+            "native_input_accepted": 8,
+            "native_frames_encoded": 33,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.5
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 6.099999999976717
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.399999999906868
+              }
+            ]
+          }
+        },
+        "clean_close": true
+      },
+      {
+        "ordinal": 7,
+        "pairing_started_elapsed_ms": 90020.21070000001,
+        "session_id_sha256": "da7e886aced60372de5d5741a538bd017ceb7f8ea4b1baa8890251c3faca3a7b",
+        "signed_pairing": true,
+        "live_media": true,
+        "trusted_input": true,
+        "fresh_pairing_to_media_ms": 897.001299999989,
+        "fresh_pairing_to_input_ms": 2648.1255999999994,
+        "activity": {
+          "first": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 212.7485999999917,
+            "wall_ms": 1790817955284,
+            "target_ms": 92538.5,
+            "frames_decoded": 13,
+            "frames_presented": 13,
+            "bytes_received": 73291,
+            "video_time": 0.753,
+            "input_frames_sent": 4,
+            "native_input_accepted": 4,
+            "native_frames_encoded": 11,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 9.600000000093132
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 10.100000000093132
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 9.100000000093132
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 9.400000000023283
+              }
+            ]
+          },
+          "second": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 1627.9187999999995,
+            "wall_ms": 1790817956699,
+            "target_ms": 93953.5,
+            "frames_decoded": 38,
+            "frames_presented": 38,
+            "bytes_received": 284155,
+            "video_time": 2.171,
+            "input_frames_sent": 8,
+            "native_input_accepted": 8,
+            "native_frames_encoded": 37,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.300000000046566
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.699999999953434
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.400000000023283
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.699999999953434
+              }
+            ]
+          }
+        },
+        "clean_close": true
+      },
+      {
+        "ordinal": 8,
+        "pairing_started_elapsed_ms": 105021.8024,
+        "session_id_sha256": "0170478b95d59b666b94b2c9b12fe494cb67786ac770009822b2dc3d5bd336dd",
+        "signed_pairing": true,
+        "live_media": true,
+        "trusted_input": true,
+        "fresh_pairing_to_media_ms": 892.8531999999977,
+        "fresh_pairing_to_input_ms": 2850.49500000001,
+        "activity": {
+          "first": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 214.61879999999655,
+            "wall_ms": 1790817970489,
+            "target_ms": 107742.30000000005,
+            "frames_decoded": 16,
+            "frames_presented": 16,
+            "bytes_received": 95478,
+            "video_time": 0.951,
+            "input_frames_sent": 4,
+            "native_input_accepted": 4,
+            "native_frames_encoded": 15,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 20.900000000023283
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 21.400000000023283
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 19.900000000023283
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 20.300000000046566
+              }
+            ]
+          },
+          "second": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 1629.9541000000027,
+            "wall_ms": 1790817971904,
+            "target_ms": 109157.30000000005,
+            "frames_decoded": 40,
+            "frames_presented": 40,
+            "bytes_received": 247724,
+            "video_time": 2.384,
+            "input_frames_sent": 8,
+            "native_input_accepted": 8,
+            "native_frames_encoded": 40,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.699999999953434
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 6.799999999930151
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.299999999930151
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.5
+              }
+            ]
+          }
+        },
+        "clean_close": true
+      },
+      {
+        "ordinal": 9,
+        "pairing_started_elapsed_ms": 120024.1481,
+        "session_id_sha256": "59e1b7160160ea05dfcd0f3c3d220306dd388897c33dcc0c4ca67eea05a336e9",
+        "signed_pairing": true,
+        "live_media": true,
+        "trusted_input": true,
+        "fresh_pairing_to_media_ms": 882.689000000013,
+        "fresh_pairing_to_input_ms": 2646.960300000006,
+        "activity": {
+          "first": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 213.19679999997607,
+            "wall_ms": 1790817985285,
+            "target_ms": 122539.09999999998,
+            "frames_decoded": 12,
+            "frames_presented": 12,
+            "bytes_received": 67563,
+            "video_time": 0.755,
+            "input_frames_sent": 4,
+            "native_input_accepted": 4,
+            "native_frames_encoded": 10,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 14.5
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 14.800000000046566
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 14
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 14.300000000046566
+              }
+            ]
+          },
+          "second": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 1630.634299999976,
+            "wall_ms": 1790817986703,
+            "target_ms": 123956,
+            "frames_decoded": 37,
+            "frames_presented": 37,
+            "bytes_received": 200979,
+            "video_time": 2.166,
+            "input_frames_sent": 8,
+            "native_input_accepted": 8,
+            "native_frames_encoded": 36,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.199999999953434
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 6.699999999953434
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.699999999953434
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.899999999906868
+              }
+            ]
+          }
+        },
+        "clean_close": true
+      },
+      {
+        "ordinal": 10,
+        "pairing_started_elapsed_ms": 135024.60139999999,
+        "session_id_sha256": "58e819232b2e52a7fedf06335be68cb799f7578fb32d1837af2ead599c4aed41",
+        "signed_pairing": true,
+        "live_media": true,
+        "trusted_input": true,
+        "fresh_pairing_to_media_ms": 879.6695999999938,
+        "fresh_pairing_to_input_ms": 2644.688200000004,
+        "activity": {
+          "first": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 213.3628000000026,
+            "wall_ms": 1790818000284,
+            "target_ms": 137538,
+            "frames_decoded": 13,
+            "frames_presented": 13,
+            "bytes_received": 73057,
+            "video_time": 0.757,
+            "input_frames_sent": 4,
+            "native_input_accepted": 4,
+            "native_frames_encoded": 11,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 13.800000000046566
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 14.20000000006985
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 13.400000000023283
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 13.599999999976717
+              }
+            ]
+          },
+          "second": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 1630.0809000000008,
+            "wall_ms": 1790818001701,
+            "target_ms": 138954.5,
+            "frames_decoded": 37,
+            "frames_presented": 37,
+            "bytes_received": 234908,
+            "video_time": 2.169,
+            "input_frames_sent": 8,
+            "native_input_accepted": 8,
+            "native_frames_encoded": 36,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.600000000093132
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 6
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.5
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.700000000069849
+              }
+            ]
+          }
+        },
+        "clean_close": true
+      },
+      {
+        "ordinal": 11,
+        "pairing_started_elapsed_ms": 150025.0054,
+        "session_id_sha256": "1b8043e29dcaae3931c0525262475a318a94f8b759a28019192b7244153618c4",
+        "signed_pairing": true,
+        "live_media": true,
+        "trusted_input": true,
+        "fresh_pairing_to_media_ms": 891.9886999999871,
+        "fresh_pairing_to_input_ms": 2647.2590999999957,
+        "activity": {
+          "first": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 213.74660000001313,
+            "wall_ms": 1790818015489,
+            "target_ms": 152742.69999999995,
+            "frames_decoded": 17,
+            "frames_presented": 17,
+            "bytes_received": 109612,
+            "video_time": 0.967,
+            "input_frames_sent": 4,
+            "native_input_accepted": 4,
+            "native_frames_encoded": 16,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 15.900000000023283
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 16.400000000023283
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 15.5
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 15.70000000006985
+              }
+            ]
+          },
+          "second": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 1428.7013000000152,
+            "wall_ms": 1790818016704,
+            "target_ms": 153957.40000000002,
+            "frames_decoded": 38,
+            "frames_presented": 38,
+            "bytes_received": 264098,
+            "video_time": 2.157,
+            "input_frames_sent": 8,
+            "native_input_accepted": 8,
+            "native_frames_encoded": 38,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.5
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 3.400000000023283
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.300000000046566
+              }
+            ]
+          }
+        },
+        "clean_close": true
+      },
+      {
+        "ordinal": 12,
+        "pairing_started_elapsed_ms": 165026.0791,
+        "session_id_sha256": "8728078a8b8651d3a95f17e14b1726aaa3511d976efbc386c066b31bb5e61262",
+        "signed_pairing": true,
+        "live_media": true,
+        "trusted_input": true,
+        "fresh_pairing_to_media_ms": 882.7331999999878,
+        "fresh_pairing_to_input_ms": 2844.2474999999977,
+        "activity": {
+          "first": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 213.3585000000021,
+            "wall_ms": 1790818030488,
+            "target_ms": 167740.40000000002,
+            "frames_decoded": 16,
+            "frames_presented": 15,
+            "bytes_received": 94114,
+            "video_time": 0.935,
+            "input_frames_sent": 4,
+            "native_input_accepted": 4,
+            "native_frames_encoded": 15,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 19.399999999906868
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 19.899999999906868
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 19
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 19.199999999953434
+              }
+            ]
+          },
+          "second": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 1628.4220999999961,
+            "wall_ms": 1790818031903,
+            "target_ms": 169155.59999999998,
+            "frames_decoded": 41,
+            "frames_presented": 40,
+            "bytes_received": 193139,
+            "video_time": 2.374,
+            "input_frames_sent": 8,
+            "native_input_accepted": 8,
+            "native_frames_encoded": 37,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.600000000093132
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.900000000023283
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.5
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.800000000046566
+              }
+            ]
+          }
+        },
+        "clean_close": true
+      },
+      {
+        "ordinal": 13,
+        "pairing_started_elapsed_ms": 180026.19189999998,
+        "session_id_sha256": "03bcdd164924c5ae09e267f6b41ff8540497daabce4dd4db4feac1b274fe0e3d",
+        "signed_pairing": true,
+        "live_media": true,
+        "trusted_input": true,
+        "fresh_pairing_to_media_ms": 881.6360000000277,
+        "fresh_pairing_to_input_ms": 2640.025900000008,
+        "activity": {
+          "first": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 211.82850000000326,
+            "wall_ms": 1790818045284,
+            "target_ms": 182536.69999999995,
+            "frames_decoded": 13,
+            "frames_presented": 13,
+            "bytes_received": 76073,
+            "video_time": 0.758,
+            "input_frames_sent": 4,
+            "native_input_accepted": 4,
+            "native_frames_encoded": 11,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 15.099999999976717
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 15.599999999976717
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 14.699999999953434
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 15
+              }
+            ]
+          },
+          "second": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 1626.751099999994,
+            "wall_ms": 1790818046699,
+            "target_ms": 183951.59999999998,
+            "frames_decoded": 38,
+            "frames_presented": 38,
+            "bytes_received": 172819,
+            "video_time": 2.166,
+            "input_frames_sent": 8,
+            "native_input_accepted": 8,
+            "native_frames_encoded": 37,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.400000000023283
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 3.700000000069849
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.600000000093132
+              }
+            ]
+          }
+        },
+        "clean_close": true
+      },
+      {
+        "ordinal": 14,
+        "pairing_started_elapsed_ms": 195028.0102,
+        "session_id_sha256": "d16a1ee40210dd8d23f8a88cdd930b0f7567552616c503250e315ebdd28371ca",
+        "signed_pairing": true,
+        "live_media": true,
+        "trusted_input": true,
+        "fresh_pairing_to_media_ms": 883.671399999992,
+        "fresh_pairing_to_input_ms": 2841.214799999987,
+        "activity": {
+          "first": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 212.0209999999788,
+            "wall_ms": 1790818060486,
+            "target_ms": 197738.80000000005,
+            "frames_decoded": 16,
+            "frames_presented": 15,
+            "bytes_received": 99939,
+            "video_time": 0.908,
+            "input_frames_sent": 4,
+            "native_input_accepted": 4,
+            "native_frames_encoded": 14,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 9.900000000023283
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 10.199999999953434
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 9
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 9.400000000023283
+              }
+            ]
+          },
+          "second": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 1627.8889999999956,
+            "wall_ms": 1790818061902,
+            "target_ms": 199154.69999999995,
+            "frames_decoded": 40,
+            "frames_presented": 40,
+            "bytes_received": 193741,
+            "video_time": 2.361,
+            "input_frames_sent": 8,
+            "native_input_accepted": 8,
+            "native_frames_encoded": 36,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.599999999976717
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 6.099999999976717
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.099999999976717
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.300000000046566
+              }
+            ]
+          }
+        },
+        "clean_close": true
+      },
+      {
+        "ordinal": 15,
+        "pairing_started_elapsed_ms": 210029.2223,
+        "session_id_sha256": "d21deb48c3a80d0e4aa17a4b38e43fede79c0c4182c71ea9696c1c904048c147",
+        "signed_pairing": true,
+        "live_media": true,
+        "trusted_input": true,
+        "fresh_pairing_to_media_ms": 884.1052999999956,
+        "fresh_pairing_to_input_ms": 2638.537699999986,
+        "activity": {
+          "first": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 212.6064999999944,
+            "wall_ms": 1790818075284,
+            "target_ms": 212537.19999999995,
+            "frames_decoded": 13,
+            "frames_presented": 12,
+            "bytes_received": 74111,
+            "video_time": 0.698,
+            "input_frames_sent": 4,
+            "native_input_accepted": 4,
+            "native_frames_encoded": 11,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 13.70000000006985
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 14.099999999976717
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 13.300000000046566
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 13.5
+              }
+            ]
+          },
+          "second": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 1628.3833999999915,
+            "wall_ms": 1790818076700,
+            "target_ms": 213952.90000000002,
+            "frames_decoded": 37,
+            "frames_presented": 37,
+            "bytes_received": 249845,
+            "video_time": 2.152,
+            "input_frames_sent": 8,
+            "native_input_accepted": 8,
+            "native_frames_encoded": 37,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 6.300000000046566
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.5
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.900000000023283
+              }
+            ]
+          }
+        },
+        "clean_close": true
+      },
+      {
+        "ordinal": 16,
+        "pairing_started_elapsed_ms": 225029.9516,
+        "session_id_sha256": "1e7e8839bb1571b8364c2af8fd89cf086512cce68e5dfa44adfb8df4e0dd1c43",
+        "signed_pairing": true,
+        "live_media": true,
+        "trusted_input": true,
+        "fresh_pairing_to_media_ms": 898.7620999999926,
+        "fresh_pairing_to_input_ms": 2669.9530999999843,
+        "activity": {
+          "first": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 213.8564999999944,
+            "wall_ms": 1790818090318,
+            "target_ms": 227568.69999999995,
+            "frames_decoded": 13,
+            "frames_presented": 13,
+            "bytes_received": 71912,
+            "video_time": 0.77,
+            "input_frames_sent": 4,
+            "native_input_accepted": 4,
+            "native_frames_encoded": 10,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 11.599999999976717
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 12
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 11.099999999976717
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 11.399999999906868
+              }
+            ]
+          },
+          "second": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 1630.232399999979,
+            "wall_ms": 1790818091734,
+            "target_ms": 228985.09999999998,
+            "frames_decoded": 37,
+            "frames_presented": 37,
+            "bytes_received": 231926,
+            "video_time": 2.171,
+            "input_frames_sent": 8,
+            "native_input_accepted": 8,
+            "native_frames_encoded": 36,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.199999999953434
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.699999999953434
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.199999999953434
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.599999999976717
+              }
+            ]
+          }
+        },
+        "clean_close": true
+      },
+      {
+        "ordinal": 17,
+        "pairing_started_elapsed_ms": 240032.1057,
+        "session_id_sha256": "538f2c9bcdf0d7d2f5f5cf7fb31b883c569a20b6e296deccfa866c32d11241f2",
+        "signed_pairing": true,
+        "live_media": true,
+        "trusted_input": true,
+        "fresh_pairing_to_media_ms": 880.899700000009,
+        "fresh_pairing_to_input_ms": 2633.7282000000123,
+        "activity": {
+          "first": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 211.9251000000222,
+            "wall_ms": 1790818105285,
+            "target_ms": 242535.40000000002,
+            "frames_decoded": 12,
+            "frames_presented": 12,
+            "bytes_received": 66904,
+            "video_time": 0.741,
+            "input_frames_sent": 4,
+            "native_input_accepted": 4,
+            "native_frames_encoded": 10,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 17.800000000046566
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 18.300000000046566
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 17.5
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 17.70000000006985
+              }
+            ]
+          },
+          "second": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 1627.5102000000188,
+            "wall_ms": 1790818106700,
+            "target_ms": 243951.30000000005,
+            "frames_decoded": 38,
+            "frames_presented": 37,
+            "bytes_received": 193607,
+            "video_time": 2.154,
+            "input_frames_sent": 8,
+            "native_input_accepted": 8,
+            "native_frames_encoded": 37,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 6.199999999953434
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.599999999976717
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.799999999930151
+              }
+            ]
+          }
+        },
+        "clean_close": true
+      },
+      {
+        "ordinal": 18,
+        "pairing_started_elapsed_ms": 255032.60419999997,
+        "session_id_sha256": "62929d544d1643ea52029c630018818fa37952a14654c08db40c1b29d31c2daa",
+        "signed_pairing": true,
+        "live_media": true,
+        "trusted_input": true,
+        "fresh_pairing_to_media_ms": 898.4226999999955,
+        "fresh_pairing_to_input_ms": 2869.0725000000093,
+        "activity": {
+          "first": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 213.58760000002803,
+            "wall_ms": 1790818120521,
+            "target_ms": 257772.30000000005,
+            "frames_decoded": 16,
+            "frames_presented": 16,
+            "bytes_received": 99187,
+            "video_time": 0.958,
+            "input_frames_sent": 4,
+            "native_input_accepted": 4,
+            "native_frames_encoded": 15,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 18.599999999976717
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 19.300000000046566
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 18.199999999953434
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 18.400000000023283
+              }
+            ]
+          },
+          "second": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 1628.427399999986,
+            "wall_ms": 1790818121936,
+            "target_ms": 259187.09999999998,
+            "frames_decoded": 42,
+            "frames_presented": 42,
+            "bytes_received": 276983,
+            "video_time": 2.4,
+            "input_frames_sent": 8,
+            "native_input_accepted": 8,
+            "native_frames_encoded": 42,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.300000000046566
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.599999999976717
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.300000000046566
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.700000000069849
+              }
+            ]
+          }
+        },
+        "clean_close": true
+      },
+      {
+        "ordinal": 19,
+        "pairing_started_elapsed_ms": 270033.365,
+        "session_id_sha256": "1e82769db42c1987dabbfba7ef3e85006d2696c3c6fbf8ee28b73f92c4af70ef",
+        "signed_pairing": true,
+        "live_media": true,
+        "trusted_input": true,
+        "fresh_pairing_to_media_ms": 897.0729000000283,
+        "fresh_pairing_to_input_ms": 2649.9309000000358,
+        "activity": {
+          "first": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 211.61139999999432,
+            "wall_ms": 1790818135302,
+            "target_ms": 272552.5,
+            "frames_decoded": 13,
+            "frames_presented": 13,
+            "bytes_received": 74363,
+            "video_time": 0.738,
+            "input_frames_sent": 4,
+            "native_input_accepted": 4,
+            "native_frames_encoded": 11,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 9.599999999976717
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 10.099999999976717
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 9.099999999976717
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 9.300000000046566
+              }
+            ]
+          },
+          "second": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 1627.8152999999584,
+            "wall_ms": 1790818136718,
+            "target_ms": 273968.6,
+            "frames_decoded": 38,
+            "frames_presented": 38,
+            "bytes_received": 179406,
+            "video_time": 2.17,
+            "input_frames_sent": 8,
+            "native_input_accepted": 8,
+            "native_frames_encoded": 37,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 6.300000000046566
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.599999999976717
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.900000000023283
+              }
+            ]
+          }
+        },
+        "clean_close": true
+      },
+      {
+        "ordinal": 20,
+        "pairing_started_elapsed_ms": 285034.19070000004,
+        "session_id_sha256": "e665478ca398e1d1fc8daf8a9e0740fcd0b8017679ea91ce79a0976967ed74a1",
+        "signed_pairing": true,
+        "live_media": true,
+        "trusted_input": true,
+        "fresh_pairing_to_media_ms": 894.5368000000017,
+        "fresh_pairing_to_input_ms": 2465.32699999999,
+        "activity": {
+          "first": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 214.0461999999825,
+            "wall_ms": 1790818150321,
+            "target_ms": 287570.4,
+            "frames_decoded": 13,
+            "frames_presented": 13,
+            "bytes_received": 72485,
+            "video_time": 0.773,
+            "input_frames_sent": 4,
+            "native_input_accepted": 4,
+            "native_frames_encoded": 10,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 11.100000000093132
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 11.400000000023283
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 10.70000000006985
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 10.900000000023283
+              }
+            ]
+          },
+          "second": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 1428.2834000000148,
+            "wall_ms": 1790818151536,
+            "target_ms": 288784.69999999995,
+            "frames_decoded": 34,
+            "frames_presented": 34,
+            "bytes_received": 193121,
+            "video_time": 1.963,
+            "input_frames_sent": 8,
+            "native_input_accepted": 8,
+            "native_frames_encoded": 33,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.199999999953434
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.599999999976717
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.599999999976717
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5
+              }
+            ]
+          }
+        },
+        "clean_close": true
+      },
+      {
+        "ordinal": 21,
+        "pairing_started_elapsed_ms": 300035.738,
+        "session_id_sha256": "50806e58573791ce5e034666e6ca1d57e9f6e001ed06c62bef7d47d6ea3be151",
+        "signed_pairing": true,
+        "live_media": true,
+        "trusted_input": true,
+        "fresh_pairing_to_media_ms": 919.0320000000065,
+        "fresh_pairing_to_input_ms": 2479.002199999988,
+        "activity": {
+          "first": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 211.97590000001946,
+            "wall_ms": 1790818165334,
+            "target_ms": 302583,
+            "frames_decoded": 14,
+            "frames_presented": 14,
+            "bytes_received": 78890,
+            "video_time": 0.797,
+            "input_frames_sent": 4,
+            "native_input_accepted": 4,
+            "native_frames_encoded": 11,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 12.099999999976717
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 12.399999999906868
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 11.5
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 11.79999999993015
+              }
+            ]
+          },
+          "second": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 1429.1453000000329,
+            "wall_ms": 1790818166551,
+            "target_ms": 303799.6,
+            "frames_decoded": 35,
+            "frames_presented": 35,
+            "bytes_received": 193658,
+            "video_time": 1.987,
+            "input_frames_sent": 8,
+            "native_input_accepted": 8,
+            "native_frames_encoded": 33,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.300000000046566
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.700000000069849
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.900000000023283
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.200000000069849
+              }
+            ]
+          }
+        },
+        "clean_close": true
+      },
+      {
+        "ordinal": 22,
+        "pairing_started_elapsed_ms": 315037.8148,
+        "session_id_sha256": "a2bce17c28df4cf6b6ca8e472e225efbfbcdbfac41a5604475e249502082b763",
+        "signed_pairing": true,
+        "live_media": true,
+        "trusted_input": true,
+        "fresh_pairing_to_media_ms": 886.244000000006,
+        "fresh_pairing_to_input_ms": 2865.9052000000374,
+        "activity": {
+          "first": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 212.85759999998845,
+            "wall_ms": 1790818180524,
+            "target_ms": 317772.9,
+            "frames_decoded": 16,
+            "frames_presented": 16,
+            "bytes_received": 97365,
+            "video_time": 0.948,
+            "input_frames_sent": 4,
+            "native_input_accepted": 4,
+            "native_frames_encoded": 15,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 20.5
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 20.79999999993015
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 19.599999999976717
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 19.900000000023283
+              }
+            ]
+          },
+          "second": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 1628.95279999997,
+            "wall_ms": 1790818181940,
+            "target_ms": 319188.9,
+            "frames_decoded": 41,
+            "frames_presented": 41,
+            "bytes_received": 224817,
+            "video_time": 2.348,
+            "input_frames_sent": 8,
+            "native_input_accepted": 8,
+            "native_frames_encoded": 41,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.199999999953434
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.599999999976717
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.299999999930151
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.599999999976717
+              }
+            ]
+          }
+        },
+        "clean_close": true
+      },
+      {
+        "ordinal": 23,
+        "pairing_started_elapsed_ms": 330037.81810000003,
+        "session_id_sha256": "b3d8bd3f162bc318d5f1c50a1e70a8c88ada97c460259a7df83f977a65818a45",
+        "signed_pairing": true,
+        "live_media": true,
+        "trusted_input": true,
+        "fresh_pairing_to_media_ms": 892.2239999999874,
+        "fresh_pairing_to_input_ms": 2661.925099999993,
+        "activity": {
+          "first": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 211.9947000000393,
+            "wall_ms": 1790818195318,
+            "target_ms": 332567.30000000005,
+            "frames_decoded": 13,
+            "frames_presented": 12,
+            "bytes_received": 74954,
+            "video_time": 0.725,
+            "input_frames_sent": 4,
+            "native_input_accepted": 4,
+            "native_frames_encoded": 10,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 13.699999999953434
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 14.199999999953434
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 13.300000000046566
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 13.599999999976717
+              }
+            ]
+          },
+          "second": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 1629.5036000000546,
+            "wall_ms": 1790818196736,
+            "target_ms": 333985.1,
+            "frames_decoded": 37,
+            "frames_presented": 37,
+            "bytes_received": 210342,
+            "video_time": 2.174,
+            "input_frames_sent": 8,
+            "native_input_accepted": 8,
+            "native_frames_encoded": 36,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.699999999953434
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.099999999976717
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.099999999976717
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.400000000023283
+              }
+            ]
+          }
+        },
+        "clean_close": true
+      },
+      {
+        "ordinal": 24,
+        "pairing_started_elapsed_ms": 345038.1175,
+        "session_id_sha256": "49a2a4f336042513efd4ae9f5c15a9fd14f6a4263ed6259adb6a65154265dc49",
+        "signed_pairing": true,
+        "live_media": true,
+        "trusted_input": true,
+        "fresh_pairing_to_media_ms": 896.6248000000487,
+        "fresh_pairing_to_input_ms": 2665.4733000000124,
+        "activity": {
+          "first": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 214.4998000000487,
+            "wall_ms": 1790818210525,
+            "target_ms": 347773.6,
+            "frames_decoded": 17,
+            "frames_presented": 17,
+            "bytes_received": 105166,
+            "video_time": 0.984,
+            "input_frames_sent": 4,
+            "native_input_accepted": 4,
+            "native_frames_encoded": 15,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 13.900000000023283
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 15
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 13.5
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 13.699999999953434
+              }
+            ]
+          },
+          "second": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 1429.5646000000415,
+            "wall_ms": 1790818211740,
+            "target_ms": 348988.9,
+            "frames_decoded": 38,
+            "frames_presented": 37,
+            "bytes_received": 208543,
+            "video_time": 2.137,
+            "input_frames_sent": 8,
+            "native_input_accepted": 8,
+            "native_frames_encoded": 37,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.900000000023283
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.400000000023283
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.200000000069849
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.5
+              }
+            ]
+          }
+        },
+        "clean_close": true
+      },
+      {
+        "ordinal": 25,
+        "pairing_started_elapsed_ms": 360038.4782,
+        "session_id_sha256": "10d5b042d13fa873e76a4e80ac74deab3d4019b4fbbad94744b8ae111bcc583a",
+        "signed_pairing": true,
+        "live_media": true,
+        "trusted_input": true,
+        "fresh_pairing_to_media_ms": 889.4753999999957,
+        "fresh_pairing_to_input_ms": 2864.510500000033,
+        "activity": {
+          "first": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 213.97509999998147,
+            "wall_ms": 1790818225524,
+            "target_ms": 362772.30000000005,
+            "frames_decoded": 16,
+            "frames_presented": 16,
+            "bytes_received": 100222,
+            "video_time": 0.933,
+            "input_frames_sent": 4,
+            "native_input_accepted": 4,
+            "native_frames_encoded": 15,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 18.400000000023283
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 19.400000000023283
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 17.900000000023283
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 18.199999999953434
+              }
+            ]
+          },
+          "second": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 1629.7299999999814,
+            "wall_ms": 1790818226940,
+            "target_ms": 364188.1,
+            "frames_decoded": 41,
+            "frames_presented": 41,
+            "bytes_received": 296399,
+            "video_time": 2.378,
+            "input_frames_sent": 8,
+            "native_input_accepted": 8,
+            "native_frames_encoded": 41,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.699999999953434
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 6.199999999953434
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.199999999953434
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.400000000023283
+              }
+            ]
+          }
+        },
+        "clean_close": true
+      },
+      {
+        "ordinal": 26,
+        "pairing_started_elapsed_ms": 375039.8579,
+        "session_id_sha256": "e8e1f1c48d73922ca247bb27f0bbcf5a8512f30c9187103d3a605d921aac0656",
+        "signed_pairing": true,
+        "live_media": true,
+        "trusted_input": true,
+        "fresh_pairing_to_media_ms": 904.7217999999993,
+        "fresh_pairing_to_input_ms": 2862.695400000026,
+        "activity": {
+          "first": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 213.47199999995064,
+            "wall_ms": 1790818240523,
+            "target_ms": 377772.1,
+            "frames_decoded": 17,
+            "frames_presented": 17,
+            "bytes_received": 108441,
+            "video_time": 0.988,
+            "input_frames_sent": 4,
+            "native_input_accepted": 4,
+            "native_frames_encoded": 15,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 17.699999999953434
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 18.699999999953434
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 17.29999999993015
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 17.699999999953434
+              }
+            ]
+          },
+          "second": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 1629.2342999999528,
+            "wall_ms": 1790818241939,
+            "target_ms": 379187.80000000005,
+            "frames_decoded": 41,
+            "frames_presented": 41,
+            "bytes_received": 215805,
+            "video_time": 2.364,
+            "input_frames_sent": 8,
+            "native_input_accepted": 8,
+            "native_frames_encoded": 41,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.400000000023283
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.799999999930151
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.400000000023283
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.799999999930151
+              }
+            ]
+          }
+        },
+        "clean_close": true
+      },
+      {
+        "ordinal": 27,
+        "pairing_started_elapsed_ms": 390041.3952,
+        "session_id_sha256": "32b1067a43c8d3b0ff583b885481c4d1dedd9082f3fd796bb44653cf3415faac",
+        "signed_pairing": true,
+        "live_media": true,
+        "trusted_input": true,
+        "fresh_pairing_to_media_ms": 905.5782999999938,
+        "fresh_pairing_to_input_ms": 2861.2052999999723,
+        "activity": {
+          "first": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 212.12630000000354,
+            "wall_ms": 1790818255522,
+            "target_ms": 392770.4,
+            "frames_decoded": 16,
+            "frames_presented": 15,
+            "bytes_received": 101304,
+            "video_time": 0.932,
+            "input_frames_sent": 4,
+            "native_input_accepted": 4,
+            "native_frames_encoded": 15,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 18.699999999953434
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 19.599999999976717
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 18.199999999953434
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 18.5
+              }
+            ]
+          },
+          "second": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 1629.6257999999798,
+            "wall_ms": 1790818256939,
+            "target_ms": 394187.9,
+            "frames_decoded": 41,
+            "frames_presented": 40,
+            "bytes_received": 224184,
+            "video_time": 2.347,
+            "input_frames_sent": 8,
+            "native_input_accepted": 8,
+            "native_frames_encoded": 37,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.900000000023283
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.400000000023283
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.300000000046566
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.599999999976717
+              }
+            ]
+          }
+        },
+        "clean_close": true
+      },
+      {
+        "ordinal": 28,
+        "pairing_started_elapsed_ms": 405042.54600000003,
+        "session_id_sha256": "c7b955a298f34a7479113e4b7b90edc14729f2c062abf4101ad3957440913fc8",
+        "signed_pairing": true,
+        "live_media": true,
+        "trusted_input": true,
+        "fresh_pairing_to_media_ms": 905.5252999999793,
+        "fresh_pairing_to_input_ms": 2654.3204999999725,
+        "activity": {
+          "first": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 212.1814000000013,
+            "wall_ms": 1790818270321,
+            "target_ms": 407567.69999999995,
+            "frames_decoded": 12,
+            "frames_presented": 12,
+            "bytes_received": 69031,
+            "video_time": 0.726,
+            "input_frames_sent": 4,
+            "native_input_accepted": 4,
+            "native_frames_encoded": 10,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 11.600000000093132
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 12
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 11.100000000093132
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 11.300000000046566
+              }
+            ]
+          },
+          "second": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 1626.4689999999828,
+            "wall_ms": 1790818271735,
+            "target_ms": 408982.19999999995,
+            "frames_decoded": 37,
+            "frames_presented": 37,
+            "bytes_received": 212272,
+            "video_time": 2.177,
+            "input_frames_sent": 8,
+            "native_input_accepted": 8,
+            "native_frames_encoded": 36,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.800000000046566
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.200000000069849
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 3.900000000023283
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.200000000069849
+              }
+            ]
+          }
+        },
+        "clean_close": true
+      },
+      {
+        "ordinal": 29,
+        "pairing_started_elapsed_ms": 420043.41990000004,
+        "session_id_sha256": "d6a0c672ac3111688ef7021a39331384853787082eb024a825a1b405f5e2217a",
+        "signed_pairing": true,
+        "live_media": true,
+        "trusted_input": true,
+        "fresh_pairing_to_media_ms": 901.1011999999755,
+        "fresh_pairing_to_input_ms": 2863.8996000000043,
+        "activity": {
+          "first": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 214.1416999999783,
+            "wall_ms": 1790818285526,
+            "target_ms": 422773.1,
+            "frames_decoded": 17,
+            "frames_presented": 17,
+            "bytes_received": 108779,
+            "video_time": 0.97,
+            "input_frames_sent": 4,
+            "native_input_accepted": 4,
+            "native_frames_encoded": 15,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 17.199999999953434
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 17.79999999993015
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 16.699999999953434
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 17.099999999976717
+              }
+            ]
+          },
+          "second": {
+            "media_state": {
+              "peer_verified": true,
+              "host_path_verified": true,
+              "browser_udp_verified": true,
+              "input_enabled": true,
+              "lease_valid": true,
+              "signal_authenticated": true,
+              "connection_state": "connected",
+              "dtls_state": "connected"
+            },
+            "elapsed_ms": 1633.7297000000253,
+            "wall_ms": 1790818286946,
+            "target_ms": 424192.5,
+            "frames_decoded": 41,
+            "frames_presented": 41,
+            "bytes_received": 205206,
+            "video_time": 2.348,
+            "input_frames_sent": 8,
+            "native_input_accepted": 8,
+            "native_frames_encoded": 37,
+            "lease_sequence": 1,
+            "controller_token_refreshes": 0,
+            "input_events": [
+              {
+                "type": "keydown",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.700000000069849
+              },
+              {
+                "type": "keyup",
+                "code": "KeyA",
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 5.800000000046566
+              },
+              {
+                "type": "pointerdown",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.200000000069849
+              },
+              {
+                "type": "pointerup",
+                "code": null,
+                "trusted": true,
+                "target_matches": true,
+                "offset_ms": 4.5
+              }
+            ]
+          }
+        },
+        "clean_close": true
+      },
+      {
+        "ordinal": 30,
+        "session_id_sha256": "a1a73a910bda7df88e507eb5ef5bac6d4abef84fdedf6416d74998b7713346e1",
+        "signed_pairing": true,
+        "live_media": true,
+        "trusted_input": true,
+        "clean_close": true,
+        "active_window": true,
+        "pairing_started_elapsed_ms": 435043.9267,
+        "fresh_pairing_to_media_ms": 2108.6965999999666,
+        "fresh_pairing_to_input_ms": 2751.7269000000088
+      }
+    ],
+    "fixture_policy": {
+      "host_timeout_seconds": 10800,
+      "one_session_grant_seconds": 10800,
+      "account_access_token_seconds": 10800
+    },
+    "network_restore_30s": {
+      "status": "not_verified",
+      "reason": "No network outage is induced by this fixture."
+    },
+    "active_window": {
+      "status": "passed",
+      "actual_active_seconds": 7202.463167000001,
+      "samples": 1391,
+      "maximum_allowed_sample_gap_ms": 15000,
+      "first": {
+        "media_state": {
+          "peer_verified": true,
+          "host_path_verified": true,
+          "browser_udp_verified": true,
+          "input_enabled": true,
+          "lease_valid": true,
+          "signal_authenticated": true,
+          "connection_state": "connected",
+          "dtls_state": "connected"
+        },
+        "elapsed_ms": 215.98870000004536,
+        "wall_ms": 1790818302269,
+        "target_ms": 439515.80000000005,
+        "frames_decoded": 47,
+        "frames_presented": 47,
+        "bytes_received": 214831,
+        "video_time": 2.678,
+        "input_frames_sent": 12,
+        "native_input_accepted": 11,
+        "native_frames_encoded": 46,
+        "lease_sequence": 1,
+        "controller_token_refreshes": 0,
+        "input_events": [
+          {
+            "type": "keydown",
+            "code": "KeyA",
+            "trusted": true,
+            "target_matches": true,
+            "offset_ms": 5.5
+          },
+          {
+            "type": "keyup",
+            "code": "KeyA",
+            "trusted": true,
+            "target_matches": true,
+            "offset_ms": 6
+          },
+          {
+            "type": "pointerdown",
+            "code": null,
+            "trusted": true,
+            "target_matches": true,
+            "offset_ms": 4.900000000023283
+          },
+          {
+            "type": "pointerup",
+            "code": null,
+            "trusted": true,
+            "target_matches": true,
+            "offset_ms": 5.199999999953434
+          }
+        ]
+      },
+      "last": {
+        "media_state": {
+          "peer_verified": true,
+          "host_path_verified": true,
+          "browser_udp_verified": true,
+          "input_enabled": true,
+          "lease_valid": true,
+          "signal_authenticated": true,
+          "connection_state": "connected",
+          "dtls_state": "connected"
+        },
+        "elapsed_ms": 7202679.1557,
+        "wall_ms": 1790825504907,
+        "target_ms": 7641979.3,
+        "frames_decoded": 129634,
+        "frames_presented": 129634,
+        "bytes_received": 224784230,
+        "video_time": 7205.166,
+        "input_frames_sent": 5572,
+        "native_input_accepted": 5571,
+        "native_frames_encoded": 129631,
+        "lease_sequence": 30,
+        "controller_token_refreshes": 15,
+        "input_events": [
+          {
+            "type": "keydown",
+            "code": "KeyA",
+            "trusted": true,
+            "target_matches": true,
+            "offset_ms": 5.2999999998137355
+          },
+          {
+            "type": "keyup",
+            "code": "KeyA",
+            "trusted": true,
+            "target_matches": true,
+            "offset_ms": 6.3999999994412065
+          },
+          {
+            "type": "pointerdown",
+            "code": null,
+            "trusted": true,
+            "target_matches": true,
+            "offset_ms": 4.7999999998137355
+          },
+          {
+            "type": "pointerup",
+            "code": null,
+            "trusted": true,
+            "target_matches": true,
+            "offset_ms": 5.099999999627471
+          }
+        ]
+      }
+    },
+    "samples_sha256": "be2c7e34da339e171625beb42a82e8e79baed067ced66f9069dc24d40de295d1",
+    "actual_connections": 30,
+    "crashed_session_closure": {
+      "server_state": "closed",
+      "host_idle": true,
+      "verified_before_restart": true,
+      "session_id_sha256": "ddd20339403bc93f4e99dd269e32a3b18c79a16db1e0a5c9e7b7423c35288694"
+    },
+    "post_crash_explicit_restart": {
+      "status": "passed",
+      "crash_to_live_input_ms": 3507.7000000001863,
+      "session_id_sha256": "a89174e8c655a547f508188a937329aeb382433b1351083b761194ed6a1c17ed",
+      "activity": {
+        "first": {
+          "media_state": {
+            "peer_verified": true,
+            "host_path_verified": true,
+            "browser_udp_verified": true,
+            "input_enabled": true,
+            "lease_valid": true,
+            "signal_authenticated": true,
+            "connection_state": "connected",
+            "dtls_state": "connected"
+          },
+          "elapsed_ms": 212.42559999972582,
+          "wall_ms": 1790825510294,
+          "target_ms": 7647366.9,
+          "frames_decoded": 16,
+          "frames_presented": 16,
+          "bytes_received": 101487,
+          "video_time": 0.949,
+          "input_frames_sent": 4,
+          "native_input_accepted": 4,
+          "native_frames_encoded": 15,
+          "lease_sequence": 1,
+          "controller_token_refreshes": 15,
+          "input_events": [
+            {
+              "type": "keydown",
+              "code": "KeyA",
+              "trusted": true,
+              "target_matches": true,
+              "offset_ms": 16.200000000186265
+            },
+            {
+              "type": "keyup",
+              "code": "KeyA",
+              "trusted": true,
+              "target_matches": true,
+              "offset_ms": 17.09999999962747
+            },
+            {
+              "type": "pointerdown",
+              "code": null,
+              "trusted": true,
+              "target_matches": true,
+              "offset_ms": 15.799999999813735
+            },
+            {
+              "type": "pointerup",
+              "code": null,
+              "trusted": true,
+              "target_matches": true,
+              "offset_ms": 16.09999999962747
+            }
+          ]
+        },
+        "second": {
+          "media_state": {
+            "peer_verified": true,
+            "host_path_verified": true,
+            "browser_udp_verified": true,
+            "input_enabled": true,
+            "lease_valid": true,
+            "signal_authenticated": true,
+            "connection_state": "connected",
+            "dtls_state": "connected"
+          },
+          "elapsed_ms": 1629.5625999998301,
+          "wall_ms": 1790825511712,
+          "target_ms": 7648783.7,
+          "frames_decoded": 41,
+          "frames_presented": 41,
+          "bytes_received": 273019,
+          "video_time": 2.348,
+          "input_frames_sent": 8,
+          "native_input_accepted": 8,
+          "native_frames_encoded": 37,
+          "lease_sequence": 1,
+          "controller_token_refreshes": 15,
+          "input_events": [
+            {
+              "type": "keydown",
+              "code": "KeyA",
+              "trusted": true,
+              "target_matches": true,
+              "offset_ms": 5.400000000372529
+            },
+            {
+              "type": "keyup",
+              "code": "KeyA",
+              "trusted": true,
+              "target_matches": true,
+              "offset_ms": 5.800000000745058
+            },
+            {
+              "type": "pointerdown",
+              "code": null,
+              "trusted": true,
+              "target_matches": true,
+              "offset_ms": 4.400000000372529
+            },
+            {
+              "type": "pointerup",
+              "code": null,
+              "trusted": true,
+              "target_matches": true,
+              "offset_ms": 4.7000000001862645
+            }
+          ]
+        }
+      },
+      "clean_close": true,
+      "server_state": "closed",
+      "host_idle": true,
+      "crashed_session_closure": {
+        "server_state": "closed",
+        "host_idle": true,
+        "verified_before_restart": true,
+        "session_id_sha256": "ddd20339403bc93f4e99dd269e32a3b18c79a16db1e0a5c9e7b7423c35288694"
+      },
+      "scope": "Owned QA host restart and new signed pairing; no automatic restart or network outage claim."
+    }
+  },
+  "server_build": {
+    "fresh": true,
+    "source_commit": "194ae805f3569dc16d94b7fda71367e5d68fdff5",
+    "command": "pnpm run build",
+    "dist": {
+      "file_count": 158,
+      "sha256": "3b460131aa76425f86f73c3cd698235728c8a08a8ce90a6f70ae6547c40f5ba9"
+    }
+  },
+  "capabilities": {
+    "permissions": [
+      "view",
+      "input.keyboard",
+      "input.pointer",
+      "input.text",
+      "clipboard.read",
+      "clipboard.write",
+      "files.send",
+      "files.receive"
+    ],
+    "codecs": [
+      "H264",
+      "VP8"
+    ],
+    "display_count": 1
+  },
+  "browser_version": "145.0.7632.6",
+  "media": {
+    "phases": [
+      "connecting",
+      "waiting_for_frame",
+      "viewing"
+    ],
+    "failures": [],
+    "input_releases": [
+      "RD_INPUT_WATCHDOG"
+    ],
+    "frames": 129664,
+    "session_create_failure": null,
+    "width": 1024,
+    "height": 768,
+    "mediaTime": 7206.803,
+    "ready": true,
+    "closed": false,
+    "peer_verified": true,
+    "host_path_verified": true,
+    "browser_udp_verified": true,
+    "input_enabled": false,
+    "connection_state": "connected",
+    "input_epoch": 2,
+    "lease_sequence": 30,
+    "lease_valid": true,
+    "signal_authenticated": true,
+    "controller_token_refreshes": 15,
+    "dtls_state": "connected",
+    "frames_decoded": 129664,
+    "bytes_received": 224834953,
+    "video_codec": "video/VP8",
+    "video_codec_parameters": null,
+    "video_decoder_implementation": null,
+    "video_power_efficient_decoder": null,
+    "input_frames_sent": 5573,
+    "input_buffered_bytes": 0,
+    "local_candidate": {
+      "protocol": "udp",
+      "type": "host"
+    },
+    "remote_candidate": {
+      "protocol": "udp",
+      "type": "host"
+    }
+  },
+  "native_media": {
+    "input_accepted": 0,
+    "input_enabled": false,
+    "input_epoch": 0,
+    "input_failed": 0,
+    "input_ignored_disabled": 0,
+    "input_ignored_epoch": 0,
+    "input_received": 0,
+    "input_replayed": 0,
+    "video_codec": "video/VP8",
+    "video_codec_parameters": null,
+    "video_encoder_implementation": "libvpx",
+    "video_frame_height": 768,
+    "video_frame_width": 1024,
+    "video_frames_encoded": 24,
+    "video_power_efficient_encoder": false
+  },
+  "finished_at": "2026-10-01T03:31:52.252Z"
+}

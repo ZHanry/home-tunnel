@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "status": "passed",
+  "version": "10.1.0",
+  "repository_revision": "41c0e21fbb3a4c634fbc9d63fcd7453337e4d029",
+  "engine": "Microsoft Defender",
+  "engine_version": "1.1.26080.3",
+  "signature_version": "1.459.491.0",
+  "signature_updated_at": "2026-09-30T16:53:20.0000000Z",
+  "scanned_at": "2026-10-01T01:22:51.1430933Z",
+  "files": [
+    {
+      "name": "HomeTunnel-Setup-10.1.0-x64.exe",
+      "sha256": "58340bcd7d799ab7e5deaccc6d284fb4313b322ac869bdfd2ad2368b03b13eb5",
+      "exit_code": 0
+    },
+    {
+      "name": "HomeTunnel-Windows-10.1.0-x64.zip",
+      "sha256": "e1c04b5cd06dcd5ac4548bac0e1611d9a996e70ba71307bb05fdb82350b98df7",
+      "exit_code": 0
+    },
+    {
+      "name": "home-tunnel-gui.exe",
+      "sha256": "1a01f5eb81777711d52077bd24ef481c6a0e6f6d79908902dfa0167b2314f68c",
+      "exit_code": 0
+    },
+    {
+      "name": "home-tunnel-agent.exe",
+      "sha256": "0be9d77918aad26539692fa80b0c2b0a8e7ab0bb8ed85de63f5e0456a2fcaef0",
+      "exit_code": 0
+    },
+    {
+      "name": "home-tunnel-service.exe",
+      "sha256": "bf3b8d92ea601b2db05d04fc730edde76e6a6ed92b63ba1daffb2908d2ce44f3",
+      "exit_code": 0
+    },
+    {
+      "name": "home_tunnel_remote_host.exe",
+      "sha256": "bd04a279fa178cdc5662565fb5946d98afc314f3137d409a0f0011f0d4557da9",
+      "exit_code": 0
+    }
+  ]
+}
