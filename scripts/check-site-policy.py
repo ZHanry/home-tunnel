@@ -29,8 +29,7 @@ BANNED = (
     "已通过 Gemini",
     "Gemini review passed",
 )
-# Only while 10.0.0 is unpromoted: its download links must not appear anywhere.
-UNPROMOTED_BANNED = ("releases/download/v10.0.0",)
+# An unpromoted line cannot advertise stable download URLs.
 ALLOWED_IMAGES = {
     "assets/hometunnel.svg",
     "assets/architecture.svg",
@@ -101,7 +100,7 @@ def audit(root=ROOT):
     releases = json.loads((site / "releases.json").read_text(encoding="utf-8"))
     candidate = json.loads((site / "candidate.json").read_text(encoding="utf-8"))
     promoted = candidate.get("promotion_status") == "promoted"
-    banned = BANNED if promoted else BANNED + UNPROMOTED_BANNED
+    banned = BANNED if promoted else BANNED + (f"releases/download/v{candidate.get('version')}",)
     css = (site / "assets" / "site.css").read_text(encoding="utf-8")
     script = (site / "assets" / "site.js").read_text(encoding="utf-8")
     for token in ("focus-visible", "prefers-color-scheme", "prefers-reduced-motion", "max-width: 800px", 'data-theme="dark"', "nav-toggle", "table-layout: fixed", "minmax(min(100%, 240px)", 'data-tone="loading"'):

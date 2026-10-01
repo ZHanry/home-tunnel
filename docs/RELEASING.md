@@ -1,3 +1,19 @@
+# Home Tunnel 10.1.0 发布流程
+
+本轮发布 Server / Client / Hub 10.1.0；Android 保留兼容的 10.0.0 正式版本、原始附件、摘要与证书。FRP 保持 0.70.1。Server / Client 使用冻结增量契约 `api-v1.5.0`；历史契约标签不可改写。
+
+## 10.1 发布顺序
+
+1. 核对 Client `41c0e21fbb3a4c634fbc9d63fcd7453337e4d029` 和 Server `194ae805f3569dc16d94b7fda71367e5d68fdff5` 的锁定源码、候选清单、构建证明、大小及 SHA-256。
+2. 将实际报告绑定到原始 Windows worker 与候选包。30 次连接、7202.463 秒活动和显式 QA host 重启结果只说明报告中的同机隔离范围；未运行的项目必须保持未验证，24 小时测试未运行。
+3. 用组件正式发布流程晋升封存的原始字节和服务端镜像摘要，不重打包、不重新构建、不移动已发布标签。继续披露 Windows/macOS 未签名与所有未验证项目。
+4. 实际 Client / Server 正式 Release 存在并核对附件后，才将 Hub 的 `distribution.json`、版本、文档和网站晋升。Android 仍指向原 v10.0.0 Release；不得生成虚构的 10.1.0 APK 链接。
+5. 运行 `python scripts/sync-distribution.py` 和贡献指南列出的检查；核对公开附件的文件名、大小、SHA-256、源提交与版本组合，再发布 Hub 10.1.0。
+
+发布状态与测试状态分开记录。稳定版本号不表示完整 GUI/Windows 服务、独立终端、Android、网络故障、24 小时、Linux/macOS 或升级恢复已经通过。历史 10.0.0 报告及截图保持原标签，不回写为 10.1.0 验收。
+
+## 历史流程：10.0.0
+
 # Home Tunnel 10.0.0 发布流程
 
 四仓正式标签为 `v10.0.0`。FRP 保持自己的 0.70.1。共享契约先冻结为不可移动的 `api-v1.4.0`（服务端提交 `74e140da43c88043d0db2aad7505ba75fd3a9a49`）。候选和稳定通道只写在 `distribution.json`，用 `python scripts/sync-distribution.py` 投影到 `releases.json` 与网站清单。

@@ -98,7 +98,7 @@ const incomplete = state.view({
   candidate: require('./docs/site/candidate.json'),
   fallbackStable: '10.0.0'
 });
-if (incomplete.tone !== 'ready' || !incomplete.en.includes('Stable downloads are 10.0.0') ||
+if (incomplete.tone !== 'ready' || !incomplete.en.includes('Stable downloads are ' + require('./docs/site/releases.json').version) ||
     !incomplete.en.includes('were not run and remain unverified') ||
     !incomplete.zh.includes('部分验收项目未运行，验证尚未完成')) process.exit(10);
 if (/waiv|owner|豁免|负责人/i.test(incomplete.en + incomplete.zh)) process.exit(11);

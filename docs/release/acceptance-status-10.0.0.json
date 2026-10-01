@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "version": "10.0.0",
+  "status": "accepted_with_waivers",
+  "evidence_file": "docs/release/v10-published-evidence.json",
+  "reason": "Restores the published release record from original component verification receipts and independently verified release bytes. Unrun runtime and UI checks remain unverified; no new approval or runtime result is asserted."
+}

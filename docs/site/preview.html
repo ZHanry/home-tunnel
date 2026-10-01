@@ -20,15 +20,15 @@
   document.documentElement.classList.add("js");
 })();
 </script>
-<title>Home Tunnel 10.0.0 范围与限制</title>
-<meta name="description" content="10.0.0 的功能、实测范围、未验证项目和已知限制。">
+<title>Home Tunnel 10.1.0 范围与限制</title>
+<meta name="description" content="10.1.0 的功能、实测范围、未验证项目和已知限制。">
 <link rel="canonical" href="https://zhanry.github.io/home-tunnel/preview.html">
 <link rel="alternate" hreflang="zh-CN" href="https://zhanry.github.io/home-tunnel/preview.html">
 <link rel="alternate" hreflang="en" href="https://zhanry.github.io/home-tunnel/en/preview.html">
 <link rel="icon" type="image/svg+xml" href="assets/HomeTunnel.svg">
-<link rel="stylesheet" href="assets/site.css?v=10.0.0">
+<link rel="stylesheet" href="assets/site.css?v=10.1.0">
 </head>
-<body data-root="" data-stable-version="10.0.0">
+<body data-root="" data-stable-version="10.1.0">
 <a class="skip" href="#content">跳到主要内容</a>
 <div class="wrap">
 <header class="site-header">
@@ -52,40 +52,26 @@
 <main id="content">
 <section class="section">
 <p class="eyebrow">范围</p>
-<h1>10.0.0 是稳定版，部分项目尚未验证。</h1>
-<p class="lede">本版的验证尚未完成。下面分别列出实测范围、未验证项目和不可用功能。未运行的项目不计为通过。契约是已冻结的 api-v1.4.0。完整清单见<a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">发布说明</a>。</p>
+<h1>10.1.0 是稳定版，部分项目尚未验证。</h1>
+<p class="lede">稳定组合为 Server / Client 10.1.0 + Android 10.0.0。Android 原始文件、版本与摘要保留不变。FRP 保持 0.70.1；增量契约为 api-v1.5.0，历史契约不变。未运行项目不计为通过。详见<a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">发布说明</a>。</p>
+<h2>10.1 更新</h2>
+<p>修复 Windows 审批弹窗底色和显示时机、阻止连接本机；原生登录通过短时单次交接复用到仅限远控的子会话。设置与更新合并，当前设备改名移到“我的设备”，登录布局、窄窗口滚动和键盘行为得到改善。登录交接与当前设备改名需要 Server 10.1.0。</p>
 <h2>两条路径</h2>
-<table role="table">
-<caption>10.0.0 的行为，以及和 9.0.0 的差别。</caption>
-<thead role="rowgroup"><tr role="row"><th role="columnheader" scope="col">路径</th><th role="columnheader" scope="col">10.0.0</th><th role="columnheader" scope="col">9.0.0（上一版本）</th></tr></thead>
-<tbody role="rowgroup">
-<tr role="row"><td role="cell"><span class="cell-label" aria-hidden="true">路径</span>远程控制</td><td role="cell"><span class="cell-label" aria-hidden="true">10.0.0</span>端到端 DTLS 加密 UDP，优先直连。浏览器控制端在直连失败时可经可选 UDP TURN 中继连接 10.0.0 被控端，中继读不到内容，没有 TCP 回退。Android 控制端和 9.x 被控端只走直连。登录即开启被控、右下角审批、分组 9 位设备 ID；接受后放行画面、键鼠、剪贴板、文件和系统声音，麦克风不自动放行。</td><td role="cell"><span class="cell-label" aria-hidden="true">9.0.0（上一版本）</span>本机批准、固定密码、一次性密码。载荷只走 UDP 直连，没有中继。</td></tr>
-<tr role="row"><td role="cell"><span class="cell-label" aria-hidden="true">路径</span>FRP 发布</td><td role="cell"><span class="cell-label" aria-hidden="true">10.0.0</span>HTTP/HTTPS、TCP、UDP，FRP 0.70.1，新增引导式服务发布。</td><td role="cell"><span class="cell-label" aria-hidden="true">9.0.0（上一版本）</span>HTTP/HTTPS、TCP、UDP，FRP 0.70.1。</td></tr>
-</tbody>
-</table>
+<p>远控继续使用端到端 DTLS 加密 UDP，浏览器可用可选 UDP TURN 中继；Android 与 9.x 被控端只走直连，没有 TCP/FRP/HTTP/WSS 载荷回退。服务发布使用 FRP 0.70.1 的 HTTP/HTTPS、TCP 与 UDP 路径。</p>
 <h2>实测范围</h2>
-<p>Web 控制端经从 9.0.0 升级的生产服务器控制 Windows 10.0.0 被控端，直连 UDP 和 TURN 中继都测过：画面、键鼠、中文、双向剪贴板、控制端到被控端的文件（SHA-256 校验）、系统声音、审批弹窗和临时密码。这些是同一功能代码的开发构建，没有在最终字节上重跑。</p>
+<p>10.1.0 的原始 Windows worker 字节在同机 Chromium 与生产源码 QA host 的隔离回环环境中通过 30 次连接、7202.463 秒活动和 1391 次采样；显式重启 QA host 后，新配对恢复输入耗时 3507.7 ms。</p>
+<p>实测包含原生画面、可信键鼠与中文、签名配对、UDP/DTLS、会话关闭与输入释放。服务器由锁定生产源码本地构建，不代表最终容器或已部署生产环境验收。QA 账号令牌与单次授权使用 10800 秒测试有效期，生产租约和信令令牌续期逻辑未修改。</p>
 <h2>未验证项目</h2>
 <ul class="plain">
-<li>被控端到控制端的文件传输</li>
-<li>最终构建上的固定密码模式</li>
-<li>Android 控制 Windows 被控端；Windows 控制 Windows</li>
-<li>实体 arm64 手机；最终 APK 的 API 26/35 模拟器运行</li>
-<li>多显示器与 DPI</li>
-<li>9→10 安装器升级与备份恢复</li>
-<li>30 次连续连接、2 小时和 24 小时运行</li>
-<li>NAT、IPv6、UDP 被封与网络恢复矩阵</li>
-<li>性能对比与隧道运行矩阵</li>
-<li>Linux 与 macOS 运行</li>
-<li>最终界面的完整 Gemini 审查</li>
+<li>这些结果不代表完整安装版 GUI、Windows 服务、两台独立 Windows 终端、Android、断网恢复、24 小时在线或 Linux/macOS 运行验收。</li>
+<li>完整审批、固定密码、临时密码界面流程；本轮未覆盖的音频、剪贴板、双向文件、多显示器与 DPI。</li>
+<li>完整安装器升级与备份恢复；NAT、IPv6、UDP 被封及断网恢复矩阵。</li>
+<li>最终 APK 与实体手机；账号令牌刷新、性能对比、隧道运行矩阵、完整最终界面审查。</li>
+<li>24 小时测试未运行。显式 QA host 重启不能证明自动服务重启或断网恢复。</li>
 </ul>
-<h2>不可用</h2>
-<ul class="plain">
-<li>锁屏、登录前和 UAC 安全桌面控制。</li>
-<li>麦克风回传。</li>
-<li>Windows/macOS 发行商签名；SHA-256 和 Sigstore 不是发行商签名。Android 保持原发行证书。</li>
-<li>8.0 验收记录是历史材料，不能代替 10.0 的产物验证。</li>
-</ul>
+<h2>限制与历史截图</h2>
+<p>锁屏、登录前、UAC 安全桌面和麦克风回传不可用。Windows Authenticode / macOS Developer ID 未配置；SHA-256 和 Sigstore 不是发行商签名。Android 保留原发行证书。10.0.0、9.0.0 和 8.0 的历史证据不能替代 10.1.0 最终字节。</p>
+<p>以下产品截图仍是明确标注的 10.0.0，不代表 10.1.0 界面或验收。</p>
 <figure class="shot-slot" data-shot-slot="v10-admin-console" data-slot-status="captured-v10-ui">
 <figcaption><strong>10.0.0 Web 控制台</strong><span>2026-09-30，发行版界面实际截图，使用本地示例数据。状态和流量来自预览测试数据。</span></figcaption>
 <img src="assets/v10/admin-console.png" alt="Home Tunnel 10.0.0 Web 控制台，示例数据，包含导航、设备状态和流量统计" width="1440" height="1132" loading="lazy">

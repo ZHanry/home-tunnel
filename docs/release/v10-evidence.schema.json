@@ -1,5 +1,5 @@
 {
-  "title": "Home Tunnel 10.0.0 aggregate candidate evidence",
+  "title": "Home Tunnel 10.x aggregate candidate evidence",
   "x-authoritative-validator": "scripts/v10_evidence.py",
   "x-required-gates": [
     "vm_windows_pair",
@@ -29,7 +29,7 @@
     "active_2h",
     "online_24h"
   ],
-  "description": "A gate or ui_coverage may instead be {status: waived, waiver: {approved_by: owner, approved_at, reason, disclosed_in}} with no measured result; a waiver is not a pass. The record status is passed with no waivers and accepted_with_waivers otherwise. Non-waived gates fail closed unless all four source SHAs, artifact digests, the immutable api-v1.4.0 contract, full Gemini UI coverage, and every required VM, network, migration, 30-repeat, recovery, 2h, and 24h gate are present and matched. Do not store a fixture in this shape as acceptance evidence.",
+  "description": "Every component version is bound to the explicit supported combination; Android 10.0.0 is never relabeled 10.1.0. A gate or ui_coverage may carry status waived and the existing dated approval/disclosure fields, without measured results. Such a gate is unverified, not passed. The 10.1.0 record must also bind original candidate metadata, the exact worker provenance, the raw native report, and the two immutable hub release documents through scripts/v101_provenance.py. Measured gates explicitly list the source components they exercise; their observations must follow those sources, even when documentation is sealed later. The single-machine native probe cannot establish installed-GUI, independent endpoint, Android, network-outage or 24-hour acceptance. Historical 10.0.0 receipts and semantics remain unchanged.",
   "type": "object",
   "required": [
     "schema_version",
@@ -43,5 +43,23 @@
     "components",
     "ui_coverage",
     "gates"
-  ]
+  ],
+  "x-supported-component-versions": {
+    "10.0.0": {
+      "hub": "10.0.0",
+      "server": "10.0.0",
+      "client": "10.0.0",
+      "android": "10.0.0"
+    },
+    "10.1.0": {
+      "hub": "10.1.0",
+      "server": "10.1.0",
+      "client": "10.1.0",
+      "android": "10.0.0"
+    }
+  },
+  "x-contracts": {
+    "10.0.0": "api-v1.4.0",
+    "10.1.0": "api-v1.5.0"
+  }
 }

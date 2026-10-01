@@ -1,4 +1,4 @@
-"""Fail-closed checks for a Home Tunnel 10.0.0 aggregate candidate record.
+"""Fail-closed checks for a Home Tunnel 10.x aggregate candidate record.
 
 Shape and internal consistency only. A clean result is not VM acceptance,
 UI approval, or proof that the recorded commits exist. Missing, unrun, stale,
@@ -8,6 +8,7 @@ mismatched, and fabricated records fail.
 from __future__ import annotations
 
 import hashlib
+import math
 import re
 import subprocess
 from datetime import datetime, timezone
@@ -56,10 +57,37 @@ RECONSTRUCTED_RECEIPT_SCOPE = {
     "active_2h": ("client", "stability", ("two_hour_active",)),
     "online_24h": ("client", "stability", ("twenty_four_hour_online",)),
 }
-VERSION = "10.0.0"
+VERSION = "10.0.0"  # Historical fixture/default; evaluate the record's explicit release line.
+COMPONENT_VERSIONS = {
+    "10.0.0": {name: "10.0.0" for name in COMPONENTS},
+    "10.1.0": {"hub": "10.1.0", "server": "10.1.0", "client": "10.1.0", "android": "10.0.0"},
+}
+
+
+V101_ARTIFACT_NAMES = {
+    "hub": {"DOWNLOADS.md", "RELEASE_NOTES.md"},
+    "server": {"home-tunnel-server-10.1.0.tar.gz", "compose.release.yaml"},
+    "client": {
+        "HomeTunnel-Setup-10.1.0-x64.exe", "HomeTunnel-Windows-10.1.0-x64.zip",
+        "home-tunnel-linux-10.1.0-amd64.tar.gz", "home-tunnel-linux-10.1.0-arm64.tar.gz",
+        "home-tunnel-macos-10.1.0-amd64.tar.gz", "home-tunnel-macos-10.1.0-arm64.tar.gz",
+    },
+    "android": {"HomeTunnel-Android-10.0.0-arm64-v8a.apk", "HomeTunnel-Android-10.0.0-x86_64.apk"},
+}
+
+
+def component_versions(version):
+    """Explicitly reviewed release combinations; never silently relabel a component."""
+    return COMPONENT_VERSIONS.get(version, {})
+
 # acceptance-status.json states that claim a release; each needs a clean evidence record.
 ACCEPTED_STATES = {"passed", "accepted", "accepted_with_waivers"}
-CONTRACT_REF = "api-v1.4.0"
+CONTRACT_REF = "api-v1.4.0"  # Historical default.
+CONTRACT_REFS = {"10.0.0": "api-v1.4.0", "10.1.0": "api-v1.5.0"}
+V101_CONTRACT = {
+    "revision": "194ae805f3569dc16d94b7fda71367e5d68fdff5",
+    "sha256": "c447a23f72b9f72efc118d75cd7cf3e071e0533e2bf0773e9b34f0e1ec779f54",
+}
 FRP = "0.70.1"
 SHA40 = re.compile(r"^[0-9a-f]{40}$")
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
@@ -70,6 +98,10 @@ PLACEHOLDER_DIGESTS = {
     hashlib.sha256(b"placeholder").hexdigest(),
     hashlib.sha256(b"test").hexdigest(),
 }
+
+
+def finite_number(value):
+    return type(value) in (int, float) and math.isfinite(value)
 
 
 def parse_time(value):
@@ -131,8 +163,10 @@ def evaluate(record, *, now=None):
         bad("fixture or synthetic records cannot be used as acceptance evidence")
     if record.get("schema_version") != 1 or record.get("product") != "Home Tunnel":
         bad("unsupported evidence identity")
-    if record.get("version") != VERSION or record.get("stage") != "candidate":
-        bad("evidence must describe the 10.0.0 candidate")
+    version = record.get("version")
+    versions = component_versions(version)
+    if not versions or record.get("stage") != "candidate":
+        bad("evidence must describe a supported 10.x candidate")
     frozen_at = parse_time(record.get("source_frozen_at"))
     if frozen_at is None:
         bad("source_frozen_at must be a timezone-aware timestamp")
@@ -152,12 +186,16 @@ def evaluate(record, *, now=None):
             bad(f"{name} source SHA is missing or mismatched")
         else:
             shas.append(sha)
+        if version == "10.1.0" and parse_time(source.get("frozen_at")) is None:
+            bad(f"{name} source needs its own frozen_at timestamp")
     if len(shas) == 4 and len(set(shas)) != 4:
         bad("the four source SHAs must be distinct commits")
 
     contract = record.get("contract") if isinstance(record.get("contract"), dict) else {}
-    if contract.get("ref") != CONTRACT_REF or contract.get("immutable") is not True:
-        bad("immutable api-v1.4.0 contract identity is required")
+    if contract.get("ref") != CONTRACT_REFS.get(version) or contract.get("immutable") is not True:
+        bad("immutable contract identity must match the release line")
+    if version == "10.1.0" and any(contract.get(key) != value for key, value in V101_CONTRACT.items()):
+        bad("10.1.0 must bind the frozen api-v1.5.0 revision and digest")
     if SHA40.fullmatch(str(contract.get("revision", ""))) is None or bad_digest(contract.get("sha256")):
         bad("contract revision and digest are required")
 
@@ -168,7 +206,7 @@ def evaluate(record, *, now=None):
     for name in COMPONENTS:
         component = components.get(name) if isinstance(components.get(name), dict) else {}
         expected_sha = (sources.get(name) or {}).get("sha") if isinstance(sources.get(name), dict) else None
-        if component.get("version") != VERSION or component.get("source_sha") != expected_sha:
+        if component.get("version") != versions.get(name) or component.get("source_sha") != expected_sha:
             bad(f"{name} version or source SHA does not match the frozen source")
         items = component.get("artifacts")
         if not isinstance(items, list) or not items:
@@ -250,7 +288,17 @@ def evaluate(record, *, now=None):
         if artifacts.get((component, filename)) != digest or bad_digest(digest):
             bad(f"{name} artifact digest is mismatched")
         observed = parse_time(gate.get("observed_at"))
-        if observed is None or (frozen_at is not None and observed < frozen_at):
+        gate_frozen_at = frozen_at
+        if version == "10.1.0":
+            used = gate.get("source_components")
+            if (not isinstance(used, list) or not used or component not in used or
+                    len(used) != len(set(used)) or any(name not in COMPONENTS for name in used)):
+                bad(f"{name} must identify every source component it exercised")
+            else:
+                times = [parse_time((sources.get(name) or {}).get("frozen_at")) for name in used]
+                if all(value is not None for value in times):
+                    gate_frozen_at = max(times)
+        if observed is None or (gate_frozen_at is not None and observed < gate_frozen_at):
             bad(f"{name} is stale or has no observation time")
         if now is not None and observed is not None and observed > now:
             bad(f"{name} observation is in the future")
@@ -264,26 +312,26 @@ def evaluate(record, *, now=None):
             bad(f"{name} uses fabricated evidence")
         if name == "repeat_30" and (gate.get("successes") != 30 or gate.get("attempts") != 30):
             bad("repeat_30 requires 30 successes in 30 attempts")
-        if name == "active_2h" and (type(gate.get("duration_seconds")) is not int or gate["duration_seconds"] < 7200):
+        if name == "active_2h" and (not finite_number(gate.get("duration_seconds")) or gate["duration_seconds"] < 7200):
             bad("active_2h duration was not met")
-        if name == "online_24h" and (type(gate.get("duration_seconds")) is not int or gate["duration_seconds"] < 86400):
+        if name == "online_24h" and (not finite_number(gate.get("duration_seconds")) or gate["duration_seconds"] < 86400):
             bad("online_24h duration was not met")
-        if name == "input_release_2s" and (type(gate.get("release_ms")) is not int or not 0 <= gate["release_ms"] <= 2000):
+        if name == "input_release_2s" and (not finite_number(gate.get("release_ms")) or not 0 <= gate["release_ms"] <= 2000):
             bad("input_release_2s was not measured within 2 seconds")
-        if name == "network_restore_30s" and (type(gate.get("restore_seconds")) is not int or not 0 <= gate["restore_seconds"] <= 30):
+        if name == "network_restore_30s" and (not finite_number(gate.get("restore_seconds")) or not 0 <= gate["restore_seconds"] <= 30):
             bad("network_restore_30s was not measured within 30 seconds")
         if name == "network_blocked_udp" and gate.get("payload_fallback") is not False:
             bad("blocked UDP must fail closed with no payload fallback")
         if name == "network_ipv6" and gate.get("address_family") != "ipv6":
             bad("network_ipv6 must record an IPv6 path")
-        if name == "migration_9_to_10" and (gate.get("from_version") != "9.0.0" or gate.get("to_version") != VERSION):
-            bad("migration gate must bind 9.0.0 to 10.0.0")
+        if name == "migration_9_to_10" and (gate.get("from_version") != "9.0.0" or gate.get("to_version") != version):
+            bad(f"migration gate must bind 9.0.0 to {version}")
     return errors
 
 
 def assess_status(status, *, evidence_errors=None, evidence_path=None):
     """Development may stay not_submitted. A pass claim fails closed without a clean real record."""
-    if not isinstance(status, dict) or status.get("schema_version") != 1 or status.get("version") != VERSION:
+    if not isinstance(status, dict) or status.get("schema_version") != 1 or not component_versions(status.get("version")):
         return ["acceptance status identity is wrong"]
     state = status.get("status")
     reason = str(status.get("reason", ""))
@@ -465,6 +513,11 @@ def load_status(root, *, now=None):
     evidence_errors = evaluate(record, now=now)
     if isinstance(record, dict):
         evidence_errors.extend(receipt_errors(record, root))
-    if isinstance(record, dict) and record.get("status") != state:
-        evidence_errors.append("acceptance status must match the evidence record status")
+        import v101_provenance
+        evidence_errors.extend(v101_provenance.evaluate(record, root))
+    if isinstance(record, dict):
+        if record.get("status") != state:
+            evidence_errors.append("acceptance status must match the evidence record status")
+        if record.get("version") != status.get("version"):
+            evidence_errors.append("acceptance status version must match the evidence record version")
     return status, assess_status(status, evidence_errors=evidence_errors, evidence_path=path), record

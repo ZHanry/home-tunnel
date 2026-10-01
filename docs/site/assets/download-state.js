@@ -13,8 +13,8 @@
   var ACCEPTED = ["accepted", "accepted_with_waivers"];
 
   function view(input) {
-    var fallback = input.fallbackStable || "10.0.0";
-    var candidateVersion = (input.candidate && input.candidate.version) || "10.0.0";
+    var fallback = input.fallbackStable || "10.1.0";
+    var candidateVersion = (input.candidate && input.candidate.version) || "10.1.0";
     if (input.transport === "loading") {
       return {
         tone: "loading",
@@ -64,11 +64,15 @@
         en: "The download manifest conflicts with itself: promotion does not match the stable version. Do not install an unverified " + candidate.version + " package."
       };
     }
+    var components = stable.components || {};
+    var mixed = components.android && components.android.version !== stable.version;
+    var mixZh = mixed ? "Server / Client " + stable.version + "，Android 保留 " + components.android.version + "。" : "";
+    var mixEn = mixed ? "Server / Client " + stable.version + "; Android remains " + components.android.version + ". " : "";
     if (candidate.acceptance_status === "accepted_with_waivers") {
       return {
         tone: "ready",
-        zh: "稳定下载是 " + stable.version + "。部分验收项目未运行，验证尚未完成，清单见发布说明。请核对校验值后再安装。",
-        en: "Stable downloads are " + stable.version + ". Some acceptance gates were not run and remain unverified; the release notes list them. Check the checksum before you install."
+        zh: "稳定下载是 " + stable.version + "。" + mixZh + "部分验收项目未运行，验证尚未完成，清单见发布说明。请核对校验值后再安装。",
+        en: "Stable downloads are " + stable.version + ". " + mixEn + "Some acceptance gates were not run and remain unverified; the release notes list them. Check the checksum before you install."
       };
     }
     return {

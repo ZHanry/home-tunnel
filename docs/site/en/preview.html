@@ -20,15 +20,15 @@
   document.documentElement.classList.add("js");
 })();
 </script>
-<title>Home Tunnel 10.0.0 scope and limits</title>
-<meta name="description" content="What 10.0.0 ships, what was tested, what remains unverified, and known limits.">
+<title>Home Tunnel 10.1.0 scope and limits</title>
+<meta name="description" content="What 10.1.0 ships, what was tested, what remains unverified, and known limits.">
 <link rel="canonical" href="https://zhanry.github.io/home-tunnel/en/preview.html">
 <link rel="alternate" hreflang="en" href="https://zhanry.github.io/home-tunnel/en/preview.html">
 <link rel="alternate" hreflang="zh-CN" href="https://zhanry.github.io/home-tunnel/preview.html">
 <link rel="icon" type="image/svg+xml" href="../assets/HomeTunnel.svg">
-<link rel="stylesheet" href="../assets/site.css?v=10.0.0">
+<link rel="stylesheet" href="../assets/site.css?v=10.1.0">
 </head>
-<body data-root="../" data-stable-version="10.0.0">
+<body data-root="../" data-stable-version="10.1.0">
 <a class="skip" href="#content">Skip to content</a>
 <div class="wrap">
 <header class="site-header">
@@ -52,40 +52,26 @@
 <main id="content">
 <section class="section">
 <p class="eyebrow">Scope</p>
-<h1>10.0.0 is stable. Verification remains incomplete.</h1>
-<p class="lede">Verification of this release remains incomplete. This page lists what was tested, what remains unverified, and what is unavailable. Tests that were not run are not counted as passed. The contract is the frozen api-v1.4.0. The <a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">release notes</a> have the full list.</p>
+<h1>10.1.0 is stable. Verification remains incomplete.</h1>
+<p class="lede">The stable combination is Server / Client 10.1.0 + Android 10.0.0. Android keeps its original files, version and hashes. FRP stays 0.70.1; the additive contract is api-v1.5.0 and historical contracts are unchanged. Tests that were not run are not counted as passed. Read the <a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">release notes</a>.</p>
+<h2>10.1 changes</h2>
+<p>Fixes Windows approval-popup background and timing, blocks self-device connections, and reuses native sign-in through a short-lived, single-use, remote-only child session. Settings and update controls are combined, current-device rename moves to My Devices, and sign-in layout, narrow-window scrolling and keyboard behavior improve. Sign-in handoff and current-device rename require Server 10.1.0.</p>
 <h2>Two paths</h2>
-<table role="table">
-<caption>10.0.0 behavior and how it differs from 9.0.0.</caption>
-<thead role="rowgroup"><tr role="row"><th role="columnheader" scope="col">Path</th><th role="columnheader" scope="col">10.0.0</th><th role="columnheader" scope="col">9.0.0 (previous)</th></tr></thead>
-<tbody role="rowgroup">
-<tr role="row"><td role="cell"><span class="cell-label" aria-hidden="true">Path</span>Remote control</td><td role="cell"><span class="cell-label" aria-hidden="true">10.0.0</span>End-to-end DTLS-encrypted UDP, direct first. When direct fails, a browser viewer can reach a 10.0.0 host through the optional UDP TURN relay, which cannot read payloads; there is no TCP fallback. Android controllers and 9.x hosts are direct-only. Hosting on after sign-in, bottom-right approval, grouped 9-digit device ID; accepting grants screen, input, clipboard, files, and system audio, and the microphone is never auto-approved.</td><td role="cell"><span class="cell-label" aria-hidden="true">9.0.0 (previous)</span>Local approval, a fixed password, or a one-time password. Direct UDP only, no relay.</td></tr>
-<tr role="row"><td role="cell"><span class="cell-label" aria-hidden="true">Path</span>FRP publishing</td><td role="cell"><span class="cell-label" aria-hidden="true">10.0.0</span>HTTP/HTTPS, TCP, and UDP with FRP 0.70.1, plus guided service publishing.</td><td role="cell"><span class="cell-label" aria-hidden="true">9.0.0 (previous)</span>HTTP/HTTPS, TCP, and UDP with FRP 0.70.1.</td></tr>
-</tbody>
-</table>
-<h2>What was tested</h2>
-<p>A Web viewer controlled a Windows 10.0.0 host through the production server (upgraded from 9.0.0), over direct UDP and the TURN relay: screen, keyboard, mouse, Chinese text, clipboard both ways, viewer-to-host files with a SHA-256 check, system audio, the approval popup, and the temporary password. These were development builds of the same feature code, not re-run on the final bytes.</p>
+<p>Remote control retains end-to-end DTLS-encrypted UDP, with optional UDP TURN for browser viewers. Android and 9.x hosts remain direct-only. There is no TCP/FRP/HTTP/WSS payload fallback. Service publishing uses FRP 0.70.1 for HTTP/HTTPS, TCP and UDP.</p>
+<h2>Verified scope</h2>
+<p>The original 10.1.0 Windows worker bytes passed 30 connections and 7202.463 seconds of activity with 1391 samples, using same-machine Chromium and a production-source QA host in an isolated loopback environment. After an explicit QA host restart, a new pairing restored input in 3507.7 ms.</p>
+<p>The run covers native video, trusted keyboard/pointer and Unicode, signed pairing, UDP/DTLS, session closure and input release. The server was locally built from locked production source, not verified as the final container or a deployed production system. The disposable account token and one-session grant use a 10800-second test lifetime; production lease and signaling-token renewal logic is unchanged.</p>
 <h2>Unverified items</h2>
 <ul class="plain">
-<li>Host-to-viewer file transfer</li>
-<li>Fixed-password mode on the final build</li>
-<li>Android controlling a Windows host; Windows-to-Windows</li>
-<li>Physical arm64 phones; API 26/35 emulator runs of the final APK</li>
-<li>Multiple monitors and DPI</li>
-<li>9-to-10 installer upgrade and backup restore</li>
-<li>30-connection repeat, 2-hour and 24-hour soaks</li>
-<li>NAT, IPv6, blocked-UDP, and network-recovery matrix</li>
-<li>Performance comparison and the tunnel runtime matrix</li>
-<li>Linux and macOS runtime</li>
-<li>A full Gemini review of the final UI</li>
+<li>This does not establish full installed-GUI, Windows service, independent Windows-endpoint, Android, network-outage recovery, 24-hour online, or Linux/macOS runtime acceptance.</li>
+<li>Full approval, fixed-password and temporary-password UI flows; audio, clipboard, bidirectional files, multi-monitor and DPI not covered by this run.</li>
+<li>Full installer upgrade and backup restore; NAT, IPv6, blocked UDP and network-outage recovery.</li>
+<li>Final APK and physical phones; account-token refresh, performance comparisons, tunnel runtime matrix and full final-UI review.</li>
+<li>The 24-hour test was not run. An explicit QA host restart does not prove automatic service restart or network recovery.</li>
 </ul>
-<h2>Not available</h2>
-<ul class="plain">
-<li>Lock screen, pre-login, and UAC secure-desktop control.</li>
-<li>Microphone return.</li>
-<li>Windows/macOS publisher signatures; SHA-256 and Sigstore are not publisher signatures. Android keeps its release certificate.</li>
-<li>The 8.0 acceptance record is historical. It does not verify 10.0 bytes.</li>
-</ul>
+<h2>Limits and historical screenshots</h2>
+<p>Lock screen, pre-login, UAC secure desktop and microphone return are unavailable. Windows Authenticode / macOS Developer ID release signing is not configured. SHA-256 and Sigstore are not publisher signatures. Android retains its release certificate. Historical 10.0.0, 9.0.0 and 8.0 evidence does not verify final 10.1.0 bytes.</p>
+<p>Product screenshots below are still labeled 10.0.0. They are not 10.1.0 captures or acceptance evidence.</p>
 <figure class="shot-slot" data-shot-slot="v10-admin-console" data-slot-status="captured-v10-ui">
 <figcaption><strong>10.0.0 Web console</strong><span>Captured from the released UI on 2026-09-30 with local example data. Status and traffic are preview fixtures.</span></figcaption>
 <img src="../assets/v10/admin-console.png" alt="Home Tunnel 10.0.0 Web console with example data, navigation, device status and traffic" width="1440" height="1132" loading="lazy">

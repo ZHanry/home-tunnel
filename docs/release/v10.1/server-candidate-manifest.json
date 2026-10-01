@@ -1,0 +1,27 @@
+{
+  "component": "server",
+  "version": "10.1.0",
+  "repository": "ZHanry/home-tunnel-server",
+  "revision": "194ae805f3569dc16d94b7fda71367e5d68fdff5",
+  "api_major": 1,
+  "rc_tag": "",
+  "channel": "candidate",
+  "release_contract": "server-candidate/1",
+  "caller_workflow": ".github/workflows/ci.yml",
+  "signer_workflow": ".github/workflows/server-candidate.yml",
+  "run_id": "36696725173",
+  "event_name": "workflow_dispatch",
+  "ref": "refs/heads/main",
+  "images": {
+    "control-center": {
+      "image": "ghcr.io/zhanry/home-tunnel-control-center",
+      "digest": "sha256:d286c574f229060f3169b7c68fef5094a22c082c5373a23ca0406b2ed6872afd",
+      "revision": "194ae805f3569dc16d94b7fda71367e5d68fdff5"
+    },
+    "traffic-gateway": {
+      "image": "ghcr.io/zhanry/home-tunnel-traffic-gateway",
+      "digest": "sha256:91793c36ec849d0c8722e7379e14520d17d7d8a3484c1142fccb4e3aa93968ff",
+      "revision": "194ae805f3569dc16d94b7fda71367e5d68fdff5"
+    }
+  }
+}

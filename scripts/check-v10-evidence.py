@@ -1,4 +1,4 @@
-"""Evaluate a 10.0.0 evidence record, or the development acceptance status.
+"""Evaluate a supported 10.x evidence record, or the development acceptance status.
 
 The status file may stay `not_submitted`. Claiming passed/accepted fails closed
 when the record is missing, stale, mismatched, or a fixture.
@@ -42,9 +42,11 @@ def main():
     errors = v10_evidence.evaluate(record)
     if isinstance(record, dict):
         errors.extend(v10_evidence.receipt_errors(record, ROOT))
+        import v101_provenance
+        errors.extend(v101_provenance.evaluate(record, ROOT))
     if errors:
         raise SystemExit("\n".join(errors))
-    print("10.0.0 candidate evidence record is internally consistent")
+    print(f"{record['version']} candidate evidence record is internally consistent")
 
 
 if __name__ == "__main__":

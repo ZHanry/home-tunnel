@@ -1,0 +1,400 @@
+{
+  "schema_version": 1,
+  "product": "Home Tunnel",
+  "stage": "candidate",
+  "status": "accepted_with_waivers",
+  "frp": "0.70.1",
+  "sources": {
+    "hub": {
+      "repository": "ZHanry/home-tunnel",
+      "sha": "29ef6c419d7dddad9f22c9af31563610215c8e24",
+      "frozen_at": "2026-09-30T22:09:58-07:00",
+      "role": "immutable-release-documentation-source; final hub tag is verified separately"
+    },
+    "server": {
+      "repository": "ZHanry/home-tunnel-server",
+      "sha": "194ae805f3569dc16d94b7fda71367e5d68fdff5",
+      "frozen_at": "2026-09-30T09:06:41Z"
+    },
+    "client": {
+      "repository": "ZHanry/home-tunnel-client",
+      "sha": "41c0e21fbb3a4c634fbc9d63fcd7453337e4d029",
+      "frozen_at": "2026-10-01T00:11:30Z"
+    },
+    "android": {
+      "repository": "ZHanry/home-tunnel-android",
+      "sha": "4701ecfa5e951787c6f49345214b2ece13326386",
+      "frozen_at": "2026-09-29T02:25:31Z"
+    }
+  },
+  "contract": {
+    "ref": "api-v1.5.0",
+    "revision": "194ae805f3569dc16d94b7fda71367e5d68fdff5",
+    "sha256": "c447a23f72b9f72efc118d75cd7cf3e071e0533e2bf0773e9b34f0e1ec779f54",
+    "immutable": true,
+    "url": "https://raw.githubusercontent.com/ZHanry/home-tunnel-server/194ae805f3569dc16d94b7fda71367e5d68fdff5/contracts/openapi.v1.json"
+  },
+  "components": {
+    "hub": {
+      "version": "10.1.0",
+      "source_sha": "29ef6c419d7dddad9f22c9af31563610215c8e24",
+      "artifacts": [
+        {
+          "filename": "DOWNLOADS.md",
+          "sha256": "1f4e5d6aceb7fc29b97190a9dded333b523d58bbe9669fd968a0f48f8f8e78e1",
+          "size_bytes": 11246,
+          "url": "https://github.com/ZHanry/home-tunnel/releases/download/v10.1.0/DOWNLOADS.md"
+        },
+        {
+          "filename": "RELEASE_NOTES.md",
+          "sha256": "e0421d5beb1fb342d4eb48909fd6072daa5c2156d7b538c4f6cc92d14b5ff14c",
+          "size_bytes": 18170,
+          "url": "https://github.com/ZHanry/home-tunnel/releases/download/v10.1.0/RELEASE_NOTES.md"
+        }
+      ]
+    },
+    "server": {
+      "version": "10.1.0",
+      "source_sha": "194ae805f3569dc16d94b7fda71367e5d68fdff5",
+      "artifacts": [
+        {
+          "filename": "home-tunnel-server-10.1.0.tar.gz",
+          "sha256": "dea0300d37f275bc8b97a7069aad48df04c5ef424e9bbc484ffbd2b3d7ff2694",
+          "size_bytes": 878055,
+          "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v10.1.0/home-tunnel-server-10.1.0.tar.gz"
+        },
+        {
+          "filename": "compose.release.yaml",
+          "sha256": "6e7b3a9894c59e7cfc2d2dbbc3e0cc41f55c58c33865af7d6b3e75af38c9bba3",
+          "size_bytes": 298,
+          "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v10.1.0/compose.release.yaml"
+        }
+      ]
+    },
+    "client": {
+      "version": "10.1.0",
+      "source_sha": "41c0e21fbb3a4c634fbc9d63fcd7453337e4d029",
+      "artifacts": [
+        {
+          "filename": "HomeTunnel-Setup-10.1.0-x64.exe",
+          "sha256": "58340bcd7d799ab7e5deaccc6d284fb4313b322ac869bdfd2ad2368b03b13eb5",
+          "size_bytes": 17463072,
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v10.1.0/HomeTunnel-Setup-10.1.0-x64.exe"
+        },
+        {
+          "filename": "HomeTunnel-Windows-10.1.0-x64.zip",
+          "sha256": "e1c04b5cd06dcd5ac4548bac0e1611d9a996e70ba71307bb05fdb82350b98df7",
+          "size_bytes": 22861344,
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v10.1.0/HomeTunnel-Windows-10.1.0-x64.zip"
+        },
+        {
+          "filename": "home-tunnel-linux-10.1.0-amd64.tar.gz",
+          "sha256": "208aa80e574af12e51ca650792d45a8c3ae35e7e815d6f69ec04f8f6a90e0624",
+          "size_bytes": 22729875,
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v10.1.0/home-tunnel-linux-10.1.0-amd64.tar.gz"
+        },
+        {
+          "filename": "home-tunnel-linux-10.1.0-arm64.tar.gz",
+          "sha256": "2562fc313130b937a230dd004cb11bc2a88bcc541aa2041ddf0b9bb85576470f",
+          "size_bytes": 12071626,
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v10.1.0/home-tunnel-linux-10.1.0-arm64.tar.gz"
+        },
+        {
+          "filename": "home-tunnel-macos-10.1.0-amd64.tar.gz",
+          "sha256": "dc7066139287d1fdf9411da9a6ae3b09209c7c7682534ab6eeb6d7390cc40fce",
+          "size_bytes": 12757661,
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v10.1.0/home-tunnel-macos-10.1.0-amd64.tar.gz"
+        },
+        {
+          "filename": "home-tunnel-macos-10.1.0-arm64.tar.gz",
+          "sha256": "6ba70b3d49c22ce4c47cc09685d252d7026c5ce3ac24cba3dae6fd8a13f13293",
+          "size_bytes": 11645377,
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v10.1.0/home-tunnel-macos-10.1.0-arm64.tar.gz"
+        }
+      ]
+    },
+    "android": {
+      "version": "10.0.0",
+      "source_sha": "4701ecfa5e951787c6f49345214b2ece13326386",
+      "artifacts": [
+        {
+          "filename": "HomeTunnel-Android-10.0.0-arm64-v8a.apk",
+          "sha256": "c37a64cfec83e45c3d4e03671d5a994053385b5533f2f8575ff7783b323c674d",
+          "size_bytes": 16387499,
+          "url": "https://github.com/ZHanry/home-tunnel-android/releases/download/v10.0.0/HomeTunnel-Android-10.0.0-arm64-v8a.apk"
+        },
+        {
+          "filename": "HomeTunnel-Android-10.0.0-x86_64.apk",
+          "sha256": "b18550736aea2f0a21068bde53c27f899af5b8f38ad2ef8460ee86bda2b86922",
+          "size_bytes": 20385493,
+          "url": "https://github.com/ZHanry/home-tunnel-android/releases/download/v10.0.0/HomeTunnel-Android-10.0.0-x86_64.apk"
+        }
+      ]
+    }
+  },
+  "version": "10.1.0",
+  "source_frozen_at": "2026-09-30T22:09:58-07:00",
+  "source_freeze_policy": "Every source has its own frozen_at. A measured gate compares its observation time with only the explicitly listed source_components. Documentation sealing does not change the runtime client/server sources.",
+  "note": "Sealed original Client and Server 10.1.0 artifacts with the unchanged compatible Android 10.0.0 release. Native measurements cover the original Windows worker in a same-machine, production-source QA host; broad application and network acceptance remains unverified. This evidence record itself does not establish public Release availability.",
+  "gates": {
+    "vm_windows_pair": {
+      "status": "waived",
+      "waiver": {
+        "approved_by": "owner",
+        "approved_at": "2026-10-01T04:38:00Z",
+        "reason": "Single-machine Chromium-to-final-Windows-worker checks passed with the production-source QA host. Independent Windows/Android controllers and the full installed-GUI authorization matrix were not verified. Stable publication was requested with the disclosed remaining coverage gaps.",
+        "disclosed_in": "https://github.com/ZHanry/home-tunnel-client/releases/tag/v10.1.0"
+      },
+      "waiver_receipt": {
+        "component": "client",
+        "path": "validation/client/41c0e21fbb3a4c634fbc9d63fcd7453337e4d029/client-acceptance-remote_sessions.json",
+        "sha256": "bd2fdf45182aaad71be7a4b7ccf03b76adc0b0bdaaff6cbc9ffce952fb72ed1e",
+        "cases": [
+          "windows_to_windows"
+        ]
+      }
+    },
+    "vm_web_to_windows": {
+      "status": "waived",
+      "waiver": {
+        "approved_by": "owner",
+        "approved_at": "2026-10-01T04:38:00Z",
+        "disclosed_in": "docs/RELEASE_NOTES.md",
+        "reason": "The original worker was exercised with same-machine Chromium and a production-source QA host. The complete installed-GUI and Windows-service path was not exercised; stable publication proceeds with this explicitly unverified broader scope."
+      }
+    },
+    "vm_android_x64": {
+      "status": "waived",
+      "waiver": {
+        "approved_at": "2026-09-29T00:40:00+00:00",
+        "approved_by": "owner",
+        "disclosed_in": "ZHanry/home-tunnel-android v10.0.0 release notes (docs/RELEASE_NOTES.md) and the hub 10.0.0 release notes",
+        "reason": "The API 35 x86_64 emulator run was not repeated on the final 10.0.0 APK; earlier runs used development builds."
+      },
+      "waiver_receipt": {
+        "component": "android",
+        "path": "validation/android/4701ecfa5e951787c6f49345214b2ece13326386/android-acceptance-x64_api35.json",
+        "sha256": "dbc2227c1844f4f7b01f96db1b8527232c8451ef6d5f49112bb871c078ca15e0",
+        "cases": [
+          "final_apk_remote_session"
+        ]
+      }
+    },
+    "network_direct_udp": {
+      "status": "waived",
+      "waiver": {
+        "approved_by": "owner",
+        "approved_at": "2026-10-01T04:38:00Z",
+        "reason": "Authenticated DTLS UDP was observed in the isolated loopback fixture. Independent devices, NAT, blocked UDP, IPv6, loss/latency and network-outage recovery were not verified. Stable publication was requested with the disclosed remaining coverage gaps.",
+        "disclosed_in": "https://github.com/ZHanry/home-tunnel-client/releases/tag/v10.1.0"
+      },
+      "waiver_receipt": {
+        "component": "client",
+        "path": "validation/client/41c0e21fbb3a4c634fbc9d63fcd7453337e4d029/client-acceptance-udp_network.json",
+        "sha256": "fbe1797d57040d5c6734fbec1f6987b7fea77b476c5d1eceb2f6f99420f25059",
+        "cases": [
+          "lan",
+          "traversable_nat"
+        ]
+      }
+    },
+    "network_blocked_udp": {
+      "status": "waived",
+      "waiver": {
+        "approved_by": "owner",
+        "approved_at": "2026-10-01T04:38:00Z",
+        "reason": "Authenticated DTLS UDP was observed in the isolated loopback fixture. Independent devices, NAT, blocked UDP, IPv6, loss/latency and network-outage recovery were not verified. Stable publication was requested with the disclosed remaining coverage gaps.",
+        "disclosed_in": "https://github.com/ZHanry/home-tunnel-client/releases/tag/v10.1.0"
+      },
+      "waiver_receipt": {
+        "component": "client",
+        "path": "validation/client/41c0e21fbb3a4c634fbc9d63fcd7453337e4d029/client-acceptance-udp_network.json",
+        "sha256": "fbe1797d57040d5c6734fbec1f6987b7fea77b476c5d1eceb2f6f99420f25059",
+        "cases": [
+          "udp_blocked"
+        ]
+      }
+    },
+    "network_ipv6": {
+      "status": "waived",
+      "waiver": {
+        "approved_by": "owner",
+        "approved_at": "2026-10-01T04:38:00Z",
+        "reason": "Authenticated DTLS UDP was observed in the isolated loopback fixture. Independent devices, NAT, blocked UDP, IPv6, loss/latency and network-outage recovery were not verified. Stable publication was requested with the disclosed remaining coverage gaps.",
+        "disclosed_in": "https://github.com/ZHanry/home-tunnel-client/releases/tag/v10.1.0"
+      },
+      "waiver_receipt": {
+        "component": "client",
+        "path": "validation/client/41c0e21fbb3a4c634fbc9d63fcd7453337e4d029/client-acceptance-udp_network.json",
+        "sha256": "fbe1797d57040d5c6734fbec1f6987b7fea77b476c5d1eceb2f6f99420f25059",
+        "cases": [
+          "ipv6"
+        ]
+      }
+    },
+    "migration_9_to_10": {
+      "status": "waived",
+      "waiver": {
+        "approved_by": "owner",
+        "approved_at": "2026-10-01T04:38:00Z",
+        "reason": "The real 9-to-10 installer upgrade, server migration, backup/restore and rollback matrix was not run on this release batch. Stable publication was requested with the disclosed remaining coverage gaps.",
+        "disclosed_in": "https://github.com/ZHanry/home-tunnel-client/releases/tag/v10.1.0"
+      },
+      "waiver_receipt": {
+        "component": "client",
+        "path": "validation/client/41c0e21fbb3a4c634fbc9d63fcd7453337e4d029/client-acceptance-upgrade_recovery.json",
+        "sha256": "584b0fa01019e5ed1194fabf65285fd0c9c3bcfbc861df0b32dce87b54d8d932",
+        "cases": [
+          "real_9_to_10_install",
+          "backup",
+          "restore"
+        ]
+      }
+    },
+    "repeat_30": {
+      "status": "passed",
+      "source_component": "client",
+      "source_components": [
+        "client",
+        "server"
+      ],
+      "source_sha": "41c0e21fbb3a4c634fbc9d63fcd7453337e4d029",
+      "artifact_filename": "HomeTunnel-Windows-10.1.0-x64.zip",
+      "artifact_sha256": "e1c04b5cd06dcd5ac4548bac0e1611d9a996e70ba71307bb05fdb82350b98df7",
+      "observed_at": "2026-10-01T03:31:52.252Z",
+      "command": "Run Windows native acceptance: 30 connections and 7200-second active probe; original candidate run 36795202532",
+      "measured_result": "30 signed connections with continuing native video and trusted input; same-machine original worker and production-source QA host only",
+      "evidence_sha256": "98136e040bb98482f03d08c81891eedc2cf33002a124fa26750ea74fb9505102",
+      "scope": "sealed-windows-worker-single-machine-qa-host",
+      "successes": 30,
+      "attempts": 30
+    },
+    "input_release_2s": {
+      "status": "passed",
+      "source_component": "client",
+      "source_components": [
+        "client",
+        "server"
+      ],
+      "source_sha": "41c0e21fbb3a4c634fbc9d63fcd7453337e4d029",
+      "artifact_filename": "HomeTunnel-Windows-10.1.0-x64.zip",
+      "artifact_sha256": "e1c04b5cd06dcd5ac4548bac0e1611d9a996e70ba71307bb05fdb82350b98df7",
+      "observed_at": "2026-10-01T03:31:52.252Z",
+      "command": "Run Windows native acceptance: 30 connections and 7200-second active probe; original candidate run 36795202532",
+      "measured_result": "1539.1 ms heartbeat input release; worker crash key/button release 11.5/12 ms; confined test-process input only",
+      "evidence_sha256": "98136e040bb98482f03d08c81891eedc2cf33002a124fa26750ea74fb9505102",
+      "scope": "sealed-windows-worker-single-machine-qa-host",
+      "release_ms": 1539.0999999996275
+    },
+    "network_restore_30s": {
+      "status": "waived",
+      "waiver": {
+        "approved_by": "owner",
+        "approved_at": "2026-10-01T04:38:00Z",
+        "reason": "Authenticated DTLS UDP was observed in the isolated loopback fixture. Independent devices, NAT, blocked UDP, IPv6, loss/latency and network-outage recovery were not verified. Stable publication was requested with the disclosed remaining coverage gaps.",
+        "disclosed_in": "https://github.com/ZHanry/home-tunnel-client/releases/tag/v10.1.0"
+      },
+      "waiver_receipt": {
+        "component": "client",
+        "path": "validation/client/41c0e21fbb3a4c634fbc9d63fcd7453337e4d029/client-acceptance-udp_network.json",
+        "sha256": "fbe1797d57040d5c6734fbec1f6987b7fea77b476c5d1eceb2f6f99420f25059",
+        "cases": [
+          "reconnect"
+        ]
+      }
+    },
+    "active_2h": {
+      "status": "passed",
+      "source_component": "client",
+      "source_components": [
+        "client",
+        "server"
+      ],
+      "source_sha": "41c0e21fbb3a4c634fbc9d63fcd7453337e4d029",
+      "artifact_filename": "HomeTunnel-Windows-10.1.0-x64.zip",
+      "artifact_sha256": "e1c04b5cd06dcd5ac4548bac0e1611d9a996e70ba71307bb05fdb82350b98df7",
+      "observed_at": "2026-10-01T03:31:52.252Z",
+      "command": "Run Windows native acceptance: 30 connections and 7200-second active probe; original candidate run 36795202532",
+      "measured_result": "7202.463167000001 seconds active with 1391 samples; same-machine original worker and production-source QA host only",
+      "evidence_sha256": "98136e040bb98482f03d08c81891eedc2cf33002a124fa26750ea74fb9505102",
+      "scope": "sealed-windows-worker-single-machine-qa-host",
+      "duration_seconds": 7202.463167000001
+    },
+    "online_24h": {
+      "status": "waived",
+      "waiver": {
+        "approved_by": "owner",
+        "approved_at": "2026-10-01T04:38:00Z",
+        "reason": "Thirty connections, 7202.463 seconds active, held-input release and explicit QA-host restart recovery were measured on the exact final worker. No 24-hour run was requested. Installed-GUI/service, independent-device, account-token refresh and network-outage recovery remain unverified. Stable publication was requested with the disclosed remaining coverage gaps.",
+        "disclosed_in": "https://github.com/ZHanry/home-tunnel-client/releases/tag/v10.1.0"
+      },
+      "waiver_receipt": {
+        "component": "client",
+        "path": "validation/client/41c0e21fbb3a4c634fbc9d63fcd7453337e4d029/client-acceptance-stability.json",
+        "sha256": "a5ecbf8401b91fc253faa6a9b054b0bf49e4b9edf483998648d89395135f10ca",
+        "cases": [
+          "twenty_four_hour_online"
+        ]
+      }
+    }
+  },
+  "ui_coverage": {
+    "status": "waived",
+    "source_sha": "29ef6c419d7dddad9f22c9af31563610215c8e24",
+    "waiver": {
+      "approved_by": "owner",
+      "approved_at": "2026-10-01T04:38:00Z",
+      "reason": "A full final-package screenshot, keyboard-focus, DPI, theme and language review was not run. Stable publication was requested with the disclosed remaining coverage gaps.",
+      "disclosed_in": "https://github.com/ZHanry/home-tunnel-client/releases/tag/v10.1.0"
+    },
+    "waiver_receipt": {
+      "component": "client",
+      "path": "validation/client/41c0e21fbb3a4c634fbc9d63fcd7453337e4d029/client-acceptance-gemini_screenshots.json",
+      "sha256": "b8aed9e8b695dd4520d9e68f26d664c23ebc7cc2ba113bd615d7d0d3012b2629",
+      "cases": [
+        "all_applicable_states"
+      ]
+    },
+    "additional_waivers": {
+      "android": {
+        "status": "waived",
+        "waiver": {
+          "approved_at": "2026-09-29T00:40:00+00:00",
+          "approved_by": "owner",
+          "disclosed_in": "ZHanry/home-tunnel-android v10.0.0 release notes (docs/RELEASE_NOTES.md) and the hub 10.0.0 release notes",
+          "reason": "Gemini reviewed emulator screenshots of development builds only; the final APK screens were not re-reviewed."
+        },
+        "waiver_receipt": {
+          "component": "android",
+          "path": "validation/android/4701ecfa5e951787c6f49345214b2ece13326386/android-acceptance-gemini_screenshots.json",
+          "sha256": "51accfd8ea5bfcc42c9d0e9807335ab079ab9d9d578678337f02c237af8b428f",
+          "cases": [
+            "final_apk_screenshot_review"
+          ]
+        }
+      }
+    }
+  },
+  "provenance": {
+    "client_candidate": {
+      "path": "docs/release/v10.1/client-candidate.json",
+      "sha256": "0e3a17f725baae4bee4dc3776023511bbc155c331be4edc647bf0cd73590931b"
+    },
+    "client_candidate_download": {
+      "path": "docs/release/v10.1/client-candidate-download.json",
+      "sha256": "5912f3516b91a42ad64cf9f6f13579bf1fc2b2440471774690f26a387b75fe5d"
+    },
+    "worker_provenance": {
+      "path": "docs/release/v10.1/remote-host-provenance.json",
+      "sha256": "9aa457f13c3818f73409d41d7277bb7194f1c1dd01f10c1f2707478215de07dd"
+    },
+    "server_manifest": {
+      "path": "docs/release/v10.1/server-candidate-manifest.json",
+      "sha256": "966712fb6c1d9b20b41c0230c590edb66397ba05c2ce78c50af00881086035ec"
+    },
+    "native_report": {
+      "path": "validation/client/41c0e21fbb3a4c634fbc9d63fcd7453337e4d029/windows-remote-native-acceptance.json",
+      "sha256": "98136e040bb98482f03d08c81891eedc2cf33002a124fa26750ea74fb9505102"
+    }
+  }
+}

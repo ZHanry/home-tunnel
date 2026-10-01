@@ -1,0 +1,42 @@
+name: Publish verified 10.1 distribution
+'on':
+  workflow_dispatch:
+    inputs:
+      expected_revision:
+        description: Exact reviewed main commit after component publication and channel validation
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: publish-home-tunnel-10.1
+  cancel-in-progress: false
+jobs:
+  publish:
+    name: Verify component downloads and publish sealed distribution documents
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      actions: read
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+    - name: Verify reviewed commit, channel evidence and existing public component bytes
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        EXPECTED_REVISION: ${{ inputs.expected_revision }}
+      run: |
+        set -euo pipefail
+        test "$GITHUB_SHA" = "$EXPECTED_REVISION"
+        python3 scripts/check-release-entry.py
+        python3 scripts/check-site-policy.py
+        python3 scripts/check-secrets.py
+        python3 scripts/check-license.py
+        python3 scripts/check-dependencies.py
+        python3 scripts/check-v10-evidence.py --status docs/release/acceptance-status.json
+        python3 -m unittest discover -s scripts -p 'test_*.py'
+        python3 scripts/publish-10.1.py

@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "version": "10.1.0",
+  "repository_revision": "41c0e21fbb3a4c634fbc9d63fcd7453337e4d029",
+  "worker": {
+    "name": "home_tunnel_remote_host.exe",
+    "sha256": "bd04a279fa178cdc5662565fb5946d98afc314f3137d409a0f0011f0d4557da9",
+    "unsigned_sha256": "bd04a279fa178cdc5662565fb5946d98afc314f3137d409a0f0011f0d4557da9"
+  },
+  "abi_version": 1,
+  "engine": {
+    "revision": "94e682e18fbcc0751463be2257b09d2a646a5a68",
+    "lock_sha256": "f0b0e46823e19a989fa14fece5d243be35939e742b247e77f45c6a17c714585d"
+  },
+  "server": {
+    "repository": "ZHanry/home-tunnel-server",
+    "revision": "194ae805f3569dc16d94b7fda71367e5d68fdff5"
+  },
+  "build": {
+    "source_modified": false,
+    "authorization_tests": "passed"
+  },
+  "notices_sha256": "8d38f9fee5b8b7be0571c91f8837008bd6ee952dc5e85c82b3a5e499972f6182",
+  "source_manifest_sha256": "0fae2e05f0afbda193cb48e332459b6a023e20458f6898297e32bd136d847884"
+}

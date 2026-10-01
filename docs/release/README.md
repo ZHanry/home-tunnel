@@ -1,3 +1,50 @@
+# 10.1.0 release evidence
+
+The 10.1.0 distribution selects Server and Client 10.1.0, with the original
+compatible Android 10.0.0 files. Android source, tag, certificate, package hashes
+and version remain unchanged. `distribution.json` is the only channel source;
+run `python scripts/sync-distribution.py` after the accepted record is sealed.
+
+`v10.1-evidence.json` distinguishes three measured native-worker gates from the
+remaining unverified application, network, migration, Android and UI checks.
+The native run used the original Windows worker, same-machine Chromium and a
+production-source QA host. Its 30 connections, 7202.463-second active window and
+input-release timings do not establish complete installed application or
+independent endpoint acceptance. Explicit QA-host restart is not network-outage
+recovery. No 24-hour result is claimed.
+
+The record binds the candidate run and original artifact, source SHAs, exact
+package hashes/sizes, frozen `api-v1.5.0`, raw native report, original worker
+provenance and immutable release-document source. Each source has its own
+`frozen_at`; passed gates list every runtime source they exercised. Documentation
+is sealed in a later commit and cannot retime a runtime observation. The hub
+publication tag is verified separately from that documentation source commit.
+
+The machine status `accepted_with_waivers` records the explicitly disclosed
+unverified gates; it never converts them into passes. Existing receipt fields
+are preserved, with broader untested installed-GUI scope disclosed separately
+from a passed lower-level worker test. Public descriptions use neutral coverage
+language. See [release notes](../RELEASE_NOTES.md).
+
+Before hub publication, verify only the already published components:
+
+```bash
+python scripts/verify-stable-release.py --components-only --manifest releases.json
+```
+
+That check does not claim a hub Release exists. After publication, verify all four
+Releases plus the actual sealed hub documents:
+
+```bash
+python scripts/verify-stable-release.py --evidence docs/release/v10.1-evidence.json --hub-revision <reviewed-final-hub-sha>
+```
+
+`stable-10.0.0.json`, `acceptance-status-10.0.0.json`, `v10-published-evidence.json`
+and `stable-9.0.0.json` preserve the previous releases. No old tag, artifact,
+receipt or screenshot is retimed, rebuilt or relabeled by this promotion.
+
+## Historical 10.0.0 record
+
 # 10.0.0 release evidence
 
 `distribution.json` is the only stable-versus-candidate source. 10.0.0 is promoted:

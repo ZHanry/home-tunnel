@@ -1,28 +1,27 @@
 # 功能矩阵 / Feature matrix
 
-稳定版是 10.0.0。"实测"只写实际测过的部分；未运行的项目标为"未验证"，不计为通过。
+稳定组合为 Server / Client 10.1.0 + 兼容保留的 Android 10.0.0。“实测”只指实际证据范围；未运行项目不计为通过。
 
-| 能力 | 10.0.0 | 验证范围 | 9.0.0（上一版本） |
-| --- | --- | --- | --- |
-| 远控传输 | 端到端 DTLS 加密 UDP，优先直连；浏览器控制端可经可选 UDP TURN 中继连接 10.0.0 被控端，中继读不到内容；没有 TCP 回退 | Web → Windows 直连与中继实测；NAT、IPv6、UDP 被封与网络恢复矩阵未验证 | 只走 UDP 直连，没有中继 |
-| Android 控制端 | arm64-v8a 与 x86_64 同源 SDK；只走直连 | Android 控制 Windows、实体 arm64 手机、最终 APK 的 API 26/35 模拟器运行未验证 | arm64 APK；模拟器不能代替真机 |
-| 被控与授权 | 登录即开启被控，右下角审批弹窗，"正在被远程控制 · 断开"条，分组 9 位设备 ID；临时密码用固定设备 ID；固定密码跳过审批 | 审批弹窗和临时密码实测；最终构建上的固定密码未验证 | 临时批准、固定密码、一次性临时密码 |
-| 接受后的权限 | 本次连接放行画面、键鼠、剪贴板、文件、系统声音；麦克风从不自动放行 | 画面、键鼠、中文输入实测 | 画面、键鼠、剪贴板 |
-| 系统声音 | WASAPI 回环（普通桌面）；Android 可播放 | Web → Windows 实测 | 未交付 |
-| 文件传输 | 双向，SHA-256 校验 | 控制端 → 被控端实测；被控端 → 控制端未验证 | 组件证据有范围限制 |
-| 剪贴板 | 浏览器后台同步 | 双向实测 | 跨端互通未验收 |
-| 多显示器 / DPI | Android 可选显示器 | 多显示器与 DPI 未验证 | 未验收 |
-| 安全桌面 / 锁屏 / 登录前 / UAC | 不可用 | 不适用 | 不可用 |
-| 麦克风回传 | 不可用 | 不适用 | 不可用 |
-| FRP 发布 | FRP 0.70.1，引导式服务发布 | 隧道运行矩阵未验证 | HTTP/HTTPS、TCP、UDP |
-| Linux / macOS | 客户端包照常提供 | Linux 与 macOS 运行未验证 | 同左 |
-| 契约 | `api-v1.4.0` 已冻结 | 不适用 | `api-v1.3.0` |
-| 9 到 10 升级 | 服务端迁移 020、021 为增量迁移 | 生产服务器从 9.0.0 升级后实测；9→10 安装器升级与备份恢复未验证 | 不适用 |
-| 长时间运行 | 不做承诺 | 30 次连续连接、2 小时和 24 小时未验证 | 未验收 |
-| 签名 | Windows/macOS 未签名；Android 证书 `d7779e338be1039acee6dda9a43417cbf2baf4b0c9995578d9708501e95af702` | 不适用 | 同左 |
+| 能力 | 10.1 稳定组合 | 验证边界 |
+| --- | --- | --- |
+| 原生登录与设备管理 | 单次、短时、仅限远控的登录交接；阻止连接本机；当前设备改名 | 需要 Server / Client 10.1.0 和冻结增量契约 `api-v1.5.0`；完整最终 GUI 交互未验收 |
+| 审批与界面 | 修复 Windows 审批弹窗底色/显示时机；合并设置与更新；改善登录布局 | 完整审批、固定密码、临时密码界面流程未验收 |
+| 远控传输 | 端到端 DTLS 加密 UDP，优先直连；浏览器可用可选 UDP TURN；Android 与 9.x 被控端只走直连 | 本轮为同机隔离回环，不能证明 NAT、IPv6、UDP 被封或断网恢复 |
+| 原生画面与输入 | Windows worker 画面、键鼠与中文输入 | 10.1.0 原始 worker、同机 Chromium 与生产源码 QA host；不代表完整安装版 GUI/服务或独立 Windows 终端 |
+| 连接与活动 | 30 次连接；7202.463 秒活动；1391 次采样 | 限上述测试环境；24 小时在线与账号令牌刷新未验证 |
+| 崩溃与重启 | 输入释放检查；显式 QA host 重启后新配对 3507.7 ms 恢复输入 | 不能证明自动服务重启或断网恢复 |
+| Android | 保留 10.0.0 arm64-v8a / x86_64 原 APK、版本、证书和摘要 | Android 控制 Windows、实体 arm64、最终 APK 的 API 26/35 运行未验证 |
+| 系统声音 / 剪贴板 / 双向文件 | 保留 10.0 功能范围，文件使用 SHA-256 | 本轮原生长测未覆盖；10.0 开发构建记录只保留为历史 |
+| 多显示器 / DPI | 保留既有功能范围 | 未验证 |
+| 安全桌面 / 锁屏 / 登录前 / UAC | 不可用 | 不适用 |
+| 麦克风回传 | 不可用 | 不适用 |
+| FRP 发布 | FRP 0.70.1，HTTP/HTTPS、TCP、UDP 与引导式发布 | 隧道运行矩阵未验证 |
+| 升级与恢复 | 先备份，使用匹配版本与固定镜像摘要 | 完整安装器升级与备份恢复未验证 |
+| Linux / macOS | 提供 10.1.0 客户端包 | 运行未验证 |
+| 签名 | Windows Authenticode / macOS Developer ID 未配置；Android 保留原发行证书 | 哈希、Sigstore 和扫描不等于发行商签名 |
 
-实测来自同一功能代码的开发构建，没有在最终字节上重跑。完整清单在 [发布说明](RELEASE_NOTES.md)。8.0 的逐项记录在 [docs/8.0/ACCEPTANCE.md](8.0/ACCEPTANCE.md)，只作为历史证据。
+完整边界见 [发布说明](RELEASE_NOTES.md)。历史 10.0.0、9.0.0 和 [8.0 验收](8.0/ACCEPTANCE.md) 只说明各自版本，不能替代 10.1.0 最终产物验证。网站现有产品截图仍为标明的 10.0.0。
 
 ## English
 
-Stable is 10.0.0. Verification remains incomplete. Remote payloads use end-to-end DTLS-encrypted UDP, direct first, with an optional UDP TURN relay for browser viewers; Android and 9.x hosts are direct-only. Web-to-Windows screen, input, clipboard, viewer-to-host files, system audio, approval and temporary password were tested on development builds. Host-to-viewer files, fixed password on the final build, Android control, multi-monitor, upgrade and restore, soaks, the network matrix and Linux/macOS runtime were not run and remain unverified. Secure desktop and microphone return are unavailable. Desktop packages remain unsigned.
+Server / Client use 10.1.0; compatible Android 10.0.0 files remain unchanged. The original 10.1.0 Windows worker bytes passed 30 connections and 7202.463 seconds of activity with 1391 samples, using same-machine Chromium and a production-source QA host in an isolated loopback environment. After an explicit QA host restart, a new pairing restored input in 3507.7 ms. This does not establish full installed-GUI, Windows service, independent Windows-endpoint, Android, network-outage recovery, 24-hour online, or Linux/macOS runtime acceptance. Audio, clipboard, files, full authorization UI flows, multi-display, installer upgrade/restore and the network matrix are not established by this run. The 24-hour test was not run. Desktop packages remain unsigned; secure desktop and microphone return remain unavailable. Historical 10.0.0 evidence and screenshots keep their original scope and labels.

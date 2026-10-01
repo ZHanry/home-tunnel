@@ -22,6 +22,14 @@ def sha(label):
     return hashlib.sha1(label.encode()).hexdigest()
 
 
+def historical_status():
+    """Historical receipt regressions must not follow a later live release."""
+    status = json.loads((ROOT / 'docs/release/acceptance-status-10.0.0.json').read_text())
+    record = json.loads((ROOT / status['evidence_file']).read_text())
+    errors = v10_evidence.evaluate(record) + v10_evidence.receipt_errors(record, ROOT)
+    return status, errors, record
+
+
 def valid_record():
     sources = {}
     components = {}
@@ -175,7 +183,7 @@ class EvidenceTests(unittest.TestCase):
         self.assertEqual(tuple(schema["x-owner-waivable-gates"]), v10_evidence.WAIVABLE_GATES)
 
     def test_repository_reconstructs_waivers_without_pass_claims(self):
-        status, errors, record = v10_evidence.load_status(ROOT)
+        status, errors, record = historical_status()
         self.assertEqual(errors, [])
         self.assertEqual(status["status"], "accepted_with_waivers")
         self.assertTrue(record["reconstructed_from_published_receipts"])
@@ -190,7 +198,7 @@ class EvidenceTests(unittest.TestCase):
         self.assertTrue(v10_evidence.assess_status(claimed, evidence_errors=[], evidence_path=claimed["evidence_file"]))
 
     def test_reconstructed_waivers_are_bound_to_original_receipts(self):
-        _, _, record = v10_evidence.load_status(ROOT)
+        _, _, record = historical_status()
         for mutation, expected in (
             (lambda gate: gate["waiver"].update(reason="new approval invented today"), "preserve"),
             (lambda gate: gate["waiver_receipt"].update(sha256="0" * 64), "digest"),
@@ -205,7 +213,7 @@ class EvidenceTests(unittest.TestCase):
                 self.assertTrue(any(expected in error for error in v10_evidence.receipt_errors(changed, ROOT)))
 
     def test_reconstructed_waiver_cannot_change_its_gate_scope(self):
-        _, _, record = v10_evidence.load_status(ROOT)
+        _, _, record = historical_status()
         swapped = copy.deepcopy(record)
         swapped["gates"]["vm_windows_pair"] = copy.deepcopy(swapped["gates"]["active_2h"])
         self.assertTrue(any("scope" in error for error in v10_evidence.receipt_errors(swapped, ROOT)))
@@ -220,7 +228,7 @@ class EvidenceTests(unittest.TestCase):
         self.assertTrue(any("scope" in error for error in v10_evidence.receipt_errors(duplicate_case, ROOT)))
 
     def test_reconstructed_waivers_bind_exact_component_package_bytes(self):
-        _, _, record = v10_evidence.load_status(ROOT)
+        _, _, record = historical_status()
         for component in ("client", "android"):
             for field, value in (("sha256", digest("different published bytes")), ("size_bytes", 1),
                                  ("filename", "not-an-approved-package.bin")):
@@ -230,7 +238,7 @@ class EvidenceTests(unittest.TestCase):
                     self.assertTrue(any("artifact bytes" in error for error in v10_evidence.receipt_errors(changed, ROOT)))
 
     def test_reconstructed_ui_preserves_android_and_aggregate_disclosure(self):
-        _, _, record = v10_evidence.load_status(ROOT)
+        _, _, record = historical_status()
         for mutation, expected in (
             (lambda ui: ui.pop("additional_waivers"), "Android"),
             (lambda ui: ui["additional_waivers"]["android"]["waiver"].update(reason="new broader approval"), "preserve"),
@@ -247,7 +255,7 @@ class EvidenceTests(unittest.TestCase):
                 self.assertTrue(any(expected in error for error in v10_evidence.receipt_errors(changed, ROOT)))
 
     def test_direct_record_command_checks_waiver_provenance(self):
-        _, _, record = v10_evidence.load_status(ROOT)
+        _, _, record = historical_status()
         record["gates"]["vm_windows_pair"]["waiver_receipt"]["sha256"] = "0" * 64
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "record.json"
@@ -260,14 +268,14 @@ class EvidenceTests(unittest.TestCase):
         self.assertIn("waiver receipt digest", completed.stderr)
 
     def test_public_wording_can_change_without_rewriting_historical_disclosure(self):
-        _, errors, record = v10_evidence.load_status(ROOT)
+        _, errors, record = historical_status()
         self.assertEqual(errors, [])
         current = (ROOT / "docs/RELEASE_NOTES.md").read_bytes()
         self.assertNotEqual(hashlib.sha256(current).hexdigest(), record["ui_coverage"]["release_disclosure"]["sha256"])
         self.assertEqual(v10_evidence.receipt_errors(record, ROOT), [])
 
     def test_missing_original_git_disclosure_fails_closed(self):
-        _, _, record = v10_evidence.load_status(ROOT)
+        _, _, record = historical_status()
         with patch.object(v10_evidence.subprocess, "run", return_value=subprocess.CompletedProcess([], 128, b"", b"missing")):
             self.assertTrue(any("original release disclosure is unavailable" in error
                                 for error in v10_evidence.receipt_errors(record, ROOT)))

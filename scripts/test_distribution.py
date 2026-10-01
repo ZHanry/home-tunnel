@@ -14,15 +14,16 @@ ROOT = Path(__file__).resolve().parents[1]
 def unpromoted_distribution():
     """Keep the pre-promotion safety regression independent of the live channel."""
     dist = distribution.load(ROOT)
+    version = dist["development_line"]
     stable = json.loads((ROOT / "docs/release/stable-9.0.0.json").read_text(encoding="utf-8"))
     dist["channels"] = {
         "stable": stable,
         "candidate": {
-            "version": "10.0.0", "stage": "development", "promotion_status": "not_promoted",
+            "version": version, "stage": "development", "promotion_status": "not_promoted",
             "downloads_published": False, "acceptance_status": "pending", "prerelease": False,
             "tag": None, "frp": "0.70.1",
             "contract": {"current_stable_ref": "api-v1.3.0", "planned_ref": "api-v1.4.0", "frozen": False},
-            "components": {name: {"repository": item["repository"], "version": "10.0.0", "source_sha": None, "artifacts": []}
+            "components": {name: {"repository": item["repository"], "version": v10_evidence.component_versions(version)[name], "source_sha": None, "artifacts": []}
                            for name, item in stable["components"].items()},
             "not_verified": sorted(distribution.REQUIRED_UNVERIFIED), "signing": copy.deepcopy(stable["signing"]),
         },
@@ -36,7 +37,7 @@ class DistributionTests(unittest.TestCase):
         self.assertEqual(distribution.validate_distribution(dist, root=ROOT), [])
         self.assertEqual(dist["channels"]["stable"]["version"], "9.0.0")
         self.assertFalse(dist["channels"]["candidate"]["downloads_published"])
-        self.assertEqual(dist["development_line"], "10.0.0")
+        self.assertEqual(dist["development_line"], (ROOT / "VERSION").read_text().strip())
 
     def test_current_channel_matches_the_published_waived_release(self):
         dist = distribution.load(ROOT)
@@ -45,7 +46,7 @@ class DistributionTests(unittest.TestCase):
         self.assertEqual(status["status"], "accepted_with_waivers")
         self.assertEqual(distribution.validate_distribution(dist, root=ROOT, evidence_errors=errors, evidence_record=record), [])
         self.assertEqual(distribution.projection_errors(dist, root=ROOT), [])
-        self.assertEqual(dist["channels"]["stable"]["version"], "10.0.0")
+        self.assertEqual(dist["channels"]["stable"]["version"], dist["development_line"])
         self.assertEqual(dist["channels"]["candidate"]["acceptance_status"], "accepted_with_waivers")
         self.assertTrue(dist["channels"]["candidate"]["downloads_published"])
 
@@ -84,15 +85,22 @@ class DistributionTests(unittest.TestCase):
         frozen = json.loads((ROOT / "docs" / "release" / "stable-9.0.0.json").read_text(encoding="utf-8"))
         stable = copy.deepcopy(frozen)
         stable["version"] = "10.0.0"
+        stable.update(contract_ref=record["contract"]["ref"], contract_revision=record["contract"]["revision"],
+                      contract_sha256=record["contract"]["sha256"])
+        stable["tested_combination"] = {name: "10.0.0" for name in ("server", "client", "android", "agent")}
         for name, component in stable["components"].items():
-            component.update(version="10.0.0", tag="v10.0.0", prerelease=False)
+            component.update(version="10.0.0", tag="v10.0.0", prerelease=False,
+                             release_url=f"https://github.com/{component['repository']}/releases/tag/v10.0.0")
             artifact = record["components"][name]["artifacts"][0]
-            component["downloads"] = [] if name == "hub" else [{"filename": artifact["filename"], "sha256": artifact["sha256"]}]
+            component["downloads"] = [] if name == "hub" else [{"filename": artifact["filename"], "sha256": artifact["sha256"], "size_bytes": artifact["size_bytes"],
+                                "url": f"https://github.com/{component['repository']}/releases/download/v10.0.0/{artifact['filename']}"}]
             if name != "hub":
                 component["release_revision"] = record["sources"][name]["sha"]
         candidate = {"version": "10.0.0", "stage": "stable", "promotion_status": "promoted", "downloads_published": True,
                      "acceptance_status": "accepted_with_waivers", "prerelease": False, "tag": "v10.0.0", "frp": "0.70.1",
-                     "waived": ["online_24h"]}
+                     "waived": ["online_24h"],
+                     "components": {name: {"repository": v10_evidence.REPOSITORIES[name], **copy.deepcopy(value)}
+                                    for name, value in record["components"].items()}}
         dist = {"schema_version": 1, "product": "Home Tunnel", "source_of_truth": "distribution.json",
                 "development_line": "10.0.0", "channels": {"stable": stable, "candidate": candidate}}
         with tempfile.TemporaryDirectory() as tmp:

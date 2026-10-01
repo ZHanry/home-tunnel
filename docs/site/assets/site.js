@@ -65,7 +65,7 @@
   var status = document.getElementById("download-status");
   if (!status || !globalThis.HomeTunnelDownloadState) return;
   var lang = document.documentElement.lang || "zh-CN";
-  var fallback = document.body.getAttribute("data-stable-version") || "10.0.0";
+  var fallback = document.body.getAttribute("data-stable-version") || "10.1.0";
   var root = document.body.getAttribute("data-root") || "";
   function paintStatus(view) {
     status.dataset.tone = view.tone;

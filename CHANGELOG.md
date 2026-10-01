@@ -1,5 +1,16 @@
 # Changelog
 
+## 10.1.0 — 2026-10-01
+
+Server / Client, CLI and managed Agent use 10.1.0 with frozen additive contract `api-v1.5.0`. Compatible Android 10.0.0 stays on its original files, version and signing identity; FRP remains 0.70.1.
+
+- Fix the Windows approval popup background and content timing; block connections to the current device.
+- Reuse native sign-in through a short-lived, single-use, remote-only handoff tied to the parent device session.
+- Add current-device rename, combine settings and update controls, and improve sign-in layout, narrow-window scrolling and keyboard behavior.
+- Record exact-worker native evidence: 30 connections, 7202.463 seconds active, 1391 samples and 3507.7 ms to new live input after an explicit QA host restart, in a same-machine Chromium loopback fixture with a production-source QA host.
+
+Full installed GUI/service, independent Windows endpoints, Android, network-outage recovery, 24-hour online, Linux/macOS runtime and other untested paths remain unverified. The 24-hour test was not run. Windows/macOS remain unsigned. See [release notes](docs/RELEASE_NOTES.md) for the exact boundaries.
+
 ## 10.0.0 — 2026-09-29
 
 All four repositories and the managed Agent use 10.0.0; FRP stays at 0.70.1. The API stays `/api/v1` and freezes contract `api-v1.4.0`.
