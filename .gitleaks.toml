@@ -1,0 +1,11 @@
+[extend]
+useDefault = true
+
+# This exact value is the independently computed public api-v1.6.0 OpenAPI digest.
+# Keep default secret rules; permit only this reviewed hash at the two projected fields.
+[[allowlists]]
+description = "Public frozen OpenAPI checksum, not an API credential"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^(distribution\.json|docs/site/candidate\.json)$''']
+regexes = ['''^8c72baae633157ccd5e7c8e9cf3d5fc24f6f607685744349fa1cb39fe482fae4$''']
