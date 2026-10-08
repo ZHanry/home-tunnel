@@ -36,6 +36,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 scripts/check-release-entry.py
+          python3 scripts/homedesk_downloads.py --check
           python3 scripts/check-site-policy.py
           python3 scripts/check-secrets.py
           python3 scripts/check-license.py

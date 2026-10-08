@@ -39,7 +39,7 @@
       "repository": "ZHanry/home-tunnel-client",
       "version": "11.0.0-rc.1",
       "tag": "v11.0.0-rc.1",
-      "source_sha": "b8ea6e02a82d3a2e129d38e3522147673eb95dca",
+      "source_sha": "902607575789479ec9b328583690425420b8e6f4",
       "published": false,
       "release_url": null,
       "artifacts": []
@@ -48,7 +48,7 @@
       "repository": "ZHanry/home-tunnel-android",
       "version": "11.0.0-rc.1",
       "tag": "v11.0.0-rc.1",
-      "source_sha": "b9ae50a775ac6c39d22521a52ac1d78c84094b8f",
+      "source_sha": "c63d90037c9317848d49a58da9090e76f0409f84",
       "published": false,
       "release_url": null,
       "artifacts": []

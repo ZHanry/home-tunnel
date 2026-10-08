@@ -109,6 +109,8 @@ if __name__ == "__main__":
     if args.record:
         distribution.dump(distribution.ROOT / "distribution.json", dist)
         distribution.project()
+        import homedesk_downloads
+        homedesk_downloads.project(dist["channels"]["candidate"])
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         distribution.dump(args.output, evidence)

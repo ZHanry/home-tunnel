@@ -1,13 +1,22 @@
 # Roadmap
 
-10.0.0 shipped on 2026-09-29 with incomplete verification. The unverified gates
-are the first follow-up: host-to-viewer files, fixed password on final bytes,
-Android controlling Windows, physical arm64 phones, multi-monitor/DPI,
-9-to-10 installer upgrade and
-restore, the 30-repeat/2-hour/24-hour soaks, the NAT/IPv6/blocked-UDP matrix,
-performance, the tunnel runtime matrix, Linux/macOS runtime and a full UI review.
-Lock screen, pre-login and UAC secure-desktop control and microphone return are
-not available. No date is attached to that work.
+HomeDesk 11 is a release candidate. It adopts the shared Rust/Flutter remote
+engine and Hearth UI, retains the independent Go/FRP tunneling stack, and requires
+authenticated, encrypted P2P for every successful built-in remote session.
+Failed direct connections terminate without a relay fallback. The server adds
+hbbs rendezvous to the existing control plane, FRPS and traffic gateway.
+
+Stable promotion requires acceptance on the exact published artifacts: two
+separate computers across real NAT/CGNAT and blocked-UDP networks, Android
+controlling Windows and physical arm64 phones, file/clipboard/audio behavior,
+multi-monitor/DPI and privilege boundaries, installer upgrades and recovery,
+repeated connections and 2-hour/24-hour soaks. Record actual network paths and
+failure conditions. IPv6 and Linux/macOS desktop GUI are not part of this
+candidate's claimed coverage; the cross-platform CLI/Agent remains available.
+Server release smoke checks cover HTTP/TCP/UDP forwarding, while real NAS and
+third-party application recipes require separate runtime acceptance. Measure
+server resource use with the complete tunneling stack enabled. No dates or
+unmeasured success-rate/capacity promises are attached to these gates.
 
 7.0.0 ships the audit fixes, unified releases, API contract, diagnostics, host-only
 recovery, encrypted backup/restore, preflight/NAS recipes, enrollment codes, MFA,
