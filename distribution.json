@@ -134,7 +134,7 @@
       "version": "11.0.0-rc.1",
       "stage": "candidate",
       "promotion_status": "prerelease",
-      "downloads_published": false,
+      "downloads_published": true,
       "acceptance_status": "pending",
       "prerelease": true,
       "tag": "v11.0.0-rc.1",
@@ -163,27 +163,90 @@
           "version": "11.0.0-rc.2",
           "tag": "v11.0.0-rc.2",
           "source_sha": "3fc4758ed0aa6eeb78635b41d829b169956a3cb3",
-          "published": false,
-          "release_url": null,
-          "artifacts": []
+          "published": true,
+          "release_url": "https://github.com/ZHanry/home-tunnel-server/releases/tag/v11.0.0-rc.2",
+          "artifacts": [
+            {
+              "filename": "HomeDesk-server-Materials-11.0.0-rc.2.zip",
+              "sha256": "136431f6ade9750426dd5e01d00178cf547847a83a470b2abad6fbc9821bd19f",
+              "size_bytes": 2594629,
+              "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v11.0.0-rc.2/HomeDesk-server-Materials-11.0.0-rc.2.zip"
+            },
+            {
+              "filename": "SHA256SUMS.txt",
+              "sha256": "53d7de32adf9119d35e49269bc3f89ed928b16facda5e3e63811f7ffffa47cb9",
+              "size_bytes": 212,
+              "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v11.0.0-rc.2/SHA256SUMS.txt"
+            },
+            {
+              "filename": "home-tunnel-server-11.0.0-rc.2.tar.gz",
+              "sha256": "a7002005eab13246b0a6b6c5a7dea9a2f9e7b30d111519631054201d6394b5de",
+              "size_bytes": 887178,
+              "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v11.0.0-rc.2/home-tunnel-server-11.0.0-rc.2.tar.gz"
+            }
+          ]
         },
         "client": {
           "repository": "ZHanry/home-tunnel-client",
           "version": "11.0.0-rc.1",
           "tag": "v11.0.0-rc.1",
           "source_sha": "902607575789479ec9b328583690425420b8e6f4",
-          "published": false,
-          "release_url": null,
-          "artifacts": []
+          "published": true,
+          "release_url": "https://github.com/ZHanry/home-tunnel-client/releases/tag/v11.0.0-rc.1",
+          "artifacts": [
+            {
+              "filename": "HomeDesk-Setup-11.0.0-rc.1-x64.exe",
+              "sha256": "2b207752fcb6a798c28a591e7ade794ccbe83497807b7a1c96b6ce844232ef49",
+              "size_bytes": 30325040,
+              "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v11.0.0-rc.1/HomeDesk-Setup-11.0.0-rc.1-x64.exe"
+            },
+            {
+              "filename": "HomeDesk-client-Materials-11.0.0-rc.1.zip",
+              "sha256": "bb032dd182fa27959ea56c8dde5adeeb8cca14eff53e7925050b541014b01077",
+              "size_bytes": 655691974,
+              "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v11.0.0-rc.1/HomeDesk-client-Materials-11.0.0-rc.1.zip"
+            },
+            {
+              "filename": "HomeTunnel-CLI-Agent-11.0.0-rc.1.zip",
+              "sha256": "2e3b46e4b71a3fc85bc6376b1d29d6a836e23d5349269914a2d68e5bd6bc26cf",
+              "size_bytes": 44694951,
+              "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v11.0.0-rc.1/HomeTunnel-CLI-Agent-11.0.0-rc.1.zip"
+            },
+            {
+              "filename": "SHA256SUMS.txt",
+              "sha256": "a127492badc9d343d6c69b4a7dea79ab87eae8fd7482b835c3d368773e877d2d",
+              "size_bytes": 312,
+              "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v11.0.0-rc.1/SHA256SUMS.txt"
+            }
+          ]
         },
         "android": {
           "repository": "ZHanry/home-tunnel-android",
           "version": "11.0.0-rc.1",
           "tag": "v11.0.0-rc.1",
-          "source_sha": "f56254be117f5f4692dec1d5290ded3fb9bc4707",
-          "published": false,
-          "release_url": null,
-          "artifacts": []
+          "source_sha": "35c197cfa8b991d2a2317c8b5018d75af2de77b8",
+          "published": true,
+          "release_url": "https://github.com/ZHanry/home-tunnel-android/releases/tag/v11.0.0-rc.1",
+          "artifacts": [
+            {
+              "filename": "HomeDesk-Android-11.0.0-rc.1.apk",
+              "sha256": "285fbd11aa2983a6277e34c60d830367bd91807353f666004debae58045f71b4",
+              "size_bytes": 117764062,
+              "url": "https://github.com/ZHanry/home-tunnel-android/releases/download/v11.0.0-rc.1/HomeDesk-Android-11.0.0-rc.1.apk"
+            },
+            {
+              "filename": "HomeDesk-android-Materials-11.0.0-rc.1.zip",
+              "sha256": "e07f0254279699ba4658c00efc02a8c8ca03071e1d321d636e4b77a843aa0fbf",
+              "size_bytes": 1127137868,
+              "url": "https://github.com/ZHanry/home-tunnel-android/releases/download/v11.0.0-rc.1/HomeDesk-android-Materials-11.0.0-rc.1.zip"
+            },
+            {
+              "filename": "SHA256SUMS.txt",
+              "sha256": "b7002167989befb15ab000ef7a5b430429099355770f6f23611cb76d0d512a9d",
+              "size_bytes": 208,
+              "url": "https://github.com/ZHanry/home-tunnel-android/releases/download/v11.0.0-rc.1/SHA256SUMS.txt"
+            }
+          ]
         }
       },
       "not_verified": [
