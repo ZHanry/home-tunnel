@@ -1,6 +1,7 @@
 """Download and verify the three actual candidate releases before publishing the hub."""
 from pathlib import Path
 import argparse
+from contextlib import contextmanager
 import hashlib
 import json
 import subprocess
@@ -22,7 +23,18 @@ def digest(path):
     return checksum.hexdigest()
 
 
-def verify(candidate, *, record=False, signatures=False):
+@contextmanager
+def download_folder(directory, name, tag):
+    if directory is None:
+        with tempfile.TemporaryDirectory(prefix="homedesk-" + name + "-") as scratch:
+            yield Path(scratch)
+    else:
+        folder = directory.resolve() / name / tag
+        folder.mkdir(parents=True, exist_ok=True)
+        yield folder
+
+
+def verify(candidate, *, record=False, signatures=False, download_dir=None):
     verified = {}
     for name in ("server", "client", "android"):
         component = candidate["components"][name]
@@ -38,9 +50,12 @@ def verify(candidate, *, record=False, signatures=False):
         assets = release["assets"]
         if len(assets) != distribution.HOMEDESK_ATTACHMENTS[name]:
             raise SystemExit("Unexpected attachment count: " + name)
-        with tempfile.TemporaryDirectory(prefix="homedesk-" + name + "-") as scratch:
-            folder = Path(scratch)
-            subprocess.run(["gh", "release", "download", tag, "--repo", repository, "--dir", str(folder)], check=True)
+        with download_folder(download_dir, name, tag) as folder:
+            command = ["gh", "release", "download", tag, "--repo", repository, "--dir", str(folder)]
+            if download_dir is not None:
+                # Cached files undergo the same verification as fresh downloads.
+                command.append("--skip-existing")
+            subprocess.run(command, check=True)
             entries = {}
             for asset in assets:
                 filename = asset["name"]
@@ -100,12 +115,13 @@ if __name__ == "__main__":
     parser.add_argument("--record", action="store_true", help="Record independently verified component bytes in distribution.json")
     parser.add_argument("--signatures", action="store_true")
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--download-dir", type=Path, help="Keep downloaded assets for inspection; all verification checks still run")
     args = parser.parse_args()
     dist = distribution.load()
     errors = distribution.validate_distribution(dist)
     if errors:
         raise SystemExit("\n".join(errors))
-    evidence = verify(dist["channels"]["candidate"], record=args.record, signatures=args.signatures)
+    evidence = verify(dist["channels"]["candidate"], record=args.record, signatures=args.signatures, download_dir=args.download_dir)
     if args.record:
         distribution.dump(distribution.ROOT / "distribution.json", dist)
         distribution.project()
