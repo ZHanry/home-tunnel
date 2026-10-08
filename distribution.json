@@ -154,8 +154,8 @@
           "version": "11.0.0-rc.1",
           "tag": "v11.0.0-rc.1",
           "source_sha": null,
-          "published": false,
-          "release_url": null,
+          "published": true,
+          "release_url": "https://github.com/ZHanry/home-tunnel/releases/tag/v11.0.0-rc.1",
           "artifacts": []
         },
         "server": {
