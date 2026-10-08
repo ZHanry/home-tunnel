@@ -1,39 +1,19 @@
-# 排查 / Troubleshooting
+# HomeDesk 11 排查
 
-先分清是远控还是 FRP。两条路径的失败不应该互相掩盖。
+## 远控直连失败
 
-## 远控失败
+核对双方 hbbs 地址、公钥与家庭私网 CIDR，检查 TCP21115/TCP21116/UDP21116、对端在线与被控端授权。错误公钥、未配置、失效会话或身份冲突必须先修正。部分 NAT/CGNAT、移动网或防火墙组合无法打洞；应用明确终止，不开启中继或把远控改走穿透。
 
-1. 确认两边都登录了同一台 10.0.0 服务器，并且被控端是已登录、未锁屏的 Windows 图形会话。
-2. 确认授权还在：临时批准、固定密码或一次性临时密码。固定密码不是账号密码。
-3. 等 UDP 连接。浏览器控制端在直连失败时可以走服务器的 UDP TURN 中继，前提是服务器部署了 `deploy/compose.turn.yaml`；Android 控制端和 9.x 被控端只走直连。UDP 被封时会失败，不会改走 TCP、FRP 或 HTTP。记下界面上的错误。
-4. 被控端可以用本机快捷键断开。不需要的配对和授权应当撤销。
+目录显示近期登记不表示媒体在线。Web 按钮需要安装 HomeDesk URL handler；若系统未识别 `homedesk://`，重新运行 Windows 安装器并查看配置。不要把账号密码、远控密码或 API token 拼到 URL。
 
-锁屏、登录前和 UAC 安全桌面在 10.0.0 里不能控制，也没有麦克风回传。这些限制不是配置错误。
+Android 共享屏幕必须取得当前系统授权；Android 14/15 不能依赖启动广播自动采集。真机问题需保留设备/系统/网络版本与脱敏日志，模拟器 Keystore/启动通过不证明手机远控兼容。
 
-## FRP 发布失败
+## 内网服务不可访问
 
-在家庭客户端运行 `doctor`。它按层给出结果，诊断包不会自动上传。
+运行 `home-tunnel-client status`，先验证目标服务在本机的地址与端口，再检查设备会话、租约、端口池、权限、ACL、流量限制、诊断与 FRPS 状态。TCP/UDP 只在管理员允许的端口池内创建；HTTP 与原始 TCP/UDP 的认证规则不同。
 
-| 层 | 看什么 |
-| --- | --- |
-| DNS | 域名是否指向你的服务器 |
-| HTTPS | 证书和服务器地址是否就是客户端里填写的地址 |
-| FRPS | 服务是否在跑，令牌是否匹配这一台服务器 |
-| 授权 | 账号是否有权使用这条连接和端口池 |
-| 本地目标 | 运行 Agent 的那台机器能否打开目标地址 |
+长期穿透使用独立 CLI/Agent；GUI 关闭会停止其受管 Agent。远控失败或模式改变不应影响原本独立运行的服务。设备撤权、账号退出或授权地址改变则按权限规则停止相应受管 Agent。
 
-手机上填写的 `127.0.0.1` 指的是手机自己，不是 NAS。TCP/UDP 没有 HTTP 登录保护。目标应用要自己做认证。
+## 升级与身份
 
-## 升级后
-
-如果设备或连接不见了，先停止继续升级，按备份文档做恢复，而不是在生产数据上反复试验。
-9→10 安装器升级和备份恢复尚未验证，恢复前先在隔离环境演练。
-
-## 报告问题时
-
-写明远控还是 FRP、四个组件里实际使用的版本、系统和复现步骤。去掉密码、令牌、接入码和私钥。安全问题走 [SECURITY.md](../SECURITY.md)。
-
-## English
-
-Decide whether the failure is remote control or FRP. Remote control uses UDP only: browser viewers can use the optional TURN relay, Android and 9.x hosts are direct-only, and blocked UDP fails closed. FRP failures should name DNS, HTTPS, FRPS, authorization, or the local target. `doctor` does not upload its report. The 9-to-10 upgrade and restore remain unverified, so rehearse a restore before relying on it.
+保留 SQLite、部署秘密与独立 hbbs 身份备份。hbbs 镜像无 shell/cat，取公钥使用宿主机 `docker cp`。恢复只写入全新空卷，避免覆盖原身份。回退应恢复对应版本数据库备份，参见 [升级说明](UPGRADING.md)。

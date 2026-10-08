@@ -72,30 +72,27 @@ class MixedVersionEvidenceTests(unittest.TestCase):
 
     def test_original_native_byte_chain_and_scope_are_bound(self):
         value = json.loads((ROOT / 'docs/release/v10.1-evidence.json').read_text())
-        def documentation(args, **kwargs):
-            path = args[-1].split(':', 1)[1]
-            return subprocess.CompletedProcess(args, 0, (ROOT / path).read_bytes(), b'')
-        with patch.object(v101_provenance.subprocess, 'run', side_effect=documentation):
-            self.assertEqual(v101_provenance.evaluate(value, ROOT), [])
-            for mutation, expected in (
-                (lambda r: r['provenance']['native_report'].update(sha256='f'*64), 'digest'),
-                (lambda r: r['components']['hub']['artifacts'].pop(), 'complete'),
-                (lambda r: r['components']['client']['artifacts'].pop(), 'complete'),
-                (lambda r: r['components']['server']['artifacts'].pop(), 'complete'),
-                (lambda r: r['components']['android']['artifacts'].pop(), 'historical'),
-                (lambda r: r['gates']['repeat_30'].update(artifact_filename='home-tunnel-linux-10.1.0-amd64.tar.gz',
-                    artifact_sha256=r['components']['client']['artifacts'][2]['sha256']), 'Windows ZIP'),
-                (lambda r: r.update(ui_coverage={'status':'passed'}), 'UI review'),
-                (lambda r: r['provenance']['worker_provenance'].update(path='../outside.json'), 'outside'),
-                (lambda r: r['components']['client']['artifacts'][0].update(size_bytes=1), 'package'),
-                (lambda r: r['gates']['active_2h'].update(duration_seconds=86400), 'measured'),
-                (lambda r: r['gates']['repeat_30'].update(scope='full-installed-application'), 'scope'),
-                (lambda r: r['gates']['repeat_30'].update(source_components=['client']), 'scope'),
-                (lambda r: r['gates']['input_release_2s'].update(observed_at='2026-10-02T00:00:00Z'), 'timestamp'),
-            ):
-                changed = copy.deepcopy(value)
-                mutation(changed)
-                self.assertTrue(any(expected in error for error in v101_provenance.evaluate(changed, ROOT)))
+        # Read the actual immutable Git documentation revision, independently of the new development line.
+        self.assertEqual(v101_provenance.evaluate(value, ROOT), [])
+        for mutation, expected in (
+            (lambda r: r['provenance']['native_report'].update(sha256='f'*64), 'digest'),
+            (lambda r: r['components']['hub']['artifacts'].pop(), 'complete'),
+            (lambda r: r['components']['client']['artifacts'].pop(), 'complete'),
+            (lambda r: r['components']['server']['artifacts'].pop(), 'complete'),
+            (lambda r: r['components']['android']['artifacts'].pop(), 'historical'),
+            (lambda r: r['gates']['repeat_30'].update(artifact_filename='home-tunnel-linux-10.1.0-amd64.tar.gz',
+                artifact_sha256=r['components']['client']['artifacts'][2]['sha256']), 'Windows ZIP'),
+            (lambda r: r.update(ui_coverage={'status':'passed'}), 'UI review'),
+            (lambda r: r['provenance']['worker_provenance'].update(path='../outside.json'), 'outside'),
+            (lambda r: r['components']['client']['artifacts'][0].update(size_bytes=1), 'package'),
+            (lambda r: r['gates']['active_2h'].update(duration_seconds=86400), 'measured'),
+            (lambda r: r['gates']['repeat_30'].update(scope='full-installed-application'), 'scope'),
+            (lambda r: r['gates']['repeat_30'].update(source_components=['client']), 'scope'),
+            (lambda r: r['gates']['input_release_2s'].update(observed_at='2026-10-02T00:00:00Z'), 'timestamp'),
+        ):
+            changed = copy.deepcopy(value)
+            mutation(changed)
+            self.assertTrue(any(expected in error for error in v101_provenance.evaluate(changed, ROOT)))
 
     def test_status_cannot_claim_different_record_version(self):
         with tempfile.TemporaryDirectory() as tmp:

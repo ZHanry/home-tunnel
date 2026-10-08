@@ -1,0 +1,39 @@
+name: Release distribution
+on:
+  push:
+    tags: [v*-rc.*]
+permissions:
+  contents: write
+  checks: read
+  actions: read
+  id-token: write
+  attestations: write
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  release:
+    name: Publish compact HomeDesk distribution candidate
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - id: metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/homedesk-release.py metadata
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6
+      - name: Verify every component release and its actual download bytes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/verify-homedesk-components.py --signatures --output material-input/components.json
+      - name: Package distribution, source, documents and release proof
+        run: python3 scripts/homedesk-release.py pack --component hub --evidence material-input
+      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6
+        with:
+          subject-path: release-public/SHA256SUMS.txt
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/homedesk-release.py publish --input release-public

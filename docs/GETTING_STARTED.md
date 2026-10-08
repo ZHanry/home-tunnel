@@ -1,42 +1,17 @@
-# 快速开始 / Quick start
+# 开始使用 HomeDesk 11
 
-安装稳定组合 **Server / Client 10.1.0 + Android 10.0.0**。部分项目尚未验证，清单见 [发布说明](RELEASE_NOTES.md)。两条路径分开做。
+先从 [下载与校验](DOWNLOADS.md) 选择候选组件，按 [自建部署](SELF_HOSTING.md) 配置 Server 11.0.0-rc.2。候选尚未完成跨网和真机验收；最后稳定下载仍保留原 10.x 组合。
 
-## 远控：授权后的 UDP 直连
+## 远程控制
 
-登记隧道设备不会自动授予远控权限。先看 [10.1 范围](RELEASE_NOTES.md)。
+Windows 与 Android 都使用 Client 同源 Rust/Flutter 核心。填写自己的 hbbs 地址、公钥和家庭 CIDR，配置 HTTPS 管理台；登录与登记本机后，同账号目录显示有效设备。目录状态只证明近期登记，不能证明屏幕会话已连通。
 
-1. 部署 10.1.0 服务端和 Windows x64 桌面包。被控端登录后即开启被控，保持已登录、未锁屏的图形桌面。
-2. 双方登录同一台服务器。用分组显示的 9 位设备 ID 找到电脑。任选一种：右下角弹窗批准、固定密码（跳过审批）或一次性临时密码。这三者和一次性接入码不是一回事，固定密码也不是账号密码。不用时关掉。
-3. 等连接和画面就绪后再输入。被控端会显示"正在被远程控制 · 断开"条，可以随时断开。配对和授权可以撤销。
-4. 载荷走端到端加密的 UDP，优先直连。直连失败时，浏览器控制端可以经服务器可选的 UDP TURN 中继连接 10.x 被控端，中继读不到内容；Android 控制端只走直连。没有 TCP / FRP / HTTP / WSS 回退。
+选择设备或输入远控 ID，获得被控端密码或批准后建立认证加密的 P2P。Web 管理台的原生按钮通过 `homedesk://ID` 打开 HomeDesk，不传递账号令牌。任何直接连接失败都会终止，没有 hbbr/TURN/FRP/HTTP/WSS/VPN 或供应商回退。
 
-接受连接后，本次放行画面、键鼠、剪贴板、文件和系统声音，麦克风不会自动放行。锁屏、登录前和 UAC 安全桌面控制不可用。Android 控制 Windows 和实体 arm64 手机尚未验证。
+Android 共享屏幕需同意系统 MediaProjection 提示；Android 14/15 要从可见应用重新授权。控制手机的具体系统权限与能力需要真机验收，不能把模拟器启动检查当作完整远控通过。
 
-## 内网穿透：用 FRP 发布家里的服务
+## 内网穿透
 
-1. 按 [部署说明](SELF_HOSTING.md) 在公网 Linux 主机安装 10.1.0。向导生成配置，预检检查 DNS、端口和目录。
-2. 登录 Web，修改管理员临时密码，启用 TOTP，保存恢复码。
-3. 在家庭电脑或 NAS 安装同版客户端。用账号和 MFA，或用一次性接入码登记。
-4. 先在这台机器上打开目标服务，再创建连接。HTTP 填写子域、本地主机和端口。原始 TCP/UDP 需要管理员的端口池和授权。
-5. 等到在线后，从另一张网络打开公网地址。Agent 需要保持运行。Android 管理隧道，不在手机上转发流量。
+NAS 或家庭电脑运行独立 `home-tunnel-client` 与锁定的 Agent。先确认目标服务在本机可访问，登记设备，再通过 Web 或暖居“家庭服务”创建 HTTP/HTTPS 或管理员允许的 TCP/UDP 连接。公网端口由服务端端口池管理，HTTP ACL/登录保护与 TCP/UDP 目标应用认证按原规则配置。
 
-示例见 [家庭服务场景](SCENARIOS.md)。失败时运行客户端 `doctor`，按 DNS、HTTPS、FRPS、授权、本地目标分层看。诊断包不会自动上传。细节在 [排查](TROUBLESHOOTING.md)。
-
-TCP/UDP 不附带 HTTP 白名单或 Basic Auth。不要把 NAS 管理口或没有认证的服务直接暴露出去。
-
-桌面原生登录交接和“我的设备”中的当前设备改名需要 Server 10.1.0；不要将 Android 10.0.0 文件改名或视为新 APK。
-
-## 备份
-
-上线后配置 [异机备份](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/disaster-recovery.md) 和 [监控](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/MONITORING.md)。从 9.0 升级见 [升级](UPGRADING.md)；完整安装器升级和备份恢复没有验证，先确认备份能恢复。
-
-## English
-
-Install Server / Client 10.1.0 and retain the compatible Android 10.0.0 APKs. Some acceptance gates were not run; the release notes list what remains unverified.
-
-For remote control, use an unlocked Windows x64 host and accounts on the same server on both sides. Find it by its grouped 9-digit device ID, then use the approval popup, a fixed password, or a one-time password. An enrollment code is not a device code or a remote password. Payloads use encrypted UDP, direct first; browser viewers can fall back to the optional UDP TURN relay, Android is direct-only, and there is no TCP fallback.
-
-For FRP, deploy the server, enroll the home Agent, confirm the local target, then open the public address from another network. Use `doctor` when a layer fails. Raw TCP/UDP relies on the target application's own authentication.
-
-Back up before upgrading. Full installer upgrade and restore remain unverified. The bounded 10.1.0 native-worker run does not establish installed-GUI/service, Android, network-outage or 24-hour acceptance.
+用外部网络验证访问地址、诊断、流量限制与撤权。GUI 中的 Agent 跟随窗口；需要长期在线时使用 CLI 合集的各平台后台说明，先查看 `home-tunnel-client --help` 与 `home-tunnel-client status`。远控开关或打洞失败不影响独立隧道。

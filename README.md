@@ -1,68 +1,46 @@
 <img src="docs/site/assets/HomeTunnel.svg" alt="" width="64" height="64">
 
-# Home Tunnel
+# HomeDesk / Home Tunnel
 
-**自托管的两条路径：授权后的 UDP 远控，以及 FRP 服务发布。**
+**暖居界面、严格 P2P 远控、完整内网穿透。四个仓库继续独立发布。**
 
-[![License Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+[English](README.en.md) · [网站](https://zhanry.github.io/home-tunnel/) · [下载与校验](docs/DOWNLOADS.md) · [快速开始](docs/GETTING_STARTED.md) · [架构](docs/ARCHITECTURE.md) · [升级](docs/UPGRADING.md)
 
-[English](README.en.md) · [网站](https://zhanry.github.io/home-tunnel/) · [下载](docs/DOWNLOADS.md) · [快速开始](docs/GETTING_STARTED.md) · [架构](docs/ARCHITECTURE.md) · [功能矩阵](docs/FEATURE_MATRIX.md)
+当前主线为 **11.0.0 候选版**：Server 11.0.0-rc.2、Client / Android / 总仓 11.0.0-rc.1。整合 ymhaha 的 Hearth Web 与 Rust/Flutter 客户端；Windows 使用原生 HomeDesk，Android 固定同一份 Client 源码。跨网络 NAT、长期媒体、真机和两台安装后终端的远控验收尚未完成，不晋升稳定版。
 
-当前稳定组合是 **Server / Client 10.1.0 + Android 10.0.0**。Android 保留原发行文件，不重新标成 10.1.0。部分验收项目未运行，验证尚未完成，清单见 [发布说明](docs/RELEASE_NOTES.md)。FRP 保持独立的 **0.70.1**；Server / Client 使用冻结增量契约 `api-v1.5.0`。稳定通道和候选记录写在同一个 [`distribution.json`](distribution.json) 里；改这一份后运行 `python scripts/sync-distribution.py`。
+`distribution.json` 是通道与实际附件的唯一来源。稳定通道仍为 Server / Client 10.1.0 + Android 10.0.0；旧发布、标签、哈希与验收材料保留，其远控结果不作为 11.x 已通过的证据。
 
-## 从这里开始
+## 连接方式
 
-| 你要做的事 | 入口 |
-| --- | --- |
-| 授权后远程操作一台 Windows 主机 | [快速开始 · 远控](docs/GETTING_STARTED.md) · [10.1 范围](docs/RELEASE_NOTES.md) |
-| 把家里的服务发布到公网 | [快速开始 · FRP](docs/GETTING_STARTED.md) · [部署](docs/SELF_HOSTING.md) · [场景](docs/SCENARIOS.md) |
-| 安装现在能用的版本 | [10.1.0 下载与校验](docs/DOWNLOADS.md) |
-| 出了问题 | [排查](docs/TROUBLESHOOTING.md) · [升级](docs/UPGRADING.md) |
+远控必须是认证加密的 P2P 直连，服务端只新增 hbbs 信令与 NAT 协调。没有 hbbr / TURN / FRP / HTTP / WSS / VPN 或供应商回退。IPv4/IPv6 和允许的直接传输仍由原生核心处理；无法建立安全直连就明确停止。Web 管理台通过 `homedesk://设备ID` 打开已安装的客户端，URL 不携带账号凭据。
 
-## 两条路径不要混用
-
-远控要求双方登录同一台自托管服务器。被控端登录即开启被控，可以在右下角审批请求、设置固定密码，或生成一次性临时密码。载荷走端到端 DTLS 加密的 UDP，优先直连；直连失败时，浏览器控制端可以经服务器可选的 UDP TURN 中继连接 10.x 被控端，中继读不到内容。没有 TCP、FRP、HTTP 或 WSS 回退。Android 控制端和 9.x 被控端只走直连。
-
-服务发布使用家里的 Agent 和 FRP 0.70.1。HTTP/HTTPS、TCP 和 UDP 走这条隧道。TCP/UDP 不附带 HTTP 登录保护，认证由目标应用自己完成。
-
-## 10.1.0 的范围
-
-10.1.0 修复 Windows 审批弹窗的底色与内容显示时机，阻止连接本机设备；原生登录可通过短时、单次、仅限远控的交接复用到远控窗口。设置与更新入口合并，当前设备改名移到“我的设备”，并改善窄窗口登录、滚动与键盘行为。登录交接和当前设备改名需要 Server 10.1.0。
-
-10.1.0 的原始 Windows worker 字节在同机 Chromium 与生产源码 QA host 的隔离回环环境中通过 30 次连接、7202.463 秒活动和 1391 次采样；显式重启 QA host 后，新配对恢复输入耗时 3507.7 ms。 这些结果不代表完整安装版 GUI、Windows 服务、两台独立 Windows 终端、Android、断网恢复、24 小时在线或 Linux/macOS 运行验收。
-
-10.0.0 的直连/中继、声音、剪贴板与文件开发构建实测保留在发布说明的历史部分，不能当作 10.1.0 最终字节的新增验收。24 小时测试未运行。
-
-锁屏、登录前和 UAC 安全桌面控制不可用，也没有麦克风回传。Windows 和 macOS 仍无 Authenticode 或 Developer ID 发行签名。Android 10.0.0 保留原 applicationId、发行证书和下载摘要。SHA-256 与 Sigstore 构建证明不是发行商签名。
-
-[8.0 历史验收](docs/8.0/ACCEPTANCE.md)、10.0.0 和 9.0.0 的历史记录只说明各自版本，不能替代 10.1.0 产物验证。
+内网穿透完整保留 HTTP/HTTPS、受控 TCP/UDP、端口池、权限、ACL、流量治理、诊断以及独立 CLI/NAS/background Agent。FRPS、Caddy、traffic-gateway 和 Node/SQLite 仍负责原有业务；远控模式切换或打洞失败不会停止隧道。GUI 内的 Agent 跟随窗口，长期服务请使用独立 CLI。
 
 ```mermaid
 flowchart LR
-  Controller[Windows / Web / Android 控制端] <-->|加密 UDP，优先直连| Host[Windows 被控端]
-  Controller -.->|浏览器可选 TURN 中继| Relay[UDP TURN]
-  Relay -.-> Host
-  Controller -->|信令| Control[你的控制面]
-  Host -->|信令| Control
-  Visitor[访问者] --> FRP[FRP 0.70.1]
-  FRP <--> Agent[家里的 Agent]
-  Agent --> App[本地服务]
+  A[Windows / Android] <-->|认证加密的 P2P| B[被控设备]
+  A -->|ID / NAT 信令| H[hbbs]
+  B -->|ID / NAT 信令| H
+  A -->|账号与设备目录| C[Node / SQLite]
+  V[服务访问者] --> E[Caddy / traffic-gateway / FRPS]
+  E <-->|内网穿透| T[独立 CLI / Agent]
 ```
 
-## 10.0.0 界面
+## 仓库与精简附件
 
-以下截图保留 10.0.0 标签，不代表 10.1.0 截图。它们是实际运行的 10.0.0 Web 界面，使用本地示例数据，未发布服务或建立远控会话。
-[完整界面预览](docs/site/preview.html)还包含 Android API 35 模拟器的 debug 截图；它们不能代替最终 APK 或真实 Windows 远控验收。
-[截图来源、环境与校验值](docs/site/assets/v10/README.md)。
+| 仓库 | 候选组件 | Release 附件 |
+| --- | --- | --- |
+| [home-tunnel-server](https://github.com/ZHanry/home-tunnel-server) | 11.0.0-rc.2，暖居 Web、SQLite 目录、hbbs | 部署包、材料包、校验文件，共 3 个 |
+| [home-tunnel-client](https://github.com/ZHanry/home-tunnel-client) | 11.0.0-rc.1，Windows Rust/Flutter 与原 Go CLI | 安装器、五平台 CLI/Agent 合集、材料包、校验文件，共 4 个 |
+| [home-tunnel-android](https://github.com/ZHanry/home-tunnel-android) | 11.0.0-rc.1，同源移动界面，API 26+ | arm64/x64 通用 APK、材料包、校验文件，共 3 个 |
+| [home-tunnel](https://github.com/ZHanry/home-tunnel) | 11.0.0-rc.1，分发、文档、网站 | 分发/源码/说明 ZIP、校验文件，共 2 个 |
 
-![Home Tunnel 10.0.0 Web 控制台，示例数据](docs/site/assets/v10/admin-console.png)
+Windows 安装器没有 Authenticode 发行签名；Android 沿用原 applicationId 和证书。macOS/Linux 原生 GUI 暂未发布，CLI 合集继续覆盖 Windows x64、Linux amd64/arm64、macOS amd64/arm64。Agent 保留锁定的 10.1.0 原始字节，FRP 保持 0.70.1。源码、许可证、依赖来源、构建证据与 Sigstore 身份证明集中在材料包。
 
-![Home Tunnel 10.0.0 Web 服务发布向导，示例数据，尚未发布服务](docs/site/assets/v10/tunnel-wizard.png)
+## 使用与升级
 
-正式 Windows 便携版的原生 WebView2 登录窗口，空白隔离状态，未登录或建立远控会话：
+先阅读 [自建部署](docs/SELF_HOSTING.md)，备份 SQLite、部署 secrets、客户端状态与 hbbs 身份。通用安装包不内置服务器、公钥或账号；配置自己的 HTTPS 管理台与同一个 hbbs 公钥，再登记设备。远控仍需被控端密码或批准，同账号目录不会绕过授权。
 
-![Home Tunnel 10.0.0 Windows 原生客户端登录窗口，真实标题栏和空白账号密码框](docs/site/assets/v10/windows-signin.png)
+原浏览器媒体引擎与旧远控兼容退出 11.x；穿透设备、连接和权限通过 SQLite 迁移继续保留。不要叠加旧 `compose.rd.yaml` / `compose.turn.yaml`。API 冻结为 `api-v1.6.0`；新目录接口不改变现有穿透 API。
 
-## 参与项目
-
-先看 [贡献指南](CONTRIBUTING.md)。反馈时写明是远控还是 FRP、组件版本和脱敏后的复现步骤。安全问题按 [SECURITY.md](SECURITY.md) 私下报告。
+项目文档与原组件分别保留各自许可证。导入的 RustDesk 核心及相关修改遵循 [AGPL-3.0](https://github.com/ZHanry/home-tunnel-client/blob/main/LICENSE-RUSTDESK)，完整对应源码随材料包提供。本总仓沿用 [Apache-2.0](LICENSE)。来源与待验收范围见 [发布说明](docs/RELEASE_NOTES.md) 和 [功能矩阵](docs/FEATURE_MATRIX.md)。

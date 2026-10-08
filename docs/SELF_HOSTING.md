@@ -1,24 +1,17 @@
-# 部署 / Deployment
+# 自建 HomeDesk 11 服务端
 
-公网 Linux 主机上有两件服务：控制面，以及 FRP 0.70.1。
-远控的画面和输入不经过 FRP。家里的 HTTP、TCP 和 UDP 服务才走 FRP。
-可选的 UDP TURN 中继（coturn，`deploy/compose.turn.yaml`）只为浏览器控制端转发加密后的远控 UDP，读不到内容。
+使用 [Server 候选发布](https://github.com/ZHanry/home-tunnel-server/releases/tag/v11.0.0-rc.2) 的部署 tar.gz，先核对 SHA256SUMS，再按包内 README 生成域名、TLS 与部署 secrets。部署镜像采用固定摘要；HTTP/HTTPS、FRPS 以及受控 TCP/UDP 端口池配置继续沿用原部署流程。
 
-当前要部署的包是 **10.0.0**。操作步骤以服务端仓库为准：
+新增 hbbs 信令服务只开放 TCP 21115、TCP/UDP 21116。不启动 hbbr/TURN，不开放远控中继 21117 或旧 WebSocket 端口 21118/21119。部分 NAT、CGNAT、移动网或防火墙组合无法打洞，失败即停止。
 
-[自托管指南](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/SELF_HOSTING.md)
+1. 备份 SQLite、部署 secrets、客户端状态与已有 hbbs 身份。
+2. 先运行 `docker compose up -d hbbs`，将公钥复制到宿主机：`docker cp "$(docker compose ps -q hbbs):/root/id_ed25519.pub" ./hbbs-public-key.txt`。镜像没有 shell/cat。只取公钥，不公开私钥。
+3. 在 `.env` 设置 `HOME_TUNNEL_HBBS_SERVER=你的信令域名:21116` 与 `HOME_TUNNEL_HBBS_PUBLIC_KEY=上述Base64公钥`，再启动完整服务。
+4. 改初始管理员密码、启用 MFA，按原规则分配穿透端口池与客户端权限。
+5. Windows / Android 填写同一 hbbs 地址、公钥及家庭私网 CIDR，并配置 HTTPS 管理台。通用客户端不会连接内置的供应商服务器。
 
-部署包和摘要在 [下载](DOWNLOADS.md)。装完后改掉初始管理员密码，打开 MFA，再按 [快速开始](GETTING_STARTED.md) 登记家庭 Agent。
+hbbs 身份在独立 `hbbs-data` 命名卷；原 SQLite/Restic 备份不包含它。Server 的 `deploy/scripts/hbbs-identity.py` 可通过宿主机 Docker/GPG 加密备份、验证并恢复到全新空卷，校验公私钥和归档路径且拒绝覆盖旧身份。完整命令见 [Server HomeDesk 部署说明](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/HOMEDESK.md)。管理台只需公钥，不挂载私钥。
 
-10.0.0 的备份恢复和长时间运行尚未验证，见 [发布说明](RELEASE_NOTES.md)。用 Release 的 `compose.release.yaml` 固定镜像摘要，不要用开发分支的源码树当生产安装介质。
+升级不要继续叠加历史 `compose.rd.yaml` 或 `compose.turn.yaml`。设备目录需要 HTTPS 账号认证，同账号只能发现自己的有效设备；远控还必须获得被控端密码或批准。Web 按钮打开已安装的 HomeDesk，不在浏览器内传输屏幕。
 
-备份、监控和账号安全仍使用服务端文档：
-
-- [备份与恢复](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/disaster-recovery.md)
-- [监控](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/MONITORING.md)
-- [账号安全](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/ACCOUNT_SECURITY.md)
-- [FRP 0.70.1 兼容说明](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/FRP_0.70.1_COMPATIBILITY.md)
-
-## English
-
-Deploy 10.0.0 from the server guide. The host runs the control plane and FRP, plus an optional UDP TURN relay (`deploy/compose.turn.yaml`) for browser viewers. Remote-control payloads are never carried by FRP, and the relay cannot read them. Backup restore and soaks were not run and remain unverified.
+长期穿透请使用 Client 合集中的独立 CLI/Agent，按对应平台 README 配置后台运行。桌面 GUI 中的受管 Agent 跟随窗口。关闭远控不应停止原本独立运行的隧道。

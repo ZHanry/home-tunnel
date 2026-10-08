@@ -1,0 +1,137 @@
+{
+  "version": "10.1.0",
+  "stage": "stable",
+  "promotion_status": "promoted",
+  "downloads_published": true,
+  "acceptance_status": "accepted_with_waivers",
+  "prerelease": false,
+  "tag": "v10.1.0",
+  "frp": "0.70.1",
+  "contract": {
+    "current_stable_ref": "api-v1.5.0",
+    "frozen": true,
+    "revision": "194ae805f3569dc16d94b7fda71367e5d68fdff5",
+    "sha256": "c447a23f72b9f72efc118d75cd7cf3e071e0533e2bf0773e9b34f0e1ec779f54"
+  },
+  "components": {
+    "hub": {
+      "repository": "ZHanry/home-tunnel",
+      "version": "10.1.0",
+      "source_sha": "29ef6c419d7dddad9f22c9af31563610215c8e24",
+      "artifacts": [
+        {
+          "filename": "DOWNLOADS.md",
+          "sha256": "1f4e5d6aceb7fc29b97190a9dded333b523d58bbe9669fd968a0f48f8f8e78e1",
+          "size_bytes": 11246,
+          "url": "https://github.com/ZHanry/home-tunnel/releases/download/v10.1.0/DOWNLOADS.md"
+        },
+        {
+          "filename": "RELEASE_NOTES.md",
+          "sha256": "e0421d5beb1fb342d4eb48909fd6072daa5c2156d7b538c4f6cc92d14b5ff14c",
+          "size_bytes": 18170,
+          "url": "https://github.com/ZHanry/home-tunnel/releases/download/v10.1.0/RELEASE_NOTES.md"
+        }
+      ]
+    },
+    "server": {
+      "repository": "ZHanry/home-tunnel-server",
+      "version": "10.1.0",
+      "source_sha": "194ae805f3569dc16d94b7fda71367e5d68fdff5",
+      "artifacts": [
+        {
+          "filename": "home-tunnel-server-10.1.0.tar.gz",
+          "sha256": "dea0300d37f275bc8b97a7069aad48df04c5ef424e9bbc484ffbd2b3d7ff2694",
+          "size_bytes": 878055,
+          "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v10.1.0/home-tunnel-server-10.1.0.tar.gz"
+        },
+        {
+          "filename": "compose.release.yaml",
+          "sha256": "6e7b3a9894c59e7cfc2d2dbbc3e0cc41f55c58c33865af7d6b3e75af38c9bba3",
+          "size_bytes": 298,
+          "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v10.1.0/compose.release.yaml"
+        }
+      ]
+    },
+    "client": {
+      "repository": "ZHanry/home-tunnel-client",
+      "version": "10.1.0",
+      "source_sha": "41c0e21fbb3a4c634fbc9d63fcd7453337e4d029",
+      "artifacts": [
+        {
+          "filename": "HomeTunnel-Setup-10.1.0-x64.exe",
+          "sha256": "58340bcd7d799ab7e5deaccc6d284fb4313b322ac869bdfd2ad2368b03b13eb5",
+          "size_bytes": 17463072,
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v10.1.0/HomeTunnel-Setup-10.1.0-x64.exe"
+        },
+        {
+          "filename": "HomeTunnel-Windows-10.1.0-x64.zip",
+          "sha256": "e1c04b5cd06dcd5ac4548bac0e1611d9a996e70ba71307bb05fdb82350b98df7",
+          "size_bytes": 22861344,
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v10.1.0/HomeTunnel-Windows-10.1.0-x64.zip"
+        },
+        {
+          "filename": "home-tunnel-linux-10.1.0-amd64.tar.gz",
+          "sha256": "208aa80e574af12e51ca650792d45a8c3ae35e7e815d6f69ec04f8f6a90e0624",
+          "size_bytes": 22729875,
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v10.1.0/home-tunnel-linux-10.1.0-amd64.tar.gz"
+        },
+        {
+          "filename": "home-tunnel-linux-10.1.0-arm64.tar.gz",
+          "sha256": "2562fc313130b937a230dd004cb11bc2a88bcc541aa2041ddf0b9bb85576470f",
+          "size_bytes": 12071626,
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v10.1.0/home-tunnel-linux-10.1.0-arm64.tar.gz"
+        },
+        {
+          "filename": "home-tunnel-macos-10.1.0-amd64.tar.gz",
+          "sha256": "dc7066139287d1fdf9411da9a6ae3b09209c7c7682534ab6eeb6d7390cc40fce",
+          "size_bytes": 12757661,
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v10.1.0/home-tunnel-macos-10.1.0-amd64.tar.gz"
+        },
+        {
+          "filename": "home-tunnel-macos-10.1.0-arm64.tar.gz",
+          "sha256": "6ba70b3d49c22ce4c47cc09685d252d7026c5ce3ac24cba3dae6fd8a13f13293",
+          "size_bytes": 11645377,
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v10.1.0/home-tunnel-macos-10.1.0-arm64.tar.gz"
+        }
+      ]
+    },
+    "android": {
+      "repository": "ZHanry/home-tunnel-android",
+      "version": "10.0.0",
+      "source_sha": "4701ecfa5e951787c6f49345214b2ece13326386",
+      "artifacts": [
+        {
+          "filename": "HomeTunnel-Android-10.0.0-arm64-v8a.apk",
+          "sha256": "c37a64cfec83e45c3d4e03671d5a994053385b5533f2f8575ff7783b323c674d",
+          "size_bytes": 16387499,
+          "url": "https://github.com/ZHanry/home-tunnel-android/releases/download/v10.0.0/HomeTunnel-Android-10.0.0-arm64-v8a.apk"
+        },
+        {
+          "filename": "HomeTunnel-Android-10.0.0-x86_64.apk",
+          "sha256": "b18550736aea2f0a21068bde53c27f899af5b8f38ad2ef8460ee86bda2b86922",
+          "size_bytes": 20385493,
+          "url": "https://github.com/ZHanry/home-tunnel-android/releases/download/v10.0.0/HomeTunnel-Android-10.0.0-x86_64.apk"
+        }
+      ]
+    }
+  },
+  "waived": [
+    "migration_9_to_10",
+    "network_blocked_udp",
+    "network_direct_udp",
+    "network_ipv6",
+    "network_restore_30s",
+    "online_24h",
+    "ui_coverage",
+    "vm_android_x64",
+    "vm_web_to_windows",
+    "vm_windows_pair"
+  ],
+  "signing": {
+    "windows": "unsigned-no-certificate-configured",
+    "macos": "unsigned-no-certificate-configured",
+    "android_certificate_sha256": "d7779e338be1039acee6dda9a43417cbf2baf4b0c9995578d9708501e95af702"
+  },
+  "evidence_file": "docs/release/v10.1-evidence.json",
+  "note": "Original Client and Server 10.1.0 release bytes; compatible Android 10.0.0 artifacts are retained unchanged. Thirty connections, 7202.463 seconds active and input release were measured on the exact Windows worker in a single-machine QA environment. The release notes identify the wider unverified runtime/UI matrix. Windows and macOS packages remain unsigned."
+}

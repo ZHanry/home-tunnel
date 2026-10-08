@@ -47,3 +47,7 @@
 
 # Preserve the original native Windows capture manifest bytes for provenance.
 docs/site/assets/v10/windows-capture-manifest.json -text
+# Preserve original signed release evidence byte-for-byte, including its line endings.
+docs/release/v10.1/client-candidate-download.json -text
+docs/release/v10.1/remote-host-provenance.json -text
+validation/client/41c0e21fbb3a4c634fbc9d63fcd7453337e4d029/windows-final-defender-scan.json -text

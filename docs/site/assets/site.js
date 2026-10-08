@@ -123,7 +123,18 @@
         transport: "ok", stable: pair[0], candidate: pair[1], fallbackStable: fallback
       });
       paintStatus(view);
-      if (view.tone === "ready") fillChecksums(pair[0]);
+      if (view.tone === "ready") {
+        fillChecksums(pair[0]);
+        var candidate = pair[1];
+        if (candidate.downloads_published === true) {
+          var components = candidate.components || {};
+          var projected = {};
+          Object.keys(components).forEach(function (name) {
+            projected[name] = { downloads: components[name].artifacts || [] };
+          });
+          fillChecksums({ components: projected });
+        }
+      }
     }).catch(function () {
       if (epoch !== requestEpoch) return;
       paintStatus(globalThis.HomeTunnelDownloadState.view({

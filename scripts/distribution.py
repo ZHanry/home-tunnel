@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 
 import v10_evidence
 from pathlib import Path
@@ -17,6 +18,10 @@ ROOT = Path(__file__).resolve().parents[1]
 COMPONENTS = ("hub", "server", "client", "android")
 STABLE_10_SHA256 = "c7273a48c2b0acd66c3ef95871364e32a0bb385aed937c42dfe64e40722b9098"
 ANCHOR_SHA256 = "9edd66e01ccabfd15c6c502eac749334fb0354fb87209f74cb73415c3366a8fb"
+STABLE_101_SHA256 = "52d40cbfeb9d3c04646daed3bfde7c6f88bebc860f9976c4e42028e9177d5885"
+HOMEDESK_TARGET = {"hub": "11.0.0-rc.1", "server": "11.0.0-rc.2", "client": "11.0.0-rc.1", "android": "11.0.0-rc.1"}
+HOMEDESK_UNVERIFIED = {"cross-network-nat", "sustained-remote-media", "physical-android-device", "installed-two-peer-remote-session"}
+HOMEDESK_ATTACHMENTS = {"server": 3, "client": 4, "android": 3}
 REQUIRED_UNVERIFIED = {
     "secure-desktop",
     "system-audio",
@@ -43,6 +48,71 @@ def _anchor_present(stable):
     return False
 
 
+def validate_homedesk(candidate, stable, *, root=ROOT):
+    """A published prerelease never promotes or reuses historical remote acceptance."""
+    errors = []
+    snapshot = root / "docs/release/stable-10.1.0.json"
+    if not snapshot.is_file() or hashlib.sha256(snapshot.read_bytes()).hexdigest() != STABLE_101_SHA256:
+        errors.append("published 10.1.0 snapshot bytes changed or are missing")
+    elif stable != json.loads(snapshot.read_text(encoding="utf8")):
+        errors.append("HomeDesk candidate must retain the exact 10.1.0 stable channel")
+    if (candidate.get("version") != HOMEDESK_TARGET["hub"] or candidate.get("stage") != "candidate"
+            or candidate.get("promotion_status") != "prerelease" or candidate.get("prerelease") is not True
+            or candidate.get("tag") != "v" + HOMEDESK_TARGET["hub"] or candidate.get("acceptance_status") != "pending"):
+        errors.append("HomeDesk must remain a pending candidate prerelease")
+    if candidate.get("remote_policy") != "require_direct" or candidate.get("relay_enabled") is not False:
+        errors.append("HomeDesk remote control must be authenticated encrypted direct P2P")
+    if candidate.get("frp") != "0.70.1" or candidate.get("agent_version") != "10.1.0":
+        errors.append("The independent FRP and original Agent versions must remain explicit")
+    if candidate.get("tested_combination") is not None or not HOMEDESK_UNVERIFIED <= set(candidate.get("not_verified", [])):
+        errors.append("Candidate targets cannot claim complete runtime acceptance")
+    contract = candidate.get("contract", {})
+    if (contract.get("ref") != "api-v1.6.0" or contract.get("frozen") is not True
+            or contract.get("revision") != "f260a5ffcd789c9a71936307b809ed5137e1a832"
+            or contract.get("openapi_sha256") != "8c72baae633157ccd5e7c8e9cf3d5fc24f6f607685744349fa1cb39fe482fae4"):
+        errors.append("Candidate must use the immutable api-v1.6.0 contract")
+    signing = candidate.get("signing", {})
+    if signing.get("windows") != "unsigned-no-certificate-configured" or signing.get("android_certificate_sha256") != stable.get("signing", {}).get("android_certificate_sha256"):
+        errors.append("Candidate signing disclosure or Android certificate changed")
+    components = candidate.get("components", {})
+    if set(components) != set(COMPONENTS) or not isinstance(candidate.get("downloads_published"), bool):
+        errors.append("All four candidate components and a boolean publication state are required")
+    published = []
+    for name in COMPONENTS:
+        item = components.get(name, {})
+        repository = v10_evidence.REPOSITORIES[name]
+        version = HOMEDESK_TARGET[name]
+        if item.get("repository") != repository or item.get("version") != version or item.get("tag") != "v" + version:
+            errors.append("HomeDesk component identity drifted: " + name)
+        if name == "hub":
+            if item.get("source_sha") is not None or item.get("artifacts") != []:
+                errors.append("Hub source and asset hashes resolve from its signed release manifest, avoiding self-reference")
+            continue
+        if not re.fullmatch(r"[0-9a-f]{40}", item.get("source_sha", "")):
+            errors.append("HomeDesk component needs an exact source revision: " + name)
+        artifacts = item.get("artifacts", [])
+        published.append(item.get("published") is True)
+        if item.get("published") is not True:
+            if artifacts or item.get("release_url"):
+                errors.append("Unpublished component cannot invent downloads: " + name)
+            continue
+        if item.get("release_url") != f"https://github.com/{repository}/releases/tag/v{version}":
+            errors.append("HomeDesk release URL drifted: " + name)
+        names = [asset.get("filename") for asset in artifacts]
+        if len(names) != HOMEDESK_ATTACHMENTS[name] or len(set(names)) != len(names) or "SHA256SUMS.txt" not in names:
+            errors.append("HomeDesk needs the complete compact attachment set: " + name)
+        for asset in artifacts:
+            filename = asset.get("filename", "")
+            if (not filename or Path(filename).name != filename or "\\" in filename
+                    or not re.fullmatch(r"[a-f0-9]{64}", asset.get("sha256", ""))
+                    or not isinstance(asset.get("size_bytes"), int) or isinstance(asset.get("size_bytes"), bool) or asset["size_bytes"] < 1
+                    or asset.get("url") != f"https://github.com/{repository}/releases/download/v{version}/{filename}"):
+                errors.append("HomeDesk asset identity, size or digest is invalid: " + name)
+    if candidate.get("downloads_published") is not all(published) or len(published) != 3:
+        errors.append("Candidate publication state must reflect all three actual component releases")
+    return errors
+
+
 def validate_distribution(dist, *, root=ROOT, evidence_errors=None, evidence_record=None):
     errors = []
 
@@ -54,7 +124,8 @@ def validate_distribution(dist, *, root=ROOT, evidence_errors=None, evidence_rec
     if dist.get("source_of_truth") != "distribution.json":
         bad("distribution.json must remain the only channel source")
     version = (root / "VERSION").read_text(encoding="utf-8").strip()
-    if dist.get("development_line") != version or not v10_evidence.component_versions(version):
+    homedesk = version == HOMEDESK_TARGET["hub"]
+    if dist.get("development_line") != version or not (v10_evidence.component_versions(version) or homedesk):
         bad("development_line must match VERSION and a supported release line")
     channels = dist.get("channels")
     if not isinstance(channels, dict) or set(channels) != {"stable", "candidate"}:
@@ -73,7 +144,7 @@ def validate_distribution(dist, *, root=ROOT, evidence_errors=None, evidence_rec
         bad("stable and candidate must be objects")
         return errors
     # Keep historical bytes immutable when a later line is promoted.
-    if version == "10.1.0":
+    if version == "10.1.0" or homedesk:
         previous_path = root / "docs" / "release" / "stable-10.0.0.json"
         if not previous_path.is_file():
             bad("published 10.0.0 snapshot is missing")
@@ -84,6 +155,8 @@ def validate_distribution(dist, *, root=ROOT, evidence_errors=None, evidence_rec
             if (previous.get("version") != "10.0.0" or previous.get("stage") != "stable" or
                     previous.get("components", {}).get("client", {}).get("release_revision") != "5eb6768f0d21a842c01d66d3d979a4f935a2ed61"):
                 bad("published 10.0.0 snapshot lost its client identity")
+    if homedesk:
+        return errors + validate_homedesk(candidate, stable, root=root)
     promotion = candidate.get("promotion_status")
     if promotion == "not_promoted":
         if stable != frozen:

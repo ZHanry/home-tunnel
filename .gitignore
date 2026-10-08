@@ -8,6 +8,10 @@
 *.py[cod]
 artifacts/
 outputs/
+imported/
+products/
+material-input/
+release-public/
 .downloads/
 .codex-tools/
 design-system/

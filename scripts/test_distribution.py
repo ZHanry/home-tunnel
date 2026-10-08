@@ -2,6 +2,8 @@ import copy
 import json
 import sys
 import unittest
+import tempfile
+import shutil
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -14,7 +16,8 @@ ROOT = Path(__file__).resolve().parents[1]
 def unpromoted_distribution():
     """Keep the pre-promotion safety regression independent of the live channel."""
     dist = distribution.load(ROOT)
-    version = dist["development_line"]
+    version = "10.1.0"
+    dist["development_line"] = version
     stable = json.loads((ROOT / "docs/release/stable-9.0.0.json").read_text(encoding="utf-8"))
     dist["channels"] = {
         "stable": stable,
@@ -32,12 +35,23 @@ def unpromoted_distribution():
 
 
 class DistributionTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        (self.root / "docs/release").mkdir(parents=True)
+        (self.root / "VERSION").write_text("10.1.0\n")
+        for name in ("stable-9.0.0.json", "stable-10.0.0.json"):
+            shutil.copyfile(ROOT / "docs/release" / name, self.root / "docs/release" / name)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
     def test_unpromoted_channel_matches_published_9_0_0(self):
         dist = unpromoted_distribution()
-        self.assertEqual(distribution.validate_distribution(dist, root=ROOT), [])
+        self.assertEqual(distribution.validate_distribution(dist, root=self.root), [])
         self.assertEqual(dist["channels"]["stable"]["version"], "9.0.0")
         self.assertFalse(dist["channels"]["candidate"]["downloads_published"])
-        self.assertEqual(dist["development_line"], (ROOT / "VERSION").read_text().strip())
+        self.assertEqual(dist["development_line"], "10.1.0")
 
     def test_current_channel_matches_the_published_waived_release(self):
         dist = distribution.load(ROOT)
@@ -46,9 +60,9 @@ class DistributionTests(unittest.TestCase):
         self.assertEqual(status["status"], "accepted_with_waivers")
         self.assertEqual(distribution.validate_distribution(dist, root=ROOT, evidence_errors=errors, evidence_record=record), [])
         self.assertEqual(distribution.projection_errors(dist, root=ROOT), [])
-        self.assertEqual(dist["channels"]["stable"]["version"], dist["development_line"])
-        self.assertEqual(dist["channels"]["candidate"]["acceptance_status"], "accepted_with_waivers")
-        self.assertTrue(dist["channels"]["candidate"]["downloads_published"])
+        self.assertEqual(dist["channels"]["stable"]["version"], "10.1.0")
+        self.assertEqual(dist["channels"]["candidate"]["acceptance_status"], "pending")
+        self.assertEqual(dist["channels"]["candidate"]["promotion_status"], "prerelease")
 
     def test_projection_is_idempotent(self):
         before = (ROOT / "releases.json").read_text(encoding="utf-8")
@@ -63,13 +77,24 @@ class DistributionTests(unittest.TestCase):
         dist = unpromoted_distribution()
         promoted = copy.deepcopy(dist)
         promoted["channels"]["candidate"]["promotion_status"] = "promoted"
-        self.assertTrue(distribution.validate_distribution(promoted, root=ROOT))
+        self.assertTrue(distribution.validate_distribution(promoted, root=self.root))
         published = copy.deepcopy(dist)
         published["channels"]["candidate"]["downloads_published"] = True
-        self.assertTrue(distribution.validate_distribution(published, root=ROOT))
+        self.assertTrue(distribution.validate_distribution(published, root=self.root))
         drifted = copy.deepcopy(dist)
         drifted["channels"]["stable"]["version"] = "10.0.0"
-        self.assertTrue(any("snapshot" in item for item in distribution.validate_distribution(drifted, root=ROOT)))
+        self.assertTrue(any("snapshot" in item for item in distribution.validate_distribution(drifted, root=self.root)))
+
+    def test_candidate_cannot_promote_stable_relay_or_historical_acceptance(self):
+        original = distribution.load(ROOT)
+        for field, invalid in (("promotion_status", "promoted"), ("acceptance_status", "accepted"),
+                               ("remote_policy", "allow_relay"), ("relay_enabled", True)):
+            value = copy.deepcopy(original)
+            value["channels"]["candidate"][field] = invalid
+            self.assertTrue(distribution.validate_distribution(value, root=ROOT), field)
+        value = copy.deepcopy(original)
+        value["channels"]["stable"]["version"] = "11.0.0"
+        self.assertTrue(distribution.validate_distribution(value, root=ROOT))
 
     def test_promotion_binds_waived_evidence_downloads_and_revisions(self):
         import tempfile

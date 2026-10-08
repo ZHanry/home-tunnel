@@ -100,7 +100,8 @@ def audit(root=ROOT):
     releases = json.loads((site / "releases.json").read_text(encoding="utf-8"))
     candidate = json.loads((site / "candidate.json").read_text(encoding="utf-8"))
     promoted = candidate.get("promotion_status") == "promoted"
-    banned = BANNED if promoted else BANNED + (f"releases/download/v{candidate.get('version')}",)
+    published_candidate = candidate.get("promotion_status") == "prerelease" and candidate.get("downloads_published") is True
+    banned = BANNED if promoted or published_candidate else BANNED + (f"releases/download/v{candidate.get('version')}",)
     css = (site / "assets" / "site.css").read_text(encoding="utf-8")
     script = (site / "assets" / "site.js").read_text(encoding="utf-8")
     for token in ("focus-visible", "prefers-color-scheme", "prefers-reduced-motion", "max-width: 800px", 'data-theme="dark"', "nav-toggle", "table-layout: fixed", "minmax(min(100%, 240px)", 'data-tone="loading"'):
@@ -188,7 +189,7 @@ def audit(root=ROOT):
                     errors.append(relative + " missing " + token)
             if text.count("<details") < 4:
                 errors.append(relative + " needs a real FAQ")
-            if promoted and candidate.get("waived"):
+            if (promoted and candidate.get("waived")) or candidate.get("promotion_status") == "prerelease":
                 # Machine evidence retains original statuses; public prose must
                 # plainly disclose incomplete verification at the download entry.
                 if relative == "index.html" and ("未运行" not in text or "验证尚未完成" not in text):

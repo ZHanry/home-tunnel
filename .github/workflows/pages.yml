@@ -96,6 +96,16 @@ jobs:
         with:
           path: _site
 
+  quality-gate:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+    if: ${{ always() }}
+    needs: build
+    steps:
+      - env:
+          RESULT: ${{ needs.build.result }}
+        run: test "$RESULT" = success
+
   deploy:
     name: Deploy Pages
     needs: build

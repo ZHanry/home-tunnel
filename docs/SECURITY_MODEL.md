@@ -1,3 +1,11 @@
-# SECURITY MODEL
+# HomeDesk 11 的权限与连接
 
-This document moved to the [server repository](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/SECURITY_MODEL.md).
+管理台继续使用 HTTPS、账号、MFA、短期访问令牌与原设备会话。HomeDesk 目录按账号隔离，只返回当前账号拥有的有效设备；设备撤销同时移除目录映射。远控 ID 全局唯一，设备报告目录身份只能使用自己的本机设备会话。
+
+hbbs 公钥固定客户端的服务端信任锚，控制中心不挂载私钥卷。Windows 凭据使用 DPAPI，Android 使用非导出 AES-GCM Keystore 密钥；随机 IV、密文、AAD 和版本校验拒绝篡改。跨进程交接单次消费并防重放，导航 URL 不放凭据。
+
+远控建立后必须再次证明连接经过认证、加密且直接到对端。禁止 hbbr/TURN/FRP/HTTPS/WSS/VPN/厂商回退；受限网络不能打洞就停止。同账号目录是发现与权限信息，不能跳过被控端密码或批准。
+
+内网穿透保留原 ACL、HTTP 登录保护、限速、配额、端口池和权限。TCP/UDP 不提供 HTTP 登录保护，目标服务应自己认证；其 FRP 转发规则不能拿来承载内置远控。
+
+材料包中的 Sigstore 绑定 GitHub 发布工作流身份、源码 revision 与真实附件哈希。Windows 未 Authenticode 签名；Android 保留原证书。验收状态与签名状态是不同信息，候选不会因构建通过被自动晋升稳定版。
