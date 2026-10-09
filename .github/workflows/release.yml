@@ -1,7 +1,7 @@
 name: Release distribution
 on:
   push:
-    tags: [v*-rc.*, v*-RC*]
+    tags: [v*-rc.*, v*-RC*, v13.*]
 permissions:
   contents: write
   checks: read
@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   release:
-    name: Publish compact HomeDesk distribution candidate
+    name: Publish verified nestlink distribution
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:

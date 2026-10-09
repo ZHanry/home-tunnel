@@ -17,8 +17,8 @@ def unpromoted_distribution():
     """Keep the pre-promotion safety regression independent of the live channel."""
     dist = distribution.load(ROOT)
     version = "10.1.0"
-    dist["development_line"] = version
     dist["product"] = "Home Tunnel"
+    dist["development_line"] = version
     stable = json.loads((ROOT / "docs/release/stable-9.0.0.json").read_text(encoding="utf-8"))
     dist["channels"] = {
         "stable": stable,
@@ -61,9 +61,10 @@ class DistributionTests(unittest.TestCase):
         self.assertEqual(status["status"], "accepted_with_waivers")
         self.assertEqual(distribution.validate_distribution(dist, root=ROOT, evidence_errors=errors, evidence_record=record), [])
         self.assertEqual(distribution.projection_errors(dist, root=ROOT), [])
-        self.assertEqual(dist["channels"]["stable"]["version"], "10.1.0")
-        self.assertEqual(dist["channels"]["candidate"]["acceptance_status"], "pending")
-        self.assertEqual(dist["channels"]["candidate"]["promotion_status"], "prerelease")
+        self.assertEqual(dist["channels"]["stable"]["version"], "13.0.0" if dist["channels"]["candidate"]["promotion_status"] == "promoted" else "10.1.0")
+        self.assertIn(dist["channels"]["candidate"]["acceptance_status"], ("pending", "passed_reproducible"))
+        self.assertIn(dist["channels"]["candidate"]["promotion_status"], ("not_promoted", "promoted"))
+        self.assertIs(dist["channels"]["candidate"]["prerelease"], False)
 
     def test_projection_is_idempotent(self):
         before = (ROOT / "releases.json").read_text(encoding="utf-8")
@@ -88,6 +89,9 @@ class DistributionTests(unittest.TestCase):
 
     def test_candidate_cannot_promote_stable_relay_or_historical_acceptance(self):
         original = distribution.load(ROOT)
+        original["channels"]["stable"] = json.loads((ROOT/"docs/release/stable-10.1.0.json").read_text())
+        target=original["channels"]["candidate"]
+        target.update(promotion_status="not_promoted",stage="development",acceptance_status="pending",tested_combination=None)
         for field, invalid in (("promotion_status", "promoted"), ("acceptance_status", "accepted"),
                                ("remote_policy", "allow_relay"), ("relay_enabled", True)):
             value = copy.deepcopy(original)

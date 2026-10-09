@@ -1,124 +1,13 @@
 <!doctype html>
 <html lang="en" data-goatcounter-endpoint="__GOATCOUNTER_ENDPOINT__">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light dark">
-<script>
-(function () {
-  var allowed = { light: 1, dark: 1, system: 1 };
-  var theme = "system";
-  try {
-    var query = new URLSearchParams(location.search).get("theme");
-    if (allowed[query]) theme = query;
-    else {
-      var stored = localStorage.getItem("home-tunnel-theme");
-      if (allowed[stored]) theme = stored;
-    }
-  } catch (error) {}
-  document.documentElement.setAttribute("data-theme", theme);
-  document.documentElement.classList.add("js");
-})();
-</script>
-<title>NestLink 10.1.0 scope and limits</title>
-<meta name="description" content="What 10.1.0 ships, what was tested, what remains unverified, and known limits.">
-<link rel="canonical" href="https://zhanry.github.io/home-tunnel/en/preview.html">
-<link rel="alternate" hreflang="en" href="https://zhanry.github.io/home-tunnel/en/preview.html">
-<link rel="alternate" hreflang="zh-CN" href="https://zhanry.github.io/home-tunnel/preview.html">
-<link rel="icon" type="image/svg+xml" href="../assets/NestLink.svg">
-<link rel="stylesheet" href="../assets/site.css?v=12.0.0-RC1">
-</head>
-<body data-root="../" data-stable-version="10.1.0">
-<a class="skip" href="#content">Skip to content</a>
-<div class="wrap">
-<header class="site-header">
-<a class="brand" href="index.html"><img src="../assets/NestLink.svg" alt="" width="36" height="36">NestLink</a>
-<button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
-<nav id="site-nav" aria-label="Primary">
-<a href="index.html#remote">Remote control</a>
-<a href="index.html#tunnel">Tunnels</a>
-<a href="downloads.html">Downloads</a>
-<a href="preview.html" aria-current="page">Scope</a>
-<a href="index.html#faq">FAQ</a>
-<a href="../preview.html" hreflang="zh-CN" lang="zh-CN">中文</a>
-<a href="https://github.com/ZHanry/home-tunnel">GitHub</a>
-</nav>
-<div class="theme" role="radiogroup" aria-label="Color theme">
-<button type="button" role="radio" id="theme-light" data-theme-choice="light" aria-checked="false">Light</button>
-<button type="button" role="radio" data-theme-choice="dark" aria-checked="false">Dark</button>
-<button type="button" role="radio" data-theme-choice="system" aria-checked="false">System</button>
-</div>
-</header>
-<main id="content">
-<section class="section"><h2>NestLink 12 candidate scope</h2><p>The new Rust/Flutter product requires authenticated encrypted direct P2P with hbbs signaling only. Complete tunnels and independent CLI/Agent remain. Build and emulator checks are not cross-network or physical-device acceptance. The following 10.x reports and screenshots are historical, not evidence for NestLink 12.</p></section>
-<section class="section">
-<p class="eyebrow">Scope</p>
-<h1>10.1.0 is stable. Verification remains incomplete.</h1>
-<p class="lede">The stable combination is Server / Client 10.1.0 + Android 10.0.0. Android keeps its original files, version and hashes. FRP stays 0.70.1; the additive contract is api-v1.5.0 and historical contracts are unchanged. Tests that were not run are not counted as passed. Read the <a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">release notes</a>.</p>
-<h2>10.1 changes</h2>
-<p>Fixes Windows approval-popup background and timing, blocks self-device connections, and reuses native sign-in through a short-lived, single-use, remote-only child session. Settings and update controls are combined, current-device rename moves to My Devices, and sign-in layout, narrow-window scrolling and keyboard behavior improve. Sign-in handoff and current-device rename require Server 10.1.0.</p>
-<h2>Two paths</h2>
-<p>Remote control retains end-to-end DTLS-encrypted UDP, with optional UDP TURN for browser viewers. Android and 9.x hosts remain direct-only. There is no TCP/FRP/HTTP/WSS payload fallback. Service publishing uses FRP 0.70.1 for HTTP/HTTPS, TCP and UDP.</p>
-<h2>Verified scope</h2>
-<p>The original 10.1.0 Windows worker bytes passed 30 connections and 7202.463 seconds of activity with 1391 samples, using same-machine Chromium and a production-source QA host in an isolated loopback environment. After an explicit QA host restart, a new pairing restored input in 3507.7 ms.</p>
-<p>The run covers native video, trusted keyboard/pointer and Unicode, signed pairing, UDP/DTLS, session closure and input release. The server was locally built from locked production source, not verified as the final container or a deployed production system. The disposable account token and one-session grant use a 10800-second test lifetime; production lease and signaling-token renewal logic is unchanged.</p>
-<h2>Unverified items</h2>
-<ul class="plain">
-<li>This does not establish full installed-GUI, Windows service, independent Windows-endpoint, Android, network-outage recovery, 24-hour online, or Linux/macOS runtime acceptance.</li>
-<li>Full approval, fixed-password and temporary-password UI flows; audio, clipboard, bidirectional files, multi-monitor and DPI not covered by this run.</li>
-<li>Full installer upgrade and backup restore; NAT, IPv6, blocked UDP and network-outage recovery.</li>
-<li>Final APK and physical phones; account-token refresh, performance comparisons, tunnel runtime matrix and full final-UI review.</li>
-<li>The 24-hour test was not run. An explicit QA host restart does not prove automatic service restart or network recovery.</li>
-</ul>
-<h2>Limits and historical screenshots</h2>
-<p>Lock screen, pre-login, UAC secure desktop and microphone return are unavailable. Windows Authenticode / macOS Developer ID release signing is not configured. SHA-256 and Sigstore are not publisher signatures. Android retains its release certificate. Historical 10.0.0, 9.0.0 and 8.0 evidence does not verify final 10.1.0 bytes.</p>
-<p>Product screenshots below are still labeled 10.0.0. They are not 10.1.0 captures or acceptance evidence.</p>
-<figure class="shot-slot" data-shot-slot="v10-admin-console" data-slot-status="captured-v10-ui">
-<figcaption><strong>10.0.0 Web console</strong><span>Captured from the released UI on 2026-09-30 with local example data. Status and traffic are preview fixtures.</span></figcaption>
-<img src="../assets/v10/admin-console.png" alt="Home Tunnel 10.0.0 Web console with example data, navigation, device status and traffic" width="1440" height="1132" loading="lazy">
-</figure>
-<figure class="shot-slot" data-shot-slot="v10-tunnel-wizard" data-slot-status="captured-v10-ui">
-<figcaption><strong>10.0.0 Web publishing wizard</strong><span>Actual device-and-template step with example data. No service had been created or published.</span></figcaption>
-<img src="../assets/v10/tunnel-wizard.png" alt="Home Tunnel 10.0.0 Web publishing wizard with the Home Assistant template selected and example data" width="1440" height="960" loading="lazy">
-</figure>
-<figure class="shot-slot" data-shot-slot="v10-web-remote-entry" data-slot-status="captured-v10-ui">
-<figcaption><strong>10.0.0 Web remote entry, disconnected</strong><span>Actual empty-device state with example data. No Windows host or remote session was connected or verified.</span></figcaption>
-<img src="../assets/v10/remote-entry.png" alt="Home Tunnel 10.0.0 Web remote entry with an empty device list, disconnected" width="1440" height="960" loading="lazy">
-</figure>
-<figure class="shot-slot" data-shot-slot="v10-windows-signin" data-slot-status="captured-v10-ui">
-<figcaption><strong>10.0.0 Windows native client, sign-in</strong><span>Official portable app in a real Windows Server 2022 native WebView2 window. Empty isolated state; no account sign-in or remote session.</span></figcaption>
-<img src="../assets/v10/windows-signin.png" alt="Home Tunnel 10.0.0 native Windows sign-in window, with its real titlebar and empty username/password fields" width="946" height="665" loading="lazy">
-</figure>
-<div class="split">
-<figure class="shot-slot shot-phone" data-shot-slot="v10-android-overview" data-slot-status="captured-v10-ui">
-<figcaption><strong>10.0.0 Android remote entry</strong><span>API 35 x86_64 emulator, debug build and example data. This is not an active remote session or final APK acceptance.</span></figcaption>
-<img src="../assets/v10/android-overview.png" alt="Home Tunnel 10.0.0 Android remote entry on an API 35 emulator, English UI and Chinese example device names" width="1080" height="2400" loading="lazy">
-</figure>
-<figure class="shot-slot shot-phone" data-shot-slot="v10-android-devices" data-slot-status="captured-v10-ui">
-<figcaption><strong>10.0.0 Android device list</strong><span>API 35 x86_64 emulator, debug build and example data. This is not physical-device or final APK acceptance.</span></figcaption>
-<img src="../assets/v10/android-devices.png" alt="Home Tunnel 10.0.0 Android device list on an API 35 emulator with search, tunnel and remote controls" width="1080" height="2400" loading="lazy">
-</figure>
-</div>
-<p class="muted"><a href="../assets/v10/README.md">Capture sources and image hashes</a></p>
-<figure data-shot-file="assets/v10/remote-window.png" class="shot-slot" data-shot-slot="v10-remote-window" data-slot-status="awaiting-v10-capture">
-<figcaption><strong>10.0 Windows remote window</strong><span>A real Windows capture is still needed. The Web and Android entry screens above do not replace it.</span></figcaption>
-<p class="slot-empty">Waiting for an actual product screenshot</p>
-</figure>
-
-<figure class="shot-slot" data-shot-slot="history-console-7" data-slot-status="historical-labeled">
-<figcaption><strong>7.0.0 console, historical example</strong><span>Kept as a 7.0.0 historical image. It is not the current remote-control screen.</span></figcaption>
-<img src="../assets/admin-dashboard-7.jpg" alt="Historical Home Tunnel 7.0.0 console screenshot with example data" width="1440" height="1195">
-</figure>
-</section>
-<section class="section"><h2>NestLink 12.0.0-RC1 · Web workbench</h2><figure class="shot-slot" data-shot-slot="rc12-workbench" data-slot-status="captured-release-ui"><figcaption><strong>NestLink 12.0.0-RC1 · Web workbench</strong><span>Actual Web application with example data; this image does not assert a remote session or media verification.</span></figcaption><img src="../assets/rc12/web-workbench.png" alt="NestLink 12.0.0-RC1 · Web workbench · example data" width="1280" height="860" loading="lazy"></figure></section>
-</main>
-<footer class="site-footer">
-<span>© 2026 NestLink · Apache-2.0</span>
-<nav aria-label="Footer"><a href="index.html">Home</a><a href="downloads.html">Downloads</a><a href="privacy.html">Privacy</a></nav>
-</footer>
-</div>
-<script src="../assets/download-state.js"></script>
-<script src="../assets/site.js"></script>
-<script src="../assets/analytics.js"></script>
-</body>
-</html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark">
+<script>(function(){var a={light:1,dark:1,system:1},t="system";try{var q=new URLSearchParams(location.search).get("theme"),s=localStorage.getItem("home-tunnel-theme");t=a[q]?q:a[s]?s:t}catch(e){}document.documentElement.dataset.theme=t;document.documentElement.classList.add("js")})();</script><title>Interface · nestlink</title><meta name="description" content="The current nestlink 13.0.0 interface.">
+<link rel="canonical" href="https://zhanry.github.io/home-tunnel/en/preview.html"><link rel="alternate" hreflang="zh-CN" href="https://zhanry.github.io/home-tunnel/preview.html"><link rel="alternate" hreflang="en" href="https://zhanry.github.io/home-tunnel/en/preview.html">
+<meta property="og:title" content="nestlink 13.0.0"><meta property="og:description" content="The current nestlink 13.0.0 interface."><meta property="og:type" content="website"><meta property="og:url" content="https://zhanry.github.io/home-tunnel/en/preview.html"><meta property="og:image" content="https://zhanry.github.io/home-tunnel/assets/share-card.svg"><meta property="og:image:alt" content="nestlink brand mark">
+<link rel="icon" type="image/svg+xml" href="../assets/NestLink.svg"><link rel="stylesheet" href="../assets/site.css?v=13.0.0">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"nestlink","softwareVersion": "13.0.0","operatingSystem":"Windows, Linux, Android, Web","applicationCategory":"UtilitiesApplication","url":"https://zhanry.github.io/home-tunnel/"}</script></head>
+<body data-root="../" data-stable-version="10.1.0"><a class="skip" href="#content">Skip to content</a>
+<header class="site-header wrap"><a class="brand" href="index.html"><img src="../assets/NestLink.svg" alt="" width="32" height="32">nestlink</a><button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button><nav id="site-nav" aria-label="Main navigation"><a href="index.html" >Home</a><a href="preview.html" aria-current="page">Interface</a><a href="downloads.html" >Downloads</a><a href="https://github.com/ZHanry/home-tunnel">GitHub <span aria-hidden="true">↗</span></a></nav><a class="language" href="../preview.html" lang="zh-CN">中文</a></header>
+<main id="content" class="wrap"><div class="page-heading"><span class="eyebrow">INTERFACE / 13.0.0</span><h1>A workspace for every connection</h1><p>Current Web pages and desktop components in light, dark and empty states. Example data; these screenshots are separate from installed-app and remote-session acceptance.</p></div><section class="gallery"><figure data-slot="desktop-light" data-slot-status="component-preview" class="product-shot"><img src="../assets/13.0.0/desktop-workbench-light.png" alt="Desktop workspace · light" width="1120" height="760" loading="lazy"><figcaption>Desktop workspace · light<span>Current 13.0.0 components · example data</span></figcaption></figure><figure data-slot="desktop-dark" data-slot-status="component-preview" class="product-shot"><img src="../assets/13.0.0/desktop-workbench-dark.png" alt="Desktop workspace · dark" width="1120" height="760" loading="lazy"><figcaption>Desktop workspace · dark<span>Current 13.0.0 components · example data</span></figcaption></figure><figure data-slot="desktop-empty" data-slot-status="component-preview" class="product-shot"><img src="../assets/13.0.0/desktop-workbench-empty.png" alt="Empty device state" width="1120" height="760" loading="lazy"><figcaption>Empty device state<span>Current 13.0.0 components · example data</span></figcaption></figure><figure data-slot="web-admin" data-slot-status="current-ui" class="product-shot"><img src="../assets/13.0.0/admin-console.png" alt="Web management" width="1440" height="960" loading="lazy"><figcaption>Web management<span>13.0.0 current Web UI · example data</span></figcaption></figure><figure data-slot="web-remote" data-slot-status="current-ui" class="product-shot"><img src="../assets/13.0.0/remote-entry.png" alt="Web remote connections" width="1440" height="960" loading="lazy"><figcaption>Web remote connections<span>13.0.0 current Web UI · example data</span></figcaption></figure><figure data-slot="web-tunnel" data-slot-status="current-ui" class="product-shot"><img src="../assets/13.0.0/tunnel-wizard.png" alt="Tunnel setup" width="1440" height="960" loading="lazy"><figcaption>Tunnel setup<span>13.0.0 current Web UI · example data</span></figcaption></figure></section><section class="interface-notes"><h2>Designed for daily use</h2><div class="three-columns"><p>Remote access, tunnels, devices and settings share consistent navigation.</p><p>Controls stay compact. Content scrolls normally without a visible right-hand scrollbar.</p><p>Mobile navigation adapts to the screen; theme and language apply across the app.</p></div><a href="../assets/13.0.0/desktop-capture-manifest.json">Source and original image hashes ↗</a> · <a href="../assets/13.0.0/web-capture-manifest.json">Web source and original screenshot digests ↗</a></section></main>
+<footer class="site-footer wrap"><div><a class="brand small" href="index.html">nestlink</a><p>Your devices. Your own server.</p></div><div class="footer-tools"><div class="theme" role="radiogroup" aria-label="Appearance"><button type="button" role="radio" aria-checked="false" data-theme-choice="light">Light</button><button type="button" role="radio" aria-checked="false" data-theme-choice="dark">Dark</button><button type="button" role="radio" aria-checked="true" data-theme-choice="system">System</button></div><a href="privacy.html">Privacy</a><a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">Release notes</a></div></footer>
+<script src="../assets/download-state.js?v=13.0.0" defer></script><script src="../assets/site.js?v=13.0.0" defer></script><script src="../assets/analytics.js" defer></script></body></html>

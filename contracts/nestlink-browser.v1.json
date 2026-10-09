@@ -1,0 +1,61 @@
+{
+  "contract_version": "nestlink-browser-v1",
+  "product_version": "13.0.0",
+  "authentication_contract": "api-v2.0.0",
+  "api_prefix": "/api/v2/browser",
+  "operations": {
+    "GET /config": {"actor": "account", "response": ["ice_servers", "policy", "transport", "frame_protocol"]},
+    "POST /hosts/poll": {"actor": "windows/linux gui device", "body": {}, "response": ["items", "stun_urls"]},
+    "POST /hosts/stop": {"actor": "gui device", "body": {}},
+    "POST /sessions": {"actor": "account", "body": ["target_id", "offer", "password?"], "status": 201},
+    "GET /sessions/{id}": {"actor": "participating controller or host"},
+    "POST /sessions/{id}/decision": {"actor": "chosen host", "body": ["approve", "answer?"]},
+    "POST /sessions/{id}/heartbeat": {"actor": "participating controller or host", "body": {}},
+    "DELETE /sessions/{id}": {"actor": "participating controller or host", "status": 204}
+  },
+  "session_response": ["session_id", "state", "target_id", "answer", "policy", "frame_protocol", "grant"],
+  "states": ["pending", "active", "closed"],
+  "consent": "Host approval or host-side native remote-password validation is required. Directory remains account-scoped; assistance by ID may cross accounts within the same deployment.",
+  "authorization": {
+    "algorithm": "Ed25519",
+    "token_format": "nlb1.<base64url-json>.<base64url-signature>",
+    "signature_input": "nlb1.<base64url-json>",
+    "claims": ["v", "typ", "jti", "realm", "host_device", "host_session", "controller_session", "offer_sha256", "answer_sha256", "iat", "exp", "policy"],
+    "grant_seconds": 15,
+    "approval_seconds": 30,
+    "peer_timeout_seconds": 15,
+    "core_input_timeout_seconds": 3,
+    "logout": "End capture, release held input and close media when either account/device authorization ends.",
+    "password": "Optional ephemeral value in HTTPS signaling; never persist or return to controller. Erase after decision/close."
+  },
+  "transport": {
+    "media": "Direct peer WebRTC DTLS/SCTP over UDP",
+    "candidates": ["host", "srflx", "prflx"],
+    "ice_servers": "At most four administrator-configured explicit STUN URLs from RD_STUN_URLS",
+    "relay": false,
+    "ice_tcp": false,
+    "server_media": false,
+    "on_direct_failure": "End the session with a visible error"
+  },
+  "frames": {
+    "channel": "nestlink.frames.v1",
+    "ordered": false,
+    "max_retransmits": 0,
+    "encoding": "JPEG",
+    "maximum_dimensions": [1920, 1080],
+    "maximum_bytes": 2097152,
+    "chunk_bytes": 16384,
+    "header": "16 bytes, network byte order: u32 magic 0x4e4c4a31, u32 frame_id, u16 index, u16 count, u32 total_bytes",
+    "maximum_inflight_frames": 3
+  },
+  "input": {
+    "channel": "nestlink.input.v1",
+    "ordered": true,
+    "maximum_bytes": 8192,
+    "maximum_messages_per_second": 240,
+    "kinds": ["heartbeat", "release", "move", "button", "wheel", "key", "text"],
+    "pointer": "Normalized x/y in [0,1] on the current captured primary display",
+    "key": "KeyboardEvent.code plus down boolean",
+    "on_close": "Release all keys and mouse buttons held by this session"
+  }
+}

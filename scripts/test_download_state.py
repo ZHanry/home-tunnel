@@ -98,9 +98,12 @@ const incomplete = state.view({
   candidate: require('./docs/site/candidate.json'),
   fallbackStable: '10.0.0'
 });
-if (incomplete.tone !== 'ready' || !incomplete.en.includes('Stable downloads are ' + require('./docs/site/releases.json').version) ||
-    !incomplete.en.includes('were not run and remain unverified') ||
-    !incomplete.zh.includes('部分验收项目未运行，验证尚未完成')) process.exit(10);
+if (incomplete.tone !== 'ready' || !incomplete.en.includes('nestlink 13.0.0')) process.exit(10);
+const current = require('./docs/site/candidate.json');
+if (current.promotion_status === 'not_promoted' && !incomplete.en.includes('acceptance are in progress')) process.exit(12);
+if (current.promotion_status === 'promoted' && !incomplete.en.includes('reproducible integration verified')) process.exit(13);
+const stable13 = state.view({ transport:'ok', stable:{version:'13.0.0',stage:'stable'},candidate:{version:'13.0.0',promotion_status:'promoted',downloads_published:true,acceptance_status:'passed_reproducible',prerelease:false,remote_policy:'require_direct',relay_enabled:false} });
+if (stable13.tone !== 'ready' || !stable13.en.includes('carrier-network')) process.exit(14);
 if (/waiv|owner|豁免|负责人/i.test(incomplete.en + incomplete.zh)) process.exit(11);
 for (const pair of [[{}, candidate], [stable, {}], [[], candidate],
   [{...stable, version: null}, candidate], [{...stable, version: '9.0.0-rc.1'}, candidate],

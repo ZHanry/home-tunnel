@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "product_version": "13.0.0",
+  "source_repository": "https://github.com/ZHanry/home-tunnel-server",
+  "source_sha": "a85acca9335fa977c01e3ac25e3f99169a4f3649",
+  "source_tag": "v13.0.0",
+  "fixture_sha256": "b1b399ef813f40bd53c6ab704fa1191dfe88e883e9c68fe99a7c762763f520c8",
+  "lockfile_sha256": "9b6a7d00b4b74837474e2dc7d36ec36fc7730274cc6376a28a26f520ae067edb",
+  "capture_script_sha256": "caf4f017752696f96c1bd4cff200dcb57bd7ea71480f47ea470e148ecb3b230e",
+  "captured_at": "2026-10-09T11:28:14.273Z",
+  "browser": "145.0.7632.6",
+  "viewport": [
+    1440,
+    960
+  ],
+  "full_page": true,
+  "locale": "zh-CN",
+  "fixture": "Unmodified control-center/scripts/ui-preview.mjs plus an enabled remote capability and empty remote endpoint list",
+  "actual_product_ui": true,
+  "capture_kind": "web-ui",
+  "fixture_data": true,
+  "installed_application": false,
+  "synthetic_data": true,
+  "ui_source_modified": false,
+  "remote_session_verified": false,
+  "windows_capture": false,
+  "capture_status": "captured-awaiting-visual-review",
+  "ci": null,
+  "captures": [
+    {
+      "file": "admin-console.png",
+      "description": "13.0.0 Web console; first-party local preview example data",
+      "sha256": "987edb9011c4ea6026857170a13966e5552705ad30d53647d0f9fbcd6e654dd4",
+      "bytes": 62211,
+      "width": 1440,
+      "height": 960
+    },
+    {
+      "file": "tunnel-wizard.png",
+      "description": "13.0.0 Web publishing wizard; device and template step; example data; nothing published",
+      "sha256": "5de765822e9e55ab18ab0d124168fc22d77a2213a42e41ce44775ccff1ec7a35",
+      "bytes": 81482,
+      "width": 1440,
+      "height": 960
+    },
+    {
+      "file": "remote-entry.png",
+      "description": "13.0.0 Web remote directory; example device fixture; no actual host or remote session",
+      "sha256": "f14dd867dd44e10aad465754dc098b280d3963e98ed3f3143130d70336ddb3ef",
+      "bytes": 55365,
+      "width": 1440,
+      "height": 960
+    }
+  ]
+}

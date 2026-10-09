@@ -1,0 +1,10 @@
+{
+  "contract": "nestlink-browser-v1",
+  "authentication_contract": "api-v2.0.0",
+  "files": [
+    {
+      "path": "contracts/nestlink-browser.v1.json",
+      "sha256": "903732fb10d8fcf166bf39cea14455b5f6b8b0f713226518f60df7373e5fbbc2"
+    }
+  ]
+}

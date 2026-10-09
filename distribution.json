@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "product": "NestLink",
+  "product": "nestlink",
   "source_of_truth": "distribution.json",
-  "development_line": "12.0.0-RC1",
+  "development_line": "13.0.0",
   "channels": {
     "stable": {
       "schema_version": 1,
@@ -131,17 +131,17 @@
       "tested_combination_scope": "Component identity and compatibility selection only. Native evidence is limited to the original Windows worker with same-machine Chromium and a production-source QA host; the complete cross-component installed-application runtime matrix remains unverified."
     },
     "candidate": {
-      "version": "12.0.0-RC1",
-      "stage": "candidate",
-      "promotion_status": "prerelease",
+      "version": "13.0.0",
+      "stage": "development",
+      "promotion_status": "not_promoted",
       "downloads_published": false,
       "acceptance_status": "pending",
-      "prerelease": true,
-      "tag": "v12.0.0-RC1",
+      "prerelease": false,
+      "tag": "v13.0.0",
       "remote_policy": "require_direct",
       "relay_enabled": false,
       "frp": "0.70.1",
-      "agent_version": "12.0.0-RC1",
+      "agent_version": "13.0.0",
       "contract": {
         "ref": "api-v2.0.0",
         "frozen": true,
@@ -151,52 +151,51 @@
       "components": {
         "hub": {
           "repository": "ZHanry/home-tunnel",
-          "version": "12.0.0-RC1",
-          "tag": "v12.0.0-RC1",
+          "version": "13.0.0",
+          "tag": "v13.0.0",
           "source_sha": null,
           "artifacts": [],
-          "prerelease": true
+          "prerelease": false
         },
         "server": {
           "repository": "ZHanry/home-tunnel-server",
-          "version": "12.0.0-RC1",
-          "tag": "v12.0.0-RC1",
-          "source_sha": "ddf5c7769cdf42fad2d9ae37b904e42866b85f0a",
+          "version": "13.0.0",
+          "tag": "v13.0.0",
+          "source_sha": "a85acca9335fa977c01e3ac25e3f99169a4f3649",
           "published": false,
           "artifacts": [],
-          "prerelease": true
+          "prerelease": false
         },
         "client": {
           "repository": "ZHanry/home-tunnel-client",
-          "version": "12.0.0-RC1",
-          "tag": "v12.0.0-RC1",
-          "source_sha": "1e737d7cc6e4bab9f043b2e94eabc7ffd75ba5d8",
+          "version": "13.0.0",
+          "tag": "v13.0.0",
+          "source_sha": "0d6f27388c269d809e4e8c794aa94c26bcd2d5f3",
           "published": false,
           "artifacts": [],
-          "prerelease": true
+          "prerelease": false
         },
         "android": {
           "repository": "ZHanry/home-tunnel-android",
-          "version": "12.0.0-RC1",
-          "tag": "v12.0.0-RC1",
-          "source_sha": "51b0ba4d030bd15ed17473ea90857bffbf12daf4",
+          "version": "13.0.0",
+          "tag": "v13.0.0",
+          "source_sha": "1145df68e4701f97712e963f850720f24e08eab9",
           "published": false,
           "artifacts": [],
-          "prerelease": true
+          "prerelease": false
         }
       },
       "not_verified": [
-        "cross-network-nat",
-        "sustained-remote-media",
         "physical-android-device",
-        "installed-two-peer-remote-session"
+        "carrier-network-nat",
+        "long-duration-media"
       ],
       "signing": {
         "windows": "unsigned-no-certificate-configured",
-        "android_certificate_sha256": "d7779e338be1039acee6dda9a43417cbf2baf4b0c9995578d9708501e95af702",
-        "macos": "ad-hoc-no-developer-id"
+        "android_certificate_sha256": "d7779e338be1039acee6dda9a43417cbf2baf4b0c9995578d9708501e95af702"
       },
-      "note": "NestLink / 栖云桥 RC1: self-hosted account authentication, direct encrypted P2P and independent FRP tunnels. Automated and reproducible integration are required before RC publication. Physical Android, carrier NAT and sustained media verification remain separate. Stable historical releases and their bytes are unchanged."
+      "note": "nestlink 13.0.0 stable target. Automated and reproducible installed-app integration are required. Physical Android devices, carrier networks and long-duration media remain unverified. Original historical release identities and bytes are retained.",
+      "tested_combination": null
     }
   }
 }

@@ -1,6 +1,6 @@
 # 自建 NestLink 12 服务端
 
-使用 [Server 候选发布](https://github.com/ZHanry/home-tunnel-server/releases/tag/v12.0.0-RC1) 的部署 tar.gz，先核对 SHA256SUMS，再按包内 README 生成域名、TLS 与部署 secrets。部署镜像采用固定摘要；HTTP/HTTPS、FRPS 以及受控 TCP/UDP 端口池配置继续沿用原部署流程。
+使用 [Server 候选发布](https://github.com/ZHanry/home-tunnel-server/releases/tag/v13.0.0) 的部署 tar.gz，先核对 SHA256SUMS，再按包内 README 生成域名、TLS 与部署 secrets。部署镜像采用固定摘要；HTTP/HTTPS、FRPS 以及受控 TCP/UDP 端口池配置继续沿用原部署流程。
 
 新增 hbbs 信令服务只开放 TCP 21115、TCP/UDP 21116。不启动 hbbr/TURN，不开放远控中继 21117 或旧 WebSocket 端口 21118/21119。部分 NAT、CGNAT、移动网或防火墙组合无法打洞，失败即停止。
 

@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none">
-  <!-- NestLink / 栖云桥: connected devices and a bridge between networks -->
+  <!-- nestlink: connected devices and a bridge between networks -->
   <polygon points="24,4 42,14.39 42,33.61 24,44 6,33.61 6,14.39" stroke="#1967D2" stroke-width="3.5" stroke-linejoin="round" fill="#EBF3FE"/>
   <circle cx="24" cy="24" r="5" fill="#1967D2"/>
   <line x1="24" y1="4" x2="24" y2="19" stroke="#1967D2" stroke-width="3" stroke-linecap="round"/>

@@ -1,46 +1,25 @@
-<img src="docs/site/assets/HomeTunnel.svg" alt="" width="64" height="64">
+# nestlink
 
-# 栖云桥 / NestLink
+[English](README.en.md) · [网站](https://zhanry.github.io/home-tunnel/) · [版本说明](docs/HOMEDESK_RELEASE.md)
 
-**栖云桥界面、严格 P2P 远控、完整内网穿透。四个仓库继续独立发布。**
+登录自己的服务器，管理设备、直接远控，并让内网服务保持可访问。当前发行目标 **13.0.0 正式版**，正在实施与验收；完成后发布可核验的安装包、源码与镜像。
 
-[English](README.en.md) · [网站](https://zhanry.github.io/home-tunnel/) · [下载与校验](docs/DOWNLOADS.md) · [快速开始](docs/GETTING_STARTED.md) · [架构](docs/ARCHITECTURE.md) · [升级](docs/UPGRADING.md)
-
-当前主线为 **12.0.0-RC1 候选版**：Server 12.0.0-RC1、Client / Android / 总仓 12.0.0-RC1。整合 ymhaha 的 Hearth Web 与 Rust/Flutter 客户端；Windows 使用原生 NestLink，Android 固定同一份 Client 源码。跨网络 NAT、长期媒体、真机和两台安装后终端的远控验收尚未完成，不晋升稳定版。
-
-`distribution.json` 是通道与实际附件的唯一来源。稳定通道仍为 Server / Client 10.1.0 + Android 10.0.0；旧发布、标签、哈希与验收材料保留，其远控结果不作为 12.x 已通过的证据。
-
-## 连接方式
-
-远控必须是认证加密的 P2P 直连，服务端只新增 hbbs 信令与 NAT 协调。没有 hbbr / TURN / FRP / HTTP / WSS / VPN 或供应商回退。IPv4/IPv6 和允许的直接传输仍由原生核心处理；无法建立安全直连就明确停止。Web 管理台通过 `homedesk://设备ID` 打开已安装的客户端，URL 不携带账号凭据。
-
-内网穿透完整保留 HTTP/HTTPS、受控 TCP/UDP、端口池、权限、ACL、流量治理、诊断以及独立 CLI/NAS/background Agent。FRPS、Caddy、traffic-gateway 和 Node/SQLite 仍负责原有业务；远控模式切换或打洞失败不会停止隧道。GUI 内的 Agent 跟随窗口，长期服务请使用独立 CLI。
-
-```mermaid
-flowchart LR
-  A[Windows / macOS / Linux / Android] <-->|认证加密的 P2P| B[被控设备]
-  A -->|ID / NAT 信令| H[hbbs]
-  B -->|ID / NAT 信令| H
-  A -->|账号与设备目录| C[Node / SQLite]
-  V[服务访问者] --> E[Caddy / traffic-gateway / FRPS]
-  E <-->|内网穿透| T[独立 CLI / Agent]
-```
-
-## 仓库与精简附件
-
-| 仓库 | 候选组件 | Release 附件 |
+| 平台 | 能力 | 发行产物 |
 | --- | --- | --- |
-| [home-tunnel-server](https://github.com/ZHanry/home-tunnel-server) | 12.0.0-RC1，栖云桥 Web、SQLite 目录、hbbs | 部署包、材料包、校验文件，共 3 个 |
-| [home-tunnel-client](https://github.com/ZHanry/home-tunnel-client) | 12.0.0-RC1，Windows Rust/Flutter 与原 Go CLI | Windows 安装器、macOS 双架构 DMG、Linux 双架构 DEB、五平台 CLI/Agent 合集、材料包、校验文件，共 8 个 |
-| [home-tunnel-android](https://github.com/ZHanry/home-tunnel-android) | 12.0.0-RC1，同源移动界面，API 26+ | arm64/x64 通用 APK、材料包、校验文件，共 3 个 |
-| [home-tunnel](https://github.com/ZHanry/home-tunnel) | 12.0.0-RC1，分发、文档、网站 | 分发/源码/说明 ZIP、校验文件，共 2 个 |
+| Web / Server | 管理与浏览器内远控 | 部署包、amd64/arm64 镜像 |
+| Windows x64 | 远控、被控、穿透中枢 | GUI 安装器 |
+| Linux x64 / ARM64 | 远控、被控、穿透中枢 | 两种 GUI DEB |
+| Android ARM64 / x86_64 | 管理与远控 | 一个通用 APK |
 
-Windows 安装器没有 Authenticode 发行签名；Android 沿用原 applicationId 和证书。macOS/Linux 原生 GUI 已纳入 RC1 构建矩阵，CLI 合集继续覆盖 Windows x64、Linux amd64/arm64、macOS amd64/arm64。Agent 从同一 RC1 提交构建，FRP 保持 0.70.1。源码、许可证、依赖来源、构建证据与 Sigstore 身份证明集中在材料包。
+统一英文名称、图标和蓝白界面。客户端必须登录自建服务，连接配置自动获取。跨账号按设备 ID 协助仍须被控端批准或验证远控密码；远控只允许认证加密的 P2P 直连，失败即结束。
 
-## 使用与升级
+HTTP/HTTPS、受控 TCP/UDP、权限、端口池、访问控制、流量治理和诊断保留，在 Windows/Linux 客户端集中管理。远控和穿透分别启停。独立 CLI/NAS 与 macOS GUI 不再属于产品发行范围。
 
-先阅读 [自建部署](docs/SELF_HOSTING.md)，备份 SQLite、部署 secrets、客户端状态与 hbbs 身份。通用安装包不内置服务器、公钥或账号；登录自己的 HTTPS 服务，自动获取连接配置并登记设备。远控仍需被控端密码或批准，同账号目录不会绕过授权。
+| 仓库 | 职责 |
+| --- | --- |
+| [home-tunnel-server](https://github.com/ZHanry/home-tunnel-server) | Web、认证、管理、信令与穿透服务 |
+| [home-tunnel-client](https://github.com/ZHanry/home-tunnel-client) | Windows/Linux 原生客户端 |
+| [home-tunnel-android](https://github.com/ZHanry/home-tunnel-android) | 固定 Client 同源代码的 Android 应用 |
+| home-tunnel | 分发清单、站点和发行材料 |
 
-原浏览器媒体引擎与旧远控兼容退出 12.x；穿透设备、连接和权限通过 SQLite 迁移继续保留。不要叠加旧 `compose.rd.yaml` / `compose.turn.yaml`。API 冻结为 `api-v2.0.0`；新目录接口不改变现有穿透 API。
-
-项目文档与原组件分别保留各自许可证。导入的 RustDesk 核心及相关修改遵循 [AGPL-3.0](https://github.com/ZHanry/home-tunnel-client/blob/main/LICENSE-RUSTDESK)，完整对应源码随材料包提供。本总仓沿用 [Apache-2.0](LICENSE)。来源与待验收范围见 [发布说明](docs/RELEASE_NOTES.md) 和 [功能矩阵](docs/FEATURE_MATRIX.md)。
+认证迁移与验证范围见 [发行说明](docs/HOMEDESK_RELEASE.md)，部署见 [自建服务](docs/SELF_HOSTING.md)。历史标签、下载和证据仍属于各自历史发行，当前页面不展示旧界面截图。原 Go 代码采用 Apache-2.0，Rust/Flutter 整合代码遵循 AGPL-3.0，对应源码与许可证随发行提供。

@@ -1,122 +1,17 @@
 <!doctype html>
 <html lang="en" data-goatcounter-endpoint="__GOATCOUNTER_ENDPOINT__">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light dark">
-<script>
-(function () {
-  var allowed = { light: 1, dark: 1, system: 1 };
-  var theme = "system";
-  try {
-    var query = new URLSearchParams(location.search).get("theme");
-    if (allowed[query]) theme = query;
-    else {
-      var stored = localStorage.getItem("home-tunnel-theme");
-      if (allowed[stored]) theme = stored;
-    }
-  } catch (error) {}
-  document.documentElement.setAttribute("data-theme", theme);
-  document.documentElement.classList.add("js");
-})();
-</script>
-<title>NestLink 12 · Direct P2P and home services</title>
-<meta name="description" content="NestLink 12: authenticated encrypted direct P2P and complete independent tunneling. Candidate acceptance pending.">
-<link rel="canonical" href="https://zhanry.github.io/home-tunnel/en/">
-<link rel="alternate" hreflang="en" href="https://zhanry.github.io/home-tunnel/en/">
-<link rel="alternate" hreflang="zh-CN" href="https://zhanry.github.io/home-tunnel/">
-<meta property="og:title" content="NestLink · UDP remote control and FRP publishing">
-<meta property="og:description" content="NestLink 12 candidate: direct P2P remote control and independent FRP tunnels.">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://zhanry.github.io/home-tunnel/en/">
-<meta property="og:image" content="https://zhanry.github.io/home-tunnel/assets/share-card.svg">
-<meta property="og:image:alt" content="NestLink brand card describing UDP remote control and FRP publishing, not a product screenshot">
-<link rel="icon" type="image/svg+xml" href="../assets/NestLink.svg">
-<link rel="stylesheet" href="../assets/site.css?v=12.0.0-RC1">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"NestLink","applicationCategory":"UtilitiesApplication","operatingSystem":"Windows, macOS, Linux, Android","softwareVersion": "12.0.0-RC1","license":"https://www.apache.org/licenses/LICENSE-2.0","url":"https://zhanry.github.io/home-tunnel/en/"}</script>
-</head>
-<body data-root="../" data-stable-version="10.1.0">
-<a class="skip" href="#content">Skip to content</a>
-<div class="wrap">
-<header class="site-header">
-<a class="brand" href="index.html"><img src="../assets/NestLink.svg" alt="" width="36" height="36">NestLink</a>
-<button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
-<nav id="site-nav" aria-label="Primary">
-<a href="#remote">Remote control</a>
-<a href="#tunnel">Tunnels</a>
-<a href="downloads.html">Downloads</a>
-<a href="preview.html">Scope</a>
-<a href="#faq">FAQ</a>
-<a href="../index.html" hreflang="zh-CN" lang="zh-CN">中文</a>
-<a href="https://github.com/ZHanry/home-tunnel">GitHub</a>
-</nav>
-<div class="theme" role="radiogroup" aria-label="Color theme">
-<button type="button" role="radio" id="theme-light" data-theme-choice="light" aria-checked="false">Light</button>
-<button type="button" role="radio" data-theme-choice="dark" aria-checked="false">Dark</button>
-<button type="button" role="radio" data-theme-choice="system" aria-checked="false">System</button>
-</div>
-</header>
-<main id="content">
-<section class="section"><p class="eyebrow">NestLink 12 · candidate</p><h1>Connect to home. Keep control direct.</h1><p class="lede">A single blue and white workspace for your devices and services. Sign in to your self-hosted server, connect directly to a device, or keep a home service online. Windows, macOS, Linux and Android share the NestLink identity. 12.0.0-RC1 is a prerelease.</p><div class="actions"><a class="button" href="downloads.html#candidate">Candidate downloads</a><a class="button secondary" href="preview.html">Scope and verification</a></div></section>
-<section id="remote" class="section"><p class="eyebrow">Direct P2P</p><h2>Peers carry the remote session.</h2><p>The native Rust/Flutter core requires an authenticated, encrypted direct connection. hbbs provides only ID and NAT signaling. No hbbr, TURN, FRP, HTTP/WSS, VPN or vendor fallback; failed direct connections terminate.</p><p>The Web console opens the installed NestLink client through an ID-only homedesk URL. The account directory cannot bypass a remote password or approval; recent registration is not proof of live media.</p></section>
-<section id="host" class="section"><h2>Choose when to share your screen.</h2><p>Sign in with your self-hosted server address and account. Connection settings are retrieved automatically. Generic packages contain no server, key or account. Android screen sharing requires current system permission, including a visible-app authorization on Android 14/15.</p></section>
-<section id="tunnel" class="section"><p class="eyebrow">FRP 0.70.1</p><h2>Keep local services online.</h2><p>HTTP/HTTPS and governed TCP/UDP, port pools, access control, traffic quotas, diagnostics and independent CLI/NAS/background Agents remain available. Remote mode changes or a failed remote session do not stop independent tunnels.</p><p>Server retains Node/SQLite and the existing Caddy, traffic-gateway and FRPS stack. Remote sessions and background tunnel services have separate lifecycles. GUI installers cover Windows x64, both macOS architectures, and Linux x64/ARM64. The CLI/Agent bundle covers five platforms.</p></section>
-<section class="section"><h2>NestLink 12.0.0-RC1 · Web workbench</h2><figure class="shot-slot" data-shot-slot="rc12-workbench" data-slot-status="captured-release-ui"><figcaption><strong>NestLink 12.0.0-RC1 · Web workbench</strong><span>Actual Web application with example data; this image does not assert a remote session or media verification.</span></figcaption><img src="../assets/rc12/web-workbench.png" alt="NestLink 12.0.0-RC1 · Web workbench · example data" width="1280" height="860" loading="lazy"></figure></section>
-<section class="section" aria-label="Diagram and screenshot slots">
-<h2>Diagrams and historical interface previews</h2>
-<p>Product screenshots below keep their 10.0.0 labels. They are not 12.x captures or acceptance evidence.</p>
-<figure class="shot-slot" data-shot-slot="vector-architecture" data-slot-status="vector-diagram">
-<figcaption><strong>Control plane and FRP data plane</strong><span>Vector diagram, not an application screenshot. Remote UDP does not use this FRP path.</span></figcaption>
-<img src="../assets/architecture.svg" alt="Home Tunnel architecture diagram showing the control center, SQLite, Caddy, traffic gateway, FRP, and a home Agent" width="1440" height="900">
-</figure>
-<figure class="shot-slot" data-shot-slot="v10-admin-console" data-slot-status="captured-v10-ui">
-<figcaption><strong>10.0.0 Web console</strong><span>Captured from the released UI on 2026-09-30 with local example data. Status and traffic are preview fixtures.</span></figcaption>
-<img src="../assets/v10/admin-console.png" alt="Home Tunnel 10.0.0 Web console with example data, navigation, device status and traffic" width="1440" height="1132" loading="lazy">
-</figure>
-<figure class="shot-slot" data-shot-slot="v10-tunnel-wizard" data-slot-status="captured-v10-ui">
-<figcaption><strong>10.0.0 Web publishing wizard</strong><span>Actual device-and-template step with example data. No service had been created or published.</span></figcaption>
-<img src="../assets/v10/tunnel-wizard.png" alt="Home Tunnel 10.0.0 Web publishing wizard with the Home Assistant template selected and example data" width="1440" height="960" loading="lazy">
-</figure>
-<figure class="shot-slot" data-shot-slot="v10-web-remote-entry" data-slot-status="captured-v10-ui">
-<figcaption><strong>10.0.0 Web remote entry, disconnected</strong><span>Actual empty-device state with example data. No Windows host or remote session was connected or verified.</span></figcaption>
-<img src="../assets/v10/remote-entry.png" alt="Home Tunnel 10.0.0 Web remote entry with an empty device list, disconnected" width="1440" height="960" loading="lazy">
-</figure>
-<figure class="shot-slot" data-shot-slot="v10-windows-signin" data-slot-status="captured-v10-ui">
-<figcaption><strong>10.0.0 Windows native client, sign-in</strong><span>Official portable app in a real Windows Server 2022 native WebView2 window. Empty isolated state; no account sign-in or remote session.</span></figcaption>
-<img src="../assets/v10/windows-signin.png" alt="Home Tunnel 10.0.0 native Windows sign-in window, with its real titlebar and empty username/password fields" width="946" height="665" loading="lazy">
-</figure>
-<div class="split">
-<figure class="shot-slot shot-phone" data-shot-slot="v10-android-overview" data-slot-status="captured-v10-ui">
-<figcaption><strong>10.0.0 Android remote entry</strong><span>API 35 x86_64 emulator, debug build and example data. This is not an active remote session or final APK acceptance.</span></figcaption>
-<img src="../assets/v10/android-overview.png" alt="Home Tunnel 10.0.0 Android remote entry on an API 35 emulator, English UI and Chinese example device names" width="1080" height="2400" loading="lazy">
-</figure>
-<figure class="shot-slot shot-phone" data-shot-slot="v10-android-devices" data-slot-status="captured-v10-ui">
-<figcaption><strong>10.0.0 Android device list</strong><span>API 35 x86_64 emulator, debug build and example data. This is not physical-device or final APK acceptance.</span></figcaption>
-<img src="../assets/v10/android-devices.png" alt="Home Tunnel 10.0.0 Android device list on an API 35 emulator with search, tunnel and remote controls" width="1080" height="2400" loading="lazy">
-</figure>
-</div>
-<p class="muted"><a href="../assets/v10/README.md">Capture sources and image hashes</a></p>
-<figure data-shot-file="assets/v10/remote-window.png" class="shot-slot" data-shot-slot="v10-remote-window" data-slot-status="awaiting-v10-capture">
-<figcaption><strong>10.0 Windows remote window</strong><span>A real Windows capture is still needed. The Web and Android entry screens above do not replace it.</span></figcaption>
-<p class="slot-empty">Waiting for an actual product screenshot</p>
-</figure>
-
-</section>
-<section class="section"><h2>Choose a release channel.</h2><p id="download-status" class="notice" role="status" aria-live="polite" data-tone="ready">Stable downloads remain 10.1.0 with Android 10.0.0. NestLink 12 is a prerelease; acceptance is pending. Cross-network and physical-device gates were not run and remain unverified.</p><div class="actions"><a class="button" href="downloads.html#candidate">NestLink candidate</a><a class="button secondary" href="downloads.html">Original stable downloads</a></div></section>
-<section id="faq" class="section"><h2>Before installing</h2><details><summary>Can remote control use a relay?</summary><p>No. NestLink 12 requires authenticated encrypted direct P2P. Failed NAT traversal stops the session.</p></details><details><summary>Are existing tunnels retained?</summary><p>Yes. Independent HTTP/HTTPS and governed TCP/UDP, permissions, port pools, ACLs and traffic management remain.</p></details><details><summary>What does the candidate verification cover?</summary><p>Build, source, unit, widget, installer and emulator checks have separate scopes. Sustained two-peer media, cross-network NAT and physical Android devices remain pending. Historical 10.0.0 and 9.0.0 evidence is not 12.x acceptance.</p></details><details><summary>What needs a backup?</summary><p>SQLite, deployment secrets, client state and the separate hbbs identity. Retire legacy remote overlays before migrating.</p></details></section>
-</main>
-<footer class="site-footer">
-<span>© 2026 NestLink · Apache-2.0</span>
-<nav aria-label="Footer">
-<a href="privacy.html">Privacy</a>
-<a href="preview.html">Scope and limits</a>
-<a href="downloads.html">10.1.0 downloads</a>
-<a href="https://github.com/ZHanry/home-tunnel/blob/main/SECURITY.md">Security</a>
-</nav>
-</footer>
-</div>
-<script src="../assets/download-state.js"></script>
-<script src="../assets/site.js"></script>
-<script src="../assets/analytics.js"></script>
-</body>
-</html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark">
+<script>(function(){var a={light:1,dark:1,system:1},t="system";try{var q=new URLSearchParams(location.search).get("theme"),s=localStorage.getItem("home-tunnel-theme");t=a[q]?q:a[s]?s:t}catch(e){}document.documentElement.dataset.theme=t;document.documentElement.classList.add("js")})();</script><title>Remote access · nestlink</title><meta name="description" content="Connect to your computers and publish local services through your own server. Keep devices, sessions and tunnels in view.">
+<link rel="canonical" href="https://zhanry.github.io/home-tunnel/en/"><link rel="alternate" hreflang="zh-CN" href="https://zhanry.github.io/home-tunnel/"><link rel="alternate" hreflang="en" href="https://zhanry.github.io/home-tunnel/en/">
+<meta property="og:title" content="nestlink 13.0.0"><meta property="og:description" content="Connect to your computers and publish local services through your own server. Keep devices, sessions and tunnels in view."><meta property="og:type" content="website"><meta property="og:url" content="https://zhanry.github.io/home-tunnel/en/"><meta property="og:image" content="https://zhanry.github.io/home-tunnel/assets/share-card.svg"><meta property="og:image:alt" content="nestlink brand mark">
+<link rel="icon" type="image/svg+xml" href="../assets/NestLink.svg"><link rel="stylesheet" href="../assets/site.css?v=13.0.0">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"nestlink","softwareVersion": "13.0.0","operatingSystem":"Windows, Linux, Android, Web","applicationCategory":"UtilitiesApplication","url":"https://zhanry.github.io/home-tunnel/"}</script></head>
+<body data-root="../" data-stable-version="10.1.0"><a class="skip" href="#content">Skip to content</a>
+<header class="site-header wrap"><a class="brand" href="index.html"><img src="../assets/NestLink.svg" alt="" width="32" height="32">nestlink</a><button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button><nav id="site-nav" aria-label="Main navigation"><a href="index.html" aria-current="page">Home</a><a href="preview.html" >Interface</a><a href="downloads.html" >Downloads</a><a href="https://github.com/ZHanry/home-tunnel">GitHub <span aria-hidden="true">↗</span></a></nav><a class="language" href="../index.html" lang="zh-CN">中文</a></header>
+<main id="content" class="wrap"><section class="hero"><div class="hero-copy"><span class="version-pill">13.0.0 · build and acceptance</span><h1>Remote control and private services,<br>in one workspace.</h1><p>Connect to your computers and publish local services through your own server. Keep devices, sessions and tunnels in view.</p><div class="actions"><a class="button primary" href="downloads.html">Download<span aria-hidden="true">↓</span></a><a class="text-link" href="preview.html">Explore the interface<span aria-hidden="true">→</span></a></div><div class="hero-tags"><span>Self-hosted</span><span>Encrypted P2P</span><span>Shared interface</span></div></div><div class="hero-preview"><figure data-slot="desktop-light" data-slot-status="component-preview" class="product-shot"><img src="../assets/13.0.0/desktop-workbench-light.png" alt="Desktop workspace · light" width="1120" height="760" fetchpriority="high"><figcaption>Desktop workspace · light<span>Current 13.0.0 components · example data</span></figcaption></figure></div></section>
+<section class="feature-grid" aria-label="Features"><article id="remote"><span class="section-index">01</span><h2>Remote control</h2><p>Connect from the browser, desktop or phone. Hosts approve requests or verify a password; screen and input use encrypted direct P2P.</p></article><article id="tunnel"><span class="section-index">02</span><h2>Private services</h2><p>Windows and Linux publish HTTP/HTTPS, TCP and UDP services with FRP. Tunnel lifetimes are managed separately from remote sessions.</p></article><article id="account"><span class="section-index">03</span><h2>One account, your server</h2><p>Sign in once to retrieve service settings. Manage device access, account limits and sessions from the same control center.</p></article></section>
+<section class="platform-section"><div><h2>Four ways to connect</h2><p>Choose the app for your device.</p><a class="text-link" href="downloads.html">Download →</a></div><table class="platform-table"><caption class="sr-only">Platform capabilities</caption><tbody><tr><th scope="row">Web</th><td>Self-hosted server · management & browser remote control</td></tr><tr><th scope="row">Windows x64</th><td>Remote control, hosting & tunnel hub</td></tr><tr><th scope="row">Linux x64 / ARM64</th><td>Remote control, hosting & tunnel hub</td></tr><tr><th scope="row">Android ARM64 / x86_64</th><td>One APK · management & remote control</td></tr></tbody></table></section>
+<section id="faq" class="faq-section"><h2>Before you connect</h2><div><details><summary>Do I need my own server?</summary><p>Yes. Install the Web server and sign in from each app. Service settings are retrieved after login.</p></details><details><summary>Can the browser control a computer directly?</summary><p>Yes. Select a Windows or Linux device or enter its ID. The host must approve the request or verify its remote password.</p></details><details><summary>What happens if P2P fails?</summary><p>The session ends with a clear error. There is no media relay fallback; independent FRP tunnels have their own lifecycle.</p></details><details><summary>Which Android package should I use?</summary><p>One universal APK includes ARM64 and x86_64. The existing application ID and release certificate are preserved for upgrades.</p></details></div></section>
+<div class="release-note"><p id="download-status" role="status" aria-live="polite">13.0.0 · build and acceptance</p><p>Physical Android devices, carrier networks and long-duration media were not run and remain unverified. <a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">Release notes ↗</a></p></div></main>
+<footer class="site-footer wrap"><div><a class="brand small" href="index.html">nestlink</a><p>Your devices. Your own server.</p></div><div class="footer-tools"><div class="theme" role="radiogroup" aria-label="Appearance"><button type="button" role="radio" aria-checked="false" data-theme-choice="light">Light</button><button type="button" role="radio" aria-checked="false" data-theme-choice="dark">Dark</button><button type="button" role="radio" aria-checked="true" data-theme-choice="system">System</button></div><a href="privacy.html">Privacy</a><a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">Release notes</a></div></footer>
+<script src="../assets/download-state.js?v=13.0.0" defer></script><script src="../assets/site.js?v=13.0.0" defer></script><script src="../assets/analytics.js" defer></script></body></html>

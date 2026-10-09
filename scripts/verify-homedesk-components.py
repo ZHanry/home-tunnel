@@ -40,8 +40,8 @@ def verify(candidate, *, record=False, signatures=False, download_dir=None):
         component = candidate["components"][name]
         repository, tag, revision = (component[key] for key in ("repository", "tag", "source_sha"))
         release = json.loads(run("gh", "api", f"repos/{repository}/releases/tags/{tag}"))
-        if release["draft"] or not release["prerelease"] or release["tag_name"] != tag:
-            raise SystemExit("Expected an actual candidate prerelease: " + name)
+        if release["draft"] or release["prerelease"] != (candidate["version"] != "13.0.0") or release["tag_name"] != tag:
+            raise SystemExit("Expected an actual release in the selected channel: " + name)
         ref = json.loads(run("gh", "api", f"repos/{repository}/git/ref/tags/{tag}"))["object"]
         while ref["type"] == "tag":
             ref = json.loads(run("gh", "api", f"repos/{repository}/git/tags/{ref['sha']}"))["object"]
@@ -98,13 +98,20 @@ def verify(candidate, *, record=False, signatures=False, download_dir=None):
                     subprocess.run(["cosign", "verify-blob", "--bundle", str(folder / "BUILD.json.sigstore.json"),
                                     "--certificate-identity", f"https://github.com/{repository}/.github/workflows/release.yml@refs/tags/{tag}",
                                     "--certificate-oidc-issuer", "https://token.actions.githubusercontent.com", str(folder / "BUILD.json")], check=True)
+            if candidate["version"] == "13.0.0":
+                acceptance=manifest.get("acceptance",{})
+                if (not isinstance(acceptance,dict) or acceptance.get("status")!="passed_reproducible"
+                        or acceptance.get("component")!=name or acceptance.get("version")!="13.0.0"
+                        or acceptance.get("source_revision")!=manifest.get("payload_source_revision")
+                        or acceptance.get("deliverables")!=manifest["deliverables"]):
+                    raise SystemExit("Current release must include actual reproducible acceptance: "+name)
             actual = sorted(entries.values(), key=lambda item: item["filename"])
             if record:
                 component.update(published=True, release_url=release["html_url"], artifacts=actual)
             elif not component.get("published") or actual != component["artifacts"] or component["release_url"] != release["html_url"]:
                 raise SystemExit("Distribution differs from the independently verified release: " + name)
             verified[name] = {"repository": repository, "tag": tag, "revision": revision,
-                              "assets": actual, "source_manifest_verified": True, "sigstore_verified": signatures}
+                              "assets": actual, "source_manifest_verified": True, "sigstore_verified": signatures, "reproducible_acceptance_verified": candidate["version"] == "13.0.0"}
         print(name + ": exact candidate tag, actual download bytes, checksums and source verified")
     if record:
         candidate["downloads_published"] = True

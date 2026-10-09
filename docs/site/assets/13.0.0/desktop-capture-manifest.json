@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "product_version": "13.0.0",
+  "repository": "ZHanry/home-tunnel-client",
+  "source_sha": "dae45e423ee66639397f2f756c4358f7c975901e",
+  "method": "Flutter render of the current HomeDeskDashboard and HomeDeskRecent components, HOMEDESK_UI_PREVIEW, 1120 x 760",
+  "capture_kind": "component-preview",
+  "fixture_data": true,
+  "installed_application": false,
+  "remote_session_verified": false,
+  "captures": [
+    {
+      "file": "desktop-workbench-light.png",
+      "sha256": "291c5295aed017ea10316956637500fde882101365d6fbdb9c4d3b84e0b0f775",
+      "width": 1120,
+      "height": 760,
+      "edited": false
+    },
+    {
+      "file": "desktop-workbench-dark.png",
+      "sha256": "5573d732883e4cc584cc1b0077d783ff79b691474180bb77b2480dd581296d65",
+      "width": 1120,
+      "height": 760,
+      "edited": false
+    },
+    {
+      "file": "desktop-workbench-empty.png",
+      "sha256": "da1aeb019447d459a78390ce41bed401a6a51aa2ccc49c942aa998365138a7b6",
+      "width": 1120,
+      "height": 760,
+      "edited": false
+    }
+  ]
+}

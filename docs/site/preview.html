@@ -1,124 +1,13 @@
 <!doctype html>
 <html lang="zh-CN" data-goatcounter-endpoint="__GOATCOUNTER_ENDPOINT__">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light dark">
-<script>
-(function () {
-  var allowed = { light: 1, dark: 1, system: 1 };
-  var theme = "system";
-  try {
-    var query = new URLSearchParams(location.search).get("theme");
-    if (allowed[query]) theme = query;
-    else {
-      var stored = localStorage.getItem("home-tunnel-theme");
-      if (allowed[stored]) theme = stored;
-    }
-  } catch (error) {}
-  document.documentElement.setAttribute("data-theme", theme);
-  document.documentElement.classList.add("js");
-})();
-</script>
-<title>栖云桥 / NestLink 10.1.0 范围与限制</title>
-<meta name="description" content="10.1.0 的功能、实测范围、未验证项目和已知限制。">
-<link rel="canonical" href="https://zhanry.github.io/home-tunnel/preview.html">
-<link rel="alternate" hreflang="zh-CN" href="https://zhanry.github.io/home-tunnel/preview.html">
-<link rel="alternate" hreflang="en" href="https://zhanry.github.io/home-tunnel/en/preview.html">
-<link rel="icon" type="image/svg+xml" href="assets/NestLink.svg">
-<link rel="stylesheet" href="assets/site.css?v=12.0.0-RC1">
-</head>
-<body data-root="" data-stable-version="10.1.0">
-<a class="skip" href="#content">跳到主要内容</a>
-<div class="wrap">
-<header class="site-header">
-<a class="brand" href="index.html"><img src="assets/NestLink.svg" alt="" width="36" height="36">栖云桥 / NestLink</a>
-<button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">菜单</button>
-<nav id="site-nav" aria-label="主导航">
-<a href="index.html#remote">远程控制</a>
-<a href="index.html#tunnel">内网穿透</a>
-<a href="downloads.html">下载</a>
-<a href="preview.html" aria-current="page">范围</a>
-<a href="index.html#faq">常见问题</a>
-<a href="en/preview.html" hreflang="en" lang="en">English</a>
-<a href="https://github.com/ZHanry/home-tunnel">GitHub</a>
-</nav>
-<div class="theme" role="radiogroup" aria-label="颜色主题">
-<button type="button" role="radio" id="theme-light" data-theme-choice="light" aria-checked="false">浅色</button>
-<button type="button" role="radio" data-theme-choice="dark" aria-checked="false">深色</button>
-<button type="button" role="radio" data-theme-choice="system" aria-checked="false">系统</button>
-</div>
-</header>
-<main id="content">
-<section class="section"><h2>NestLink 12 候选范围</h2><p>新的 Rust/Flutter 产品强制认证加密 P2P，hbbs 只传信令；完整穿透与独立 CLI/Agent 保留。构建与模拟器检查不代表跨网或真机验收。下方 10.x 报告与截图为历史材料，不作为 NestLink 12 已通过的证据。</p></section>
-<section class="section">
-<p class="eyebrow">范围</p>
-<h1>10.1.0 是稳定版，部分项目尚未验证。</h1>
-<p class="lede">稳定组合为 Server / Client 10.1.0 + Android 10.0.0。Android 原始文件、版本与摘要保留不变。FRP 保持 0.70.1；增量契约为 api-v1.5.0，历史契约不变。未运行项目不计为通过。详见<a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">发布说明</a>。</p>
-<h2>10.1 更新</h2>
-<p>修复 Windows 审批弹窗底色和显示时机、阻止连接本机；原生登录通过短时单次交接复用到仅限远控的子会话。设置与更新合并，当前设备改名移到“我的设备”，登录布局、窄窗口滚动和键盘行为得到改善。登录交接与当前设备改名需要 Server 10.1.0。</p>
-<h2>两条路径</h2>
-<p>远控继续使用端到端 DTLS 加密 UDP，浏览器可用可选 UDP TURN 中继；Android 与 9.x 被控端只走直连，没有 TCP/FRP/HTTP/WSS 载荷回退。服务发布使用 FRP 0.70.1 的 HTTP/HTTPS、TCP 与 UDP 路径。</p>
-<h2>实测范围</h2>
-<p>10.1.0 的原始 Windows worker 字节在同机 Chromium 与生产源码 QA host 的隔离回环环境中通过 30 次连接、7202.463 秒活动和 1391 次采样；显式重启 QA host 后，新配对恢复输入耗时 3507.7 ms。</p>
-<p>实测包含原生画面、可信键鼠与中文、签名配对、UDP/DTLS、会话关闭与输入释放。服务器由锁定生产源码本地构建，不代表最终容器或已部署生产环境验收。QA 账号令牌与单次授权使用 10800 秒测试有效期，生产租约和信令令牌续期逻辑未修改。</p>
-<h2>未验证项目</h2>
-<ul class="plain">
-<li>这些结果不代表完整安装版 GUI、Windows 服务、两台独立 Windows 终端、Android、断网恢复、24 小时在线或 Linux/macOS 运行验收。</li>
-<li>完整审批、固定密码、临时密码界面流程；本轮未覆盖的音频、剪贴板、双向文件、多显示器与 DPI。</li>
-<li>完整安装器升级与备份恢复；NAT、IPv6、UDP 被封及断网恢复矩阵。</li>
-<li>最终 APK 与实体手机；账号令牌刷新、性能对比、隧道运行矩阵、完整最终界面审查。</li>
-<li>24 小时测试未运行。显式 QA host 重启不能证明自动服务重启或断网恢复。</li>
-</ul>
-<h2>限制与历史截图</h2>
-<p>锁屏、登录前、UAC 安全桌面和麦克风回传不可用。Windows Authenticode / macOS Developer ID 未配置；SHA-256 和 Sigstore 不是发行商签名。Android 保留原发行证书。10.0.0、9.0.0 和 8.0 的历史证据不能替代 10.1.0 最终字节。</p>
-<p>以下产品截图仍是明确标注的 10.0.0，不代表 10.1.0 界面或验收。</p>
-<figure class="shot-slot" data-shot-slot="v10-admin-console" data-slot-status="captured-v10-ui">
-<figcaption><strong>10.0.0 Web 控制台</strong><span>2026-09-30，发行版界面实际截图，使用本地示例数据。状态和流量来自预览测试数据。</span></figcaption>
-<img src="assets/v10/admin-console.png" alt="Home Tunnel 10.0.0 Web 控制台，示例数据，包含导航、设备状态和流量统计" width="1440" height="1132" loading="lazy">
-</figure>
-<figure class="shot-slot" data-shot-slot="v10-tunnel-wizard" data-slot-status="captured-v10-ui">
-<figcaption><strong>10.0.0 Web 服务发布向导</strong><span>实际向导的设备与模板步骤，使用示例数据；截图时尚未创建或发布服务。</span></figcaption>
-<img src="assets/v10/tunnel-wizard.png" alt="Home Tunnel 10.0.0 Web 发布内网服务向导，选中 Home Assistant 模板，使用示例数据" width="1440" height="960" loading="lazy">
-</figure>
-<figure class="shot-slot" data-shot-slot="v10-web-remote-entry" data-slot-status="captured-v10-ui">
-<figcaption><strong>10.0.0 Web 远控入口，未连接</strong><span>实际界面的空设备状态，使用示例数据。没有连接 Windows 主机，不代表远控会话验证。</span></figcaption>
-<img src="assets/v10/remote-entry.png" alt="Home Tunnel 10.0.0 Web 远控入口，显示还没有被控电脑，未连接状态" width="1440" height="960" loading="lazy">
-</figure>
-<figure class="shot-slot" data-shot-slot="v10-windows-signin" data-slot-status="captured-v10-ui">
-<figcaption><strong>10.0.0 Windows 原生客户端，登录界面</strong><span>正式便携版在 Windows Server 2022 上的真实原生 WebView2 窗口。空白隔离状态，尚未登录账号或建立远控会话。</span></figcaption>
-<img src="assets/v10/windows-signin.png" alt="Home Tunnel 10.0.0 Windows 原生登录窗口，包含真实窗口标题栏和空白账号密码框" width="946" height="665" loading="lazy">
-</figure>
-<div class="split">
-<figure class="shot-slot shot-phone" data-shot-slot="v10-android-overview" data-slot-status="captured-v10-ui">
-<figcaption><strong>10.0.0 Android 远控入口</strong><span>API 35 x86_64 模拟器、debug 构建，使用示例数据；不是活动远控会话或最终 APK 验收。</span></figcaption>
-<img src="assets/v10/android-overview.png" alt="Home Tunnel 10.0.0 Android 远控入口，API 35 模拟器，英文界面和中文示例设备名" width="1080" height="2400" loading="lazy">
-</figure>
-<figure class="shot-slot shot-phone" data-shot-slot="v10-android-devices" data-slot-status="captured-v10-ui">
-<figcaption><strong>10.0.0 Android 设备列表</strong><span>API 35 x86_64 模拟器、debug 构建，使用示例数据；不是实体手机或最终 APK 验收。</span></figcaption>
-<img src="assets/v10/android-devices.png" alt="Home Tunnel 10.0.0 Android 设备列表，API 35 模拟器，展示搜索、隧道和远控入口" width="1080" height="2400" loading="lazy">
-</figure>
-</div>
-<p class="muted"><a href="assets/v10/README.md">截图来源与原始图片校验值</a></p>
-<figure data-shot-file="assets/v10/remote-window.png" class="shot-slot" data-shot-slot="v10-remote-window" data-slot-status="awaiting-v10-capture">
-<figcaption><strong>10.0 Windows 远控窗口</strong><span>仍需真实 Windows 环境截图；上方 Web 与 Android 入口不能代替它。</span></figcaption>
-<p class="slot-empty">等待实际产品截图</p>
-</figure>
-
-<figure class="shot-slot" data-shot-slot="history-console-7" data-slot-status="historical-labeled">
-<figcaption><strong>7.0.0 控制台，历史示例</strong><span>保留作 7.0.0 历史图片，不代表当前远控界面。</span></figcaption>
-<img src="assets/admin-dashboard-7.jpg" alt="Home Tunnel 7.0.0 控制台历史截图，示例数据" width="1440" height="1195">
-</figure>
-</section>
-<section class="section"><h2>栖云桥 12.0.0-RC1 · Web 工作台</h2><figure class="shot-slot" data-shot-slot="rc12-workbench" data-slot-status="captured-release-ui"><figcaption><strong>栖云桥 12.0.0-RC1 · Web 工作台</strong><span>真实 Web 界面，使用隔离的示例数据；图片不代表远控会话或媒体验收。</span></figcaption><img src="assets/rc12/web-workbench.png" alt="栖云桥 12.0.0-RC1 · Web 工作台 · 示例数据" width="1280" height="860" loading="lazy"></figure></section>
-</main>
-<footer class="site-footer">
-<span>© 2026 NestLink · Apache-2.0</span>
-<nav aria-label="页脚"><a href="index.html">首页</a><a href="downloads.html">下载</a><a href="privacy.html">隐私说明</a></nav>
-</footer>
-</div>
-<script src="assets/download-state.js"></script>
-<script src="assets/site.js"></script>
-<script src="assets/analytics.js"></script>
-</body>
-</html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark">
+<script>(function(){var a={light:1,dark:1,system:1},t="system";try{var q=new URLSearchParams(location.search).get("theme"),s=localStorage.getItem("home-tunnel-theme");t=a[q]?q:a[s]?s:t}catch(e){}document.documentElement.dataset.theme=t;document.documentElement.classList.add("js")})();</script><title>界面 · nestlink</title><meta name="description" content="nestlink 13.0.0 当前界面。">
+<link rel="canonical" href="https://zhanry.github.io/home-tunnel/preview.html"><link rel="alternate" hreflang="zh-CN" href="https://zhanry.github.io/home-tunnel/preview.html"><link rel="alternate" hreflang="en" href="https://zhanry.github.io/home-tunnel/en/preview.html">
+<meta property="og:title" content="nestlink 13.0.0"><meta property="og:description" content="nestlink 13.0.0 当前界面。"><meta property="og:type" content="website"><meta property="og:url" content="https://zhanry.github.io/home-tunnel/preview.html"><meta property="og:image" content="https://zhanry.github.io/home-tunnel/assets/share-card.svg"><meta property="og:image:alt" content="nestlink brand mark">
+<link rel="icon" type="image/svg+xml" href="assets/NestLink.svg"><link rel="stylesheet" href="assets/site.css?v=13.0.0">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"nestlink","softwareVersion": "13.0.0","operatingSystem":"Windows, Linux, Android, Web","applicationCategory":"UtilitiesApplication","url":"https://zhanry.github.io/home-tunnel/"}</script></head>
+<body data-root="" data-stable-version="10.1.0"><a class="skip" href="#content">跳到主要内容</a>
+<header class="site-header wrap"><a class="brand" href="index.html"><img src="assets/NestLink.svg" alt="" width="32" height="32">nestlink</a><button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">菜单</button><nav id="site-nav" aria-label="主导航"><a href="index.html" >首页</a><a href="preview.html" aria-current="page">界面</a><a href="downloads.html" >下载</a><a href="https://github.com/ZHanry/home-tunnel">GitHub <span aria-hidden="true">↗</span></a></nav><a class="language" href="en/preview.html" lang="en">English</a></header>
+<main id="content" class="wrap"><div class="page-heading"><span class="eyebrow">INTERFACE / 13.0.0</span><h1>把每一种连接，放在合适的位置。</h1><p>当前 Web 页面与桌面组件，包含浅色、深色和空状态。使用示例数据；截图不代表安装版或远控会话验收。</p></div><section class="gallery"><figure data-slot="desktop-light" data-slot-status="component-preview" class="product-shot"><img src="assets/13.0.0/desktop-workbench-light.png" alt="桌面工作台 · 浅色" width="1120" height="760" loading="lazy"><figcaption>桌面工作台 · 浅色<span>13.0.0 当前组件 · 示例数据</span></figcaption></figure><figure data-slot="desktop-dark" data-slot-status="component-preview" class="product-shot"><img src="assets/13.0.0/desktop-workbench-dark.png" alt="桌面工作台 · 深色" width="1120" height="760" loading="lazy"><figcaption>桌面工作台 · 深色<span>13.0.0 当前组件 · 示例数据</span></figcaption></figure><figure data-slot="desktop-empty" data-slot-status="component-preview" class="product-shot"><img src="assets/13.0.0/desktop-workbench-empty.png" alt="设备空状态" width="1120" height="760" loading="lazy"><figcaption>设备空状态<span>13.0.0 当前组件 · 示例数据</span></figcaption></figure><figure data-slot="web-admin" data-slot-status="current-ui" class="product-shot"><img src="assets/13.0.0/admin-console.png" alt="Web 管理工作台" width="1440" height="960" loading="lazy"><figcaption>Web 管理工作台<span>13.0.0 当前 Web 界面 · 示例数据</span></figcaption></figure><figure data-slot="web-remote" data-slot-status="current-ui" class="product-shot"><img src="assets/13.0.0/remote-entry.png" alt="Web 远控入口" width="1440" height="960" loading="lazy"><figcaption>Web 远控入口<span>13.0.0 当前 Web 界面 · 示例数据</span></figcaption></figure><figure data-slot="web-tunnel" data-slot-status="current-ui" class="product-shot"><img src="assets/13.0.0/tunnel-wizard.png" alt="穿透配置向导" width="1440" height="960" loading="lazy"><figcaption>穿透配置向导<span>13.0.0 当前 Web 界面 · 示例数据</span></figcaption></figure></section><section class="interface-notes"><h2>为日常使用整理界面</h2><div class="three-columns"><p>远控、穿透、设备与设置统一导航，账号和版本入口放在底部。</p><p>控件保持紧凑。内容可以正常滚动，右侧不显示上下滚动条。</p><p>手机导航随屏幕适配，主题与语言在各主要页面保持一致。</p></div><a href="assets/13.0.0/desktop-capture-manifest.json">源码与原始图片摘要 ↗</a> · <a href="assets/13.0.0/web-capture-manifest.json">Web 源码与原始图片摘要 ↗</a></section></main>
+<footer class="site-footer wrap"><div><a class="brand small" href="index.html">nestlink</a><p>连接你的设备，使用自己的服务。</p></div><div class="footer-tools"><div class="theme" role="radiogroup" aria-label="外观"><button type="button" role="radio" aria-checked="false" data-theme-choice="light">浅色</button><button type="button" role="radio" aria-checked="false" data-theme-choice="dark">深色</button><button type="button" role="radio" aria-checked="true" data-theme-choice="system">跟随系统</button></div><a href="privacy.html">隐私</a><a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">发布说明</a></div></footer>
+<script src="assets/download-state.js?v=13.0.0" defer></script><script src="assets/site.js?v=13.0.0" defer></script><script src="assets/analytics.js" defer></script></body></html>

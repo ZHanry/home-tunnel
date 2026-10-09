@@ -2,7 +2,7 @@
 
 Server 保持 Node/SQLite 控制面、Caddy HTTPS 边缘、traffic-gateway 流量治理与 FRPS 穿透数据面。只新增常驻 hbbs 1.1.16，提供远控设备 ID 与 NAT 协调；固定镜像摘要，内存上限 64 MB。一次性卷初始化复用已有 FRPS 镜像，没有新增常驻数据库、Redis、TURN 或 hbbr。
 
-Client 使用导入的 RustDesk 核心与 Flutter 栖云桥界面，保留原 Go CLI 和独立 Agent。所有远控入口与最终成功守卫要求认证、加密、直连；不提供中继回退。Android 通过 `homedesk-core` Git 子模块固定 Client revision，不维护复制分叉。
+Client 使用导入的 RustDesk 核心与 Flutter NestLink界面，保留原 Go CLI 和独立 Agent。所有远控入口与最终成功守卫要求认证、加密、直连；不提供中继回退。Android 通过 `homedesk-core` Git 子模块固定 Client revision，不维护复制分叉。
 
 ```mermaid
 flowchart LR
@@ -11,7 +11,7 @@ flowchart LR
   A -->|ID 与 NAT 协调| H
   W -->|HTTPS 账号 / 设备 / 服务| C[Node + SQLite]
   A --> C
-  Web[栖云桥 Web 管理台] --> C
+  Web[NestLink Web 管理台] --> C
   Web -.->|homedesk://ID| W
   Visitor[公网服务访问者] --> Edge[Caddy + traffic-gateway / FRPS]
   Edge <-->|HTTP/HTTPS / 受控 TCP/UDP| Agent[家庭 CLI / NAS / Agent]

@@ -11,12 +11,12 @@ END = "<!-- homedesk-assets:end -->"
 
 def contents(candidate, english=False):
     if not candidate.get("downloads_published"):
-        return ("<p>Candidate builds and release verification are in progress. Real download hashes will appear after publication.</p>"
-                if english else "<p>候选构建与发布检查进行中，完成后列出真实下载与摘要。</p>")
+        return ("<p>13.0.0 build and acceptance are in progress. Original download hashes will appear after publication.</p>"
+                if english else "<p>13.0.0 构建与验收进行中，发布后列出原始下载文件与摘要。</p>")
     components = candidate["components"]
     file_label = "File" if english else "文件"
     titles = {"server": "Server" if english else "服务端",
-              "client": "Windows / macOS / Linux / CLI + Agent" if english else "Windows / macOS / Linux / CLI 与 Agent",
+              "client": "Windows / Linux desktop" if english else "Windows / Linux 桌面端",
               "android": "Android"}
     parts = []
     for name in ("server", "client", "android"):

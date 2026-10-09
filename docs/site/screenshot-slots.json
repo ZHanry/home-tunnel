@@ -1,195 +1,111 @@
 {
-  "schema_version": 1,
-  "note": "Current product captures use original PNG bytes and a source/hash manifest. Historical images keep their original version labels. The Windows remote-window slot remains empty until a real Windows capture exists.",
+  "schema_version": 2,
+  "note": "Only current nestlink 13.0.0 images. Component renders are explicitly labeled and are separate from installed-package acceptance.",
   "slots": [
     {
-      "id": "history-console-7",
-      "status": "historical-labeled",
+      "id": "desktop-light",
+      "status": "component-preview",
+      "asset": "assets/13.0.0/desktop-workbench-light.png",
+      "capture_manifest": "assets/13.0.0/desktop-capture-manifest.json",
+      "source_file": "desktop-workbench-light.png",
+      "captured_product_version": "13.0.0",
+      "fixture_data": true,
+      "capture_kind": "component-preview",
       "pages": [
         "preview.html",
-        "en/preview.html"
-      ],
-      "asset": "assets/admin-dashboard-7.jpg",
-      "captured_product_version": "7.0.0",
-      "label_must_include": [
-        "7.0.0"
-      ],
-      "replacement": "Keep this historical figure. Add a new slot for a later capture."
-    },
-    {
-      "id": "vector-architecture",
-      "status": "vector-diagram",
-      "pages": [
+        "en/preview.html",
         "index.html",
         "en/index.html"
       ],
-      "asset": "assets/architecture.svg",
       "label_must_include": [
-        "FRP"
-      ],
-      "replacement": "Vector diagram of the control plane and FRP path. It is not a remote-desktop screenshot."
+        "13.0.0"
+      ]
     },
     {
-      "id": "v10-remote-window",
-      "status": "awaiting-v10-capture",
-      "pages": [
-        "index.html",
-        "en/index.html",
-        "preview.html",
-        "en/preview.html"
-      ],
-      "asset": null,
-      "replacement_file": "assets/v10/remote-window.png",
-      "replacement_rules": "Actual Windows remote-window screenshot after a real capture. Do not use admin-dashboard-7.jpg or social-preview.jpg."
-    },
-    {
-      "status": "captured-v10-ui",
-      "pages": [
-        "index.html",
-        "en/index.html",
-        "preview.html",
-        "en/preview.html"
-      ],
-      "captured_product_version": "10.0.0",
+      "id": "desktop-dark",
+      "status": "component-preview",
+      "asset": "assets/13.0.0/desktop-workbench-dark.png",
+      "capture_manifest": "assets/13.0.0/desktop-capture-manifest.json",
+      "source_file": "desktop-workbench-dark.png",
+      "captured_product_version": "13.0.0",
       "fixture_data": true,
-      "id": "v10-admin-console",
-      "asset": "assets/v10/admin-console.png",
-      "capture_manifest": "assets/v10/web-capture-manifest.json",
+      "capture_kind": "component-preview",
+      "pages": [
+        "preview.html",
+        "en/preview.html"
+      ],
+      "label_must_include": [
+        "13.0.0"
+      ]
+    },
+    {
+      "id": "desktop-empty",
+      "status": "component-preview",
+      "asset": "assets/13.0.0/desktop-workbench-empty.png",
+      "capture_manifest": "assets/13.0.0/desktop-capture-manifest.json",
+      "source_file": "desktop-workbench-empty.png",
+      "captured_product_version": "13.0.0",
+      "fixture_data": true,
+      "capture_kind": "component-preview",
+      "pages": [
+        "preview.html",
+        "en/preview.html"
+      ],
+      "label_must_include": [
+        "13.0.0"
+      ]
+    },
+    {
+      "id": "web-admin",
+      "status": "current-ui",
+      "asset": "assets/13.0.0/admin-console.png",
+      "capture_manifest": "assets/13.0.0/web-capture-manifest.json",
       "source_file": "admin-console.png",
-      "label_must_include": [
-        "10.0.0",
-        "Web"
-      ]
-    },
-    {
-      "status": "captured-v10-ui",
+      "captured_product_version": "13.0.0",
+      "fixture_data": true,
+      "capture_kind": "web-ui",
       "pages": [
-        "index.html",
-        "en/index.html",
         "preview.html",
         "en/preview.html"
       ],
-      "captured_product_version": "10.0.0",
-      "fixture_data": true,
-      "id": "v10-tunnel-wizard",
-      "asset": "assets/v10/tunnel-wizard.png",
-      "capture_manifest": "assets/v10/web-capture-manifest.json",
-      "source_file": "tunnel-wizard.png",
       "label_must_include": [
-        "10.0.0",
-        "Web"
+        "13.0.0"
       ]
     },
     {
-      "status": "captured-v10-ui",
-      "pages": [
-        "index.html",
-        "en/index.html",
-        "preview.html",
-        "en/preview.html"
-      ],
-      "captured_product_version": "10.0.0",
-      "fixture_data": true,
-      "id": "v10-web-remote-entry",
-      "asset": "assets/v10/remote-entry.png",
-      "capture_manifest": "assets/v10/web-capture-manifest.json",
+      "id": "web-remote",
+      "status": "current-ui",
+      "asset": "assets/13.0.0/remote-entry.png",
+      "capture_manifest": "assets/13.0.0/web-capture-manifest.json",
       "source_file": "remote-entry.png",
-      "label_must_include": [
-        "10.0.0",
-        "Web"
-      ]
-    },
-    {
-      "status": "captured-v10-ui",
-      "pages": [
-        "index.html",
-        "en/index.html",
-        "preview.html",
-        "en/preview.html"
-      ],
-      "captured_product_version": "10.0.0",
+      "captured_product_version": "13.0.0",
       "fixture_data": true,
-      "id": "v10-android-overview",
-      "asset": "assets/v10/android-overview.png",
-      "capture_manifest": "assets/v10/android-capture-manifest.json",
-      "source_file": "overview.png",
-      "label_must_include": [
-        "10.0.0",
-        "Android",
-        "API 35",
-        "debug"
-      ]
-    },
-    {
-      "status": "captured-v10-ui",
+      "capture_kind": "web-ui",
       "pages": [
-        "index.html",
-        "en/index.html",
         "preview.html",
         "en/preview.html"
       ],
-      "captured_product_version": "10.0.0",
+      "label_must_include": [
+        "13.0.0"
+      ]
+    },
+    {
+      "id": "web-tunnel",
+      "status": "current-ui",
+      "asset": "assets/13.0.0/tunnel-wizard.png",
+      "capture_manifest": "assets/13.0.0/web-capture-manifest.json",
+      "source_file": "tunnel-wizard.png",
+      "captured_product_version": "13.0.0",
       "fixture_data": true,
-      "id": "v10-android-devices",
-      "asset": "assets/v10/android-devices.png",
-      "capture_manifest": "assets/v10/android-capture-manifest.json",
-      "source_file": "devices.png",
-      "label_must_include": [
-        "10.0.0",
-        "Android",
-        "API 35",
-        "debug"
-      ]
-    },
-    {
-      "id": "v10-windows-signin",
-      "status": "captured-v10-ui",
+      "capture_kind": "web-ui",
       "pages": [
-        "index.html",
-        "en/index.html",
         "preview.html",
         "en/preview.html"
       ],
-      "asset": "assets/v10/windows-signin.png",
-      "captured_product_version": "10.0.0",
-      "fixture_data": false,
-      "capture_kind": "native-windows",
-      "capture_manifest": "assets/v10/windows-capture-manifest.json",
-      "source_file": "windows-v10-signin.png",
-      "product_source_revision": "5eb6768f0d21a842c01d66d3d979a4f935a2ed61",
       "label_must_include": [
-        "10.0.0",
-        "Windows",
-        "WebView2"
-      ]
-    },
-    {
-      "id": "rc12-workbench",
-      "status": "captured-release-ui",
-      "pages": [
-        "index.html",
-        "en/index.html",
-        "preview.html",
-        "en/preview.html"
-      ],
-      "asset": "assets/rc12/web-workbench.png",
-      "capture_manifest": "assets/rc12/web-capture-manifest.json",
-      "source_file": "web-workbench.png",
-      "captured_product_version": "12.0.0-RC1",
-      "fixture_data": true,
-      "label_must_include": [
-        "12.0.0-RC1",
-        "Web"
+        "13.0.0"
       ]
     }
   ],
-  "historical_assets_not_for_v10": [
-    "assets/admin-connections-v5.jpg",
-    "assets/admin-dashboard.jpg",
-    "assets/admin-dashboard-small.jpg",
-    "assets/admin-mobile.jpg",
-    "assets/android.jpg",
-    "assets/desktop.jpg",
-    "assets/social-preview.jpg"
-  ]
+  "historical_assets_not_for_v10": []
 }

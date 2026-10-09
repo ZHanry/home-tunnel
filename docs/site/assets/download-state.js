@@ -10,7 +10,7 @@
   }
 
   // Both states describe published releases; unrun gates remain unverified.
-  var ACCEPTED = ["accepted", "accepted_with_waivers"];
+  var ACCEPTED = ["accepted", "accepted_with_waivers", "passed_reproducible"];
 
   function view(input) {
     var fallback = input.fallbackStable || "10.1.0";
@@ -59,6 +59,11 @@
         en: "Stable downloads are " + stable.version + ". NestLink " + candidate.version + " remains a prerelease. " + publishedEn + "Remote control requires direct P2P; acceptance is pending. Cross-network and physical-device gates were not run and remain unverified."
       };
     }
+    if (candidate.version === "13.0.0" && candidate.prerelease === false && candidate.promotion_status === "not_promoted") {
+      if (candidate.acceptance_status !== "pending" || candidate.remote_policy !== "require_direct" || candidate.relay_enabled !== false)
+        return {tone:"error",zh:"13.0.0 清单状态不一致。",en:"The 13.0.0 manifest has conflicting state."};
+      return {tone:"ready",zh:"nestlink 13.0.0 构建与验收进行中。正式下载将在通过检查后发布。",en:"nestlink 13.0.0 build and acceptance are in progress. Stable downloads will follow verified publication."};
+    }
     if (candidate.promotion_status !== "promoted") {
       if (candidate.downloads_published !== false || ACCEPTED.indexOf(candidate.acceptance_status) !== -1) {
         return {
@@ -77,6 +82,8 @@
         en: "The download manifest conflicts with itself: promotion does not match the stable version. Do not install an unverified " + candidate.version + " package."
       };
     }
+    if (candidate.version === "13.0.0" && candidate.acceptance_status === "passed_reproducible")
+      return {tone:"ready",zh:"nestlink 13.0.0 正式版 · 安装与联调已验证。真机、运营商网络和长期媒体验证范围见发布说明。",en:"nestlink 13.0.0 stable · installation and reproducible integration verified. See release notes for physical-device, carrier-network and long-duration-media coverage."};
     var components = stable.components || {};
     var mixed = components.android && components.android.version !== stable.version;
     var mixZh = mixed ? "Server / Client " + stable.version + "，Android 保留 " + components.android.version + "。" : "";

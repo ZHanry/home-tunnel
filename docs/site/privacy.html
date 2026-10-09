@@ -1,73 +1,13 @@
 <!doctype html>
 <html lang="zh-CN" data-goatcounter-endpoint="__GOATCOUNTER_ENDPOINT__">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light dark">
-<script>
-(function () {
-  var allowed = { light: 1, dark: 1, system: 1 };
-  var theme = "system";
-  try {
-    var query = new URLSearchParams(location.search).get("theme");
-    if (allowed[query]) theme = query;
-    else {
-      var stored = localStorage.getItem("home-tunnel-theme");
-      if (allowed[stored]) theme = stored;
-    }
-  } catch (error) {}
-  document.documentElement.setAttribute("data-theme", theme);
-  document.documentElement.classList.add("js");
-})();
-</script>
-<title>隐私说明 · 栖云桥 / NestLink</title>
-<meta name="description" content="栖云桥 / NestLink 项目网站与自托管服务如何处理数据。">
-<link rel="canonical" href="https://zhanry.github.io/home-tunnel/privacy.html">
-<link rel="alternate" hreflang="zh-CN" href="https://zhanry.github.io/home-tunnel/privacy.html">
-<link rel="alternate" hreflang="en" href="https://zhanry.github.io/home-tunnel/en/privacy.html">
-<link rel="icon" type="image/svg+xml" href="assets/NestLink.svg">
-<link rel="stylesheet" href="assets/site.css?v=10.1.0">
-</head>
-<body data-root="" data-stable-version="10.1.0">
-<a class="skip" href="#content">跳到主要内容</a>
-<div class="wrap">
-<header class="site-header">
-<a class="brand" href="index.html"><img src="assets/NestLink.svg" alt="" width="36" height="36">栖云桥 / NestLink</a>
-<button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">菜单</button>
-<nav id="site-nav" aria-label="主导航">
-<a href="index.html#remote">远程控制</a>
-<a href="index.html#tunnel">内网穿透</a>
-<a href="downloads.html">下载</a>
-<a href="preview.html">范围</a>
-<a href="index.html#faq">常见问题</a>
-<a href="en/privacy.html" hreflang="en" lang="en">English</a>
-<a href="https://github.com/ZHanry/home-tunnel">GitHub</a>
-</nav>
-<div class="theme" role="radiogroup" aria-label="颜色主题">
-<button type="button" role="radio" id="theme-light" data-theme-choice="light" aria-checked="false">浅色</button>
-<button type="button" role="radio" data-theme-choice="dark" aria-checked="false">深色</button>
-<button type="button" role="radio" data-theme-choice="system" aria-checked="false">系统</button>
-</div>
-</header>
-<main id="content" class="section">
-<p class="eyebrow">隐私</p>
-<h1>隐私说明</h1>
-<h2>项目网站</h2>
-<p>此网站提供产品说明和下载链接，不要求登录，不收集 NestLink 账号或设备凭据。网站托管在 GitHub Pages，访问时由托管服务处理基础请求信息。主题选择保存在这台浏览器的 localStorage 里，键名是 home-tunnel-theme，不会发到服务器。</p>
-<p>仓库里的访问统计默认是空的。只有在 GitHub Pages 生产主机配置了 GoatCounter 的 HTTPS /count 地址时，页面才会从 gc.zgo.at 加载计数脚本。计数只针对这个网站的访问，不包含 NestLink 账号、远控画面或隧道凭据。GoatCounter 的说明见 <a href="https://www.goatcounter.com/privacy">goatcounter.com/privacy</a>。</p>
-<h2>自托管服务</h2>
-<p>账号、设备、连接、流量统计和审计记录存储在你部署的服务器上，由部署管理员管理。设备凭据用于连接授权。Android 登录用于管理你自己的服务器，不在这个项目网站上保存。</p>
-<p>远控的画面、输入、文件和声音不经过本网站。NestLink 12 候选版的自托管服务器负责身份、授权和连接撮合；内置远控只允许认证加密的 P2P 直连，直连失败即终止，不使用中继。FRP 发布的是你配置的本地服务，流量经过你自己的服务器，而不是这个文档站。旧稳定版的能力和边界见对应版本的发行说明。</p>
-<h2>反馈与联系</h2>
-<p>通过 GitHub 提交问题时，请去掉密码、令牌、私钥和个人信息。安全问题使用 <a href="https://github.com/ZHanry/home-tunnel/security/advisories/new">私密漏洞报告</a>，不要发到公开 Issue。仓库里的 SECURITY.md 有同样的入口。</p>
-</main>
-<footer class="site-footer">
-<span>© 2026 NestLink · Apache-2.0</span>
-<nav aria-label="页脚"><a href="index.html">首页</a><a href="downloads.html">下载</a></nav>
-</footer>
-</div>
-<script src="assets/download-state.js"></script>
-<script src="assets/site.js"></script>
-<script src="assets/analytics.js"></script>
-</body>
-</html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark">
+<script>(function(){var a={light:1,dark:1,system:1},t="system";try{var q=new URLSearchParams(location.search).get("theme"),s=localStorage.getItem("home-tunnel-theme");t=a[q]?q:a[s]?s:t}catch(e){}document.documentElement.dataset.theme=t;document.documentElement.classList.add("js")})();</script><title>隐私 · nestlink</title><meta name="description" content="nestlink privacy and self-hosted data.">
+<link rel="canonical" href="https://zhanry.github.io/home-tunnel/privacy.html"><link rel="alternate" hreflang="zh-CN" href="https://zhanry.github.io/home-tunnel/privacy.html"><link rel="alternate" hreflang="en" href="https://zhanry.github.io/home-tunnel/en/privacy.html">
+<meta property="og:title" content="nestlink 13.0.0"><meta property="og:description" content="nestlink privacy and self-hosted data."><meta property="og:type" content="website"><meta property="og:url" content="https://zhanry.github.io/home-tunnel/privacy.html"><meta property="og:image" content="https://zhanry.github.io/home-tunnel/assets/share-card.svg"><meta property="og:image:alt" content="nestlink brand mark">
+<link rel="icon" type="image/svg+xml" href="assets/NestLink.svg"><link rel="stylesheet" href="assets/site.css?v=13.0.0">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"nestlink","softwareVersion": "13.0.0","operatingSystem":"Windows, Linux, Android, Web","applicationCategory":"UtilitiesApplication","url":"https://zhanry.github.io/home-tunnel/"}</script></head>
+<body data-root="" data-stable-version="10.1.0"><a class="skip" href="#content">跳到主要内容</a>
+<header class="site-header wrap"><a class="brand" href="index.html"><img src="assets/NestLink.svg" alt="" width="32" height="32">nestlink</a><button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">菜单</button><nav id="site-nav" aria-label="主导航"><a href="index.html" >首页</a><a href="preview.html" >界面</a><a href="downloads.html" >下载</a><a href="https://github.com/ZHanry/home-tunnel">GitHub <span aria-hidden="true">↗</span></a></nav><a class="language" href="en/privacy.html" lang="en">English</a></header>
+<main id="content" class="wrap"><div class="page-heading"><span class="eyebrow">PRIVACY</span><h1>数据由你的服务器管理。</h1></div><article class="prose"><h2>这个网站</h2><p>本静态网站在本地保存外观偏好。仅在站点运营者配置统计端点时启用 GoatCounter 访问统计。网站不收集账号密码或远控画面。</p><h2>自建服务</h2><p>你的服务端保存账号、设备、会话与穿透元数据，负责认证和信令。远控画面与输入通过经过认证和加密的 P2P 直连传输。FRP 穿透流量遵循管理员的部署和访问策略。</p><h2>管理访问</h2><p>退出登录会结束相关远控会话。撤销设备会取消其凭据并停止对应服务。数据保留和删除策略由你自己的服务管理员管理。</p></article></main>
+<footer class="site-footer wrap"><div><a class="brand small" href="index.html">nestlink</a><p>连接你的设备，使用自己的服务。</p></div><div class="footer-tools"><div class="theme" role="radiogroup" aria-label="外观"><button type="button" role="radio" aria-checked="false" data-theme-choice="light">浅色</button><button type="button" role="radio" aria-checked="false" data-theme-choice="dark">深色</button><button type="button" role="radio" aria-checked="true" data-theme-choice="system">跟随系统</button></div><a href="privacy.html">隐私</a><a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">发布说明</a></div></footer>
+<script src="assets/download-state.js?v=13.0.0" defer></script><script src="assets/site.js?v=13.0.0" defer></script><script src="assets/analytics.js" defer></script></body></html>

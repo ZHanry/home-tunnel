@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   capture:
-    name: Capture released v10 Web UI with example data
+    name: Capture current 13.0.0 Web UI with example data
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -25,11 +25,11 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Check out unchanged v10.0.0 server source
+      - name: Check out unchanged 13.0.0 server source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ZHanry/home-tunnel-server
-          ref: 9e5b4ff4e6381a42317c94618d1805b7398c558e
+          ref: a85acca9335fa977c01e3ac25e3f99169a4f3649
           path: capture-source/server
           persist-credentials: false
       - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86
@@ -49,11 +49,11 @@ jobs:
           pnpm exec playwright install --with-deps --only-shell chromium
           test -n "$(fc-list :lang=zh family)"
       - name: Capture genuine Web UI and record provenance
-        run: node docs/screenshots/capture-product.mjs capture-source/server product-captures-v10
+        run: node docs/screenshots/capture-product.mjs capture-source/server product-captures-13
       - name: Upload screenshots for visual review
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: home-tunnel-v10-web-screenshots-${{ github.run_id }}-${{ github.run_attempt }}
-          path: product-captures-v10/
+          name: nestlink-13-web-screenshots-${{ github.run_id }}-${{ github.run_attempt }}
+          path: product-captures-13/
           if-no-files-found: error
           retention-days: 14

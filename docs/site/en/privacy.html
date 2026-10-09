@@ -1,73 +1,13 @@
 <!doctype html>
 <html lang="en" data-goatcounter-endpoint="__GOATCOUNTER_ENDPOINT__">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light dark">
-<script>
-(function () {
-  var allowed = { light: 1, dark: 1, system: 1 };
-  var theme = "system";
-  try {
-    var query = new URLSearchParams(location.search).get("theme");
-    if (allowed[query]) theme = query;
-    else {
-      var stored = localStorage.getItem("home-tunnel-theme");
-      if (allowed[stored]) theme = stored;
-    }
-  } catch (error) {}
-  document.documentElement.setAttribute("data-theme", theme);
-  document.documentElement.classList.add("js");
-})();
-</script>
-<title>Privacy · NestLink</title>
-<meta name="description" content="How the NestLink website and a self-hosted service handle data.">
-<link rel="canonical" href="https://zhanry.github.io/home-tunnel/en/privacy.html">
-<link rel="alternate" hreflang="en" href="https://zhanry.github.io/home-tunnel/en/privacy.html">
-<link rel="alternate" hreflang="zh-CN" href="https://zhanry.github.io/home-tunnel/privacy.html">
-<link rel="icon" type="image/svg+xml" href="../assets/NestLink.svg">
-<link rel="stylesheet" href="../assets/site.css?v=10.1.0">
-</head>
-<body data-root="../" data-stable-version="10.1.0">
-<a class="skip" href="#content">Skip to content</a>
-<div class="wrap">
-<header class="site-header">
-<a class="brand" href="index.html"><img src="../assets/NestLink.svg" alt="" width="36" height="36">NestLink</a>
-<button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
-<nav id="site-nav" aria-label="Primary">
-<a href="index.html#remote">Remote control</a>
-<a href="index.html#tunnel">Tunnels</a>
-<a href="downloads.html">Downloads</a>
-<a href="preview.html">Scope</a>
-<a href="index.html#faq">FAQ</a>
-<a href="../privacy.html" hreflang="zh-CN" lang="zh-CN">中文</a>
-<a href="https://github.com/ZHanry/home-tunnel">GitHub</a>
-</nav>
-<div class="theme" role="radiogroup" aria-label="Color theme">
-<button type="button" role="radio" id="theme-light" data-theme-choice="light" aria-checked="false">Light</button>
-<button type="button" role="radio" data-theme-choice="dark" aria-checked="false">Dark</button>
-<button type="button" role="radio" data-theme-choice="system" aria-checked="false">System</button>
-</div>
-</header>
-<main id="content" class="section">
-<p class="eyebrow">Privacy</p>
-<h1>Privacy</h1>
-<h2>Project website</h2>
-<p>This site explains the product and links to downloads. It does not require sign-in and it does not collect NestLink accounts or device credentials. GitHub Pages hosts the site and processes basic request information. The theme choice stays in this browser under the localStorage key home-tunnel-theme and is not sent to a NestLink server.</p>
-<p>The repository leaves page analytics empty. Only a configured GoatCounter HTTPS /count endpoint on the GitHub Pages production host loads the counter from gc.zgo.at. That counter covers visits to this website, not NestLink accounts, remote-desktop pictures, or tunnel credentials. See <a href="https://www.goatcounter.com/privacy">goatcounter.com/privacy</a>.</p>
-<h2>Self-hosted service</h2>
-<p>Accounts, devices, connections, traffic statistics, and audit records are stored on the server you deploy and are managed by that deployment's administrator. Device credentials authorize connections. Android sign-in manages your own server and is not stored on this website.</p>
-<p>Remote-control pictures, input, files, and audio do not pass through this website. In the NestLink 12 candidate, your server handles identity, authorization, and rendezvous. Built-in remote control requires authenticated, encrypted P2P connections; a failed direct connection ends the session without relay fallback. FRP publishes the local services you configure, and that traffic crosses your server rather than this documentation site. See the relevant release notes for the older stable version's capabilities and limits.</p>
-<h2>Feedback</h2>
-<p>Remove passwords, tokens, private keys, enrollment codes, and personal information before opening a GitHub issue. Report security problems through <a href="https://github.com/ZHanry/home-tunnel/security/advisories/new">private vulnerability reports</a>, not a public issue. SECURITY.md in the repository points to the same place.</p>
-</main>
-<footer class="site-footer">
-<span>© 2026 NestLink · Apache-2.0</span>
-<nav aria-label="Footer"><a href="index.html">Home</a><a href="downloads.html">Downloads</a></nav>
-</footer>
-</div>
-<script src="../assets/download-state.js"></script>
-<script src="../assets/site.js"></script>
-<script src="../assets/analytics.js"></script>
-</body>
-</html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark">
+<script>(function(){var a={light:1,dark:1,system:1},t="system";try{var q=new URLSearchParams(location.search).get("theme"),s=localStorage.getItem("home-tunnel-theme");t=a[q]?q:a[s]?s:t}catch(e){}document.documentElement.dataset.theme=t;document.documentElement.classList.add("js")})();</script><title>Privacy · nestlink</title><meta name="description" content="nestlink privacy and self-hosted data.">
+<link rel="canonical" href="https://zhanry.github.io/home-tunnel/en/privacy.html"><link rel="alternate" hreflang="zh-CN" href="https://zhanry.github.io/home-tunnel/privacy.html"><link rel="alternate" hreflang="en" href="https://zhanry.github.io/home-tunnel/en/privacy.html">
+<meta property="og:title" content="nestlink 13.0.0"><meta property="og:description" content="nestlink privacy and self-hosted data."><meta property="og:type" content="website"><meta property="og:url" content="https://zhanry.github.io/home-tunnel/en/privacy.html"><meta property="og:image" content="https://zhanry.github.io/home-tunnel/assets/share-card.svg"><meta property="og:image:alt" content="nestlink brand mark">
+<link rel="icon" type="image/svg+xml" href="../assets/NestLink.svg"><link rel="stylesheet" href="../assets/site.css?v=13.0.0">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"nestlink","softwareVersion": "13.0.0","operatingSystem":"Windows, Linux, Android, Web","applicationCategory":"UtilitiesApplication","url":"https://zhanry.github.io/home-tunnel/"}</script></head>
+<body data-root="../" data-stable-version="10.1.0"><a class="skip" href="#content">Skip to content</a>
+<header class="site-header wrap"><a class="brand" href="index.html"><img src="../assets/NestLink.svg" alt="" width="32" height="32">nestlink</a><button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button><nav id="site-nav" aria-label="Main navigation"><a href="index.html" >Home</a><a href="preview.html" >Interface</a><a href="downloads.html" >Downloads</a><a href="https://github.com/ZHanry/home-tunnel">GitHub <span aria-hidden="true">↗</span></a></nav><a class="language" href="../privacy.html" lang="zh-CN">中文</a></header>
+<main id="content" class="wrap"><div class="page-heading"><span class="eyebrow">PRIVACY</span><h1>Your server, your data</h1></div><article class="prose"><h2>The website</h2><p>This static website stores appearance preferences locally. Optional GoatCounter analytics are enabled only when the site operator configures an endpoint. It does not collect account passwords or remote screen content.</p><h2>The self-hosted service</h2><p>Your server stores account, device, session and tunnel metadata and handles authentication and signaling. Remote screen and input use authenticated encrypted direct P2P. FRP tunnel traffic follows the deployment and access policies configured by your administrator.</p><h2>Control your access</h2><p>Sign out to close remote sessions. Revoke a device to remove its credentials and stop its services. Ask your own service administrator about retention and deletion.</p></article></main>
+<footer class="site-footer wrap"><div><a class="brand small" href="index.html">nestlink</a><p>Your devices. Your own server.</p></div><div class="footer-tools"><div class="theme" role="radiogroup" aria-label="Appearance"><button type="button" role="radio" aria-checked="false" data-theme-choice="light">Light</button><button type="button" role="radio" aria-checked="false" data-theme-choice="dark">Dark</button><button type="button" role="radio" aria-checked="true" data-theme-choice="system">System</button></div><a href="privacy.html">Privacy</a><a href="https://github.com/ZHanry/home-tunnel/blob/main/docs/RELEASE_NOTES.md">Release notes</a></div></footer>
+<script src="../assets/download-state.js?v=13.0.0" defer></script><script src="../assets/site.js?v=13.0.0" defer></script><script src="../assets/analytics.js" defer></script></body></html>
