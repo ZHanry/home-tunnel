@@ -6,3 +6,5 @@ f5945fe698532ab9c1609852073b3c01652b3a6e:control-center/src/experience.test.ts:g
 3294fd537df4b1a27c1d6214fae0b910bad268a2:traffic-gateway/src/server.e2e.test.ts:generic-api-key:709
 6a1ce267b58a1cbe979830ed6433ebf2b9c5fdc1:tests/run-compose-smoke.ps1:private-key:51
 6a1ce267b58a1cbe979830ed6433ebf2b9c5fdc1:traffic-gateway/src/server.e2e.test.ts:generic-api-key:448
+# SHA-256 of immutable contracts/openapi.v2.json, checked against the frozen source.
+e1fac74164013b4d35d684baec82cdf095f1132e:distribution.json:generic-api-key:149
