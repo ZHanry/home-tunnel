@@ -1,16 +1,16 @@
 {
   "schema_version": 2,
-  "note": "Only current nestlink 13.0.0 images. Component renders are explicitly labeled and are separate from installed-package acceptance.",
+  "note": "Only current nestlink 13.0.0 images, captured from the installed Linux GUI and running Web server with disposable example data. Capture manifests bind original pixels to exact source and package bytes.",
   "slots": [
     {
       "id": "desktop-light",
-      "status": "component-preview",
+      "status": "current-ui",
       "asset": "assets/13.0.0/desktop-workbench-light.png",
       "capture_manifest": "assets/13.0.0/desktop-capture-manifest.json",
       "source_file": "desktop-workbench-light.png",
       "captured_product_version": "13.0.0",
       "fixture_data": true,
-      "capture_kind": "component-preview",
+      "capture_kind": "native-linux",
       "pages": [
         "preview.html",
         "en/preview.html",
@@ -23,13 +23,13 @@
     },
     {
       "id": "desktop-dark",
-      "status": "component-preview",
+      "status": "current-ui",
       "asset": "assets/13.0.0/desktop-workbench-dark.png",
       "capture_manifest": "assets/13.0.0/desktop-capture-manifest.json",
       "source_file": "desktop-workbench-dark.png",
       "captured_product_version": "13.0.0",
       "fixture_data": true,
-      "capture_kind": "component-preview",
+      "capture_kind": "native-linux",
       "pages": [
         "preview.html",
         "en/preview.html"
@@ -40,13 +40,13 @@
     },
     {
       "id": "desktop-empty",
-      "status": "component-preview",
+      "status": "current-ui",
       "asset": "assets/13.0.0/desktop-workbench-empty.png",
       "capture_manifest": "assets/13.0.0/desktop-capture-manifest.json",
       "source_file": "desktop-workbench-empty.png",
       "captured_product_version": "13.0.0",
       "fixture_data": true,
-      "capture_kind": "component-preview",
+      "capture_kind": "native-linux",
       "pages": [
         "preview.html",
         "en/preview.html"
