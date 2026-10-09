@@ -1,0 +1,2633 @@
+{
+  "schema_version": 1,
+  "version": "13.0.0",
+  "component": "hub",
+  "status": "passed_reproducible",
+  "source_revision": "d1db50a4e90c0dc3c81d5756f8a375cacf373db1",
+  "recorded_at": "2026-10-09T18:51:12.883906+00:00",
+  "deliverables": {},
+  "scenarios": [
+    {
+      "name": "component-bytes-signatures",
+      "status": "passed",
+      "evidence": {
+        "components": {
+          "server": {
+            "repository": "ZHanry/home-tunnel-server",
+            "tag": "v13.0.0",
+            "revision": "9645cf23871d2cb4913239eb9eff520d08c7cb23",
+            "assets": [
+              {
+                "filename": "NestLink-Server-13.0.0.tar.gz",
+                "sha256": "da77831ded3ba0ff0bf6e7f6257dba390f6d4e612eda41f64aced64219c76c7d",
+                "size_bytes": 295895,
+                "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v13.0.0/NestLink-Server-13.0.0.tar.gz"
+              },
+              {
+                "filename": "NestLink-server-Materials-13.0.0.zip",
+                "sha256": "34fd82683e25e87dc99cb1bbd97a2667273a89acd780eef4a7bb29761574a084",
+                "size_bytes": 1626773,
+                "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v13.0.0/NestLink-server-Materials-13.0.0.zip"
+              },
+              {
+                "filename": "SHA256SUMS.txt",
+                "sha256": "516723ec6d2b9b0ee9d1a8a2ed1e376ece1010e845d4e0fa4bbef0b937c32699",
+                "size_bytes": 199,
+                "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v13.0.0/SHA256SUMS.txt"
+              }
+            ],
+            "source_manifest_verified": true,
+            "sigstore_verified": true,
+            "reproducible_acceptance_verified": true
+          },
+          "client": {
+            "repository": "ZHanry/home-tunnel-client",
+            "tag": "v13.0.0",
+            "revision": "e712c02e0f38dd9d65aaa42162255d4ec0576f92",
+            "assets": [
+              {
+                "filename": "NestLink-Linux-13.0.0-arm64.deb",
+                "sha256": "c89325bba7dae33d1feee4a7087bf82751b0fa1e2d4d94a22545e7fb1bf7b6c0",
+                "size_bytes": 34148560,
+                "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v13.0.0/NestLink-Linux-13.0.0-arm64.deb"
+              },
+              {
+                "filename": "NestLink-Linux-13.0.0-x64.deb",
+                "sha256": "bd2b9a612ea7078a745b4bcb977bf804b97f24b51871f5bd8f8be4d713a51957",
+                "size_bytes": 36033432,
+                "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v13.0.0/NestLink-Linux-13.0.0-x64.deb"
+              },
+              {
+                "filename": "NestLink-Setup-13.0.0-x64.exe",
+                "sha256": "9410616f7e8b961eb6612545bf260c25abe83196cf4fa05b533785dc3266a88a",
+                "size_bytes": 32266847,
+                "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v13.0.0/NestLink-Setup-13.0.0-x64.exe"
+              },
+              {
+                "filename": "NestLink-client-Materials-13.0.0.zip",
+                "sha256": "22ee87c6327466f46c3e6abcd99001bc5b41afd1699eb8a03ab26f5687de77a4",
+                "size_bytes": 1965229642,
+                "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v13.0.0/NestLink-client-Materials-13.0.0.zip"
+              },
+              {
+                "filename": "SHA256SUMS.txt",
+                "sha256": "551fe682d4514e64afbd80071f86f207bb1cc255564bf243d2f553319321e25f",
+                "size_bytes": 393,
+                "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v13.0.0/SHA256SUMS.txt"
+              }
+            ],
+            "source_manifest_verified": true,
+            "sigstore_verified": true,
+            "reproducible_acceptance_verified": true
+          },
+          "android": {
+            "repository": "ZHanry/home-tunnel-android",
+            "tag": "v13.0.0",
+            "revision": "3543a54633bf33c94bddc3339e5500f185b62617",
+            "assets": [
+              {
+                "filename": "NestLink-Android-13.0.0.apk",
+                "sha256": "e61b5df9fce7df389ec1abba02d987c67c3b15d1bb4d850c192ea6838d8bfede",
+                "size_bytes": 116562154,
+                "url": "https://github.com/ZHanry/home-tunnel-android/releases/download/v13.0.0/NestLink-Android-13.0.0.apk"
+              },
+              {
+                "filename": "NestLink-android-Materials-13.0.0.zip",
+                "sha256": "cac81d5525dc779813f2107bbb04c464dd64c6a964dc408f7c4bb3b0a3ed8c55",
+                "size_bytes": 1134533382,
+                "url": "https://github.com/ZHanry/home-tunnel-android/releases/download/v13.0.0/NestLink-android-Materials-13.0.0.zip"
+              },
+              {
+                "filename": "SHA256SUMS.txt",
+                "sha256": "39c3de27d4401c517e587eed4d2fde9f49d7e8c6807c99be79d5dcd8bf9fc4c5",
+                "size_bytes": 198,
+                "url": "https://github.com/ZHanry/home-tunnel-android/releases/download/v13.0.0/SHA256SUMS.txt"
+              }
+            ],
+            "source_manifest_verified": true,
+            "sigstore_verified": true,
+            "reproducible_acceptance_verified": true
+          }
+        },
+        "independent_verification": {
+          "repository": "ZHanry/home-tunnel",
+          "source_revision": "f0d7aeeb4828e5e68665df93c01ff04d7d3fa34e",
+          "run_id": 37975082230,
+          "url": "https://github.com/ZHanry/home-tunnel/actions/runs/37975082230",
+          "scope": "All released component files downloaded and independently hashed; source and Sigstore verified. No product rebuild."
+        },
+        "images": {
+          "control": {
+            "image": "ghcr.io/zhanry/home-tunnel-control-center",
+            "digest": "sha256:1f586773c1273137a349f96676be5c6bc1967f7b7efa71d013151223501e3770"
+          },
+          "gateway": {
+            "image": "ghcr.io/zhanry/home-tunnel-traffic-gateway",
+            "digest": "sha256:64fb7a7d74cddf64f92fd712101b29be0374239fa7ea3624f659c97e3583aba7"
+          }
+        },
+        "public_stable_image_indices": {
+          "version": "13.0.0",
+          "status": "passed",
+          "images": [
+            {
+              "image": "ghcr.io/zhanry/home-tunnel-control-center",
+              "tag": "13.0.0",
+              "digest": "sha256:1f586773c1273137a349f96676be5c6bc1967f7b7efa71d013151223501e3770",
+              "platforms": [
+                "amd64",
+                "arm64"
+              ],
+              "status": "passed"
+            },
+            {
+              "image": "ghcr.io/zhanry/home-tunnel-traffic-gateway",
+              "tag": "13.0.0",
+              "digest": "sha256:64fb7a7d74cddf64f92fd712101b29be0374239fa7ea3624f659c97e3583aba7",
+              "platforms": [
+                "amd64",
+                "arm64"
+              ],
+              "status": "passed"
+            }
+          ],
+          "scope": "Independently fetched public stable-tag OCI index bytes and registry digest; compared with the actual accepted server image digests."
+        },
+        "scope": "All eleven public component attachments independently downloaded and hashed, corresponding source and Sigstore signatures verified, embedded exact-byte reproducible acceptance checked. No rebuild."
+      }
+    },
+    {
+      "name": "current-ui-site",
+      "status": "passed",
+      "evidence": {
+        "browser_checks": {
+          "version": "13.0.0",
+          "source_revision": "d1db50a4e90c0dc3c81d5756f8a375cacf373db1",
+          "origin": "http://127.0.0.1:4317",
+          "status": "passed",
+          "cases": [
+            {
+              "language": "zh",
+              "theme": "light",
+              "width": 320,
+              "page": "index.html",
+              "geometry": {
+                "viewport": 320,
+                "content": 320,
+                "body": 320,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 正式版 · 安装与联调已验证。真机、运营商网络和长期媒体验证范围见发布说明。",
+                "tone": "ready",
+                "headingSize": 30,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "light",
+              "width": 320,
+              "page": "preview.html",
+              "geometry": {
+                "viewport": 320,
+                "content": 320,
+                "body": 320,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-dark.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-empty.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/admin-console.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/remote-entry.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/tunnel-wizard.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "light",
+              "width": 320,
+              "page": "downloads.html",
+              "geometry": {
+                "viewport": 320,
+                "content": 320,
+                "body": 320,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 正式版 · 安装与联调已验证。真机、运营商网络和长期媒体验证范围见发布说明。",
+                "tone": "ready",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "light",
+              "width": 320,
+              "page": "privacy.html",
+              "geometry": {
+                "viewport": 320,
+                "content": 320,
+                "body": 320,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "light",
+              "width": 390,
+              "page": "index.html",
+              "geometry": {
+                "viewport": 390,
+                "content": 390,
+                "body": 390,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 正式版 · 安装与联调已验证。真机、运营商网络和长期媒体验证范围见发布说明。",
+                "tone": "ready",
+                "headingSize": 30,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "light",
+              "width": 390,
+              "page": "preview.html",
+              "geometry": {
+                "viewport": 390,
+                "content": 390,
+                "body": 390,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-dark.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-empty.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/admin-console.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/remote-entry.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/tunnel-wizard.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "light",
+              "width": 390,
+              "page": "downloads.html",
+              "geometry": {
+                "viewport": 390,
+                "content": 390,
+                "body": 390,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 正式版 · 安装与联调已验证。真机、运营商网络和长期媒体验证范围见发布说明。",
+                "tone": "ready",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "light",
+              "width": 390,
+              "page": "privacy.html",
+              "geometry": {
+                "viewport": 390,
+                "content": 390,
+                "body": 390,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "light",
+              "width": 768,
+              "page": "index.html",
+              "geometry": {
+                "viewport": 768,
+                "content": 768,
+                "body": 768,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 正式版 · 安装与联调已验证。真机、运营商网络和长期媒体验证范围见发布说明。",
+                "tone": "ready",
+                "headingSize": 30,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "light",
+              "width": 768,
+              "page": "preview.html",
+              "geometry": {
+                "viewport": 768,
+                "content": 768,
+                "body": 768,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-dark.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-empty.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/admin-console.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/remote-entry.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/tunnel-wizard.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "light",
+              "width": 768,
+              "page": "downloads.html",
+              "geometry": {
+                "viewport": 768,
+                "content": 768,
+                "body": 768,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 正式版 · 安装与联调已验证。真机、运营商网络和长期媒体验证范围见发布说明。",
+                "tone": "ready",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "light",
+              "width": 768,
+              "page": "privacy.html",
+              "geometry": {
+                "viewport": 768,
+                "content": 768,
+                "body": 768,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "light",
+              "width": 1440,
+              "page": "index.html",
+              "geometry": {
+                "viewport": 1440,
+                "content": 1440,
+                "body": 1440,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 正式版 · 安装与联调已验证。真机、运营商网络和长期媒体验证范围见发布说明。",
+                "tone": "ready",
+                "headingSize": 36,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "light",
+              "width": 1440,
+              "page": "preview.html",
+              "geometry": {
+                "viewport": 1440,
+                "content": 1440,
+                "body": 1440,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 30,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-dark.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-empty.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/admin-console.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/remote-entry.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/tunnel-wizard.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "light",
+              "width": 1440,
+              "page": "downloads.html",
+              "geometry": {
+                "viewport": 1440,
+                "content": 1440,
+                "body": 1440,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 正式版 · 安装与联调已验证。真机、运营商网络和长期媒体验证范围见发布说明。",
+                "tone": "ready",
+                "headingSize": 30,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "light",
+              "width": 1440,
+              "page": "privacy.html",
+              "geometry": {
+                "viewport": 1440,
+                "content": 1440,
+                "body": 1440,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 30,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "dark",
+              "width": 320,
+              "page": "index.html",
+              "geometry": {
+                "viewport": 320,
+                "content": 320,
+                "body": 320,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 正式版 · 安装与联调已验证。真机、运营商网络和长期媒体验证范围见发布说明。",
+                "tone": "ready",
+                "headingSize": 30,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "dark",
+              "width": 320,
+              "page": "preview.html",
+              "geometry": {
+                "viewport": 320,
+                "content": 320,
+                "body": 320,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-dark.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-empty.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/admin-console.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/remote-entry.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/tunnel-wizard.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "dark",
+              "width": 320,
+              "page": "downloads.html",
+              "geometry": {
+                "viewport": 320,
+                "content": 320,
+                "body": 320,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 正式版 · 安装与联调已验证。真机、运营商网络和长期媒体验证范围见发布说明。",
+                "tone": "ready",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "dark",
+              "width": 320,
+              "page": "privacy.html",
+              "geometry": {
+                "viewport": 320,
+                "content": 320,
+                "body": 320,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "dark",
+              "width": 390,
+              "page": "index.html",
+              "geometry": {
+                "viewport": 390,
+                "content": 390,
+                "body": 390,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 正式版 · 安装与联调已验证。真机、运营商网络和长期媒体验证范围见发布说明。",
+                "tone": "ready",
+                "headingSize": 30,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "dark",
+              "width": 390,
+              "page": "preview.html",
+              "geometry": {
+                "viewport": 390,
+                "content": 390,
+                "body": 390,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-dark.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-empty.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/admin-console.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/remote-entry.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/tunnel-wizard.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "dark",
+              "width": 390,
+              "page": "downloads.html",
+              "geometry": {
+                "viewport": 390,
+                "content": 390,
+                "body": 390,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 正式版 · 安装与联调已验证。真机、运营商网络和长期媒体验证范围见发布说明。",
+                "tone": "ready",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "dark",
+              "width": 390,
+              "page": "privacy.html",
+              "geometry": {
+                "viewport": 390,
+                "content": 390,
+                "body": 390,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "dark",
+              "width": 768,
+              "page": "index.html",
+              "geometry": {
+                "viewport": 768,
+                "content": 768,
+                "body": 768,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 正式版 · 安装与联调已验证。真机、运营商网络和长期媒体验证范围见发布说明。",
+                "tone": "ready",
+                "headingSize": 30,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "dark",
+              "width": 768,
+              "page": "preview.html",
+              "geometry": {
+                "viewport": 768,
+                "content": 768,
+                "body": 768,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-dark.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-empty.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/admin-console.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/remote-entry.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/tunnel-wizard.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "dark",
+              "width": 768,
+              "page": "downloads.html",
+              "geometry": {
+                "viewport": 768,
+                "content": 768,
+                "body": 768,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 正式版 · 安装与联调已验证。真机、运营商网络和长期媒体验证范围见发布说明。",
+                "tone": "ready",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "dark",
+              "width": 768,
+              "page": "privacy.html",
+              "geometry": {
+                "viewport": 768,
+                "content": 768,
+                "body": 768,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "dark",
+              "width": 1440,
+              "page": "index.html",
+              "geometry": {
+                "viewport": 1440,
+                "content": 1440,
+                "body": 1440,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 正式版 · 安装与联调已验证。真机、运营商网络和长期媒体验证范围见发布说明。",
+                "tone": "ready",
+                "headingSize": 36,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "dark",
+              "width": 1440,
+              "page": "preview.html",
+              "geometry": {
+                "viewport": 1440,
+                "content": 1440,
+                "body": 1440,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 30,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-dark.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/desktop-workbench-empty.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/admin-console.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/remote-entry.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "assets/13.0.0/tunnel-wizard.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "dark",
+              "width": 1440,
+              "page": "downloads.html",
+              "geometry": {
+                "viewport": 1440,
+                "content": 1440,
+                "body": 1440,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 正式版 · 安装与联调已验证。真机、运营商网络和长期媒体验证范围见发布说明。",
+                "tone": "ready",
+                "headingSize": 30,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "theme": "dark",
+              "width": 1440,
+              "page": "privacy.html",
+              "geometry": {
+                "viewport": 1440,
+                "content": 1440,
+                "body": 1440,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 30,
+                "images": [
+                  {
+                    "src": "assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "light",
+              "width": 320,
+              "page": "index.html",
+              "geometry": {
+                "viewport": 320,
+                "content": 320,
+                "body": 320,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 stable · installation and reproducible integration verified. See release notes for physical-device, carrier-network and long-duration-media coverage.",
+                "tone": "ready",
+                "headingSize": 30,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "light",
+              "width": 320,
+              "page": "preview.html",
+              "geometry": {
+                "viewport": 320,
+                "content": 320,
+                "body": 320,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-dark.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-empty.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/admin-console.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/remote-entry.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/tunnel-wizard.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "light",
+              "width": 320,
+              "page": "downloads.html",
+              "geometry": {
+                "viewport": 320,
+                "content": 320,
+                "body": 320,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 stable · installation and reproducible integration verified. See release notes for physical-device, carrier-network and long-duration-media coverage.",
+                "tone": "ready",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "light",
+              "width": 320,
+              "page": "privacy.html",
+              "geometry": {
+                "viewport": 320,
+                "content": 320,
+                "body": 320,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "light",
+              "width": 390,
+              "page": "index.html",
+              "geometry": {
+                "viewport": 390,
+                "content": 390,
+                "body": 390,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 stable · installation and reproducible integration verified. See release notes for physical-device, carrier-network and long-duration-media coverage.",
+                "tone": "ready",
+                "headingSize": 30,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "light",
+              "width": 390,
+              "page": "preview.html",
+              "geometry": {
+                "viewport": 390,
+                "content": 390,
+                "body": 390,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-dark.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-empty.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/admin-console.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/remote-entry.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/tunnel-wizard.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "light",
+              "width": 390,
+              "page": "downloads.html",
+              "geometry": {
+                "viewport": 390,
+                "content": 390,
+                "body": 390,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 stable · installation and reproducible integration verified. See release notes for physical-device, carrier-network and long-duration-media coverage.",
+                "tone": "ready",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "light",
+              "width": 390,
+              "page": "privacy.html",
+              "geometry": {
+                "viewport": 390,
+                "content": 390,
+                "body": 390,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "light",
+              "width": 768,
+              "page": "index.html",
+              "geometry": {
+                "viewport": 768,
+                "content": 768,
+                "body": 768,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 stable · installation and reproducible integration verified. See release notes for physical-device, carrier-network and long-duration-media coverage.",
+                "tone": "ready",
+                "headingSize": 30,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "light",
+              "width": 768,
+              "page": "preview.html",
+              "geometry": {
+                "viewport": 768,
+                "content": 768,
+                "body": 768,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-dark.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-empty.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/admin-console.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/remote-entry.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/tunnel-wizard.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "light",
+              "width": 768,
+              "page": "downloads.html",
+              "geometry": {
+                "viewport": 768,
+                "content": 768,
+                "body": 768,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 stable · installation and reproducible integration verified. See release notes for physical-device, carrier-network and long-duration-media coverage.",
+                "tone": "ready",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "light",
+              "width": 768,
+              "page": "privacy.html",
+              "geometry": {
+                "viewport": 768,
+                "content": 768,
+                "body": 768,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "light",
+              "width": 1440,
+              "page": "index.html",
+              "geometry": {
+                "viewport": 1440,
+                "content": 1440,
+                "body": 1440,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 stable · installation and reproducible integration verified. See release notes for physical-device, carrier-network and long-duration-media coverage.",
+                "tone": "ready",
+                "headingSize": 36,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "light",
+              "width": 1440,
+              "page": "preview.html",
+              "geometry": {
+                "viewport": 1440,
+                "content": 1440,
+                "body": 1440,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 30,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-dark.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-empty.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/admin-console.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/remote-entry.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/tunnel-wizard.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "light",
+              "width": 1440,
+              "page": "downloads.html",
+              "geometry": {
+                "viewport": 1440,
+                "content": 1440,
+                "body": 1440,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 stable · installation and reproducible integration verified. See release notes for physical-device, carrier-network and long-duration-media coverage.",
+                "tone": "ready",
+                "headingSize": 30,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "light",
+              "width": 1440,
+              "page": "privacy.html",
+              "geometry": {
+                "viewport": 1440,
+                "content": 1440,
+                "body": 1440,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 30,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "dark",
+              "width": 320,
+              "page": "index.html",
+              "geometry": {
+                "viewport": 320,
+                "content": 320,
+                "body": 320,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 stable · installation and reproducible integration verified. See release notes for physical-device, carrier-network and long-duration-media coverage.",
+                "tone": "ready",
+                "headingSize": 30,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "dark",
+              "width": 320,
+              "page": "preview.html",
+              "geometry": {
+                "viewport": 320,
+                "content": 320,
+                "body": 320,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-dark.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-empty.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/admin-console.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/remote-entry.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/tunnel-wizard.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "dark",
+              "width": 320,
+              "page": "downloads.html",
+              "geometry": {
+                "viewport": 320,
+                "content": 320,
+                "body": 320,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 stable · installation and reproducible integration verified. See release notes for physical-device, carrier-network and long-duration-media coverage.",
+                "tone": "ready",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "dark",
+              "width": 320,
+              "page": "privacy.html",
+              "geometry": {
+                "viewport": 320,
+                "content": 320,
+                "body": 320,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "dark",
+              "width": 390,
+              "page": "index.html",
+              "geometry": {
+                "viewport": 390,
+                "content": 390,
+                "body": 390,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 stable · installation and reproducible integration verified. See release notes for physical-device, carrier-network and long-duration-media coverage.",
+                "tone": "ready",
+                "headingSize": 30,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "dark",
+              "width": 390,
+              "page": "preview.html",
+              "geometry": {
+                "viewport": 390,
+                "content": 390,
+                "body": 390,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-dark.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-empty.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/admin-console.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/remote-entry.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/tunnel-wizard.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "dark",
+              "width": 390,
+              "page": "downloads.html",
+              "geometry": {
+                "viewport": 390,
+                "content": 390,
+                "body": 390,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 stable · installation and reproducible integration verified. See release notes for physical-device, carrier-network and long-duration-media coverage.",
+                "tone": "ready",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "dark",
+              "width": 390,
+              "page": "privacy.html",
+              "geometry": {
+                "viewport": 390,
+                "content": 390,
+                "body": 390,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "dark",
+              "width": 768,
+              "page": "index.html",
+              "geometry": {
+                "viewport": 768,
+                "content": 768,
+                "body": 768,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 stable · installation and reproducible integration verified. See release notes for physical-device, carrier-network and long-duration-media coverage.",
+                "tone": "ready",
+                "headingSize": 30,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "dark",
+              "width": 768,
+              "page": "preview.html",
+              "geometry": {
+                "viewport": 768,
+                "content": 768,
+                "body": 768,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-dark.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-empty.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/admin-console.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/remote-entry.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/tunnel-wizard.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "dark",
+              "width": 768,
+              "page": "downloads.html",
+              "geometry": {
+                "viewport": 768,
+                "content": 768,
+                "body": 768,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 stable · installation and reproducible integration verified. See release notes for physical-device, carrier-network and long-duration-media coverage.",
+                "tone": "ready",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "dark",
+              "width": 768,
+              "page": "privacy.html",
+              "geometry": {
+                "viewport": 768,
+                "content": 768,
+                "body": 768,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 27,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "dark",
+              "width": 1440,
+              "page": "index.html",
+              "geometry": {
+                "viewport": 1440,
+                "content": 1440,
+                "body": 1440,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 stable · installation and reproducible integration verified. See release notes for physical-device, carrier-network and long-duration-media coverage.",
+                "tone": "ready",
+                "headingSize": 36,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "dark",
+              "width": 1440,
+              "page": "preview.html",
+              "geometry": {
+                "viewport": 1440,
+                "content": 1440,
+                "body": 1440,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 30,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-light.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-dark.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/desktop-workbench-empty.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/admin-console.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/remote-entry.png",
+                    "loaded": true
+                  },
+                  {
+                    "src": "../assets/13.0.0/tunnel-wizard.png",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "dark",
+              "width": 1440,
+              "page": "downloads.html",
+              "geometry": {
+                "viewport": 1440,
+                "content": 1440,
+                "body": 1440,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "status": "nestlink 13.0.0 stable · installation and reproducible integration verified. See release notes for physical-device, carrier-network and long-duration-media coverage.",
+                "tone": "ready",
+                "headingSize": 30,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "en",
+              "theme": "dark",
+              "width": 1440,
+              "page": "privacy.html",
+              "geometry": {
+                "viewport": 1440,
+                "content": 1440,
+                "body": 1440,
+                "scrollbar": "none",
+                "webkitScrollbar": "0px",
+                "stable": "13.0.0",
+                "brand": "nestlink",
+                "headingSize": 30,
+                "images": [
+                  {
+                    "src": "../assets/NestLink.svg",
+                    "loaded": true
+                  }
+                ]
+              },
+              "status": "passed"
+            },
+            {
+              "language": "zh",
+              "javascript": false,
+              "status": "passed",
+              "scope": "Static platform downloads and complete hashes"
+            },
+            {
+              "language": "en",
+              "javascript": false,
+              "status": "passed",
+              "scope": "Static platform downloads and complete hashes"
+            },
+            {
+              "state": "loading",
+              "status": "passed",
+              "scope": "Fallback status retains exact static 13.0.0 downloads"
+            },
+            {
+              "state": "offline",
+              "status": "passed",
+              "scope": "Fallback status retains exact static 13.0.0 downloads"
+            },
+            {
+              "state": "error",
+              "status": "passed",
+              "scope": "Fallback status retains exact static 13.0.0 downloads"
+            }
+          ],
+          "captures": [
+            {
+              "file": "zh-index-light-390.png",
+              "sha256": "a6556a4931f44b3f7824dc7f579f477c69397987e25acc11e59ca2ec3f0e4b94"
+            },
+            {
+              "file": "zh-downloads-light-390.png",
+              "sha256": "3eaa0f7ccf4aa91c5e4450a973aa176adcd519023252fce8658c5a9a584d953f"
+            },
+            {
+              "file": "zh-index-light-1440.png",
+              "sha256": "5a0450aef6bbc7d0dcb0050658463e3d755cfa7c4da191af5f688a26f9923f6a"
+            },
+            {
+              "file": "zh-downloads-light-1440.png",
+              "sha256": "3c548f006fb3dddd20cfd33337155fdad95c2bd57b46c0bc7f06c06efcb22454"
+            },
+            {
+              "file": "zh-index-dark-390.png",
+              "sha256": "132585097708d32a6b60e1dc394a39242e0e9cf303f47705d072f71daa740141"
+            },
+            {
+              "file": "zh-downloads-dark-390.png",
+              "sha256": "3369c5858562e74d07a2436d810ea78a872b6a979be47505be63484542d1a44c"
+            },
+            {
+              "file": "zh-index-dark-1440.png",
+              "sha256": "06fae621ba75cb316a1c4fc61b81610b0bbde49184b6bc8d40c04d5a5dbb18b8"
+            },
+            {
+              "file": "zh-downloads-dark-1440.png",
+              "sha256": "26383ec2d3ecbaca6a518945c1ef771571d4104558451a72b5cfa5dc9bd6aa2d"
+            },
+            {
+              "file": "en-index-light-390.png",
+              "sha256": "d897052015ad40042d89bc83b4d5e86995bac792ed6dfa8f1f9622d6fb689c47"
+            },
+            {
+              "file": "en-downloads-light-390.png",
+              "sha256": "17058a4bc46e36feec7f756f168d4d82204e2efcaa692c7ee549a7080f0e3786"
+            },
+            {
+              "file": "en-index-light-1440.png",
+              "sha256": "02a15e3e4367dfbc3c17431a63715cc8b0ef86c668fc6898b53dabe1c1e7ff2a"
+            },
+            {
+              "file": "en-downloads-light-1440.png",
+              "sha256": "6a483b6699814d28308e13c05494dac48544b3c10b1479ff2166969b74739176"
+            },
+            {
+              "file": "en-index-dark-390.png",
+              "sha256": "d756073c0a5231f2f00a186e26cfc59383661d56aadd99132bd3a3584f747f8d"
+            },
+            {
+              "file": "en-downloads-dark-390.png",
+              "sha256": "6c0d765f68fc90163c0e5ef3ff12318599deba8bfe5cd2474c090e157d251068"
+            },
+            {
+              "file": "en-index-dark-1440.png",
+              "sha256": "eb3396fa1c03eee5ed7acce4c79fbd472dc18b01371b7ce11f37347fef33732e"
+            },
+            {
+              "file": "en-downloads-dark-1440.png",
+              "sha256": "277b41607021386a3d31a8f26bba0932823beb603e03265b774297bef603474a"
+            }
+          ],
+          "faults": [],
+          "scope": "Actual Chromium layout, navigation, theme, scroll, image, static download and hash checks. Component download bytes verified separately."
+        },
+        "committed_site_files": [
+          {
+            "path": "docs/site/.nojekyll",
+            "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+            "size_bytes": 1,
+            "served_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+            "served_size_bytes": 1
+          },
+          {
+            "path": "docs/site/assets/13.0.0/admin-console.png",
+            "sha256": "423d86f3dd0f87ca0708d24a827b11e1837453ba967070a4c0ae366350317ab4",
+            "size_bytes": 79762,
+            "served_sha256": "423d86f3dd0f87ca0708d24a827b11e1837453ba967070a4c0ae366350317ab4",
+            "served_size_bytes": 79762
+          },
+          {
+            "path": "docs/site/assets/13.0.0/desktop-capture-manifest.json",
+            "sha256": "3f64251513f47f342cd83eb19f0fc1bf90bc9a107b7fed8cf327135a84865e57",
+            "size_bytes": 1632,
+            "served_sha256": "3f64251513f47f342cd83eb19f0fc1bf90bc9a107b7fed8cf327135a84865e57",
+            "served_size_bytes": 1632
+          },
+          {
+            "path": "docs/site/assets/13.0.0/desktop-workbench-dark.png",
+            "sha256": "3a8b6fcb5935901e63a8eb6618b1ea1b41b2c063df493069e8b7dfec6193c343",
+            "size_bytes": 91966,
+            "served_sha256": "3a8b6fcb5935901e63a8eb6618b1ea1b41b2c063df493069e8b7dfec6193c343",
+            "served_size_bytes": 91966
+          },
+          {
+            "path": "docs/site/assets/13.0.0/desktop-workbench-empty.png",
+            "sha256": "df35b0494b6fb8e1a979033aac346bfa2ed212ddf0ff5244d2c93057e0398d9c",
+            "size_bytes": 90082,
+            "served_sha256": "df35b0494b6fb8e1a979033aac346bfa2ed212ddf0ff5244d2c93057e0398d9c",
+            "served_size_bytes": 90082
+          },
+          {
+            "path": "docs/site/assets/13.0.0/desktop-workbench-light.png",
+            "sha256": "09801bd523a45167c0bbe261d8fe7c09f2f46cdbfb55b7d48101c75c09987be4",
+            "size_bytes": 87710,
+            "served_sha256": "09801bd523a45167c0bbe261d8fe7c09f2f46cdbfb55b7d48101c75c09987be4",
+            "served_size_bytes": 87710
+          },
+          {
+            "path": "docs/site/assets/13.0.0/remote-entry.png",
+            "sha256": "c28128df2e199355eb1fa64db7e7be5585e8d3dd6a3d2524a4a44a3eb0117763",
+            "size_bytes": 70485,
+            "served_sha256": "c28128df2e199355eb1fa64db7e7be5585e8d3dd6a3d2524a4a44a3eb0117763",
+            "served_size_bytes": 70485
+          },
+          {
+            "path": "docs/site/assets/13.0.0/tunnel-wizard.png",
+            "sha256": "305ca14d8b113906555e2584fe659ce6139901f2b78895dfcf46a628ef7b2832",
+            "size_bytes": 101162,
+            "served_sha256": "305ca14d8b113906555e2584fe659ce6139901f2b78895dfcf46a628ef7b2832",
+            "served_size_bytes": 101162
+          },
+          {
+            "path": "docs/site/assets/13.0.0/web-capture-manifest.json",
+            "sha256": "aceb271709c620e73360c514c1c5ac99478bf70f58ba2ec9ddc2f095c1aade5e",
+            "size_bytes": 1881,
+            "served_sha256": "62ad394b78230a24633d30d0f897ebbf9fcd0469ebc095412e18d2a7cd9f900f",
+            "served_size_bytes": 1935
+          },
+          {
+            "path": "docs/site/assets/HomeTunnel.svg",
+            "sha256": "c7ccb5bf3908228cc4b5e02ecf71197a2d6dc1a25e3becbe72f7e138bdd8b5dd",
+            "size_bytes": 825,
+            "served_sha256": "c7ccb5bf3908228cc4b5e02ecf71197a2d6dc1a25e3becbe72f7e138bdd8b5dd",
+            "served_size_bytes": 825
+          },
+          {
+            "path": "docs/site/assets/NestLink.svg",
+            "sha256": "c7ccb5bf3908228cc4b5e02ecf71197a2d6dc1a25e3becbe72f7e138bdd8b5dd",
+            "size_bytes": 825,
+            "served_sha256": "c7ccb5bf3908228cc4b5e02ecf71197a2d6dc1a25e3becbe72f7e138bdd8b5dd",
+            "served_size_bytes": 825
+          },
+          {
+            "path": "docs/site/assets/analytics.js",
+            "sha256": "ffed65ecb7eee37e93ae5f7745fc6541f29b1f7b5558c30ec5fe36da9619165f",
+            "size_bytes": 500,
+            "served_sha256": "ffed65ecb7eee37e93ae5f7745fc6541f29b1f7b5558c30ec5fe36da9619165f",
+            "served_size_bytes": 500
+          },
+          {
+            "path": "docs/site/assets/architecture.svg",
+            "sha256": "7417a6006fa5e8bae084b3e30a5940dd232139e71a1a530ec5b3b6d8fe5fedef",
+            "size_bytes": 6767,
+            "served_sha256": "e6256556832c5216b81bd75d58f21954490a0feafd381b768823354a0dc29a4e",
+            "served_size_bytes": 6800
+          },
+          {
+            "path": "docs/site/assets/download-state.js",
+            "sha256": "9a85f19a976c3d800c82ab9f797941cb53dc99f55d91c1664fbcc9db3c6e3024",
+            "size_bytes": 7608,
+            "served_sha256": "02469ac9434143ce4a34375f5083f59070ca16552007e717cac6c190b8c68c78",
+            "served_size_bytes": 7714
+          },
+          {
+            "path": "docs/site/assets/share-card.svg",
+            "sha256": "383debb7a5df641f39586188e25323be60b2c4e076850a851805264b0452581a",
+            "size_bytes": 1718,
+            "served_sha256": "eacdc4d7402541395bd16aaf099cf3e66eb7ab2785a1c109d7df57a0b682f68c",
+            "served_size_bytes": 1739
+          },
+          {
+            "path": "docs/site/assets/site.css",
+            "sha256": "8e372ee3565998d5d355df6bf6b4107d0ed42281a48ee18b3de1e2f13b2c8d04",
+            "size_bytes": 9877,
+            "served_sha256": "625e4eac98379e2b3b013bd4d648b652cb6a142a8d1e3a18871c4ad060fc5a34",
+            "served_size_bytes": 9884
+          },
+          {
+            "path": "docs/site/assets/site.js",
+            "sha256": "2839f422875d76bf3ef8e48cf67b309d5ed2fda7ad84c038c5eb60376d646486",
+            "size_bytes": 6249,
+            "served_sha256": "701080469b8d292524dc36b4b39b56e71b2918705cc69df54f6052f95a390ef8",
+            "served_size_bytes": 6397
+          },
+          {
+            "path": "docs/site/candidate.json",
+            "sha256": "d58d6d884d4b05bf82e91f94e12e29ff4d61e86b7c0543d9d934fe7359052526",
+            "size_bytes": 6302,
+            "served_sha256": "3e02a39f460dc5a5ed0779b74477c7d2562af44541048d8ed606d02125bd2301",
+            "served_size_bytes": 6453
+          },
+          {
+            "path": "docs/site/downloads.html",
+            "sha256": "584aadf57e6ba6e4e52a3402c372177d26be4a4e3b7ba53733475d7a993c3a20",
+            "size_bytes": 12593,
+            "served_sha256": "3e3c05c64bb089d6410a6736275d05aca503288ab5c669b2fddbe7dafac40c97",
+            "served_size_bytes": 12623
+          },
+          {
+            "path": "docs/site/en/downloads.html",
+            "sha256": "a464234f4bf9a2d38595813442bd0ec557ee5c67cbc419d458002983b482a8b0",
+            "size_bytes": 12677,
+            "served_sha256": "bf23e4f825881d3747adf01608b542993c12bc4da4ddc979ce93e89b2efeb539",
+            "served_size_bytes": 12707
+          },
+          {
+            "path": "docs/site/en/index.html",
+            "sha256": "db99d64004d94115af299643731f8d4e1c5ce3cc6ae765404cc29afa29a8bc7e",
+            "size_bytes": 7024,
+            "served_sha256": "2bb35196c282c08b57f7b3d883d961f645206d805e7d85469a6dd2e9a28cecb0",
+            "served_size_bytes": 7040
+          },
+          {
+            "path": "docs/site/en/preview.html",
+            "sha256": "39ea2508badd2c018e056d4c9792c4fb54fdd7c16463bb907d9afaf7176c0ba3",
+            "size_bytes": 6095,
+            "served_sha256": "77e06cc51598d530ca75c1786f63bbc1b491042903d07874f0c3304675af49de",
+            "served_size_bytes": 6107
+          },
+          {
+            "path": "docs/site/en/privacy.html",
+            "sha256": "d99aa5dddf4d94f3dbe62c3f0c030c63ba5c824bb60196175fab77166791defd",
+            "size_bytes": 4201,
+            "served_sha256": "ab0fe9ec7c612e023725223610e031ac242625c8f7455688f4661bb8c4565c04",
+            "served_size_bytes": 4213
+          },
+          {
+            "path": "docs/site/index.html",
+            "sha256": "d2e20f0109c65d4746de40a998b6850517401711d8fc83eb4e952bb415858625",
+            "size_bytes": 6952,
+            "served_sha256": "edb5428d1d61bdaf0d0560a154fe5f0ea579069123845aac425bdffd9d366621",
+            "served_size_bytes": 6968
+          },
+          {
+            "path": "docs/site/preview.html",
+            "sha256": "df894a861d7747f5aa1f43b093130155c1fbe97991a9e83fd92f3da9279d93fa",
+            "size_bytes": 6042,
+            "served_sha256": "48d2cb451dcbb386e3995a69f43775e2ac8e3d5ec13acfb37b5b463afb7c2ae8",
+            "served_size_bytes": 6054
+          },
+          {
+            "path": "docs/site/privacy.html",
+            "sha256": "1c4faeff8571da41b32a97a27f516a014251a4bf7bfd7587038fb7201f765d54",
+            "size_bytes": 4082,
+            "served_sha256": "c92ca36f48af1befe34098178c84b9f2b7055601552aa45144bc8c9bcc89ef70",
+            "served_size_bytes": 4094
+          },
+          {
+            "path": "docs/site/releases.json",
+            "sha256": "3e36b40d9477d668b4f706ebe40acb0a78003be16aac21a4a4544017eea4be6b",
+            "size_bytes": 6499,
+            "served_sha256": "84b23f52a12c1b75da292b3e693d3db186b239371019fc597a8b76e83ba1a846",
+            "served_size_bytes": 6642
+          },
+          {
+            "path": "docs/site/robots.txt",
+            "sha256": "73daa5e72c230978e697075473360599461ad9b8be983e8f1e62243a48e7ac23",
+            "size_bytes": 82,
+            "served_sha256": "73daa5e72c230978e697075473360599461ad9b8be983e8f1e62243a48e7ac23",
+            "served_size_bytes": 82
+          },
+          {
+            "path": "docs/site/schemas/api-v1.1.0.json",
+            "sha256": "f6445b3e3a461f8bc07ae8beb5f99ec5c6ac7e44fdc220d1f531d80057605996",
+            "size_bytes": 121892,
+            "served_sha256": "f6445b3e3a461f8bc07ae8beb5f99ec5c6ac7e44fdc220d1f531d80057605996",
+            "served_size_bytes": 121892
+          },
+          {
+            "path": "docs/site/screenshot-slots.json",
+            "sha256": "6582b4867854fa994894a0c8f5ae303fcb0e7e1b4b726697cadfcde97e3e6b26",
+            "size_bytes": 3227,
+            "served_sha256": "5e4417dc0de5283656e63f2909682c9527d4967ff80fc08dd698df37757f0731",
+            "served_size_bytes": 3338
+          },
+          {
+            "path": "docs/site/sitemap.xml",
+            "sha256": "9307495af36b5af9fc3937a4049efaee53f8cf87e263e8309a8058adfe5ea8a8",
+            "size_bytes": 926,
+            "served_sha256": "9307495af36b5af9fc3937a4049efaee53f8cf87e263e8309a8058adfe5ea8a8",
+            "served_size_bytes": 926
+          }
+        ],
+        "desktop_captures": {
+          "schema_version": 1,
+          "product_version": "13.0.0",
+          "repository": "ZHanry/home-tunnel-client",
+          "source_sha": "4cf3d1603a7c6d22b37746f3f02fee707a9338d9",
+          "build_run": 37960914602,
+          "capture_kind": "native-linux",
+          "method": "X11 scrot -u original 1120 x 760 application window pixels from the installed, running release DEB",
+          "captured_at": "2026-10-09T17:18:38.576726+00:00",
+          "fixture_data": true,
+          "installed_application": true,
+          "interactive": true,
+          "remote_session_verified": true,
+          "package_sha256": "bd2b9a612ea7078a745b4bcb977bf804b97f24b51871f5bd8f8be4d713a51957",
+          "gui_sha256": "43c8c8458daf937fe5505a31d3082061483dc10b9b6730b50a6187c237cd557e",
+          "flutter_app_sha256": "37b9e071e74c198a4cd46de1bf584449c4cc769c4ed15a2c3726a02722a5326c",
+          "capture_script_sha256": "b0ccbd6541753247e5915a0bbc3346b82a58c8e1946848f672e8722572b21875",
+          "scope": "Linux x64 installed GUI with disposable example accounts. These pixels are not Windows or physical-device captures.",
+          "captures": [
+            {
+              "file": "desktop-workbench-light.png",
+              "sha256": "09801bd523a45167c0bbe261d8fe7c09f2f46cdbfb55b7d48101c75c09987be4",
+              "width": 1120,
+              "height": 760,
+              "edited": false
+            },
+            {
+              "file": "desktop-workbench-dark.png",
+              "sha256": "3a8b6fcb5935901e63a8eb6618b1ea1b41b2c063df493069e8b7dfec6193c343",
+              "width": 1120,
+              "height": 760,
+              "edited": false
+            },
+            {
+              "file": "desktop-workbench-empty.png",
+              "sha256": "df35b0494b6fb8e1a979033aac346bfa2ed212ddf0ff5244d2c93057e0398d9c",
+              "width": 1120,
+              "height": 760,
+              "edited": false
+            }
+          ]
+        },
+        "web_captures": {
+          "schema_version": 1,
+          "product_version": "13.0.0",
+          "source_repository": "https://github.com/ZHanry/home-tunnel-server",
+          "source_sha": "4ccf4a068f7b8353e1ca734918f9e36cc69a39e9",
+          "image_digest": "sha256:1f586773c1273137a349f96676be5c6bc1967f7b7efa71d013151223501e3770",
+          "captured_at": "2026-10-09T15:25:02.678Z",
+          "browser": "145.0.7632.6",
+          "capture_script_sha256": "1c31298de377a9a5b98e87116fed0114f9236728bd174ab54cb9559d84bc3c83",
+          "viewport": [
+            1440,
+            960
+          ],
+          "full_page": false,
+          "locale": "zh-CN",
+          "fixture": "Actual immutable server image, task-owned accounts, GUI devices and managed tunnels. No UI or API mocks.",
+          "actual_product_ui": true,
+          "capture_kind": "web-ui",
+          "fixture_data": true,
+          "installed_application": true,
+          "synthetic_data": true,
+          "ui_source_modified": false,
+          "remote_session_verified": false,
+          "windows_capture": false,
+          "capture_status": "visually-reviewed",
+          "captures": [
+            {
+              "file": "admin-console.png",
+              "description": "Installed Web management console with disposable example account data",
+              "sha256": "423d86f3dd0f87ca0708d24a827b11e1837453ba967070a4c0ae366350317ab4",
+              "bytes": 79762,
+              "width": 1440,
+              "height": 960,
+              "edited": false
+            },
+            {
+              "file": "remote-entry.png",
+              "description": "Installed Web remote directory and browser connection entry; example account",
+              "sha256": "c28128df2e199355eb1fa64db7e7be5585e8d3dd6a3d2524a4a44a3eb0117763",
+              "bytes": 70485,
+              "width": 1440,
+              "height": 960,
+              "edited": false
+            },
+            {
+              "file": "tunnel-wizard.png",
+              "description": "Installed Web tunnel wizard; no service created by capture",
+              "sha256": "305ca14d8b113906555e2584fe659ce6139901f2b78895dfcf46a628ef7b2832",
+              "bytes": 101162,
+              "width": 1440,
+              "height": 960,
+              "edited": false
+            }
+          ]
+        },
+        "reproduction_script_sha256": "00a6637aea6488cda28003b38fc13394559295ea400ee62b8e99d3d5985b4c76",
+        "reproduction_script": "const fs = require('node:fs');\nconst path = require('node:path');\nconst crypto = require('node:crypto');\nconst { chromium } = require('../repos/home-tunnel-server/control-center/node_modules/.pnpm/playwright-core@1.58.2/node_modules/playwright-core');\nconst out = path.join(__dirname, 'evidence13', 'site');\nconst origin = process.env.NESTLINK_SITE_ORIGIN || 'http://127.0.0.1:4317';\nconst source = process.env.NESTLINK_SITE_SOURCE;\nfunction check(value, message) { if (!value) throw new Error(message); }\nasync function main() {\n  check(/^[a-f0-9]{40}$/.test(source || ''), 'Exact committed site source required');\n  fs.mkdirSync(out, { recursive: true });\n  const browser = await chromium.launch({ headless: true });\n  const cases = [], captures = [], faults = [];\n  try {\n    for (const language of ['zh', 'en']) for (const theme of ['light', 'dark']) {\n      const context = await browser.newContext({ colorScheme: theme, reducedMotion: 'reduce' });\n      const page = await context.newPage();\n      page.on('pageerror', e => faults.push(e.message));\n      page.on('response', r => { if (r.url().startsWith(origin) && r.status() >= 400) faults.push(r.url() + ': ' + r.status()); });\n      for (const width of [320, 390, 768, 1440]) for (const file of ['index.html', 'preview.html', 'downloads.html', 'privacy.html']) {\n        await page.setViewportSize({ width, height: 900 });\n        const url = origin + '/' + (language === 'en' ? 'en/' : '') + file + '?theme=' + theme;\n        await page.goto(url, { waitUntil: 'networkidle' });\n        await page.locator('body').evaluate(() => document.fonts.ready);\n        for (const img of await page.locator('img').all()) {\n          await img.scrollIntoViewIfNeeded();\n          await img.evaluate(image => image.decode());\n        }\n        await page.evaluate(() => scrollTo(0, 0));\n        const geometry = await page.evaluate(() => ({\n          viewport: innerWidth, content: document.documentElement.scrollWidth,\n          body: document.body.scrollWidth, scrollbar: getComputedStyle(document.documentElement).scrollbarWidth,\n          webkitScrollbar: getComputedStyle(document.documentElement, '::-webkit-scrollbar').width,\n          stable: document.body.dataset.stableVersion, brand: document.querySelector('.brand').textContent.trim(),\n          status: document.querySelector('#download-status')?.textContent,\n          tone: document.querySelector('#download-status')?.dataset.tone,\n          headingSize: parseFloat(getComputedStyle(document.querySelector('h1')).fontSize),\n          images: [...document.images].map(image => ({src: image.getAttribute('src'), loaded: image.complete && image.naturalWidth > 0})),\n        }));\n        check(geometry.content <= width + 1 && geometry.body <= width + 1, `Horizontal overflow: ${url} @ ${width}: ${JSON.stringify(geometry)}`);\n        check(geometry.scrollbar === 'none' || geometry.webkitScrollbar === '0px', 'Visible scrollbar: ' + url);\n        check(geometry.stable === '13.0.0' && geometry.brand === 'nestlink', 'Version or brand differs: ' + url);\n        check(geometry.headingSize <= 36 && geometry.images.every(image => image.loaded), 'Typography or image load failed: ' + url);\n        if (geometry.status) check(geometry.tone === 'ready' && geometry.status.includes('13.0.0'), 'Download status failed: ' + url);\n        if (file === 'downloads.html') {\n          const buttons = await page.locator('.download-actions a').evaluateAll(links => links.map(link => ({href: link.href, text: link.textContent.trim()})));\n          check(buttons.length === 5 && buttons.every(link => link.href.includes('/releases/download/v13.0.0/')), 'Missing platform downloads');\n          check(await page.locator('[data-sha256-for]').count() === 11, 'Complete release hash list required');\n        }\n        if (width <= 800) {\n          const menu = page.locator('.nav-toggle');\n          await menu.click();\n          check(await menu.getAttribute('aria-expanded') === 'true' && await page.locator('#site-nav').isVisible(), 'Menu did not open');\n          await page.keyboard.press('Escape');\n          check(await menu.getAttribute('aria-expanded') === 'false' && await menu.evaluate(el => el === document.activeElement), 'Menu escape/focus failed');\n        }\n        await page.locator('[data-theme-choice=\"dark\"]').click();\n        check(await page.locator('html').getAttribute('data-theme') === 'dark', 'Dark theme selection failed');\n        await page.locator('[data-theme-choice=\"light\"]').click();\n        check(await page.locator('html').getAttribute('data-theme') === 'light', 'Light theme selection failed');\n        await page.locator('[data-theme-choice=\"' + theme + '\"]').click();\n        await page.evaluate(() => scrollTo(0, 0));\n        await page.mouse.move(width / 2, 600);\n        await page.mouse.wheel(0, 500);\n        await page.waitForTimeout(80);\n        check(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight || scrollY > 0), 'Hidden scrollbar prevented scrolling');\n        await page.evaluate(() => scrollTo(0, 0));\n        if ([390, 1440].includes(width) && ['index.html', 'downloads.html'].includes(file)) {\n          const name = `${language}-${file.replace('.html', '')}-${theme}-${width}.png`;\n          await page.screenshot({path: path.join(out, name), fullPage: true});\n          captures.push({file: name, sha256: crypto.createHash('sha256').update(fs.readFileSync(path.join(out, name))).digest('hex')});\n        }\n        cases.push({language, theme, width, page: file, geometry, status: 'passed'});\n      }\n      await context.close();\n    }\n    for (const language of ['zh', 'en']) {\n      const context = await browser.newContext({javaScriptEnabled: false, viewport: {width: 390, height: 900}});\n      const page = await context.newPage();\n      await page.goto(origin + '/' + (language === 'en' ? 'en/' : '') + 'downloads.html');\n      check(await page.locator('.download-actions a').count() === 5, 'Static download links require JavaScript');\n      check(await page.locator('[data-sha256-for]').count() === 11, 'Static hashes require JavaScript');\n      cases.push({language, javascript: false, status: 'passed', scope: 'Static platform downloads and complete hashes'});\n      await context.close();\n    }\n    const context = await browser.newContext();\n    const page = await context.newPage();\n    for (const state of ['loading', 'offline', 'error']) {\n      await page.goto(origin + '/downloads.html?state=' + state);\n      check(await page.locator('#download-status').getAttribute('data-tone') === state, 'Forced download state failed: ' + state);\n      check((await page.locator('#download-status').innerText()).includes('13.0.0'), 'Fallback version drift');\n      check(await page.locator('.download-actions a').count() === 5, 'Fallback removed downloads');\n      cases.push({state, status: 'passed', scope: 'Fallback status retains exact static 13.0.0 downloads'});\n    }\n    await context.close();\n    check(faults.length === 0, 'Page errors: ' + faults.join('; '));\n    fs.writeFileSync(path.join(out, 'site-acceptance.json'), JSON.stringify({version: '13.0.0', source_revision: source,\n      origin, status: 'passed', cases, captures, faults, scope: 'Actual Chromium layout, navigation, theme, scroll, image, static download and hash checks. Component download bytes verified separately.'}, null, 2) + '\\n');\n    console.log(JSON.stringify({status: 'passed', cases: cases.length, captures: captures.length, source_revision: source}));\n  } finally { await browser.close(); }\n}\nmain().catch(error => { console.error(error.message); process.exitCode = 1; });\n"
+      }
+    },
+    {
+      "name": "background-device-revocation",
+      "status": "passed",
+      "evidence": {
+        "action": {
+          "version": "13.0.0",
+          "client_source": "4cf3d1603a7c6d22b37746f3f02fee707a9338d9",
+          "client_package_sha256": "bd2b9a612ea7078a745b4bcb977bf804b97f24b51871f5bd8f8be4d713a51957",
+          "action": "revoke-device",
+          "username": "qa-two",
+          "device_id": "99555309-ea62-4cf3-9ac1-e106cd5bfe2e",
+          "status": "revoked",
+          "route": "/api/v2/auth/devices/{id}"
+        },
+        "actual_service_probes": {
+          "version": "13.0.0",
+          "client_source": "4cf3d1603a7c6d22b37746f3f02fee707a9338d9",
+          "client_package_sha256": "bd2b9a612ea7078a745b4bcb977bf804b97f24b51871f5bd8f8be4d713a51957",
+          "server_source": "4ccf4a068f7b8353e1ca734918f9e36cc69a39e9",
+          "server_image": "ghcr.io/zhanry/home-tunnel-control-center@sha256:1f586773c1273137a349f96676be5c6bc1967f7b7efa71d013151223501e3770",
+          "status": "passed",
+          "scenario": "release-after-device-revoke",
+          "results": {
+            "http": {
+              "blocked": true,
+              "error_type": "HTTPError"
+            },
+            "https_backend": {
+              "blocked": true,
+              "error_type": "HTTPError"
+            },
+            "tcp": {
+              "blocked": true,
+              "error_type": "ConnectionResetError"
+            },
+            "udp": {
+              "blocked": true,
+              "error_type": "TimeoutError"
+            }
+          },
+          "scope": "HTTP gateway and TLS local HTTPS backend; real FRP TCP/UDP data. Isolated loopback backends; no operator network NAT assertion."
+        }
+      }
+    }
+  ],
+  "reproduction": {
+    "components": "At the recorded verifier source, run verify-nestlink-components.yml or scripts/verify-homedesk-components.py --signatures with gh and cosign. Download each actual public Release, hash all bytes, check tag revisions, SHA256SUMS, corresponding-source.zip, BUILD.json and its GitHub OIDC Sigstore identity. Compare with components-13.0.0.json.",
+    "site": "Serve docs/site on loopback. Execute the embedded site script with Chromium/Playwright 1.58.2, NESTLINK_SITE_ORIGIN and NESTLINK_SITE_SOURCE set to this recorded commit. Adapt only the local Playwright module/output paths. It checks eight pages in both themes at widths 320/390/768/1440, responsive menu focus, normal scrolling with hidden bars, original image loading, exact static downloads and hashes without JavaScript, and loading/offline/error fallbacks. The website files are hashed above.",
+    "lifecycle": "After the accepted native/browser/Android integration, revoke the independently credentialed background device using /api/v2/auth/devices/{id}. Probe the same HTTP, HTTPS local-backend, FRP TCP and UDP services and require each to stop. Foreground-revocation continuity is recorded in the component acceptance."
+  },
+  "unverified": [
+    "physical-android-device",
+    "carrier-network-nat",
+    "long-duration-media",
+    "windows-remote-media",
+    "linux-arm64-remote-media",
+    "wayland-remote-desktop",
+    "audio-file-clipboard",
+    "successful-fixed-password-session",
+    "multiple-monitor-dpi-runtime",
+    "android-to-windows-remote"
+  ],
+  "scope": "Automated and reproducible integration on the actual released Server, Client and Android bytes. Native media used installed Linux x64 X11 desktops and Android x86_64 emulator; Windows/ARM64 exact-package installation/startup/credential tests are separate from media. Browser JPEG maximum 1920x1080, approximately 6.7 fps. No physical Android, operator NAT or sustained media assertion. Windows has no Authenticode publisher signature. No production deployment upgrade."
+}
