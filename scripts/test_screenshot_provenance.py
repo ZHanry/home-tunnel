@@ -63,9 +63,32 @@ class ScreenshotProvenanceTests(unittest.TestCase):
     def test_component_preview_does_not_claim_installed_app_acceptance(self):
         path=self.site/"assets/13.0.0/desktop-capture-manifest.json"
         manifest=json.loads(path.read_text())
+        manifest["capture_kind"]="component-preview"
         manifest["installed_application"]=True
         path.write_text(json.dumps(manifest))
+        slots_path=self.site/"screenshot-slots.json"
+        slots=json.loads(slots_path.read_text())
+        for slot in slots["slots"]:
+            if slot["id"].startswith("desktop-"):
+                slot["capture_kind"]="component-preview"
+        slots_path.write_text(json.dumps(slots))
         self.assertTrue(any("cannot claim installed-app" in error for error in self.errors()))
+
+    def test_native_linux_capture_needs_installed_package_and_gui_hashes(self):
+        path=self.site/"assets/13.0.0/desktop-capture-manifest.json"
+        manifest=json.loads(path.read_text())
+        manifest.update(capture_kind="native-linux", installed_application=True, interactive=True)
+        manifest.pop("package_sha256", None)
+        manifest.pop("gui_sha256", None)
+        path.write_text(json.dumps(manifest))
+        slots_path=self.site/"screenshot-slots.json"
+        slots=json.loads(slots_path.read_text())
+        for slot in slots["slots"]:
+            if slot["id"].startswith("desktop-"):
+                slot["capture_kind"]="native-linux"
+        slots_path.write_text(json.dumps(slots))
+        self.assertTrue(any("actual Linux package_sha256" in error for error in self.errors()))
+        self.assertTrue(any("actual Linux gui_sha256" in error for error in self.errors()))
 
     def test_public_release_copy_keeps_objective_verification_scope(self):
         path = self.site / "index.html"

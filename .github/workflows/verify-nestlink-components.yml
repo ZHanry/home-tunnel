@@ -1,0 +1,51 @@
+name: Verify nestlink component bytes
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Download and verify published component bytes
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6
+      - name: Require the selected stable product line
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          assert Path('VERSION').read_text().strip() == '13.0.0'
+          candidate = json.loads(Path('distribution.json').read_text())['channels']['candidate']
+          assert candidate['version'] == '13.0.0' and candidate['prerelease'] is False
+          PY
+      - name: Verify actual downloads, SHA-256, corresponding source and Sigstore
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/verify-homedesk-components.py --record --signatures \
+            --download-dir verified-downloads --output verified/components-13.0.0.json
+          cp distribution.json verified/distribution.json
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          Path('verified/verification-run.json').write_text(json.dumps({
+            'repository': os.environ['GITHUB_REPOSITORY'],
+            'source_revision': os.environ['GITHUB_SHA'],
+            'run_id': int(os.environ['GITHUB_RUN_ID']),
+            'scope': 'All released component files downloaded and independently hashed; source and Sigstore verified. No product rebuild.'
+          }, indent=2) + '\n')
+          PY
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: verified-nestlink-components
+          path: verified/*
+          if-no-files-found: error
+          retention-days: 90

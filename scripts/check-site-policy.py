@@ -57,6 +57,14 @@ def audit_capture(site, slot):
             errors.append(f"slot {slot_id} capture kind does not match its source")
         if slot.get("capture_kind") == "component-preview" and (manifest.get("installed_application") is not False or manifest.get("remote_session_verified") is not False):
             errors.append(f"slot {slot_id} component preview cannot claim installed-app or remote-session acceptance")
+        if slot.get("capture_kind") == "native-linux":
+            if manifest.get("installed_application") is not True or manifest.get("interactive") is not True:
+                errors.append(f"slot {slot_id} needs an installed interactive Linux application capture")
+            if manifest.get("repository") != "ZHanry/home-tunnel-client":
+                errors.append(f"slot {slot_id} needs the actual Linux product repository")
+            for key in ("package_sha256", "gui_sha256"):
+                if not re.fullmatch(r"[a-f0-9]{64}", manifest.get(key, "")):
+                    errors.append(f"slot {slot_id} needs the actual Linux {key}")
         entries = manifest.get("captures", manifest.get("screenshots", []))
         if slot.get("capture_kind") == "native-windows":
             if manifest.get("interactive") is not True:
