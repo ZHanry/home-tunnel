@@ -154,7 +154,6 @@
           "version": "12.0.0-RC1",
           "tag": "v12.0.0-RC1",
           "source_sha": null,
-          "published": true,
           "artifacts": [],
           "prerelease": true
         },
@@ -162,7 +161,7 @@
           "repository": "ZHanry/home-tunnel-server",
           "version": "12.0.0-RC1",
           "tag": "v12.0.0-RC1",
-          "source_sha": "3ff6044ba06eb54843803343bf7924d3a017590c",
+          "source_sha": "ddf5c7769cdf42fad2d9ae37b904e42866b85f0a",
           "published": false,
           "artifacts": [],
           "prerelease": true
@@ -171,7 +170,7 @@
           "repository": "ZHanry/home-tunnel-client",
           "version": "12.0.0-RC1",
           "tag": "v12.0.0-RC1",
-          "source_sha": "86f4eb38fb8a7d05b0213a2a3fbd19e6f968de56",
+          "source_sha": "1e737d7cc6e4bab9f043b2e94eabc7ffd75ba5d8",
           "published": false,
           "artifacts": [],
           "prerelease": true
