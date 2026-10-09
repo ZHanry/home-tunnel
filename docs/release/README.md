@@ -1,3 +1,9 @@
+# nestlink 13.0.0 release evidence
+
+The current release uses `acceptance-13.0.0.json` for reproducible installed-application integration and `components-13.0.0.json` for independent published-byte, corresponding-source and Sigstore verification. These records bind the exact 13.0.0 sources and payloads. Physical Android devices, carrier networks and long-duration media remain unverified.
+
+The records below document historical releases and do not assert 13.0.0 acceptance.
+
 # 10.1.0 release evidence
 
 The 10.1.0 distribution selects Server and Client 10.1.0, with the original

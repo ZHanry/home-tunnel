@@ -13,8 +13,8 @@
   var ACCEPTED = ["accepted", "accepted_with_waivers", "passed_reproducible"];
 
   function view(input) {
-    var fallback = input.fallbackStable || "10.1.0";
-    var candidateVersion = (input.candidate && input.candidate.version) || "10.1.0";
+    var fallback = input.fallbackStable || "13.0.0";
+    var candidateVersion = (input.candidate && input.candidate.version) || "13.0.0";
     if (input.transport === "loading") {
       return {
         tone: "loading",

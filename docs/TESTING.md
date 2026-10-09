@@ -1,10 +1,12 @@
-# HomeDesk 11 验证记录
+# nestlink 13.0.0 验证记录
 
-各仓材料包记录精确源码与实际构建的验证，范围分开列出：
+验收绑定实际安装包、APK、部署包与镜像，记录在各仓 `docs/release/acceptance-13.0.0.json`，并随材料 ZIP 发布。
 
-- Server：原权限、SQLite 迁移、API、设备目录、Web 控件、完整 HTTP/TCP/UDP 穿透生产路径，以及隔离 hbbs 启动、IPv4/IPv6 监听、身份重启与加密恢复。
-- Client：严格 P2P 守卫、门户 API/TLS、Windows DPAPI、单次交接、Flutter 控件、独立 Go 穿透、Windows 原生构建与安装/卸载校验。
-- Android：固定共用源码、两个 native ABI、API26/35 模拟器真实 Keystore 篡改拒绝与启动检查，原证书与应用身份/ABI 校验。
-- 总仓：候选/稳定通道、历史冻结字节、链接/网站、真实 Release 下载 SHA 与 Sigstore 工作流签名。
+- Server：账号/MFA/旧会话事务迁移及中断回滚；后台凭据与穿透配置保留；浏览器和原生许可；实际 HTTP/HTTPS、TCP/UDP 穿透。
+- Client：Windows 安装、文件摘要、版本、协议入口、启动、卸载和隔离升级预检；Linux 两架构实际 DEB 安装启动与 Secret Service 跨进程、注销和损坏恢复。安装的 Linux x64 GUI 完成跨账号批准、真实画面和输入、成对直连、冷恢复、续期与撤销断开；1120×760 固定窗口检查通过。
+- Browser：实际服务端连接安装的 Linux 客户端，验证画面、键盘输入、DTLS 与非中继 UDP 候选。拒绝、错误密码、离线时零帧；活动会话撤销后断开。
+- Android：原证书、applicationId、通用 APK 实际字节与两种 ELF ABI；API26/35 Keystore 和启动检查。安装的最终签名 APK 完成登录冷恢复、真实设备管理、续期、同账号/跨账号远控画面与输入、横竖屏和撤销退出。
+- 穿透生命周期：四种真实服务在关闭远控、撤销前台会话后继续运行，撤销其后台设备后停止。
+- 总仓：独立下载组件字节，验证 SHA-256、对应源码与 Sigstore；当前安装版原图、中英文网站、浅深色、小屏布局、菜单、滚动和静态下载。
 
-**待验收**：跨网络 NAT、持续屏幕/输入/音频/剪贴板/文件会话、两台实际安装终端、Android 真机，以及设备/网络能力与性能矩阵。候选门禁通过不把这些项目标成通过。历史 10.x 的长测、截图和验收文件只说明旧版本。
+以上使用隔离的测试账号、X11 桌面和 Android 模拟器，不升级生产部署。Android 真机、运营商网络/NAT、长期媒体、Windows/ARM64 实际远控媒体、Wayland、多显示器/DPI、Android 到 Windows、正确固定密码连接，以及音频/文件/剪贴板尚未验收。浏览器当前 JPEG 上限为 1920×1080、约 6.7 fps。完整边界见 [发行说明](HOMEDESK_RELEASE.md)。历史 10.x 的长测和截图不作为本次验证。

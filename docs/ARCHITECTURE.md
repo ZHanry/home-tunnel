@@ -1,26 +1,26 @@
-# NestLink 12 四仓架构
+# nestlink 13.0.0 四仓架构
 
-Server 保持 Node/SQLite 控制面、Caddy HTTPS 边缘、traffic-gateway 流量治理与 FRPS 穿透数据面。只新增常驻 hbbs 1.1.16，提供远控设备 ID 与 NAT 协调；固定镜像摘要，内存上限 64 MB。一次性卷初始化复用已有 FRPS 镜像，没有新增常驻数据库、Redis、TURN 或 hbbr。
+Server 使用 Node/SQLite 控制面、Caddy HTTPS 边缘、traffic-gateway 流量治理与 FRPS 穿透数据面。hbbs 提供原生远控设备 ID 与 NAT 协调；浏览器信令、短期连接许可和授权在同一自建服务内完成。服务端不转发远控画面，也不启用 hbbr/TURN 中继。
 
-Client 使用导入的 RustDesk 核心与 Flutter NestLink界面，保留原 Go CLI 和独立 Agent。所有远控入口与最终成功守卫要求认证、加密、直连；不提供中继回退。Android 通过 `homedesk-core` Git 子模块固定 Client revision，不维护复制分叉。
+Client 将 Rust/Flutter 远控核心、统一工作台和内部 Go 穿透执行器组合成 Windows x64、Linux x64/ARM64 GUI。Android 以 `homedesk-core` Git 子模块固定通过验收的 Client 运行源码，提供 ARM64/x86_64 通用 APK。独立 CLI/NAS 和 macOS 不属于本次产品发行。
 
 ```mermaid
 flowchart LR
-  W[Windows NestLink] <-->|加密 P2P 媒体与输入| A[Android / 对端 NestLink]
+  W[Windows / Linux 客户端] <-->|认证加密 P2P 画面与输入| A[Android / 原生对端]
   W -->|ID 与 NAT 协调| H[hbbs]
-  A -->|ID 与 NAT 协调| H
-  W -->|HTTPS 账号 / 设备 / 服务| C[Node + SQLite]
+  A --> H
+  W -->|HTTPS 账号 / 许可 / 设备 / 服务| C[Node + SQLite]
   A --> C
-  Web[NestLink Web 管理台] --> C
-  Web -.->|homedesk://ID| W
+  Web[nestlink Web 管理与远控] -->|认证 / 授权 / 信令| C
+  Web <-->|直接 WebRTC 数据通道| W
   Visitor[公网服务访问者] --> Edge[Caddy + traffic-gateway / FRPS]
-  Edge <-->|HTTP/HTTPS / 受控 TCP/UDP| Agent[家庭 CLI / NAS / Agent]
+  Edge <-->|HTTP/HTTPS / 受控 TCP/UDP| Tunnel[桌面客户端内部穿透执行器]
 ```
 
-同账号目录记录设备与原生远控 ID，写入现有 SQLite。设备撤权立即清除映射，远控 ID 全局唯一；近期登记只表示目录可发现，不能当作媒体在线。hbbs 公钥是信任锚，控制中心不持有 hbbs 私钥卷。
+设备目录按账号隔离。跨账号协助在同一自建服务内按设备 ID 请求，仍须被控端批准或验证密码；目录登记不代表实时在线，也不能替代连接授权。原生核心在发起、接受连接时检查短期许可，浏览器使用独立版本的远控契约。认证契约冻结为 `api-v2.0.0`，原穿透同步及后台设备必要接口保留。
 
-通用安装包无内置服务器、公钥或凭据。Windows 使用 DPAPI，Android 使用非导出的 Keystore AES-GCM 密钥；原生交接单次消费、防重放，URL 只携带设备 ID。控制中心账号权限与被控端会话授权各司其职。
+安装包不内置供应商服务器、公钥或凭据。Windows 使用 DPAPI，Linux 使用 Secret Service，Android 使用非导出 Keystore 密钥。深链接和系统入口统一检查登录，URL 不携带凭据。管理会话和后台设备凭据分别撤销。
 
-内网穿透生命周期保持独立。GUI 受管 Agent 跟随窗口；独立 CLI 支持 NAS 和后台服务。远控失败、网络模式切换不会终止穿透；账号退出、授权地址改变或设备撤销仍按原权限规则停止相关受管 Agent。
+桌面主工作台固定 1120×760，按可用屏幕和 DPI 缩小，禁止自由缩放和最大化；远控窗口保留全屏。远控与穿透分别管理生命周期：关闭远控或撤销前台会话不停止独立凭据维持的穿透，撤销对应后台设备则停止其服务。后台运行由桌面和托盘管理。
 
-旧 WebRTC 远控退出 12.x 生产路径。历史 10.x 的 DTLS/TURN 文档与证据只适用于其原始发布，不代表新的候选架构或验收。
+实际联调范围及未验证的真机、运营商网络、长期媒体、Wayland 和平台媒体矩阵见 [发行说明](HOMEDESK_RELEASE.md)。历史 10.x 文档与证据属于其原始发行。

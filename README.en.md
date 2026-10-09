@@ -2,7 +2,7 @@
 
 [中文](README.md) · [Website](https://zhanry.github.io/home-tunnel/en/) · [Release scope](docs/HOMEDESK_RELEASE.md)
 
-Manage devices, control a remote desktop directly, and keep local services accessible through your own server. **13.0.0 is the stable release target**; implementation and acceptance are in progress.
+Manage devices, control a remote desktop directly, and keep local services accessible through your own server. **13.0.0 is the stable release** with automated checks and reproducible integration on the released bytes. See [downloads](docs/DOWNLOADS.md) and [release notes](docs/HOMEDESK_RELEASE.md) for the exact verification scope and unverified coverage.
 
 | Platform | Role | Package |
 | --- | --- | --- |

@@ -1,10 +1,10 @@
 # 家庭服务场景 / Application recipes
 
-这些示例属于 FRP 服务发布，HomeDesk 11 候选版完整保留此功能。
-服务器发行检查已验证 HTTP/TCP/UDP 穿透；下列第三方应用的实际运行和跨网矩阵仍需逐项验收。
+这些示例属于 nestlink 13.0.0 的 FRP 服务发布功能，在桌面客户端的“内网穿透”配置。
+服务器发行检查已验证 HTTP/HTTPS、TCP/UDP 穿透；下列第三方应用的实际运行和跨网矩阵仍需逐项验收。
 内置远控只走认证加密的 P2P，不能通过这些映射回退；FRP 发布的服务本身会经过服务器。
 
-下表是连接表单的示例，不会安装或修改第三方应用。必须先在客户端所在电脑/NAS
+下表是连接表单的示例，不会安装或修改第三方应用。必须先在客户端所在电脑
 验证本地地址；如应用运行在 Docker 中，使用发布到宿主机的端口或可达的网络地址。
 建议用普通用户创建。子域最终受部署的前缀规则影响。
 
@@ -24,9 +24,8 @@ Home Assistant 的 `trusted_proxies` 不能写成任意公网来源；只添加�
 反向代理网络。移动应用/WebSocket/流媒体可能无法使用额外的 HTTP Basic Auth，
 这时依赖应用自身的登录和 MFA，按需使用 IP 白名单。配置访问策略后验证实际客户端。
 
-NAS 安装方式见 [NAS 模板](https://github.com/ZHanry/home-tunnel-client/tree/main/packaging/nas)
-和 [部署预检](https://github.com/ZHanry/home-tunnel-server/blob/main/docs/NAS.md)。
-目标应用的数据备份是单独的任务，Home Tunnel 的数据库备份不包含照片或媒体文件。
+本次不分发独立 CLI/NAS。可由 Windows/Linux 穿透中枢连接可达的内网目标。
+目标应用的数据备份是单独的任务，nestlink 的数据库备份不包含照片或媒体文件。
 
 English: these are connection recipes, not third-party application installers.
 Verify the target from the Agent host first. Use application authentication/MFA,

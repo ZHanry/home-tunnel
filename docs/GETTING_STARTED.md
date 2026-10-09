@@ -1,4 +1,4 @@
-# 使用 NestLink
+# 使用 nestlink
 
 1. 部署自己的 Server，并配置 HTTPS 与公网地址。
 2. 在 Windows/Linux 或 Android 安装对应的客户端，填写服务地址，使用账号密码登录。
