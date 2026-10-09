@@ -20,26 +20,26 @@
   document.documentElement.classList.add("js");
 })();
 </script>
-<title>HomeDesk 11 · Direct P2P and home services</title>
-<meta name="description" content="HomeDesk 11: authenticated encrypted direct P2P and complete independent tunneling. Candidate acceptance pending.">
+<title>NestLink 12 · Direct P2P and home services</title>
+<meta name="description" content="NestLink 12: authenticated encrypted direct P2P and complete independent tunneling. Candidate acceptance pending.">
 <link rel="canonical" href="https://zhanry.github.io/home-tunnel/en/">
 <link rel="alternate" hreflang="en" href="https://zhanry.github.io/home-tunnel/en/">
 <link rel="alternate" hreflang="zh-CN" href="https://zhanry.github.io/home-tunnel/">
-<meta property="og:title" content="Home Tunnel · UDP remote control and FRP publishing">
-<meta property="og:description" content="HomeDesk 11 candidate: direct P2P remote control and independent FRP tunnels.">
+<meta property="og:title" content="NestLink · UDP remote control and FRP publishing">
+<meta property="og:description" content="NestLink 12 candidate: direct P2P remote control and independent FRP tunnels.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://zhanry.github.io/home-tunnel/en/">
 <meta property="og:image" content="https://zhanry.github.io/home-tunnel/assets/share-card.svg">
-<meta property="og:image:alt" content="Home Tunnel brand card describing UDP remote control and FRP publishing, not a product screenshot">
-<link rel="icon" type="image/svg+xml" href="../assets/HomeTunnel.svg">
-<link rel="stylesheet" href="../assets/site.css?v=11.0.0-rc.1">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Home Tunnel","applicationCategory":"UtilitiesApplication","operatingSystem":"Windows, macOS, Linux, Android","softwareVersion": "10.1.0","license":"https://www.apache.org/licenses/LICENSE-2.0","url":"https://zhanry.github.io/home-tunnel/en/"}</script>
+<meta property="og:image:alt" content="NestLink brand card describing UDP remote control and FRP publishing, not a product screenshot">
+<link rel="icon" type="image/svg+xml" href="../assets/NestLink.svg">
+<link rel="stylesheet" href="../assets/site.css?v=12.0.0-RC1">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"NestLink","applicationCategory":"UtilitiesApplication","operatingSystem":"Windows, macOS, Linux, Android","softwareVersion": "12.0.0-RC1","license":"https://www.apache.org/licenses/LICENSE-2.0","url":"https://zhanry.github.io/home-tunnel/en/"}</script>
 </head>
 <body data-root="../" data-stable-version="10.1.0">
 <a class="skip" href="#content">Skip to content</a>
 <div class="wrap">
 <header class="site-header">
-<a class="brand" href="index.html"><img src="../assets/HomeTunnel.svg" alt="" width="36" height="36">Home Tunnel</a>
+<a class="brand" href="index.html"><img src="../assets/NestLink.svg" alt="" width="36" height="36">NestLink</a>
 <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
 <nav id="site-nav" aria-label="Primary">
 <a href="#remote">Remote control</a>
@@ -57,13 +57,14 @@
 </div>
 </header>
 <main id="content">
-<section class="section"><p class="eyebrow">HomeDesk 11 · candidate</p><h1>Connect to home. Keep control direct.</h1><p class="lede">Warm native Windows and Android interfaces with authenticated, encrypted direct P2P remote sessions. Keep NAS and local services available through independent FRP tunnels. Server 11.0.0-rc.2 and Client/Android 11.0.0-rc.1 remain candidates; acceptance is pending.</p><div class="actions"><a class="button" href="downloads.html#candidate">Candidate downloads</a><a class="button secondary" href="preview.html">Scope and verification</a></div></section>
-<section id="remote" class="section"><p class="eyebrow">Direct P2P</p><h2>Peers carry the remote session.</h2><p>The native Rust/Flutter core requires an authenticated, encrypted direct connection. hbbs provides only ID and NAT signaling. No hbbr, TURN, FRP, HTTP/WSS, VPN or vendor fallback; failed direct connections terminate.</p><p>The Web console opens the installed HomeDesk client through an ID-only homedesk URL. The account directory cannot bypass a remote password or approval; recent registration is not proof of live media.</p></section>
-<section id="host" class="section"><h2>Choose when to share your screen.</h2><p>Configure your own HTTPS console, hbbs address and public key. Generic packages contain no server, key or account. Android screen sharing requires current system permission, including a visible-app authorization on Android 14/15.</p></section>
-<section id="tunnel" class="section"><p class="eyebrow">FRP 0.70.1</p><h2>Keep local services online.</h2><p>HTTP/HTTPS and governed TCP/UDP, port pools, access control, traffic quotas, diagnostics and independent CLI/NAS/background Agents remain available. Remote mode changes or a failed remote session do not stop independent tunnels.</p><p>Server retains Node/SQLite and the existing Caddy, traffic-gateway and FRPS stack. The only new resident process is hbbs, capped at 64 MB. Native macOS/Linux GUIs are not released; the CLI bundle covers five platforms.</p></section>
+<section class="section"><p class="eyebrow">NestLink 12 · candidate</p><h1>Connect to home. Keep control direct.</h1><p class="lede">A single blue and white workspace for your devices and services. Sign in to your self-hosted server, connect directly to a device, or keep a home service online. Windows, macOS, Linux and Android share the NestLink identity. 12.0.0-RC1 is a prerelease.</p><div class="actions"><a class="button" href="downloads.html#candidate">Candidate downloads</a><a class="button secondary" href="preview.html">Scope and verification</a></div></section>
+<section id="remote" class="section"><p class="eyebrow">Direct P2P</p><h2>Peers carry the remote session.</h2><p>The native Rust/Flutter core requires an authenticated, encrypted direct connection. hbbs provides only ID and NAT signaling. No hbbr, TURN, FRP, HTTP/WSS, VPN or vendor fallback; failed direct connections terminate.</p><p>The Web console opens the installed NestLink client through an ID-only homedesk URL. The account directory cannot bypass a remote password or approval; recent registration is not proof of live media.</p></section>
+<section id="host" class="section"><h2>Choose when to share your screen.</h2><p>Sign in with your self-hosted server address and account. Connection settings are retrieved automatically. Generic packages contain no server, key or account. Android screen sharing requires current system permission, including a visible-app authorization on Android 14/15.</p></section>
+<section id="tunnel" class="section"><p class="eyebrow">FRP 0.70.1</p><h2>Keep local services online.</h2><p>HTTP/HTTPS and governed TCP/UDP, port pools, access control, traffic quotas, diagnostics and independent CLI/NAS/background Agents remain available. Remote mode changes or a failed remote session do not stop independent tunnels.</p><p>Server retains Node/SQLite and the existing Caddy, traffic-gateway and FRPS stack. Remote sessions and background tunnel services have separate lifecycles. GUI installers cover Windows x64, both macOS architectures, and Linux x64/ARM64. The CLI/Agent bundle covers five platforms.</p></section>
+<section class="section"><h2>NestLink 12.0.0-RC1 · Web workbench</h2><figure class="shot-slot" data-shot-slot="rc12-workbench" data-slot-status="captured-release-ui"><figcaption><strong>NestLink 12.0.0-RC1 · Web workbench</strong><span>Actual Web application with example data; this image does not assert a remote session or media verification.</span></figcaption><img src="../assets/rc12/web-workbench.png" alt="NestLink 12.0.0-RC1 · Web workbench · example data" width="1280" height="860" loading="lazy"></figure></section>
 <section class="section" aria-label="Diagram and screenshot slots">
 <h2>Diagrams and historical interface previews</h2>
-<p>Product screenshots below keep their 10.0.0 labels. They are not 11.x captures or acceptance evidence.</p>
+<p>Product screenshots below keep their 10.0.0 labels. They are not 12.x captures or acceptance evidence.</p>
 <figure class="shot-slot" data-shot-slot="vector-architecture" data-slot-status="vector-diagram">
 <figcaption><strong>Control plane and FRP data plane</strong><span>Vector diagram, not an application screenshot. Remote UDP does not use this FRP path.</span></figcaption>
 <img src="../assets/architecture.svg" alt="Home Tunnel architecture diagram showing the control center, SQLite, Caddy, traffic gateway, FRP, and a home Agent" width="1440" height="900">
@@ -101,11 +102,11 @@
 </figure>
 
 </section>
-<section class="section"><h2>Choose a release channel.</h2><p id="download-status" class="notice" role="status" aria-live="polite" data-tone="ready">Stable downloads remain 10.1.0 with Android 10.0.0. HomeDesk 11 is a prerelease; acceptance is pending. Cross-network and physical-device gates were not run and remain unverified.</p><div class="actions"><a class="button" href="downloads.html#candidate">HomeDesk candidate</a><a class="button secondary" href="downloads.html">Original stable downloads</a></div></section>
-<section id="faq" class="section"><h2>Before installing</h2><details><summary>Can remote control use a relay?</summary><p>No. HomeDesk 11 requires authenticated encrypted direct P2P. Failed NAT traversal stops the session.</p></details><details><summary>Are existing tunnels retained?</summary><p>Yes. Independent HTTP/HTTPS and governed TCP/UDP, permissions, port pools, ACLs and traffic management remain.</p></details><details><summary>What does the candidate verification cover?</summary><p>Build, source, unit, widget, installer and emulator checks have separate scopes. Sustained two-peer media, cross-network NAT and physical Android devices remain pending. Historical 10.0.0 and 9.0.0 evidence is not 11.x acceptance.</p></details><details><summary>What needs a backup?</summary><p>SQLite, deployment secrets, client state and the separate hbbs identity. Retire legacy remote overlays before migrating.</p></details></section>
+<section class="section"><h2>Choose a release channel.</h2><p id="download-status" class="notice" role="status" aria-live="polite" data-tone="ready">Stable downloads remain 10.1.0 with Android 10.0.0. NestLink 12 is a prerelease; acceptance is pending. Cross-network and physical-device gates were not run and remain unverified.</p><div class="actions"><a class="button" href="downloads.html#candidate">NestLink candidate</a><a class="button secondary" href="downloads.html">Original stable downloads</a></div></section>
+<section id="faq" class="section"><h2>Before installing</h2><details><summary>Can remote control use a relay?</summary><p>No. NestLink 12 requires authenticated encrypted direct P2P. Failed NAT traversal stops the session.</p></details><details><summary>Are existing tunnels retained?</summary><p>Yes. Independent HTTP/HTTPS and governed TCP/UDP, permissions, port pools, ACLs and traffic management remain.</p></details><details><summary>What does the candidate verification cover?</summary><p>Build, source, unit, widget, installer and emulator checks have separate scopes. Sustained two-peer media, cross-network NAT and physical Android devices remain pending. Historical 10.0.0 and 9.0.0 evidence is not 12.x acceptance.</p></details><details><summary>What needs a backup?</summary><p>SQLite, deployment secrets, client state and the separate hbbs identity. Retire legacy remote overlays before migrating.</p></details></section>
 </main>
 <footer class="site-footer">
-<span>© 2026 Home Tunnel · Apache-2.0</span>
+<span>© 2026 NestLink · Apache-2.0</span>
 <nav aria-label="Footer">
 <a href="privacy.html">Privacy</a>
 <a href="preview.html">Scope and limits</a>

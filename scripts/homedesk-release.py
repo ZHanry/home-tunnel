@@ -36,7 +36,7 @@ def version():
 def candidate_metadata():
     value = version()
     tag = os.environ.get("GITHUB_REF_NAME", "")
-    if not re.fullmatch(r"\d+\.\d+\.\d+-rc\.[1-9]\d*", value) or tag != "v" + value:
+    if not re.fullmatch(r"\d+\.\d+\.\d+-(?:RC[1-9]\d*|rc\.[1-9]\d*)", value) or tag != "v" + value:
         raise SystemExit("Only a matching candidate tag can publish HomeDesk; stable requires separate real acceptance.")
     revision = run("git", "rev-parse", "HEAD", capture=True)
     if revision != os.environ["GITHUB_SHA"]:
@@ -96,7 +96,7 @@ def pack(args):
     output.mkdir(parents=True, exist_ok=True)
     if any(output.iterdir()):
         raise SystemExit("Use an empty output directory; existing sealed assets are never overwritten")
-    maximum = {"server": 3, "client": 4, "android": 3, "hub": 2}[args.component]
+    maximum = {"server": 3, "client": 8, "android": 3, "hub": 2}[args.component]
     if len(args.select) + 2 > maximum or len(set(args.select)) != len(args.select):
         raise SystemExit("Too many or duplicate release attachments")
     selected = []
@@ -107,7 +107,7 @@ def pack(args):
         shutil.copyfile(source, output / name)
         selected.append(output / name)
     # The hub's only package already contains its distribution and corresponding source.
-    material_name = f"HomeTunnel-Distribution-{value}.zip" if args.component == "hub" else f"HomeDesk-{args.component}-Materials-{value}.zip"
+    material_name = f"NestLink-Distribution-{value}.zip" if args.component == "hub" else f"NestLink-{args.component}-Materials-{value}.zip"
     material = output / material_name
     staging = ROOT / "outputs" / "release-materials"
     staging.mkdir(parents=True, exist_ok=True)
@@ -165,7 +165,7 @@ def publish(args):
     repository = os.environ["GITHUB_REPOSITORY"]
     notes = ROOT / "docs" / "HOMEDESK_RELEASE.md"
     run("gh", "release", "create", tag, "--repo", repository, "--verify-tag", "--draft", "--prerelease",
-        "--title", "HomeDesk " + version(), "--notes-file", str(notes))
+        "--title", "栖云桥 / NestLink " + version(), "--notes-file", str(notes))
     run("gh", "release", "upload", tag, "--repo", repository, *[str(p) for p in sorted(directory.iterdir())])
     run("gh", "release", "edit", tag, "--repo", repository, "--draft=false", "--prerelease", "--latest=false")
 

@@ -32,6 +32,8 @@ BANNED = (
 # An unpromoted line cannot advertise stable download URLs.
 ALLOWED_IMAGES = {
     "assets/hometunnel.svg",
+    "assets/nestlink.svg",
+    "assets/rc12/web-workbench.png",
     "assets/architecture.svg",
     "assets/share-card.svg",
     "assets/admin-dashboard-7.jpg",
@@ -58,8 +60,8 @@ def audit_capture(site, slot):
             return [f"slot {slot_id} capture paths must stay inside the site"]
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         version = manifest.get("product_version", manifest.get("component_version", manifest.get("version")))
-        if version != slot.get("captured_product_version") or version != "10.0.0":
-            errors.append(f"slot {slot_id} capture version must match 10.0.0")
+        if version != slot.get("captured_product_version") or version not in ("10.0.0", "12.0.0-RC1"):
+            errors.append(f"slot {slot_id} capture version must match its recorded product version")
         revision = manifest.get("source_sha", manifest.get("repository_revision", manifest.get("capture_revision", "")))
         if not re.fullmatch(r"[a-f0-9]{40}", revision):
             errors.append(f"slot {slot_id} capture needs its exact source revision")
@@ -141,7 +143,7 @@ def audit(root=ROOT):
             "home-tunnel-theme",
             "download-state.js",
             "site.js",
-            "HomeTunnel.svg",
+            "NestLink.svg",
             "__GOATCOUNTER_ENDPOINT__",
         )
         for token in required:
@@ -183,7 +185,8 @@ def audit(root=ROOT):
         if relative in STATUS_PAGES and 'id="download-status"' not in text:
             errors.append(relative + " needs a download status region")
         if relative in LANDING_PAGES:
-            software = f'"softwareVersion": "{releases["version"]}"'
+            advertised = candidate['version'] if candidate.get('promotion_status') == 'prerelease' else releases['version']
+            software = f'"softwareVersion": "{advertised}"'
             for token in (software, "rel=\"canonical\"", 'hreflang="en"', 'hreflang="zh-CN"', 'id="faq"', 'id="remote"', 'id="tunnel"', "FRP", "UDP", "9.0.0", "10.0.0"):
                 if token not in text:
                     errors.append(relative + " missing " + token)
@@ -208,7 +211,7 @@ def audit(root=ROOT):
             if "Authenticode" not in text:
                 errors.append(relative + " must keep the desktop signing fact")
     for slot in slots["slots"]:
-        if slot["status"] == "captured-v10-ui":
+        if slot["status"] in ("captured-v10-ui", "captured-release-ui"):
             errors.extend(audit_capture(site, slot))
         pages_for_slot = seen_slots.get(slot["id"], [])
         found_on = {item[0] for item in pages_for_slot}
@@ -230,7 +233,7 @@ def audit(root=ROOT):
                 for label in slot.get("label_must_include", []):
                     if label not in figure:
                         errors.append(f"slot {slot['id']} on {page_name} must include {label}")
-                if slot["status"] == "captured-v10-ui" and slot.get("fixture_data"):
+                if slot["status"] in ("captured-v10-ui", "captured-release-ui") and slot.get("fixture_data"):
                     label = "example data" if page_name.startswith("en/") else "示例数据"
                     if label not in figure:
                         errors.append(f"slot {slot['id']} on {page_name} must disclose {label}")

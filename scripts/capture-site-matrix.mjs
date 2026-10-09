@@ -23,10 +23,10 @@ const ROUTES = [
   { locale: "en", page: "downloads", path: "/en/downloads.html", faq: false, status: true },
 ];
 const THEMES = [
-  { name: "light", query: "light", scheme: "light", bg: "rgb(244, 245, 240)" },
-  { name: "dark", query: "dark", scheme: "dark", bg: "rgb(17, 28, 25)" },
-  { name: "system-light", query: "system", scheme: "light", bg: "rgb(244, 245, 240)" },
-  { name: "system-dark", query: "system", scheme: "dark", bg: "rgb(17, 28, 25)" },
+  { name: "light", query: "light", scheme: "light", bg: "rgb(247, 249, 252)" },
+  { name: "dark", query: "dark", scheme: "dark", bg: "rgb(16, 26, 43)" },
+  { name: "system-light", query: "system", scheme: "light", bg: "rgb(247, 249, 252)" },
+  { name: "system-dark", query: "system", scheme: "dark", bg: "rgb(16, 26, 43)" },
 ];
 const DESKTOP = { name: "desktop", width: 1440, height: 900, dsf: 1 };
 const TABLET = { name: "tablet", width: 768, height: 1024, dsf: 1 };

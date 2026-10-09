@@ -48,7 +48,7 @@ def verify(candidate, *, record=False, signatures=False, download_dir=None):
         if ref["type"] != "commit" or ref["sha"] != revision:
             raise SystemExit("Immutable product tag differs from the selected source: " + name)
         assets = release["assets"]
-        if len(assets) != distribution.HOMEDESK_ATTACHMENTS[name]:
+        if len(assets) != distribution.attachment_counts(candidate['version'])[name]:
             raise SystemExit("Unexpected attachment count: " + name)
         with download_folder(download_dir, name, tag) as folder:
             command = ["gh", "release", "download", tag, "--repo", repository, "--dir", str(folder)]
@@ -76,7 +76,8 @@ def verify(candidate, *, record=False, signatures=False, download_dir=None):
                 listed[filename] = checksum
             if set(listed) != set(entries) - {"SHA256SUMS.txt"}:
                 raise SystemExit("Checksum file must cover the complete attachment set")
-            materials = folder / f"HomeDesk-{name}-Materials-{component['version']}.zip"
+            brand = 'NestLink' if candidate['version'] == distribution.NESTLINK_TARGET['hub'] else 'HomeDesk'
+            materials = folder / f"{brand}-{name}-Materials-{component['version']}.zip"
             with zipfile.ZipFile(materials) as bundle:
                 manifest_bytes = bundle.read("BUILD.json")
                 manifest = json.loads(manifest_bytes)

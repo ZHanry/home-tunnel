@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-labelledby="title desc">
-  <title id="title">Home Tunnel architecture</title>
+  <title id="title">NestLink architecture</title>
   <desc id="desc">Control traffic flows from clients to the control center and SQLite. Application traffic flows through Caddy and the traffic gateway to FRP and a managed home agent.</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#07111f"/><stop offset="1" stop-color="#0d1b2d"/></linearGradient>

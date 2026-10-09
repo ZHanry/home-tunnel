@@ -1,14 +1,14 @@
-# HomeDesk 11 候选下载
+# NestLink 12 候选下载
 
-Server 11.0.0-rc.2；Client / Android 11.0.0-rc.1。候选远控要求认证加密 P2P，失败终止，完整内网穿透保留。跨网与真机验收尚未完成，Windows 未 Authenticode 签名。构建与发布检查完成后，本节由实际 Release 校验结果生成附件表；不要将旧稳定包误认为新的原生 HomeDesk。
+Server 12.0.0-RC1；Client / Android 12.0.0-RC1。候选远控要求认证加密 P2P，失败终止，完整内网穿透保留。跨网与真机验收尚未完成，Windows 未 Authenticode 签名。构建与发布检查完成后，本节由实际 Release 校验结果生成附件表；不要将旧稳定包误认为新的原生 NestLink。
 
-[Server 候选发布](https://github.com/ZHanry/home-tunnel-server/releases/tag/v11.0.0-rc.2) · [Windows / CLI 候选发布](https://github.com/ZHanry/home-tunnel-client/releases/tag/v11.0.0-rc.1) · [Android 候选发布](https://github.com/ZHanry/home-tunnel-android/releases/tag/v11.0.0-rc.1)
+[Server 候选发布](https://github.com/ZHanry/home-tunnel-server/releases/tag/v12.0.0-RC1) · [Windows / CLI 候选发布](https://github.com/ZHanry/home-tunnel-client/releases/tag/v12.0.0-RC1) · [Android 候选发布](https://github.com/ZHanry/home-tunnel-android/releases/tag/v12.0.0-RC1)
 
 <!-- homedesk-assets:start -->
 候选发布与实际附件检查进行中；真实摘要将在完成后列出。
 <!-- homedesk-assets:end -->
 
-稳定通道、原字节和历史验证说明如下。11.x 不复用这些远控验收结果。
+稳定通道、原字节和历史验证说明如下。12.x 不复用这些远控验收结果。
 
 ---
 

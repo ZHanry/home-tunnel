@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "product_version": "12.0.0-RC1",
+  "repository": "ZHanry/home-tunnel-server",
+  "source_sha": "ddf5c7769cdf42fad2d9ae37b904e42866b85f0a",
+  "captured_at": "2026-10-09T07:40:34.138Z",
+  "fixture_data": true,
+  "method": "Playwright Chromium screenshot of the production Web application with isolated example devices",
+  "scope": "UI pixels only; no remote session or media assertion",
+  "captures": [
+    {
+      "file": "web-workbench.png",
+      "sha256": "e675812877ee941303dca4098def31e6345fbace80504e66071f06a92b68030a",
+      "width": 1280,
+      "height": 860
+    }
+  ]
+}

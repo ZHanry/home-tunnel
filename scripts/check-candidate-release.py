@@ -29,7 +29,7 @@ def validate(value):
     require(value.get("latest") is False, "Candidate cannot replace the stable channel")
     require(set(value.get("components", {})) == set(REPOSITORIES), "All four components are required")
     contract = value.get("contract", {})
-    require(re.fullmatch(r"api-v1\.2\.0(?:-rc\.[1-9][0-9]*)?", contract.get("ref", "")), "Invalid contract ref")
+    require(re.fullmatch(r"api-v1\.2\.0(?:-(?:RC[1-9][0-9]*|rc\.[1-9][0-9]*))?", contract.get("ref", "")), "Invalid contract ref")
     require(re.fullmatch(r"[0-9a-f]{40}", contract.get("revision", "")), "Contract revision is required")
     require(re.fullmatch(r"[0-9a-f]{64}", contract.get("sha256", "")), "Contract checksum is required")
     for name, repository in REPOSITORIES.items():

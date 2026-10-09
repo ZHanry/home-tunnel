@@ -1,0 +1,12 @@
+{
+  "name": "NestLink",
+  "name_zh": "栖云桥",
+  "version": "12.0.0-RC1",
+  "style": "blue-workbench",
+  "primary": "#1967D2",
+  "background": "#F7F9FC",
+  "icon": "icon.svg",
+  "icon_sha256": "f2f0649afa76798cf7be828b5f082a5af0f5250d917035981cfa5c3efa7b7f47",
+  "scrollbars": "hidden-with-accessible-scrolling",
+  "upgrade_identity": "Preserve HomeDesk configuration namespace, installer identity, Android applicationId and signing certificate"
+}

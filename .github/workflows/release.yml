@@ -1,7 +1,7 @@
 name: Release distribution
 on:
   push:
-    tags: [v*-rc.*]
+    tags: [v*-rc.*, v*-RC*]
 permissions:
   contents: write
   checks: read

@@ -16,7 +16,7 @@ def contents(candidate, english=False):
     components = candidate["components"]
     file_label = "File" if english else "文件"
     titles = {"server": "Server" if english else "服务端",
-              "client": "Windows / CLI + Agent" if english else "Windows / CLI 与 Agent",
+              "client": "Windows / macOS / Linux / CLI + Agent" if english else "Windows / macOS / Linux / CLI 与 Agent",
               "android": "Android"}
     parts = []
     for name in ("server", "client", "android"):

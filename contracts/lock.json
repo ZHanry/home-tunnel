@@ -1,0 +1,43 @@
+{
+  "repository": "ZHanry/home-tunnel-server",
+  "ref": "api-v2.0.0",
+  "contract_status": "frozen",
+  "frozen_tag": "api-v2.0.0",
+  "published_contract_ref": "api-v2.0.0",
+  "previous_immutable_tag": "api-v1.6.0",
+  "source_revision": "2242354fc10c6681ec0ccf33e91ab96611e60791",
+  "source_tree_dirty": false,
+  "api_prefix": "/api/v2",
+  "path": "contracts/home-tunnel.v2.json",
+  "sha256": "9543bafe0c6d5a8f615926c2d8cfa8f2b9f72a744c39e138ea04a9f4b8d254cf",
+  "files": [
+    {
+      "path": "contracts/home-tunnel.v1.json",
+      "sha256": "47122e7f75788e0b60efe1f7b5180a6098183ea0310d248a9f96098474a5ef2a"
+    },
+    {
+      "path": "contracts/openapi.v1.json",
+      "sha256": "8c72baae633157ccd5e7c8e9cf3d5fc24f6f607685744349fa1cb39fe482fae4"
+    },
+    {
+      "path": "contracts/api.schema.json",
+      "sha256": "5edd7c53065d8b81fb6cc500015c60246dd4d6c7da3afd7daf33aad22b6272d7"
+    },
+    {
+      "path": "contracts/home-tunnel.v2.json",
+      "sha256": "9543bafe0c6d5a8f615926c2d8cfa8f2b9f72a744c39e138ea04a9f4b8d254cf"
+    },
+    {
+      "path": "contracts/openapi.v2.json",
+      "sha256": "b7f31f073dc97383314688f728e2cfeae5474f1e2b27e073dfc1990c18dd9e78"
+    },
+    {
+      "path": "contracts/api.v2.schema.json",
+      "sha256": "e4fa2ca58847e445423d78cdab6de16e29d67e63ef6daf553c0647054cdf94ed"
+    },
+    {
+      "path": "contracts/nestlink-auth.v2-vectors.json",
+      "sha256": "8328d7d3febfea627e5743e577ea22c857687056eebd13e5fc04c0456b6a0ebd"
+    }
+  ]
+}

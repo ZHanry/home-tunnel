@@ -31,9 +31,9 @@
     }
     var stableVersion = input.stable && input.stable.version;
     var candidateTag = input.candidate && input.candidate.version;
-    var versionPattern = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-rc\.[1-9][0-9]*)?$/;
+    var versionPattern = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-(?:RC[1-9][0-9]*|rc\.[1-9][0-9]*))?$/;
     if (input.transport !== "ok" || !input.stable || !input.candidate ||
-        typeof stableVersion !== "string" || !versionPattern.test(stableVersion) || stableVersion.indexOf("-rc.") !== -1 ||
+        typeof stableVersion !== "string" || !versionPattern.test(stableVersion) || stableVersion.indexOf("-") !== -1 ||
         input.stable.stage !== "stable" || typeof candidateTag !== "string" || !versionPattern.test(candidateTag) ||
         ["not_promoted", "promoted", "prerelease"].indexOf(input.candidate.promotion_status) === -1 ||
         ["pending", "not_submitted"].concat(ACCEPTED).indexOf(input.candidate.acceptance_status) === -1 ||
@@ -48,15 +48,15 @@
     var candidate = input.candidate;
     if (candidate.promotion_status === "prerelease") {
       if (candidate.prerelease !== true || candidate.stage !== "candidate" || candidate.acceptance_status !== "pending" ||
-          candidate.version.indexOf("-rc.") === -1 || candidate.remote_policy !== "require_direct" || candidate.relay_enabled !== false) {
+          !/-([Rr][Cc][1-9][0-9]*|rc\.[1-9][0-9]*)$/.test(candidate.version) || candidate.remote_policy !== "require_direct" || candidate.relay_enabled !== false) {
         return { tone: "error", zh: "候选清单冲突，请使用稳定下载链接。", en: "Candidate manifest conflict; use the stable download links." };
       }
       var publishedZh = candidate.downloads_published ? "候选包已发布。" : "候选构建与发布检查进行中。";
       var publishedEn = candidate.downloads_published ? "Candidate packages are published. " : "Candidate builds and publication checks are in progress. ";
       return {
         tone: "ready",
-        zh: "稳定下载是 " + stable.version + "。HomeDesk " + candidate.version + " 只进入候选通道。" + publishedZh + "远控严格 P2P；跨网与真机验收尚未完成。部分验收项目未运行，验证尚未完成。",
-        en: "Stable downloads are " + stable.version + ". HomeDesk " + candidate.version + " remains a prerelease. " + publishedEn + "Remote control requires direct P2P; acceptance is pending. Cross-network and physical-device gates were not run and remain unverified."
+        zh: "稳定下载是 " + stable.version + "。NestLink " + candidate.version + " 只进入候选通道。" + publishedZh + "远控严格 P2P；跨网与真机验收尚未完成。部分验收项目未运行，验证尚未完成。",
+        en: "Stable downloads are " + stable.version + ". NestLink " + candidate.version + " remains a prerelease. " + publishedEn + "Remote control requires direct P2P; acceptance is pending. Cross-network and physical-device gates were not run and remain unverified."
       };
     }
     if (candidate.promotion_status !== "promoted") {

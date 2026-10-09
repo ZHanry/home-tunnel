@@ -1,17 +1,17 @@
 :root,
 html[data-theme="light"] {
   color-scheme: light;
-  --bg: #f4f5f0;
-  --ink: #172e2a;
+  --bg: #f7f9fc;
+  --ink: #172b4d;
   --muted: #3e4654;
-  --accent: #595ad7;
+  --accent: #1967d2;
   --on-accent: #ffffff;
-  --line: #d9d6ea;
+  --line: #dce5ef;
   --surface: #ffffff;
-  --focus: #3d3a9e;
-  --board: #2a2754;
-  --board-ink: #f4f5f0;
-  --band: #eceaf8;
+  --focus: #1455ae;
+  --board: #143463;
+  --board-ink: #f7f9fc;
+  --band: #eaf2fe;
   --danger-bg: #fff1f0;
   --danger-ink: #3d1010;
   --danger-line: #9b2c2c;
@@ -22,17 +22,17 @@ html[data-theme="light"] {
 }
 html[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #111c19;
-  --ink: #ecf3ed;
-  --muted: #c9c6df;
-  --accent: #b9b7ff;
-  --on-accent: #1c1a33;
-  --line: #3d3a5c;
-  --surface: #1a1830;
-  --focus: #dedcff;
-  --board: #2a2754;
-  --board-ink: #f4f5f0;
-  --band: #231f3d;
+  --bg: #101a2b;
+  --ink: #eff5ff;
+  --muted: #bac9df;
+  --accent: #8cbcff;
+  --on-accent: #10274a;
+  --line: #30435e;
+  --surface: #18263b;
+  --focus: #c4ddff;
+  --board: #143463;
+  --board-ink: #f7f9fc;
+  --band: #1d3250;
   --danger-bg: #3b1717;
   --danger-ink: #ffd7d2;
   --danger-line: #d47b74;
@@ -44,17 +44,17 @@ html[data-theme="dark"] {
   html[data-theme="system"],
   html:not([data-theme]) {
     color-scheme: dark;
-    --bg: #111c19;
-    --ink: #ecf3ed;
-    --muted: #c9c6df;
-    --accent: #b9b7ff;
-    --on-accent: #1c1a33;
-    --line: #3d3a5c;
-    --surface: #1a1830;
-    --focus: #dedcff;
-    --board: #2a2754;
-    --board-ink: #f4f5f0;
-    --band: #231f3d;
+    --bg: #101a2b;
+    --ink: #eff5ff;
+    --muted: #bac9df;
+    --accent: #8cbcff;
+    --on-accent: #10274a;
+    --line: #30435e;
+    --surface: #18263b;
+    --focus: #c4ddff;
+    --board: #143463;
+    --board-ink: #f7f9fc;
+    --band: #1d3250;
     --danger-bg: #3b1717;
     --danger-ink: #ffd7d2;
     --danger-line: #d47b74;
@@ -64,7 +64,9 @@ html[data-theme="dark"] {
   }
 }
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none; }
+* { scrollbar-width: none; }
+*::-webkit-scrollbar { width: 0; height: 0; display: none; }
 body {
   margin: 0;
   background: var(--bg);

@@ -1,0 +1,49 @@
+{
+  "contract_version": "api-v2.0.0",
+  "product_version": "12.0.0-RC1",
+  "api_prefix": "/api/v2",
+  "mode": "self_hosted_account",
+  "authentication": {
+    "login": "/api/v2/auth/login",
+    "refresh": "/api/v2/auth/refresh",
+    "device_registration": "/api/v2/auth/devices",
+    "device_revocation": "/api/v2/auth/devices/{id}",
+    "management_sessions": "/api/v2/auth/sessions",
+    "gui_parent_required": true,
+    "background_credentials_independent": true,
+    "mfa": false,
+    "enrollment_codes": false
+  },
+  "remote": {
+    "presence": "/api/v2/remote/presence",
+    "permits": "/api/v2/remote/permits",
+    "algorithm": "Ed25519",
+    "token_format": "nlp2.<base64url-json>.<base64url-signature>",
+    "signature_input": "nlp2.<base64url-json>",
+    "binding_input": "NestLink-binding-v2:<realm>:<device_id>:<remote_id>",
+    "login_input": "NestLink-login-v2:<permit>:<connection_id>",
+    "login_request_unknown_field": 100,
+    "login_request_envelope": ["permit", "proof"],
+    "connection_id": "Nonzero unsigned 64-bit decimal string",
+    "permit_seconds": 45,
+    "heartbeat_seconds": 5,
+    "peer_timeout_seconds": 20,
+    "require_direct": true,
+    "require_authenticated_encryption": true,
+    "cross_account_lookup": "Device ID within the same deployment; host approval or password still required",
+    "directory_scope": "Same account",
+    "media_path": "Direct P2P only; never transported by the account API"
+  },
+  "websocket": {
+    "path": "/api/v2/ws",
+    "revocation_event": "account.session.revoked",
+    "revocation_close_code": 4001
+  },
+  "compatibility": {
+    "tunnel_api_prefix": "/api/v1",
+    "sync_fixture": "home-tunnel.v1.json",
+    "preserve_device_identity": true,
+    "preserve_background_credentials": true,
+    "preserve_tunnel_configuration": true
+  }
+}

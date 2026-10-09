@@ -18,6 +18,7 @@ def unpromoted_distribution():
     dist = distribution.load(ROOT)
     version = "10.1.0"
     dist["development_line"] = version
+    dist["product"] = "Home Tunnel"
     stable = json.loads((ROOT / "docs/release/stable-9.0.0.json").read_text(encoding="utf-8"))
     dist["channels"] = {
         "stable": stable,

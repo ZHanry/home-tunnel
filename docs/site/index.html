@@ -20,26 +20,26 @@
   document.documentElement.classList.add("js");
 })();
 </script>
-<title>HomeDesk 11 · 直接远控与家庭服务</title>
-<meta name="description" content="HomeDesk 11: authenticated encrypted direct P2P and complete independent tunneling. Candidate acceptance pending.">
+<title>NestLink 12 · 直接远控与家庭服务</title>
+<meta name="description" content="NestLink 12: authenticated encrypted direct P2P and complete independent tunneling. Candidate acceptance pending.">
 <link rel="canonical" href="https://zhanry.github.io/home-tunnel/">
 <link rel="alternate" hreflang="zh-CN" href="https://zhanry.github.io/home-tunnel/">
 <link rel="alternate" hreflang="en" href="https://zhanry.github.io/home-tunnel/en/">
-<meta property="og:title" content="Home Tunnel · 远控走 UDP，服务发布走 FRP">
-<meta property="og:description" content="HomeDesk 11 candidate: direct P2P remote control and independent FRP tunnels.">
+<meta property="og:title" content="栖云桥 / NestLink · 远控走 UDP，服务发布走 FRP">
+<meta property="og:description" content="NestLink 12 candidate: direct P2P remote control and independent FRP tunnels.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://zhanry.github.io/home-tunnel/">
 <meta property="og:image" content="https://zhanry.github.io/home-tunnel/assets/share-card.svg">
-<meta property="og:image:alt" content="Home Tunnel 品牌分享图，说明 UDP 远控和 FRP 发布，不是产品界面截图">
-<link rel="icon" type="image/svg+xml" href="assets/HomeTunnel.svg">
-<link rel="stylesheet" href="assets/site.css?v=11.0.0-rc.1">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Home Tunnel","applicationCategory":"UtilitiesApplication","operatingSystem":"Windows, macOS, Linux, Android","softwareVersion": "10.1.0","license":"https://www.apache.org/licenses/LICENSE-2.0","url":"https://zhanry.github.io/home-tunnel/"}</script>
+<meta property="og:image:alt" content="栖云桥 / NestLink 品牌分享图，说明 UDP 远控和 FRP 发布，不是产品界面截图">
+<link rel="icon" type="image/svg+xml" href="assets/NestLink.svg">
+<link rel="stylesheet" href="assets/site.css?v=12.0.0-RC1">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"NestLink","applicationCategory":"UtilitiesApplication","operatingSystem":"Windows, macOS, Linux, Android","softwareVersion": "12.0.0-RC1","license":"https://www.apache.org/licenses/LICENSE-2.0","url":"https://zhanry.github.io/home-tunnel/"}</script>
 </head>
 <body data-root="" data-stable-version="10.1.0">
 <a class="skip" href="#content">跳到主要内容</a>
 <div class="wrap">
 <header class="site-header">
-<a class="brand" href="index.html"><img src="assets/HomeTunnel.svg" alt="" width="36" height="36">Home Tunnel</a>
+<a class="brand" href="index.html"><img src="assets/NestLink.svg" alt="" width="36" height="36">栖云桥 / NestLink</a>
 <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">菜单</button>
 <nav id="site-nav" aria-label="主导航">
 <a href="#remote">远程控制</a>
@@ -57,13 +57,14 @@
 </div>
 </header>
 <main id="content">
-<section class="section"><p class="eyebrow">HomeDesk 11 · 候选版</p><h1>回到家里的设备，<br>保持直接连接。</h1><p class="lede">暖居 Windows / Android 原生界面，认证加密的 P2P 远控；NAS 和内网服务继续走独立 FRP 穿透。Server 11.0.0-rc.2，Client / Android 11.0.0-rc.1。跨网与真机验收尚未完成。</p><div class="actions"><a class="button" href="downloads.html#candidate">下载候选版</a><a class="button secondary" href="preview.html">查看范围与验证</a></div></section>
-<section id="remote" class="section"><p class="eyebrow">严格 P2P</p><h2>远控会话直接连接两端。</h2><p>Rust/Flutter 原生核心要求认证、加密、直连。hbbs 只提供 ID 与 NAT 信令；没有 hbbr、TURN、FRP、HTTP/WSS、VPN 或厂商回退。无法建立安全直连时明确停止。</p><p>暖居 Web 管理台通过只含 ID 的 homedesk URL 打开已安装客户端。同账号目录不会绕过被控端密码或批准；近期登记不代表媒体在线。</p></section>
-<section id="host" class="section"><h2>按你的意愿共享屏幕。</h2><p>填写自己的 HTTPS 管理台、hbbs 地址与公钥。通用包没有内置服务器、密钥或账号。Android 共享屏幕要同意系统提示，Android 14/15 从可见应用重新授权。</p></section>
-<section id="tunnel" class="section"><p class="eyebrow">FRP 0.70.1</p><h2>家里的服务继续在线。</h2><p>HTTP/HTTPS、受控 TCP/UDP、端口池、权限、ACL、流量配额、诊断与独立 CLI/NAS/background Agent 全部保留。远控模式切换或连接失败不会停止独立隧道。</p><p>Server 保持 Node/SQLite 与 Caddy、traffic-gateway、FRPS，只新增常驻 hbbs，内存上限 64 MB。macOS/Linux 原生 GUI 暂未发布，五平台 CLI/Agent 合集继续提供。</p></section>
+<section class="section"><p class="eyebrow">NestLink 12 · 候选版</p><h1>回到家里的设备，<br>保持直接连接。</h1><p class="lede">一个清晰的蓝白工作台，连接设备，也让家里的服务保持在线。登录自己的服务器后即可使用远控与穿透。Windows、macOS、Linux 与 Android 使用同一品牌和操作习惯。12.0.0-RC1 为候选版。</p><div class="actions"><a class="button" href="downloads.html#candidate">下载候选版</a><a class="button secondary" href="preview.html">查看范围与验证</a></div></section>
+<section id="remote" class="section"><p class="eyebrow">严格 P2P</p><h2>远控会话直接连接两端。</h2><p>Rust/Flutter 原生核心要求认证、加密、直连。hbbs 只提供 ID 与 NAT 信令；没有 hbbr、TURN、FRP、HTTP/WSS、VPN 或厂商回退。无法建立安全直连时明确停止。</p><p>栖云桥 Web 管理台通过只含 ID 的 homedesk URL 打开已安装客户端。同账号目录不会绕过被控端密码或批准；近期登记不代表媒体在线。</p></section>
+<section id="host" class="section"><h2>按你的意愿共享屏幕。</h2><p>填写自建服务地址和账号登录，连接配置自动获取。通用包没有内置服务器、密钥或账号。Android 共享屏幕要同意系统提示，Android 14/15 从可见应用重新授权。</p></section>
+<section id="tunnel" class="section"><p class="eyebrow">FRP 0.70.1</p><h2>家里的服务继续在线。</h2><p>HTTP/HTTPS、受控 TCP/UDP、端口池、权限、ACL、流量配额、诊断与独立 CLI/NAS/background Agent 全部保留。远控模式切换或连接失败不会停止独立隧道。</p><p>Server 保持 Node/SQLite 与 Caddy、traffic-gateway、FRPS，远控会话与后台穿透分别管理生命周期。GUI 提供 Windows x64 安装器、macOS 双架构安装包与 Linux x64/ARM64 DEB；CLI/Agent 合集覆盖现有五个平台。</p></section>
+<section class="section"><h2>栖云桥 12.0.0-RC1 · Web 工作台</h2><figure class="shot-slot" data-shot-slot="rc12-workbench" data-slot-status="captured-release-ui"><figcaption><strong>栖云桥 12.0.0-RC1 · Web 工作台</strong><span>真实 Web 界面，使用隔离的示例数据；图片不代表远控会话或媒体验收。</span></figcaption><img src="assets/rc12/web-workbench.png" alt="栖云桥 12.0.0-RC1 · Web 工作台 · 示例数据" width="1280" height="860" loading="lazy"></figure></section>
 <section class="section" aria-label="架构图与界面预览">
 <h2>图示与历史界面预览</h2>
-<p>以下产品截图保留 10.0.0 标签，不代表 11.x 界面或验收。</p>
+<p>以下产品截图保留 10.0.0 标签，不代表 12.x 界面或验收。</p>
 <figure class="shot-slot" data-shot-slot="vector-architecture" data-slot-status="vector-diagram">
 <figcaption><strong>控制面与 FRP 数据面</strong><span>矢量图，不是应用截图。远控 UDP 不经过这条 FRP 转发路径。</span></figcaption>
 <img src="assets/architecture.svg" alt="Home Tunnel 架构矢量图：控制中心、SQLite、Caddy、流量网关、FRP 和家庭 Agent" width="1440" height="900">
@@ -101,11 +102,11 @@
 </figure>
 
 </section>
-<section class="section"><h2>选择下载通道。</h2><p id="download-status" class="notice" role="status" aria-live="polite" data-tone="ready">稳定通道仍为 Server / Client 10.1.0 + Android 10.0.0；HomeDesk 11 只进入候选通道。跨网与真机验收尚未完成。部分验收项目未运行，验证尚未完成。</p><div class="actions"><a class="button" href="downloads.html#candidate">HomeDesk 候选版</a><a class="button secondary" href="downloads.html">原稳定下载</a></div></section>
-<section id="faq" class="section"><h2>安装前了解这些</h2><details><summary>远控会回退中继吗？</summary><p>不会。HomeDesk 11 要求认证加密的 P2P，打洞失败即停止。</p></details><details><summary>内网穿透还能使用吗？</summary><p>完整保留 HTTP/HTTPS、受控 TCP/UDP、权限、端口池、ACL 与流量治理；长期服务使用独立 CLI/Agent。</p></details><details><summary>候选验证了哪些内容？</summary><p>源码、单元、控件、构建、安装器和模拟器检查各有范围。持续两端媒体、跨网 NAT 和 Android 真机待验收；10.0.0、9.0.0 历史结果不作为 11.x 通过证据。</p></details><details><summary>升级前备份什么？</summary><p>SQLite、部署 secrets、客户端状态与独立 hbbs 身份卷；退出旧远控覆盖配置后再迁移。</p></details></section>
+<section class="section"><h2>选择下载通道。</h2><p id="download-status" class="notice" role="status" aria-live="polite" data-tone="ready">稳定通道仍为 Server / Client 10.1.0 + Android 10.0.0；NestLink 12 只进入候选通道。跨网与真机验收尚未完成。部分验收项目未运行，验证尚未完成。</p><div class="actions"><a class="button" href="downloads.html#candidate">NestLink 候选版</a><a class="button secondary" href="downloads.html">原稳定下载</a></div></section>
+<section id="faq" class="section"><h2>安装前了解这些</h2><details><summary>远控会回退中继吗？</summary><p>不会。NestLink 12 要求认证加密的 P2P，打洞失败即停止。</p></details><details><summary>内网穿透还能使用吗？</summary><p>完整保留 HTTP/HTTPS、受控 TCP/UDP、权限、端口池、ACL 与流量治理；长期服务使用独立 CLI/Agent。</p></details><details><summary>候选验证了哪些内容？</summary><p>源码、单元、控件、构建、安装器和模拟器检查各有范围。持续两端媒体、跨网 NAT 和 Android 真机待验收；10.0.0、9.0.0 历史结果不作为 12.x 通过证据。</p></details><details><summary>升级前备份什么？</summary><p>SQLite、部署 secrets、客户端状态与独立 hbbs 身份卷；退出旧远控覆盖配置后再迁移。</p></details></section>
 </main>
 <footer class="site-footer">
-<span>© 2026 Home Tunnel · Apache-2.0</span>
+<span>© 2026 NestLink · Apache-2.0</span>
 <nav aria-label="页脚">
 <a href="privacy.html">隐私说明</a>
 <a href="preview.html">范围与限制</a>

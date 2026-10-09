@@ -22,6 +22,12 @@ STABLE_101_SHA256 = "52d40cbfeb9d3c04646daed3bfde7c6f88bebc860f9976c4e42028e9177
 HOMEDESK_TARGET = {"hub": "11.0.0-rc.1", "server": "11.0.0-rc.2", "client": "11.0.0-rc.1", "android": "11.0.0-rc.1"}
 HOMEDESK_UNVERIFIED = {"cross-network-nat", "sustained-remote-media", "physical-android-device", "installed-two-peer-remote-session"}
 HOMEDESK_ATTACHMENTS = {"server": 3, "client": 4, "android": 3}
+NESTLINK_TARGET = {name: "12.0.0-RC1" for name in COMPONENTS}
+NESTLINK_ATTACHMENTS = {"server": 3, "client": 8, "android": 3}
+
+
+def attachment_counts(version):
+    return NESTLINK_ATTACHMENTS if version == NESTLINK_TARGET["hub"] else HOMEDESK_ATTACHMENTS
 REQUIRED_UNVERIFIED = {
     "secure-desktop",
     "system-audio",
@@ -51,23 +57,37 @@ def _anchor_present(stable):
 def validate_homedesk(candidate, stable, *, root=ROOT):
     """A published prerelease never promotes or reuses historical remote acceptance."""
     errors = []
+    nestlink = candidate.get("version") == NESTLINK_TARGET["hub"]
+    target = NESTLINK_TARGET if nestlink else HOMEDESK_TARGET
     snapshot = root / "docs/release/stable-10.1.0.json"
     if not snapshot.is_file() or hashlib.sha256(snapshot.read_bytes()).hexdigest() != STABLE_101_SHA256:
         errors.append("published 10.1.0 snapshot bytes changed or are missing")
     elif stable != json.loads(snapshot.read_text(encoding="utf8")):
         errors.append("HomeDesk candidate must retain the exact 10.1.0 stable channel")
-    if (candidate.get("version") != HOMEDESK_TARGET["hub"] or candidate.get("stage") != "candidate"
+    if (candidate.get("version") != target["hub"] or candidate.get("stage") != "candidate"
             or candidate.get("promotion_status") != "prerelease" or candidate.get("prerelease") is not True
-            or candidate.get("tag") != "v" + HOMEDESK_TARGET["hub"] or candidate.get("acceptance_status") != "pending"):
+            or candidate.get("tag") != "v" + target["hub"] or candidate.get("acceptance_status") != "pending"):
         errors.append("HomeDesk must remain a pending candidate prerelease")
     if candidate.get("remote_policy") != "require_direct" or candidate.get("relay_enabled") is not False:
         errors.append("HomeDesk remote control must be authenticated encrypted direct P2P")
-    if candidate.get("frp") != "0.70.1" or candidate.get("agent_version") != "10.1.0":
+    if candidate.get("frp") != "0.70.1" or candidate.get("agent_version") != (target["client"] if nestlink else "10.1.0"):
         errors.append("The independent FRP and original Agent versions must remain explicit")
     if candidate.get("tested_combination") is not None or not HOMEDESK_UNVERIFIED <= set(candidate.get("not_verified", [])):
         errors.append("Candidate targets cannot claim complete runtime acceptance")
     contract = candidate.get("contract", {})
-    if (contract.get("ref") != "api-v1.6.0" or contract.get("frozen") is not True
+    if nestlink:
+        lock = json.loads((root / "contracts/lock.json").read_text(encoding="utf8"))
+        files = {item["path"]: item["sha256"] for item in lock["files"]}
+        if (contract.get("ref") != "api-v2.0.0" or contract.get("frozen") is not True
+                or contract.get("revision") != "2242354fc10c6681ec0ccf33e91ab96611e60791"
+                or contract.get("openapi_sha256") != files["contracts/openapi.v2.json"]):
+            errors.append("NestLink must use the immutable api-v2.0.0 contract")
+        for path, expected in files.items():
+            if hashlib.sha256((root / path).read_bytes()).hexdigest() != expected:
+                errors.append("Frozen API contract bytes drifted: " + path)
+        if candidate.get("signing", {}).get("macos") != "ad-hoc-no-developer-id":
+            errors.append("macOS ad-hoc signing must be disclosed")
+    elif (contract.get("ref") != "api-v1.6.0" or contract.get("frozen") is not True
             or contract.get("revision") != "f260a5ffcd789c9a71936307b809ed5137e1a832"
             or contract.get("openapi_sha256") != "8c72baae633157ccd5e7c8e9cf3d5fc24f6f607685744349fa1cb39fe482fae4"):
         errors.append("Candidate must use the immutable api-v1.6.0 contract")
@@ -81,7 +101,7 @@ def validate_homedesk(candidate, stable, *, root=ROOT):
     for name in COMPONENTS:
         item = components.get(name, {})
         repository = v10_evidence.REPOSITORIES[name]
-        version = HOMEDESK_TARGET[name]
+        version = target[name]
         if item.get("repository") != repository or item.get("version") != version or item.get("tag") != "v" + version:
             errors.append("HomeDesk component identity drifted: " + name)
         if name == "hub":
@@ -99,7 +119,7 @@ def validate_homedesk(candidate, stable, *, root=ROOT):
         if item.get("release_url") != f"https://github.com/{repository}/releases/tag/v{version}":
             errors.append("HomeDesk release URL drifted: " + name)
         names = [asset.get("filename") for asset in artifacts]
-        if len(names) != HOMEDESK_ATTACHMENTS[name] or len(set(names)) != len(names) or "SHA256SUMS.txt" not in names:
+        if len(names) != attachment_counts(candidate["version"])[name] or len(set(names)) != len(names) or "SHA256SUMS.txt" not in names:
             errors.append("HomeDesk needs the complete compact attachment set: " + name)
         for asset in artifacts:
             filename = asset.get("filename", "")
@@ -119,12 +139,13 @@ def validate_distribution(dist, *, root=ROOT, evidence_errors=None, evidence_rec
     def bad(message):
         errors.append(message)
 
-    if not isinstance(dist, dict) or dist.get("schema_version") != 1 or dist.get("product") != "Home Tunnel":
+    version = (root / "VERSION").read_text(encoding="utf-8").strip()
+    product = "NestLink" if version == NESTLINK_TARGET["hub"] else "Home Tunnel"
+    if not isinstance(dist, dict) or dist.get("schema_version") != 1 or dist.get("product") != product:
         bad("distribution identity is wrong")
     if dist.get("source_of_truth") != "distribution.json":
         bad("distribution.json must remain the only channel source")
-    version = (root / "VERSION").read_text(encoding="utf-8").strip()
-    homedesk = version == HOMEDESK_TARGET["hub"]
+    homedesk = version in (HOMEDESK_TARGET["hub"], NESTLINK_TARGET["hub"])
     if dist.get("development_line") != version or not (v10_evidence.component_versions(version) or homedesk):
         bad("development_line must match VERSION and a supported release line")
     channels = dist.get("channels")

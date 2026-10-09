@@ -162,6 +162,25 @@
         "Windows",
         "WebView2"
       ]
+    },
+    {
+      "id": "rc12-workbench",
+      "status": "captured-release-ui",
+      "pages": [
+        "index.html",
+        "en/index.html",
+        "preview.html",
+        "en/preview.html"
+      ],
+      "asset": "assets/rc12/web-workbench.png",
+      "capture_manifest": "assets/rc12/web-capture-manifest.json",
+      "source_file": "web-workbench.png",
+      "captured_product_version": "12.0.0-RC1",
+      "fixture_data": true,
+      "label_must_include": [
+        "12.0.0-RC1",
+        "Web"
+      ]
     }
   ],
   "historical_assets_not_for_v10": [
