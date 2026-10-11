@@ -9,3 +9,12 @@ condition = "AND"
 regexTarget = "secret"
 paths = ['''^(distribution\.json|docs/site/candidate\.json)$''']
 regexes = ['''^8c72baae633157ccd5e7c8e9cf3d5fc24f6f607685744349fa1cb39fe482fae4$''']
+
+# Exact SVG byte hashes independently checked against the accepted 14.0.0 Linux x64 deb.
+# Require both these three screenshot manifests and one of the nine precise public hashes.
+[[allowlists]]
+description = "Verified public 14.0.0 installed SVG checksums, not credentials"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^docs/site/assets/14\.0\.0/desktop-(light|remote|tunnel)-capture-manifest\.json$''']
+regexes = ['''^(?:1e555baf5a32c88d5f1e47648c0fdae13e211e6a743632cd68256cd35aa259e2|442e7678b4ba49a4261222bff05e52c9c892d4b37f5403c974f3ecf79007bc4b|45bd7de758b979cb6b8735abb4d1ad8e5e3ed4f6c24a969d6b724fdc413cd1a7|483911dd70639a6c5c20d7c44b26593a7032fd0c61c824646e5692b019d51fdb|65360327073579c1e72626b3dad257913c6653bfc82b1becddd5f49179fa511a|699aae703998c04758bc8c90ed9e89baaf7cd3ce9b90f6b261cd18b2e9a0b32f|7d05241541ea2ac9a918a5852ace86c06673d8aa54cc02a274c8bc5ff7efa715|976be154f07bed12377690ddfe734bf94ff01858f9ce28a0a526db7617130e5e|98583b4cf0dc8afe3b5025fce65f261c2f01264afdbea19b591853e8e93d7fbe)$''']
