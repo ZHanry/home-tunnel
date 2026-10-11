@@ -1,0 +1,1342 @@
+{
+  "schema_version": 1,
+  "version": "14.0.0",
+  "component": "hub",
+  "status": "passed_reproducible",
+  "source_revision": "0e45aeffbf09ee9249d5a1ab55e0ecf723d9d082",
+  "build_run": 38119530254,
+  "build_attempt": 1,
+  "recorded_at": "2026-10-11T07:06:54.478579+00:00",
+  "deliverables": {},
+  "scenarios": [
+    {
+      "name": "component-bytes-signatures",
+      "status": "passed",
+      "evidence": {
+        "execution": {
+          "started_at": "2026-10-11T07:02:36.782095+00:00",
+          "finished_at": "2026-10-11T07:03:12.347441+00:00",
+          "exit_code": 0,
+          "command": "[\"C:\\\\Users\\\\Popdo\\\\anaconda3\\\\python.exe\", \"-X\", \"utf8\", \"D:\\\\代码\\\\远程控制\\\\.work\\\\14.0.0\\\\release-evidence-tools\\\\hub14_evidence.py\", \"components\", \"--hub\", \"D:\\\\代码\\\\远程控制\\\\.work\\\\12.0.0-RC1\\\\repos\\\\home-tunnel\", \"--plan\", \"D:\\\\代码\\\\远程控制\\\\.work\\\\14.0.0\\\\release-evidence-tools\\\\plan14.hub.attempt02.json\", \"--download-dir\", \"D:\\\\代码\\\\远程控制\\\\.work\\\\14.0.0\\\\releases14\", \"--cosign\", \"D:\\\\代码\\\\远程控制\\\\.work\\\\12.0.0-RC1\\\\toolchains\\\\cosign13\\\\cosign.exe\", \"--hub-source\", \"0e45aeffbf09ee9249d5a1ab55e0ecf723d9d082\", \"--output\", \"D:\\\\代码\\\\远程控制\\\\.work\\\\14.0.0\\\\evidence\\\\palette-final\\\\hub-attempt02\\\\hub-components14.json\"]"
+        },
+        "observation": "Actual source-bound components primary and successful wrapper verify all 11 exact public component attachments, their SHA-256/source/BUILD signatures, accepted server image digests, documentation-only formal tag drift and Android shared-core payload mapping.",
+        "files": [
+          {
+            "path": "palette-final/hub-attempt02/hub-components14.json",
+            "sha256": "69c4a0f6cf44d4c2c19015f7b50bd6b0a42f1b281dc862d209f6046eff2a7137",
+            "size_bytes": 562528,
+            "kind": "result"
+          },
+          {
+            "path": "executions14/palette-hub-components14-attempt02.json",
+            "sha256": "837b0766ef5f5dfa84bf0956ef14ca28b200a0545e2ed11ae557fe098515a658",
+            "size_bytes": 1847,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-components14-attempt02.initial.json",
+            "sha256": "ed63ea5361856058a10ccc058b5983873bb843df8796b2f23d2fa7258e16c90d",
+            "size_bytes": 1547,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-components14-attempt02.log",
+            "sha256": "073c901475cc4afb586dda4536a3a6bb552adc9ab45f79eed919018c023cc16e",
+            "size_bytes": 2523,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-components14-attempt02.tools.json",
+            "sha256": "0f75520a41c8487c7d5a777b1341a6e2a9c92324bdc8a6e4974b0cbd623f461a",
+            "size_bytes": 8161,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-components14-attempt02.tools-closed.json",
+            "sha256": "20f6709e93860fb44dcb96d4f0882e87ece74e2c6890f2a2bd87547e30e75e8d",
+            "size_bytes": 827,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-components14-attempt02.tools/00-run-hub-root-step14.py",
+            "sha256": "34f7904eee3240c2b7c140f5850ee219e3f7fc26e44fc5b9abcc9fd373970ac3",
+            "size_bytes": 14252,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-components14-attempt02.tools/01-record-execution14.py",
+            "sha256": "e426ef3a880c1fa06139ba3f8dd5f5078b30601c13a42386c039814ee6b4755f",
+            "size_bytes": 2632,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-components14-attempt02.tools/02-hub14_evidence.py",
+            "sha256": "508f84d540c5e355771b8d63062ba3db34e3b2e25dc883102d7b5e06adb7f0c0",
+            "size_bytes": 33617,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-components14-attempt02.tools/03-release14_evidence.py",
+            "sha256": "afba63ff00cc7cb2003b10064b4d2c01f84b47af78ca300e508222b84196063e",
+            "size_bytes": 55134,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-components14-attempt02.tools/04-hub14_capture_image.py",
+            "sha256": "f8cef0bd52202a92cac552e66c8993e81dd5c7fee598f908b8f5c5213fbbfdf6",
+            "size_bytes": 3047,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-components14-attempt02.tools/05-distribution.py",
+            "sha256": "ec40e139c9181ff1d1c03e39cbfc39ad16b95d5dedde61e226b5e4cd46e45e7d",
+            "size_bytes": 29633,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-components14-attempt02.tools/06-homedesk_downloads.py",
+            "sha256": "91972ae8cf18e009c2380fbfa26aaefab8ee83f5e8c1e134517163c1e169a51d",
+            "size_bytes": 9029,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-components14-attempt02.tools/07-verify-homedesk-components.py",
+            "sha256": "5a84069695df1a180e59618287ce49cf0048a1003b7fa3c4c8eec850c769cb53",
+            "size_bytes": 8681,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-components14-attempt02.tools/08-promote-nestlink.py",
+            "sha256": "2d773d739eb01c9d762e14b2978c5c8b7d30338bf08dde69564b9265fa06a549",
+            "size_bytes": 15891,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-components14-attempt02.tools/09-check-site-policy.py",
+            "sha256": "295cc4747bafb4d90f7441b88e5ea09fc8e7a71aac694779bbef548f82a171b9",
+            "size_bytes": 11899,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-components14-attempt02.tools/10-homedesk-release.py",
+            "sha256": "0d8f4769bef0783220d0b30cce22485d897c9584de3eed03a7408e42beca4a0d",
+            "size_bytes": 18403,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-components14-attempt02.tools/11-v10_evidence.py",
+            "sha256": "aa23517b49382a62f9ff2efba303391837fe875e615c8d63ccf51ac6d470f65e",
+            "size_bytes": 27681,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-components14-attempt02.tools/12-capture_image.py",
+            "sha256": "f8cef0bd52202a92cac552e66c8993e81dd5c7fee598f908b8f5c5213fbbfdf6",
+            "size_bytes": 3047,
+            "kind": "attachment"
+          }
+        ],
+        "fixture_sources": {
+          "server": "299753a4c6580ac6bbc748cdee743489a3e17dba",
+          "client": "feaf1181efe55076dead52931203a8488cbad20d",
+          "android": "dcdfc4299d1f92f46b5f3ca8e675d304f9639982",
+          "hub": "0e45aeffbf09ee9249d5a1ab55e0ecf723d9d082"
+        },
+        "deliverables": {}
+      }
+    },
+    {
+      "name": "current-ui-site",
+      "status": "passed",
+      "evidence": {
+        "execution": {
+          "started_at": "2026-10-11T07:03:31.113188+00:00",
+          "finished_at": "2026-10-11T07:04:07.912459+00:00",
+          "exit_code": 0,
+          "command": "[\"C:\\\\Users\\\\Popdo\\\\anaconda3\\\\python.exe\", \"-X\", \"utf8\", \"D:\\\\代码\\\\远程控制\\\\.work\\\\14.0.0\\\\release-evidence-tools\\\\hub14_evidence.py\", \"site\", \"--hub\", \"D:\\\\代码\\\\远程控制\\\\.work\\\\12.0.0-RC1\\\\repos\\\\home-tunnel\", \"--plan\", \"D:\\\\代码\\\\远程控制\\\\.work\\\\14.0.0\\\\release-evidence-tools\\\\plan14.hub.attempt02.json\", \"--download-dir\", \"D:\\\\代码\\\\远程控制\\\\.work\\\\14.0.0\\\\releases14\", \"--cosign\", \"D:\\\\代码\\\\远程控制\\\\.work\\\\12.0.0-RC1\\\\toolchains\\\\cosign13\\\\cosign.exe\", \"--hub-source\", \"0e45aeffbf09ee9249d5a1ab55e0ecf723d9d082\", \"--output\", \"D:\\\\代码\\\\远程控制\\\\.work\\\\14.0.0\\\\evidence\\\\palette-final\\\\hub-attempt02\\\\hub-site14.json\", \"--matrix\", \"D:\\\\代码\\\\远程控制\\\\.work\\\\14.0.0\\\\evidence\\\\palette-final\\\\hub-attempt02\\\\hub-site-matrix14\\\\manifest.json\"]"
+        },
+        "observation": "Actual source-bound site primary and successful site/matrix wrappers verify all 8 bilingual pages, stable downloads/update projections, cache keys/no-store, 8 unchanged installed-original capture bindings and 148 completed source-clean served-byte browser cases; all original slice hashes match.",
+        "files": [
+          {
+            "path": "palette-final/hub-attempt02/hub-site14.json",
+            "sha256": "4b9477387ae798293746e65ef1673bff55cc9eab7ca3997c485db0e5a65b298c",
+            "size_bytes": 54790,
+            "kind": "result"
+          },
+          {
+            "path": "executions14/palette-hub-site14-attempt02.json",
+            "sha256": "3da88a110e8264187a1f1b64a0e34b9b651bf58db9e8c88341a7c685bff84ed9",
+            "size_bytes": 1980,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-site14-attempt02.initial.json",
+            "sha256": "ba06c8ce08d26e1a36a9262340c6c57b794c0e08aa6158b863bc39c645203cf4",
+            "size_bytes": 1686,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-site14-attempt02.log",
+            "sha256": "073c901475cc4afb586dda4536a3a6bb552adc9ab45f79eed919018c023cc16e",
+            "size_bytes": 2523,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-site14-attempt02.tools.json",
+            "sha256": "f6da4bb10e4e202e6aac9f71233e447cfb1201de99fbd3551a58402058ca55e3",
+            "size_bytes": 8321,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-site14-attempt02.tools-closed.json",
+            "sha256": "f3910d8fd8f50d3f50ddf714a4ae79660449fec8dbc035cbcaedf4a3493b8b6f",
+            "size_bytes": 809,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-site14-attempt02.tools/00-run-hub-root-step14.py",
+            "sha256": "34f7904eee3240c2b7c140f5850ee219e3f7fc26e44fc5b9abcc9fd373970ac3",
+            "size_bytes": 14252,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-site14-attempt02.tools/01-record-execution14.py",
+            "sha256": "e426ef3a880c1fa06139ba3f8dd5f5078b30601c13a42386c039814ee6b4755f",
+            "size_bytes": 2632,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-site14-attempt02.tools/02-hub14_evidence.py",
+            "sha256": "508f84d540c5e355771b8d63062ba3db34e3b2e25dc883102d7b5e06adb7f0c0",
+            "size_bytes": 33617,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-site14-attempt02.tools/03-release14_evidence.py",
+            "sha256": "afba63ff00cc7cb2003b10064b4d2c01f84b47af78ca300e508222b84196063e",
+            "size_bytes": 55134,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-site14-attempt02.tools/04-hub14_capture_image.py",
+            "sha256": "f8cef0bd52202a92cac552e66c8993e81dd5c7fee598f908b8f5c5213fbbfdf6",
+            "size_bytes": 3047,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-site14-attempt02.tools/05-distribution.py",
+            "sha256": "ec40e139c9181ff1d1c03e39cbfc39ad16b95d5dedde61e226b5e4cd46e45e7d",
+            "size_bytes": 29633,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-site14-attempt02.tools/06-homedesk_downloads.py",
+            "sha256": "91972ae8cf18e009c2380fbfa26aaefab8ee83f5e8c1e134517163c1e169a51d",
+            "size_bytes": 9029,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-site14-attempt02.tools/07-verify-homedesk-components.py",
+            "sha256": "5a84069695df1a180e59618287ce49cf0048a1003b7fa3c4c8eec850c769cb53",
+            "size_bytes": 8681,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-site14-attempt02.tools/08-promote-nestlink.py",
+            "sha256": "2d773d739eb01c9d762e14b2978c5c8b7d30338bf08dde69564b9265fa06a549",
+            "size_bytes": 15891,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-site14-attempt02.tools/09-check-site-policy.py",
+            "sha256": "295cc4747bafb4d90f7441b88e5ea09fc8e7a71aac694779bbef548f82a171b9",
+            "size_bytes": 11899,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-site14-attempt02.tools/10-homedesk-release.py",
+            "sha256": "0d8f4769bef0783220d0b30cce22485d897c9584de3eed03a7408e42beca4a0d",
+            "size_bytes": 18403,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-site14-attempt02.tools/11-v10_evidence.py",
+            "sha256": "aa23517b49382a62f9ff2efba303391837fe875e615c8d63ccf51ac6d470f65e",
+            "size_bytes": 27681,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-site14-attempt02.tools/12-capture_image.py",
+            "sha256": "f8cef0bd52202a92cac552e66c8993e81dd5c7fee598f908b8f5c5213fbbfdf6",
+            "size_bytes": 3047,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-matrix14-attempt02.json",
+            "sha256": "991607de7fc1db77e50327372c49f9111c73e1ad1622c8cf0cae86e1bce31402",
+            "size_bytes": 1493,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-matrix14-attempt02.initial.json",
+            "sha256": "52e04adeadd1e13b800545494a1a325cf3421b6f278f1c8d088169c5770dab9a",
+            "size_bytes": 1197,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-matrix14-attempt02.log",
+            "sha256": "0c17d3e6c67bc02a154646dfcec31c22c78be42b54c9f4bc311049edbc7b4add",
+            "size_bytes": 9556,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-matrix14-attempt02.tools.json",
+            "sha256": "4f65d02d62f256640404ee15474ff994711419090ed1101456b25912bea0af18",
+            "size_bytes": 8443,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-matrix14-attempt02.tools-closed.json",
+            "sha256": "10b3ef7201c637ebecf5089410d7c240d8423cb0cb95afeb251a18112024ec99",
+            "size_bytes": 815,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-matrix14-attempt02.tools/00-run-hub-root-step14.py",
+            "sha256": "34f7904eee3240c2b7c140f5850ee219e3f7fc26e44fc5b9abcc9fd373970ac3",
+            "size_bytes": 14252,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-matrix14-attempt02.tools/01-record-execution14.py",
+            "sha256": "e426ef3a880c1fa06139ba3f8dd5f5078b30601c13a42386c039814ee6b4755f",
+            "size_bytes": 2632,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-matrix14-attempt02.tools/02-hub14_evidence.py",
+            "sha256": "508f84d540c5e355771b8d63062ba3db34e3b2e25dc883102d7b5e06adb7f0c0",
+            "size_bytes": 33617,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-matrix14-attempt02.tools/03-release14_evidence.py",
+            "sha256": "afba63ff00cc7cb2003b10064b4d2c01f84b47af78ca300e508222b84196063e",
+            "size_bytes": 55134,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-matrix14-attempt02.tools/04-hub14_capture_image.py",
+            "sha256": "f8cef0bd52202a92cac552e66c8993e81dd5c7fee598f908b8f5c5213fbbfdf6",
+            "size_bytes": 3047,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-matrix14-attempt02.tools/05-capture-site-matrix.mjs",
+            "sha256": "3fb8997d9c183c0258eef88f0863de8a42e6828a9d44e16e776c354f4baa9b4f",
+            "size_bytes": 31528,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-matrix14-attempt02.tools/06-distribution.py",
+            "sha256": "ec40e139c9181ff1d1c03e39cbfc39ad16b95d5dedde61e226b5e4cd46e45e7d",
+            "size_bytes": 29633,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-matrix14-attempt02.tools/07-homedesk_downloads.py",
+            "sha256": "91972ae8cf18e009c2380fbfa26aaefab8ee83f5e8c1e134517163c1e169a51d",
+            "size_bytes": 9029,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-matrix14-attempt02.tools/08-verify-homedesk-components.py",
+            "sha256": "5a84069695df1a180e59618287ce49cf0048a1003b7fa3c4c8eec850c769cb53",
+            "size_bytes": 8681,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-matrix14-attempt02.tools/09-promote-nestlink.py",
+            "sha256": "2d773d739eb01c9d762e14b2978c5c8b7d30338bf08dde69564b9265fa06a549",
+            "size_bytes": 15891,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-matrix14-attempt02.tools/10-check-site-policy.py",
+            "sha256": "295cc4747bafb4d90f7441b88e5ea09fc8e7a71aac694779bbef548f82a171b9",
+            "size_bytes": 11899,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-matrix14-attempt02.tools/11-homedesk-release.py",
+            "sha256": "0d8f4769bef0783220d0b30cce22485d897c9584de3eed03a7408e42beca4a0d",
+            "size_bytes": 18403,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-matrix14-attempt02.tools/12-v10_evidence.py",
+            "sha256": "aa23517b49382a62f9ff2efba303391837fe875e615c8d63ccf51ac6d470f65e",
+            "size_bytes": 27681,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions14/palette-hub-matrix14-attempt02.tools/13-capture_image.py",
+            "sha256": "f8cef0bd52202a92cac552e66c8993e81dd5c7fee598f908b8f5c5213fbbfdf6",
+            "size_bytes": 3047,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/manifest.json",
+            "sha256": "ac8455db1e49f39620773817a84f9038260eef4a04005ae16ae1eb38601c54a1",
+            "size_bytes": 369378,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/source.json",
+            "sha256": "b878be69dd95641aa6ec2f80c599318d2619ea6c8fd4c32105dc16a2c598fd8d",
+            "size_bytes": 4514,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/b5ebcf2342c1cff219774786171939647e561da5f490ea98a139208384b1b162.png",
+            "sha256": "b5ebcf2342c1cff219774786171939647e561da5f490ea98a139208384b1b162",
+            "size_bytes": 145005,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/6650e8658ff6fc6f076f3f9b0db0a8e558c99c8f5df152b14a1a5cd199b811ee.png",
+            "sha256": "6650e8658ff6fc6f076f3f9b0db0a8e558c99c8f5df152b14a1a5cd199b811ee",
+            "size_bytes": 137236,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/7231ab2c9156920592a4f8845aee292cfda4b71392daff58a6feaedeabd7c4f0.png",
+            "sha256": "7231ab2c9156920592a4f8845aee292cfda4b71392daff58a6feaedeabd7c4f0",
+            "size_bytes": 117397,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/2615933e5811e51af6fa27426887e5c2f5d076859f0805572484e59d2f572fe0.png",
+            "sha256": "2615933e5811e51af6fa27426887e5c2f5d076859f0805572484e59d2f572fe0",
+            "size_bytes": 143031,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/0f8f98317d7b7d5e7a7bf75a8d506046213d9479d28124598ab2c77e82001640.png",
+            "sha256": "0f8f98317d7b7d5e7a7bf75a8d506046213d9479d28124598ab2c77e82001640",
+            "size_bytes": 136201,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/c214b6d283753b887aa4d9aa072855298eb4e2ee8bbf7198f848a804a6115df4.png",
+            "sha256": "c214b6d283753b887aa4d9aa072855298eb4e2ee8bbf7198f848a804a6115df4",
+            "size_bytes": 116467,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/06639be0fd67f56813efc26bc1b90a802182fcf1b07fa179c5eaa4a2403f3e57.png",
+            "sha256": "06639be0fd67f56813efc26bc1b90a802182fcf1b07fa179c5eaa4a2403f3e57",
+            "size_bytes": 144917,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/50e1067045084cde38b721dd53d7b2ada6a2f3c55d338707197ed1628587687f.png",
+            "sha256": "50e1067045084cde38b721dd53d7b2ada6a2f3c55d338707197ed1628587687f",
+            "size_bytes": 137164,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/443bd773544caff3bc4718e2df36db7a6be482b2ea1ba9e0b9e9dcab84626738.png",
+            "sha256": "443bd773544caff3bc4718e2df36db7a6be482b2ea1ba9e0b9e9dcab84626738",
+            "size_bytes": 117325,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/b946bc66578e1cdf58ea31ececaa4cda39ce74bf3213ee960236f20dcf36e6bb.png",
+            "sha256": "b946bc66578e1cdf58ea31ececaa4cda39ce74bf3213ee960236f20dcf36e6bb",
+            "size_bytes": 142924,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/e6e59c4f9afbda18648a0141d244b228cd9ff4b85186e62a5724123c0f6253a7.png",
+            "sha256": "e6e59c4f9afbda18648a0141d244b228cd9ff4b85186e62a5724123c0f6253a7",
+            "size_bytes": 136102,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/34a38d4d1e41d0810ab39cd32eb24254ed05cb678d008edffaab5d6c31c3cfcf.png",
+            "sha256": "34a38d4d1e41d0810ab39cd32eb24254ed05cb678d008edffaab5d6c31c3cfcf",
+            "size_bytes": 116394,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/a2debe044c37f8759e9793d06952406537c2c299fd3c9cf2c3e9b938bd4bc768.png",
+            "sha256": "a2debe044c37f8759e9793d06952406537c2c299fd3c9cf2c3e9b938bd4bc768",
+            "size_bytes": 114479,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/7965183129aa7c36cab48edc4f81b9d9f28c075eac6c726ac2e4fa8910ae1eb6.png",
+            "sha256": "7965183129aa7c36cab48edc4f81b9d9f28c075eac6c726ac2e4fa8910ae1eb6",
+            "size_bytes": 113603,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/52161612e98a88e8ab31dc581238b7359a240d41a19c606edaa7114384ef226e.png",
+            "sha256": "52161612e98a88e8ab31dc581238b7359a240d41a19c606edaa7114384ef226e",
+            "size_bytes": 110801,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/ecd348f967959935c5246eb3d440aee2e26ab4dd3dc0c1410b7b0f114a478531.png",
+            "sha256": "ecd348f967959935c5246eb3d440aee2e26ab4dd3dc0c1410b7b0f114a478531",
+            "size_bytes": 136821,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/9b3def05eb2debbc7cd50eb460b696b75b6ddfd6906e654c9a0615a8fb95152c.png",
+            "sha256": "9b3def05eb2debbc7cd50eb460b696b75b6ddfd6906e654c9a0615a8fb95152c",
+            "size_bytes": 126825,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/604ff8bc436d8a9cba1405c8eb434fd14dd5bd8829068271ce3e6b998b3c517a.png",
+            "sha256": "604ff8bc436d8a9cba1405c8eb434fd14dd5bd8829068271ce3e6b998b3c517a",
+            "size_bytes": 477067,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/f2c091d728ba5ca25313946a89d4eb810f74873d8a13b9f07495efbd6db2b698.png",
+            "sha256": "f2c091d728ba5ca25313946a89d4eb810f74873d8a13b9f07495efbd6db2b698",
+            "size_bytes": 139984,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/c47b1ddc610c76f7f49764aa354b009ff6d63d8adec77c4ba11c012a0ae22ba3.png",
+            "sha256": "c47b1ddc610c76f7f49764aa354b009ff6d63d8adec77c4ba11c012a0ae22ba3",
+            "size_bytes": 134509,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/0cbb362b752e0d1e729e12ceacf8a760799ca85cc1ca8ff163762fe28112bd09.png",
+            "sha256": "0cbb362b752e0d1e729e12ceacf8a760799ca85cc1ca8ff163762fe28112bd09",
+            "size_bytes": 115133,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/4291e695813e0e5e5a93c209de54d2bc40c184d74879b1f546289f943e7b3a0d.png",
+            "sha256": "4291e695813e0e5e5a93c209de54d2bc40c184d74879b1f546289f943e7b3a0d",
+            "size_bytes": 137650,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/388a243f39530ae46efc851590b97e2544caa84208aa88f384ea4131c9b5748e.png",
+            "sha256": "388a243f39530ae46efc851590b97e2544caa84208aa88f384ea4131c9b5748e",
+            "size_bytes": 132588,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/9f6e02fd3a88c6756bca3bea7fc5ad2a5bf71809e16be99ed3febfa585604c2f.png",
+            "sha256": "9f6e02fd3a88c6756bca3bea7fc5ad2a5bf71809e16be99ed3febfa585604c2f",
+            "size_bytes": 113161,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/8518ffa71164d12c56ecd096404857c822542c788569730616860f265fa98b2e.png",
+            "sha256": "8518ffa71164d12c56ecd096404857c822542c788569730616860f265fa98b2e",
+            "size_bytes": 139973,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/b686e1d87bb23995a569fa08b4f437754bebc842a580d7bece143f05071148f2.png",
+            "sha256": "b686e1d87bb23995a569fa08b4f437754bebc842a580d7bece143f05071148f2",
+            "size_bytes": 134547,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/fb7d82acc0c16fa7fbd29f8c0290b6b16cba848483f151fa5b19472d8c8969ad.png",
+            "sha256": "fb7d82acc0c16fa7fbd29f8c0290b6b16cba848483f151fa5b19472d8c8969ad",
+            "size_bytes": 115158,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/98be60de4e670f24c25542e1d40356c3b56d77e9541ad4d71041c91675966b6c.png",
+            "sha256": "98be60de4e670f24c25542e1d40356c3b56d77e9541ad4d71041c91675966b6c",
+            "size_bytes": 137652,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/9a761d9ec9fa7115bc1195d16a80418e51850b98c65eadb805faaced06edd593.png",
+            "sha256": "9a761d9ec9fa7115bc1195d16a80418e51850b98c65eadb805faaced06edd593",
+            "size_bytes": 132594,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/df7aef42531f72a85f2212b3ac5bafd7952c262433a88ecf8b4284983cad3d00.png",
+            "sha256": "df7aef42531f72a85f2212b3ac5bafd7952c262433a88ecf8b4284983cad3d00",
+            "size_bytes": 113217,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/b4340173ea3b9f6ab8b23382694fefd869ce4dc930d41e2e3325658020f4734f.png",
+            "sha256": "b4340173ea3b9f6ab8b23382694fefd869ce4dc930d41e2e3325658020f4734f",
+            "size_bytes": 113628,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/16bf00748a0cbf21440777674eb326851f6274937efce95c49f8dd157e7cac78.png",
+            "sha256": "16bf00748a0cbf21440777674eb326851f6274937efce95c49f8dd157e7cac78",
+            "size_bytes": 112026,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/e9025ffe2bee3c8521b87ee39b112aa271ace2a08066e96591594bdc3770779d.png",
+            "sha256": "e9025ffe2bee3c8521b87ee39b112aa271ace2a08066e96591594bdc3770779d",
+            "size_bytes": 114969,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/1a979f0a7e8071dd53ff789da12fe6aff9fb35117cbeab4fee5691bb73d959ca.png",
+            "sha256": "1a979f0a7e8071dd53ff789da12fe6aff9fb35117cbeab4fee5691bb73d959ca",
+            "size_bytes": 134545,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/52950a6694f22344aa97d00266d2b766a496c649a54d58fe70bec8f1fe2c4078.png",
+            "sha256": "52950a6694f22344aa97d00266d2b766a496c649a54d58fe70bec8f1fe2c4078",
+            "size_bytes": 127297,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/e020f5ffa82f2e7db9473889691ac5f676eeb586e733747e24bb8629867357e7.png",
+            "sha256": "e020f5ffa82f2e7db9473889691ac5f676eeb586e733747e24bb8629867357e7",
+            "size_bytes": 421061,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/659e695a187f06edc04e750050b3b0f6d8abdf99198381cffe52501c6102dbd9.png",
+            "sha256": "659e695a187f06edc04e750050b3b0f6d8abdf99198381cffe52501c6102dbd9",
+            "size_bytes": 58767,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/da353bb63c6ed4c30ab0ee33ed00a7891752137e8fb886928c575aee1bf2537e.png",
+            "sha256": "da353bb63c6ed4c30ab0ee33ed00a7891752137e8fb886928c575aee1bf2537e",
+            "size_bytes": 53729,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/942e5c329e946505697f83a3714ba4490f0a4b8a6549e605e25ba5bfbb81ebac.png",
+            "sha256": "942e5c329e946505697f83a3714ba4490f0a4b8a6549e605e25ba5bfbb81ebac",
+            "size_bytes": 50209,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/ecbe6b12cd31583acf9f6fba0da9b9bd69a00b27ee82ca391b6e019163f99110.png",
+            "sha256": "ecbe6b12cd31583acf9f6fba0da9b9bd69a00b27ee82ca391b6e019163f99110",
+            "size_bytes": 57605,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/6b286f5d8f595b2cd33cdf0e53e555825c7b71753ce7c0409986b715e07d36ac.png",
+            "sha256": "6b286f5d8f595b2cd33cdf0e53e555825c7b71753ce7c0409986b715e07d36ac",
+            "size_bytes": 52843,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/23c5e5a5bd452a1249031a45380e59e085ab8dca30562de49c7dfa5ddf145ec2.png",
+            "sha256": "23c5e5a5bd452a1249031a45380e59e085ab8dca30562de49c7dfa5ddf145ec2",
+            "size_bytes": 49476,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/5dd85b372e42144e329da9550fdf425f35636e6f5d66cc98d2a60f6613579496.png",
+            "sha256": "5dd85b372e42144e329da9550fdf425f35636e6f5d66cc98d2a60f6613579496",
+            "size_bytes": 58680,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/cf93c63c62161e023f07fc18e98ee35d9c7c5a4f8f8f7224db7e99010a83b966.png",
+            "sha256": "cf93c63c62161e023f07fc18e98ee35d9c7c5a4f8f8f7224db7e99010a83b966",
+            "size_bytes": 53645,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/a41b94f94b66d7619df851d2758fa638caf38b086f90da35f9b831e7ffb019fc.png",
+            "sha256": "a41b94f94b66d7619df851d2758fa638caf38b086f90da35f9b831e7ffb019fc",
+            "size_bytes": 50142,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/fd519454fce1a6221c9e0efd3bd5da46ce47e0fe67873e597b4266e357ae3fd9.png",
+            "sha256": "fd519454fce1a6221c9e0efd3bd5da46ce47e0fe67873e597b4266e357ae3fd9",
+            "size_bytes": 57495,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/757708a3168371a812e566d1ae8b549339371087eec6b427083c8068b6d18b03.png",
+            "sha256": "757708a3168371a812e566d1ae8b549339371087eec6b427083c8068b6d18b03",
+            "size_bytes": 52740,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/5824444b92a99f9bca52381a9f1e63a8cb5180c3abc26c67fe8d54aef8ce41e6.png",
+            "sha256": "5824444b92a99f9bca52381a9f1e63a8cb5180c3abc26c67fe8d54aef8ce41e6",
+            "size_bytes": 49396,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/8dc1e17012c3bbb9cec0a387d8f0f531a7ab8ce069df8a82c7aaf1575288cc0e.png",
+            "sha256": "8dc1e17012c3bbb9cec0a387d8f0f531a7ab8ce069df8a82c7aaf1575288cc0e",
+            "size_bytes": 49434,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/ae46790e022205aa09dbda282950b3ee8c6cdc13e33209949e224893fe17aed7.png",
+            "sha256": "ae46790e022205aa09dbda282950b3ee8c6cdc13e33209949e224893fe17aed7",
+            "size_bytes": 48716,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/533c80b71323bcf98e445576905f9ad2476f8a9cc9b9b658908dfdcc99921572.png",
+            "sha256": "533c80b71323bcf98e445576905f9ad2476f8a9cc9b9b658908dfdcc99921572",
+            "size_bytes": 49856,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/1a220d6132aef56e3d8fdcb84f9d004f52794b004a49c7dbe42b9b409e45be45.png",
+            "sha256": "1a220d6132aef56e3d8fdcb84f9d004f52794b004a49c7dbe42b9b409e45be45",
+            "size_bytes": 53253,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/0e8e62f727935b772a8870b2ce3c80576e8d6d57f6fbea9c1831b3b0b6dd86da.png",
+            "sha256": "0e8e62f727935b772a8870b2ce3c80576e8d6d57f6fbea9c1831b3b0b6dd86da",
+            "size_bytes": 53935,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/3fdfdc107ef1cb0a6cf2db80062948d6296a056211eeb0753ad825f60ea5f23d.png",
+            "sha256": "3fdfdc107ef1cb0a6cf2db80062948d6296a056211eeb0753ad825f60ea5f23d",
+            "size_bytes": 199831,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/e2a6551fffb0abf928e644fce79a3d3120fe21051ff2cbbebae54f6da0a02a3a.png",
+            "sha256": "e2a6551fffb0abf928e644fce79a3d3120fe21051ff2cbbebae54f6da0a02a3a",
+            "size_bytes": 52924,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/c3b5e4d3ff45d5d2aec7cb0263675efc2ddd842fa51ace53dbe3c32061adc34e.png",
+            "sha256": "c3b5e4d3ff45d5d2aec7cb0263675efc2ddd842fa51ace53dbe3c32061adc34e",
+            "size_bytes": 48575,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/a58bc848f3a008cd35d5290aaedeb7cec3aaa6d8bdafc81db8061683cb771573.png",
+            "sha256": "a58bc848f3a008cd35d5290aaedeb7cec3aaa6d8bdafc81db8061683cb771573",
+            "size_bytes": 44021,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/5165958914690308617942c54c0435a51165d64c0636a3b0bace33b69e2da955.png",
+            "sha256": "5165958914690308617942c54c0435a51165d64c0636a3b0bace33b69e2da955",
+            "size_bytes": 51603,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/f87792eef920e0c8017383ce31889c522172936610651b62434085b470aa6c36.png",
+            "sha256": "f87792eef920e0c8017383ce31889c522172936610651b62434085b470aa6c36",
+            "size_bytes": 47508,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/adc2ea50574c25f6bd255a968f795dba5d1230b1d20f66b16b23fd50d92b9560.png",
+            "sha256": "adc2ea50574c25f6bd255a968f795dba5d1230b1d20f66b16b23fd50d92b9560",
+            "size_bytes": 43573,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/217e14516944cdde53d64d36314e2ba480a48ffd87f7f518924b2dc4b45e96b1.png",
+            "sha256": "217e14516944cdde53d64d36314e2ba480a48ffd87f7f518924b2dc4b45e96b1",
+            "size_bytes": 52911,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/b25894c83f624f6cb2d135bd782e37a90918653bd2476ffa4d47a06803a60f3b.png",
+            "sha256": "b25894c83f624f6cb2d135bd782e37a90918653bd2476ffa4d47a06803a60f3b",
+            "size_bytes": 48610,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/ba5694bff4b0758d5e1ddbda7b3fb3567b2c3049049e56db50decc1882ca28d2.png",
+            "sha256": "ba5694bff4b0758d5e1ddbda7b3fb3567b2c3049049e56db50decc1882ca28d2",
+            "size_bytes": 44040,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/44463cbc9d415404344699cabcaa8b8e7f553cb6150d75d0e244f8a91f602807.png",
+            "sha256": "44463cbc9d415404344699cabcaa8b8e7f553cb6150d75d0e244f8a91f602807",
+            "size_bytes": 51603,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/9935d0a20d8328723bb6eb12900f2af38a84a8bbb5f210e627606478198a95bd.png",
+            "sha256": "9935d0a20d8328723bb6eb12900f2af38a84a8bbb5f210e627606478198a95bd",
+            "size_bytes": 47523,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/f5f8946d44df08ea9e2b7cbc92d133d08b31601a65782c926a5ecf0e87f4ea64.png",
+            "sha256": "f5f8946d44df08ea9e2b7cbc92d133d08b31601a65782c926a5ecf0e87f4ea64",
+            "size_bytes": 43625,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/b26c7ec8cc5a7d1bac71494c89107d95434c837a409e49b21efc33e55cafa37a.png",
+            "sha256": "b26c7ec8cc5a7d1bac71494c89107d95434c837a409e49b21efc33e55cafa37a",
+            "size_bytes": 45365,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/c665e83d1de05eeba3e5057ce44988ec17a673eec3a2595d071045e223e1aa2e.png",
+            "sha256": "c665e83d1de05eeba3e5057ce44988ec17a673eec3a2595d071045e223e1aa2e",
+            "size_bytes": 45043,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/b5e6d84a0ef926fdbd2c09ddfee82746e3ed34ddd4426d03ad0d35f4dd3996f5.png",
+            "sha256": "b5e6d84a0ef926fdbd2c09ddfee82746e3ed34ddd4426d03ad0d35f4dd3996f5",
+            "size_bytes": 46194,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/af4e376f3a6b47ecb67a183b289329ce8412815fcd10f87cbc885864194996fc.png",
+            "sha256": "af4e376f3a6b47ecb67a183b289329ce8412815fcd10f87cbc885864194996fc",
+            "size_bytes": 48439,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/e7287a316428dddcee35708a821d0baeb7329a74b207300c7c900027d1e2d91a.png",
+            "sha256": "e7287a316428dddcee35708a821d0baeb7329a74b207300c7c900027d1e2d91a",
+            "size_bytes": 49162,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/361367cc8235e6d223d9a65b8d3eacb0b6299a411ad689dd7f17ebcbfc47c6ae.png",
+            "sha256": "361367cc8235e6d223d9a65b8d3eacb0b6299a411ad689dd7f17ebcbfc47c6ae",
+            "size_bytes": 159341,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/5948c256f29cdd1b14015945628c93e287835b61781c1fd8368b04015abcbf3e.png",
+            "sha256": "5948c256f29cdd1b14015945628c93e287835b61781c1fd8368b04015abcbf3e",
+            "size_bytes": 344995,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/3f522fc7633cf581ae59ded9730a46f92926d30f4805200276644c90137c53e4.png",
+            "sha256": "3f522fc7633cf581ae59ded9730a46f92926d30f4805200276644c90137c53e4",
+            "size_bytes": 380005,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/a676f26acfa22d3ba30143eeab883b03a1ac81146499bcd66a0013bdcb6e194a.png",
+            "sha256": "a676f26acfa22d3ba30143eeab883b03a1ac81146499bcd66a0013bdcb6e194a",
+            "size_bytes": 196235,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/706215ceec5cc2e6bf816e7392a53d97276a210d55c806dec5742bba8eb9cf3d.png",
+            "sha256": "706215ceec5cc2e6bf816e7392a53d97276a210d55c806dec5742bba8eb9cf3d",
+            "size_bytes": 343829,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/4f052417c7b6614d18c5f4e56a065365fece54f2251f29da07f1bab7d50ea23d.png",
+            "sha256": "4f052417c7b6614d18c5f4e56a065365fece54f2251f29da07f1bab7d50ea23d",
+            "size_bytes": 381516,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/f951bf7a127de9f9c803de0c582d93e85338b08d2b4b68df92b97296cd314544.png",
+            "sha256": "f951bf7a127de9f9c803de0c582d93e85338b08d2b4b68df92b97296cd314544",
+            "size_bytes": 197823,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/af6c27d036299c8d4d4916077d0406fdaeefe390d208e4685f4869c5c1f6efec.png",
+            "sha256": "af6c27d036299c8d4d4916077d0406fdaeefe390d208e4685f4869c5c1f6efec",
+            "size_bytes": 344917,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/16bddfcdb065b0bf0088594f58f3273ba8738df0865ddcf7803eb4756abd344d.png",
+            "sha256": "16bddfcdb065b0bf0088594f58f3273ba8738df0865ddcf7803eb4756abd344d",
+            "size_bytes": 379922,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/f5b396e4fe647057d2f390f55ad80429bec9f91fef1e463ec7db79c1a660923d.png",
+            "sha256": "f5b396e4fe647057d2f390f55ad80429bec9f91fef1e463ec7db79c1a660923d",
+            "size_bytes": 196161,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/fbd59050fadbab9f3303e446c5fb680fb3dc6dfc421bb3521464374a5602f159.png",
+            "sha256": "fbd59050fadbab9f3303e446c5fb680fb3dc6dfc421bb3521464374a5602f159",
+            "size_bytes": 343737,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/4056389a02b75d7716f2409338aa071a220910de9233ea8ef0fe87db55d61186.png",
+            "sha256": "4056389a02b75d7716f2409338aa071a220910de9233ea8ef0fe87db55d61186",
+            "size_bytes": 381428,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/8411937192d6795649b5a64e35be1c2c98f51b3354bd3fe0b1fa5b53a526478a.png",
+            "sha256": "8411937192d6795649b5a64e35be1c2c98f51b3354bd3fe0b1fa5b53a526478a",
+            "size_bytes": 197754,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/3897a7f40eeaf9eb330b3587afe30224b3fff68ca57d752fb14356b6839479a8.png",
+            "sha256": "3897a7f40eeaf9eb330b3587afe30224b3fff68ca57d752fb14356b6839479a8",
+            "size_bytes": 163765,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/88ceac7965aa0daf8dcc7a040628db26ee93cccbd3c5788c9d79864143ec42c4.png",
+            "sha256": "88ceac7965aa0daf8dcc7a040628db26ee93cccbd3c5788c9d79864143ec42c4",
+            "size_bytes": 165027,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/817cfff7f5e7d77d00029740af35b78ff59adfb74a497f9a46a013d7791b278f.png",
+            "sha256": "817cfff7f5e7d77d00029740af35b78ff59adfb74a497f9a46a013d7791b278f",
+            "size_bytes": 122806,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/13cfd9bd45fd8cc4944ce30cc7d3e03d8cf52ed5707921c5b1aabcd75ed59bef.png",
+            "sha256": "13cfd9bd45fd8cc4944ce30cc7d3e03d8cf52ed5707921c5b1aabcd75ed59bef",
+            "size_bytes": 369008,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/8d9c2f9075056ef843551882ef54fedc258606be431ea08d254b90e3dbfbe07c.png",
+            "sha256": "8d9c2f9075056ef843551882ef54fedc258606be431ea08d254b90e3dbfbe07c",
+            "size_bytes": 244948,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/df183920d4bb9a0162038e0dae5a886dfd90ae4c5520bda45215959519130cf5.png",
+            "sha256": "df183920d4bb9a0162038e0dae5a886dfd90ae4c5520bda45215959519130cf5",
+            "size_bytes": 1035189,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/829cbafeaa781a48595352db502c0b5ce878cecaab36aae7b165ae2e4fb5b88a.png",
+            "sha256": "829cbafeaa781a48595352db502c0b5ce878cecaab36aae7b165ae2e4fb5b88a",
+            "size_bytes": 336736,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/fd6f12f6175b99cf1c392ed9babc50130d4b89b4709193647db4937dc9e5c742.png",
+            "sha256": "fd6f12f6175b99cf1c392ed9babc50130d4b89b4709193647db4937dc9e5c742",
+            "size_bytes": 370662,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/fa5d75d264105942f379107b6800af61fa2ae9e75ecc74ebfb942e15e5d22916.png",
+            "sha256": "fa5d75d264105942f379107b6800af61fa2ae9e75ecc74ebfb942e15e5d22916",
+            "size_bytes": 186002,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/503bd0f3ffb01b07f2cabdbb7c9d4e63c523fd85f31365fce6b89ec4c6fb48b3.png",
+            "sha256": "503bd0f3ffb01b07f2cabdbb7c9d4e63c523fd85f31365fce6b89ec4c6fb48b3",
+            "size_bytes": 334858,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/3dbfdd0d1808af6e446f4a392d491c2180bf8639880da0058f7b77b5ed8f8857.png",
+            "sha256": "3dbfdd0d1808af6e446f4a392d491c2180bf8639880da0058f7b77b5ed8f8857",
+            "size_bytes": 371456,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/040a04a66c325b904e9fb0af9a6c89023d065508d494da92d60936f2f5f7b670.png",
+            "sha256": "040a04a66c325b904e9fb0af9a6c89023d065508d494da92d60936f2f5f7b670",
+            "size_bytes": 187168,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/35bffb39645f9d3ae5411c5a69f63412c92849197a0be14dbb40571013957f83.png",
+            "sha256": "35bffb39645f9d3ae5411c5a69f63412c92849197a0be14dbb40571013957f83",
+            "size_bytes": 336725,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/145d5b5745e52f42397b0ddf7793801089a7b90c10e83e9276bf0149daa06829.png",
+            "sha256": "145d5b5745e52f42397b0ddf7793801089a7b90c10e83e9276bf0149daa06829",
+            "size_bytes": 370696,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/8322b5f6b75f1182345b56d2d51fd7c67639cd6ab7dfec780b3b413bf8824f52.png",
+            "sha256": "8322b5f6b75f1182345b56d2d51fd7c67639cd6ab7dfec780b3b413bf8824f52",
+            "size_bytes": 186025,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/5926d232a300bdb86f53b7b7a248b89ce4dfc4f55f87e5c052cd0c23cb071947.png",
+            "sha256": "5926d232a300bdb86f53b7b7a248b89ce4dfc4f55f87e5c052cd0c23cb071947",
+            "size_bytes": 334868,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/2d1d4bd3c16a08c9c62c20a6e8de9e90a8d3bd502694ce093b7c954503439f59.png",
+            "sha256": "2d1d4bd3c16a08c9c62c20a6e8de9e90a8d3bd502694ce093b7c954503439f59",
+            "size_bytes": 371476,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/90aaa4e14d2bd970bed095c82d3fa29cd4dda1fcadf77d74895567c23c60e672.png",
+            "sha256": "90aaa4e14d2bd970bed095c82d3fa29cd4dda1fcadf77d74895567c23c60e672",
+            "size_bytes": 187226,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/8e52f8006ddbaafcaf3b65f0ff8009ac061fb0291783f8bb06975687963d3286.png",
+            "sha256": "8e52f8006ddbaafcaf3b65f0ff8009ac061fb0291783f8bb06975687963d3286",
+            "size_bytes": 156911,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/ab7212b89684a45c669f1ab6f82484c1619ab73167464522a32740e09bbafa8e.png",
+            "sha256": "ab7212b89684a45c669f1ab6f82484c1619ab73167464522a32740e09bbafa8e",
+            "size_bytes": 158829,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/eac487ddba0ae4d6c3ecc6145b96bebea8a88161395acd9b31e7eefe6011d9a0.png",
+            "sha256": "eac487ddba0ae4d6c3ecc6145b96bebea8a88161395acd9b31e7eefe6011d9a0",
+            "size_bytes": 121969,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/3bbbb5718928660fd134a5a8f64266217f60ddf0e64665465e25023d9efbfeac.png",
+            "sha256": "3bbbb5718928660fd134a5a8f64266217f60ddf0e64665465e25023d9efbfeac",
+            "size_bytes": 358295,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/2d1ff57f86b06d14a18a7017885ebf25fd327217ede46de4600a0d011ac5d655.png",
+            "sha256": "2d1ff57f86b06d14a18a7017885ebf25fd327217ede46de4600a0d011ac5d655",
+            "size_bytes": 239806,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/15a70a7a7a8fd2140d4e1ad5de9d60dc4883616ea738023899bb4784ee0601c3.png",
+            "sha256": "15a70a7a7a8fd2140d4e1ad5de9d60dc4883616ea738023899bb4784ee0601c3",
+            "size_bytes": 972942,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/d52277c2999239c8da1fa360461c6d970cc9f4185b1951b69d22cf4ddaa17461.png",
+            "sha256": "d52277c2999239c8da1fa360461c6d970cc9f4185b1951b69d22cf4ddaa17461",
+            "size_bytes": 138502,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/93a3316dbf9a29a0943dcc7f2e6e49077c5b06a8904c0dd1224d8f4bbf626e3a.png",
+            "sha256": "93a3316dbf9a29a0943dcc7f2e6e49077c5b06a8904c0dd1224d8f4bbf626e3a",
+            "size_bytes": 130355,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/d95d74245b2ae2238a0218e4d710585bc943534f2cf0e11f1ff7ef3562de0c2b.png",
+            "sha256": "d95d74245b2ae2238a0218e4d710585bc943534f2cf0e11f1ff7ef3562de0c2b",
+            "size_bytes": 133633,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/37ec02543ae6308293e3c50c04ca28279cb722db7ed3fccdda87dfbe5ce02a4f.png",
+            "sha256": "37ec02543ae6308293e3c50c04ca28279cb722db7ed3fccdda87dfbe5ce02a4f",
+            "size_bytes": 138042,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/160eb3f6ead995592220d075f77c2f194e6e5b9b5008123a58d93bec8b2e2f64.png",
+            "sha256": "160eb3f6ead995592220d075f77c2f194e6e5b9b5008123a58d93bec8b2e2f64",
+            "size_bytes": 130361,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/c570b1644702f563660719d7c1fa9d78efff668161f5d3dba6beddf1de1a2e89.png",
+            "sha256": "c570b1644702f563660719d7c1fa9d78efff668161f5d3dba6beddf1de1a2e89",
+            "size_bytes": 133783,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/a44e7f67e6b24f5d15295e7321994de44672d35af0cebabdcd87bd1b410725e8.png",
+            "sha256": "a44e7f67e6b24f5d15295e7321994de44672d35af0cebabdcd87bd1b410725e8",
+            "size_bytes": 138426,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/449f0a0606885b69fa5b4df2f354907cba0fe8082dd196105efa0d93fed91086.png",
+            "sha256": "449f0a0606885b69fa5b4df2f354907cba0fe8082dd196105efa0d93fed91086",
+            "size_bytes": 130282,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/6ad3c099e3a92a253ddde22bb68706fd9ccbf375d7e036397b7bed02feeaf61c.png",
+            "sha256": "6ad3c099e3a92a253ddde22bb68706fd9ccbf375d7e036397b7bed02feeaf61c",
+            "size_bytes": 133561,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/5ccf99b5932085e0460a1216082a0bf8b443fed8f41d154249f66de270db2ad3.png",
+            "sha256": "5ccf99b5932085e0460a1216082a0bf8b443fed8f41d154249f66de270db2ad3",
+            "size_bytes": 137961,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/8013c6b80acff64ac665e6ce5ef910d9f0e4726b067e198e2a6091699c05fa6c.png",
+            "sha256": "8013c6b80acff64ac665e6ce5ef910d9f0e4726b067e198e2a6091699c05fa6c",
+            "size_bytes": 130276,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/ea140e7e941b599742c1f616d0398be596920be8ae6d8603356ef5c2b4dfb0d8.png",
+            "sha256": "ea140e7e941b599742c1f616d0398be596920be8ae6d8603356ef5c2b4dfb0d8",
+            "size_bytes": 133713,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/52638cf6415ddc6ea0e0cc4329e4485dfa96e0b080751dce555843f62769ffa0.png",
+            "sha256": "52638cf6415ddc6ea0e0cc4329e4485dfa96e0b080751dce555843f62769ffa0",
+            "size_bytes": 132153,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/51330486cef1ba1e9d32afd0681b790c4275d3706a66b45ced0bc99a7e0c2988.png",
+            "sha256": "51330486cef1ba1e9d32afd0681b790c4275d3706a66b45ced0bc99a7e0c2988",
+            "size_bytes": 132948,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/4f043e81d606232c3994be1b6f46dbd12983f759140981e7c7e4a1d467e0dde9.png",
+            "sha256": "4f043e81d606232c3994be1b6f46dbd12983f759140981e7c7e4a1d467e0dde9",
+            "size_bytes": 137147,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/75968927a53a83e53cd33eb8398a57c651d5fd5e5e4b68987dfda09e18160ee1.png",
+            "sha256": "75968927a53a83e53cd33eb8398a57c651d5fd5e5e4b68987dfda09e18160ee1",
+            "size_bytes": 131861,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/c457a9bafe73e93262d82474607a79d8b45c5dfc4bf4a421057a6999e9147895.png",
+            "sha256": "c457a9bafe73e93262d82474607a79d8b45c5dfc4bf4a421057a6999e9147895",
+            "size_bytes": 134475,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/0202563d1267386abf1492e4b77350deee23bdf3b21c1f26a21677c425c3fc00.png",
+            "sha256": "0202563d1267386abf1492e4b77350deee23bdf3b21c1f26a21677c425c3fc00",
+            "size_bytes": 419889,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/b403bb908b4619977232541a944a0adfc5e0cbf5fe6eba1a0a77cf5fdce4cec3.png",
+            "sha256": "b403bb908b4619977232541a944a0adfc5e0cbf5fe6eba1a0a77cf5fdce4cec3",
+            "size_bytes": 131246,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/5682202e4ed3fa2fd3d7ef7b597cae217eea6bb9a7546966578f7c92293ecf0b.png",
+            "sha256": "5682202e4ed3fa2fd3d7ef7b597cae217eea6bb9a7546966578f7c92293ecf0b",
+            "size_bytes": 124083,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/cc95b33e86fab107823c769e07969d9627de3d6835b4eef5fe772942df39450c.png",
+            "sha256": "cc95b33e86fab107823c769e07969d9627de3d6835b4eef5fe772942df39450c",
+            "size_bytes": 126577,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/9fa22a3ceb3260cb9dbd68d8e7aab014222dc0cc2b1a6703fca240a32e9529b2.png",
+            "sha256": "9fa22a3ceb3260cb9dbd68d8e7aab014222dc0cc2b1a6703fca240a32e9529b2",
+            "size_bytes": 130698,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/3f0e27d95ccff11b5764f4a998f531017b76764e9f851a65d8d97f88d9d8429c.png",
+            "sha256": "3f0e27d95ccff11b5764f4a998f531017b76764e9f851a65d8d97f88d9d8429c",
+            "size_bytes": 123931,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/2f419b1f4565b66ee2c26c343a2a9a94e925dd8cd0af6456e740e6e245ddbc6c.png",
+            "sha256": "2f419b1f4565b66ee2c26c343a2a9a94e925dd8cd0af6456e740e6e245ddbc6c",
+            "size_bytes": 126930,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/2449769a3910ef98b2ba46413f43bce95963edf7dfd593e9d8da8ceb209b337d.png",
+            "sha256": "2449769a3910ef98b2ba46413f43bce95963edf7dfd593e9d8da8ceb209b337d",
+            "size_bytes": 131240,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/411e5ff0d3a70a0030bf1fbea1e464e8caefc318d7d1f0d140e589a763015366.png",
+            "sha256": "411e5ff0d3a70a0030bf1fbea1e464e8caefc318d7d1f0d140e589a763015366",
+            "size_bytes": 124119,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/e1fcac4cec9d6dbfa56637a0f8e56b754646c16e755cd84bae21121f95d126ed.png",
+            "sha256": "e1fcac4cec9d6dbfa56637a0f8e56b754646c16e755cd84bae21121f95d126ed",
+            "size_bytes": 126601,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/e3eba34358b1cfa8512748b028dd7327ec8916df7438ad8a1422ae095962fa9e.png",
+            "sha256": "e3eba34358b1cfa8512748b028dd7327ec8916df7438ad8a1422ae095962fa9e",
+            "size_bytes": 130707,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/3f1cf436504c1204e5fac1382a7296dde99fdf00b8885e10c08647a85c050f91.png",
+            "sha256": "3f1cf436504c1204e5fac1382a7296dde99fdf00b8885e10c08647a85c050f91",
+            "size_bytes": 123948,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/3a2c7e97f2d28b37f921115a2fba996543ed6ed51573a799fdfb1b2f50b9422e.png",
+            "sha256": "3a2c7e97f2d28b37f921115a2fba996543ed6ed51573a799fdfb1b2f50b9422e",
+            "size_bytes": 126989,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/76141dfcac4efef2e24f4a79f015374e2879d5ee318548d85a6c9776d9c90320.png",
+            "sha256": "76141dfcac4efef2e24f4a79f015374e2879d5ee318548d85a6c9776d9c90320",
+            "size_bytes": 126076,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/ba9e74c735fea794586c1cfa552e18b0712d8f32b2b5ce57b9bf50be0026f638.png",
+            "sha256": "ba9e74c735fea794586c1cfa552e18b0712d8f32b2b5ce57b9bf50be0026f638",
+            "size_bytes": 126897,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/bbad8ecf30420944a2367abddd3b8708b85eaa1e95332a4fc6ab091e4a5017da.png",
+            "sha256": "bbad8ecf30420944a2367abddd3b8708b85eaa1e95332a4fc6ab091e4a5017da",
+            "size_bytes": 133312,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/c0c5930b99c41fc25d3d36b39927ffb1324a0be9c4d91247f74aa03b32ab3823.png",
+            "sha256": "c0c5930b99c41fc25d3d36b39927ffb1324a0be9c4d91247f74aa03b32ab3823",
+            "size_bytes": 125636,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/6358ce34022f01e26d18f5de6c0fee37baf1cae9be57202f426f65000766d2cb.png",
+            "sha256": "6358ce34022f01e26d18f5de6c0fee37baf1cae9be57202f426f65000766d2cb",
+            "size_bytes": 129102,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/8d8f5d29d2229e4ba684339325f82de9806df5e4790028a347bf139e6b0c18c9.png",
+            "sha256": "8d8f5d29d2229e4ba684339325f82de9806df5e4790028a347bf139e6b0c18c9",
+            "size_bytes": 377452,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/db522dbfb7254b4afb21190f4e284340648cbac5510a0cd8860ef5e5161ccc19.png",
+            "sha256": "db522dbfb7254b4afb21190f4e284340648cbac5510a0cd8860ef5e5161ccc19",
+            "size_bytes": 113510,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/19962f7a2f990979da17ff6f1b114ea6cb3681b69a0e332c51b0257504f9a667.png",
+            "sha256": "19962f7a2f990979da17ff6f1b114ea6cb3681b69a0e332c51b0257504f9a667",
+            "size_bytes": 132080,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/a552a1eb748c69908353deee564e7a8ed6daf812f8cf61f7a0904c444f9e7c39.png",
+            "sha256": "a552a1eb748c69908353deee564e7a8ed6daf812f8cf61f7a0904c444f9e7c39",
+            "size_bytes": 110085,
+            "kind": "attachment"
+          },
+          {
+            "path": "palette-final/hub-attempt02/hub-site-matrix14/images/03486d903c526fe4e16db41ea9bcf08e36f9ecb55a9375e6312423b4184ebdbb.png",
+            "sha256": "03486d903c526fe4e16db41ea9bcf08e36f9ecb55a9375e6312423b4184ebdbb",
+            "size_bytes": 125339,
+            "kind": "attachment"
+          }
+        ],
+        "fixture_sources": {
+          "server": "299753a4c6580ac6bbc748cdee743489a3e17dba",
+          "client": "feaf1181efe55076dead52931203a8488cbad20d",
+          "android": "dcdfc4299d1f92f46b5f3ca8e675d304f9639982",
+          "hub": "0e45aeffbf09ee9249d5a1ab55e0ecf723d9d082"
+        },
+        "deliverables": {}
+      }
+    }
+  ],
+  "quality_evidence": {
+    "source_ci": "https://github.com/ZHanry/home-tunnel/actions/runs/38119530254",
+    "CodeQL": "https://github.com/ZHanry/home-tunnel/actions/runs/38119530265",
+    "Secret scan": "https://github.com/ZHanry/home-tunnel/actions/runs/38119530301"
+  },
+  "reproduction": {
+    "component_bytes": "Run existing hub14_evidence.py components with this exact frozen Hub plan/checkout, retained complete public downloads and explicit cosign; retain successful actual wrapper and source-bound primary.",
+    "current_ui_site": "Serve clean committed docs/site on loopback 8766, use Node 24 to run ready.default after exact successful Pages CI, then existing hub14_evidence.py site with the actual complete matrix; retain wrappers, source manifest and all original slices.",
+    "acceptance": "Run existing release14_evidence.py acceptance with this inventory/results/evidence root. It revalidates live exact-source CI, complete public component source/BUILD/image signatures and the immutable inventory again."
+  },
+  "unverified": [
+    "OS-root-password-UI-unlock",
+    "android-arm64-physical-execution",
+    "android-receiver-media-on-task-slirp-avd",
+    "arm64-hardware-execution",
+    "audio-clipboard-file-transfer",
+    "audio-file-clipboard-media",
+    "carrier-network-NAT",
+    "carrier-network-nat",
+    "cross-account-android-installation-ownership-transfer",
+    "exhaustive-empty-loading-error-keyboard-navigation-matrix",
+    "full-arm64-integration",
+    "full-arm64-local-integration",
+    "historical13-created-credential-provenance",
+    "hub-checks-do-not-retest-product-media",
+    "installed-three-platform-update-ui-discovery-pending-final-publication",
+    "linux-arm64-local-execution",
+    "linux-dark-english-ui-in-root-review",
+    "long-duration-media",
+    "original-production13-database-migration",
+    "original-trusted_devices-semantic-preservation",
+    "physical-Android-device",
+    "physical-android-device",
+    "post-publication-update-discovery",
+    "production-server-not-upgraded",
+    "public-CA-production-TLS",
+    "public-production-ca-tls",
+    "screenshot-one-time-password-invalidation-before-publication",
+    "this-round-backup-restore",
+    "windows-arm64-wayland-media",
+    "windows-authenticated-pages-local-execution"
+  ],
+  "scope": "Frozen 14.0.0 Hub distribution/site only: genuine complete published Server/Client/Android attachment bytes, SHA-256, signed BUILD/source and documentation-only formal tag drift; exact original payload mappings and Android core; 8 bilingual pages, 11 component attachments, stable update/cache projections, 8 unchanged installed product originals with hash-bound reviews, and 148 completed local Chromium/Edge layout cases against every tracked served site byte. These Hub checks do not rerun product media or claim production deployment."
+}
