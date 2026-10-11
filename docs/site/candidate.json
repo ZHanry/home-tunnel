@@ -1,15 +1,15 @@
 {
-  "version": "13.0.0",
+  "version": "14.0.0",
   "stage": "stable",
   "promotion_status": "promoted",
   "downloads_published": true,
   "acceptance_status": "passed_reproducible",
   "prerelease": false,
-  "tag": "v13.0.0",
+  "tag": "v14.0.0",
   "remote_policy": "require_direct",
   "relay_enabled": false,
   "frp": "0.70.1",
-  "agent_version": "13.0.0",
+  "agent_version": "14.0.0",
   "contract": {
     "ref": "api-v2.0.0",
     "frozen": true,
@@ -19,133 +19,158 @@
   "components": {
     "hub": {
       "repository": "ZHanry/home-tunnel",
-      "version": "13.0.0",
-      "tag": "v13.0.0",
+      "version": "14.0.0",
+      "tag": "v14.0.0",
       "source_sha": null,
       "artifacts": [],
-      "prerelease": false
+      "prerelease": false,
+      "published": false
     },
     "server": {
       "repository": "ZHanry/home-tunnel-server",
-      "version": "13.0.0",
-      "tag": "v13.0.0",
-      "source_sha": "9645cf23871d2cb4913239eb9eff520d08c7cb23",
+      "version": "14.0.0",
+      "tag": "v14.0.0",
+      "source_sha": "fa765744ce56076fcde364f1f11749cfe77a744a",
       "published": true,
       "artifacts": [
         {
-          "filename": "NestLink-Server-13.0.0.tar.gz",
-          "sha256": "da77831ded3ba0ff0bf6e7f6257dba390f6d4e612eda41f64aced64219c76c7d",
-          "size_bytes": 295895,
-          "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v13.0.0/NestLink-Server-13.0.0.tar.gz"
+          "filename": "NestLink-Server-14.0.0.tar.gz",
+          "sha256": "1a42bc2e9520c9d4d7c641af6bc3fff42bd9833880423b767485779f4e8812a7",
+          "size_bytes": 557130,
+          "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v14.0.0/NestLink-Server-14.0.0.tar.gz"
         },
         {
-          "filename": "NestLink-server-Materials-13.0.0.zip",
-          "sha256": "34fd82683e25e87dc99cb1bbd97a2667273a89acd780eef4a7bb29761574a084",
-          "size_bytes": 1626773,
-          "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v13.0.0/NestLink-server-Materials-13.0.0.zip"
+          "filename": "NestLink-server-Materials-14.0.0.zip",
+          "sha256": "fe10b6bb580197338e430cebcdcbad70e1bdae3d295ce45dce8bc09c9ead3ac4",
+          "size_bytes": 2217610,
+          "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v14.0.0/NestLink-server-Materials-14.0.0.zip"
         },
         {
           "filename": "SHA256SUMS.txt",
-          "sha256": "516723ec6d2b9b0ee9d1a8a2ed1e376ece1010e845d4e0fa4bbef0b937c32699",
+          "sha256": "b586f224ebaaf7e46a2be223ba77d8ca91e12b2a65e879a9393631708b0c7125",
           "size_bytes": 199,
-          "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v13.0.0/SHA256SUMS.txt"
+          "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v14.0.0/SHA256SUMS.txt"
         }
       ],
       "prerelease": false,
-      "release_url": "https://github.com/ZHanry/home-tunnel-server/releases/tag/v13.0.0"
+      "release_url": "https://github.com/ZHanry/home-tunnel-server/releases/tag/v14.0.0"
     },
     "client": {
       "repository": "ZHanry/home-tunnel-client",
-      "version": "13.0.0",
-      "tag": "v13.0.0",
-      "source_sha": "e712c02e0f38dd9d65aaa42162255d4ec0576f92",
+      "version": "14.0.0",
+      "tag": "v14.0.0",
+      "source_sha": "46e6194b5e0474292a175b6247b36572434fa9a4",
       "published": true,
       "artifacts": [
         {
-          "filename": "NestLink-Linux-13.0.0-arm64.deb",
-          "sha256": "c89325bba7dae33d1feee4a7087bf82751b0fa1e2d4d94a22545e7fb1bf7b6c0",
-          "size_bytes": 34148560,
-          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v13.0.0/NestLink-Linux-13.0.0-arm64.deb"
+          "filename": "NestLink-Linux-14.0.0-arm64.deb",
+          "sha256": "ad109bb5b1379c3a2cbfcf936ab83b35a1ce6d919126ae00d18c2a2e443662a3",
+          "size_bytes": 33890582,
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v14.0.0/NestLink-Linux-14.0.0-arm64.deb"
         },
         {
-          "filename": "NestLink-Linux-13.0.0-x64.deb",
-          "sha256": "bd2b9a612ea7078a745b4bcb977bf804b97f24b51871f5bd8f8be4d713a51957",
-          "size_bytes": 36033432,
-          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v13.0.0/NestLink-Linux-13.0.0-x64.deb"
+          "filename": "NestLink-Linux-14.0.0-x64.deb",
+          "sha256": "9856a8ac83da603847f6796c006df04fdc9c83f651b1014763e5df28a308a4ce",
+          "size_bytes": 35797802,
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v14.0.0/NestLink-Linux-14.0.0-x64.deb"
         },
         {
-          "filename": "NestLink-Setup-13.0.0-x64.exe",
-          "sha256": "9410616f7e8b961eb6612545bf260c25abe83196cf4fa05b533785dc3266a88a",
-          "size_bytes": 32266847,
-          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v13.0.0/NestLink-Setup-13.0.0-x64.exe"
+          "filename": "NestLink-Setup-14.0.0-x64.exe",
+          "sha256": "6f772544fef487c2b084f83abe26a9bfb581b4cd8aeebd25b2bcc5647ebda41f",
+          "size_bytes": 32020618,
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v14.0.0/NestLink-Setup-14.0.0-x64.exe"
         },
         {
-          "filename": "NestLink-client-Materials-13.0.0.zip",
-          "sha256": "22ee87c6327466f46c3e6abcd99001bc5b41afd1699eb8a03ab26f5687de77a4",
-          "size_bytes": 1965229642,
-          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v13.0.0/NestLink-client-Materials-13.0.0.zip"
+          "filename": "NestLink-client-Materials-14.0.0.zip",
+          "sha256": "caa79d59b43dcdcaad184ebcfbac22096d03fab13c2d0e846906d94231e3c0c3",
+          "size_bytes": 1965325884,
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v14.0.0/NestLink-client-Materials-14.0.0.zip"
         },
         {
           "filename": "SHA256SUMS.txt",
-          "sha256": "551fe682d4514e64afbd80071f86f207bb1cc255564bf243d2f553319321e25f",
+          "sha256": "0141fd45d23b7b9176d769baa0e17b01049f8b0cce76d4077d7efede6edb9c49",
           "size_bytes": 393,
-          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v13.0.0/SHA256SUMS.txt"
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v14.0.0/SHA256SUMS.txt"
         }
       ],
       "prerelease": false,
-      "release_url": "https://github.com/ZHanry/home-tunnel-client/releases/tag/v13.0.0"
+      "release_url": "https://github.com/ZHanry/home-tunnel-client/releases/tag/v14.0.0"
     },
     "android": {
       "repository": "ZHanry/home-tunnel-android",
-      "version": "13.0.0",
-      "tag": "v13.0.0",
-      "source_sha": "3543a54633bf33c94bddc3339e5500f185b62617",
+      "version": "14.0.0",
+      "tag": "v14.0.0",
+      "source_sha": "a4a96b66208483b9e85f1f6dcf6298397de57e22",
       "published": true,
       "artifacts": [
         {
-          "filename": "NestLink-Android-13.0.0.apk",
-          "sha256": "e61b5df9fce7df389ec1abba02d987c67c3b15d1bb4d850c192ea6838d8bfede",
-          "size_bytes": 116562154,
-          "url": "https://github.com/ZHanry/home-tunnel-android/releases/download/v13.0.0/NestLink-Android-13.0.0.apk"
+          "filename": "NestLink-Android-14.0.0.apk",
+          "sha256": "0d81e4a2ac6ee64b21fd95bcae00ba3cbc71b9036371475786cc8bf03bcafbab",
+          "size_bytes": 118539831,
+          "url": "https://github.com/ZHanry/home-tunnel-android/releases/download/v14.0.0/NestLink-Android-14.0.0.apk"
         },
         {
-          "filename": "NestLink-android-Materials-13.0.0.zip",
-          "sha256": "cac81d5525dc779813f2107bbb04c464dd64c6a964dc408f7c4bb3b0a3ed8c55",
-          "size_bytes": 1134533382,
-          "url": "https://github.com/ZHanry/home-tunnel-android/releases/download/v13.0.0/NestLink-android-Materials-13.0.0.zip"
+          "filename": "NestLink-android-Materials-14.0.0.zip",
+          "sha256": "bdaaf491c6969d15f8ddd78094a44c228e519638062cfbbc7fc1efec79701044",
+          "size_bytes": 1134470998,
+          "url": "https://github.com/ZHanry/home-tunnel-android/releases/download/v14.0.0/NestLink-android-Materials-14.0.0.zip"
         },
         {
           "filename": "SHA256SUMS.txt",
-          "sha256": "39c3de27d4401c517e587eed4d2fde9f49d7e8c6807c99be79d5dcd8bf9fc4c5",
+          "sha256": "6df9261153373014d80cbe429dd5bd47c30180f3aa9c6e235be1f130eff874ae",
           "size_bytes": 198,
-          "url": "https://github.com/ZHanry/home-tunnel-android/releases/download/v13.0.0/SHA256SUMS.txt"
+          "url": "https://github.com/ZHanry/home-tunnel-android/releases/download/v14.0.0/SHA256SUMS.txt"
         }
       ],
       "prerelease": false,
-      "release_url": "https://github.com/ZHanry/home-tunnel-android/releases/tag/v13.0.0"
+      "release_url": "https://github.com/ZHanry/home-tunnel-android/releases/tag/v14.0.0"
     }
   },
   "not_verified": [
-    "physical-android-device",
+    "OS-root-password-UI-unlock",
+    "android-arm64-physical-execution",
+    "android-receiver-media-on-task-slirp-avd",
+    "arm64-hardware-execution",
+    "audio-clipboard-file-transfer",
+    "audio-file-clipboard-media",
+    "carrier-network-NAT",
     "carrier-network-nat",
-    "long-duration-media"
+    "cross-account-android-installation-ownership-transfer",
+    "exhaustive-empty-loading-error-keyboard-navigation-matrix",
+    "full-arm64-integration",
+    "full-arm64-local-integration",
+    "historical13-created-credential-provenance",
+    "linux-arm64-local-execution",
+    "linux-dark-english-ui-in-root-review",
+    "long-duration-media",
+    "original-production13-database-migration",
+    "original-trusted_devices-semantic-preservation",
+    "physical-Android-device",
+    "physical-android-device",
+    "post-publication-update-discovery",
+    "public-CA-production-TLS",
+    "public-production-ca-tls",
+    "screenshot-one-time-password-invalidation-before-publication",
+    "this-round-backup-restore",
+    "windows-arm64-wayland-media",
+    "windows-authenticated-pages-local-execution"
   ],
   "signing": {
     "windows": "unsigned-no-certificate-configured",
     "android_certificate_sha256": "d7779e338be1039acee6dda9a43417cbf2baf4b0c9995578d9708501e95af702"
   },
-  "note": "nestlink 13.0.0 stable. Automated checks and reproducible installed-application integration passed on the exact released bytes. Outstanding physical/network/media coverage remains explicit in the release notes. Historical release bytes are retained.",
+  "note": "nestlink 14.0.0 stable. Actual Release files, source manifests, Sigstore signatures and version-specific reproducible acceptance independently verified. Exact scope and outstanding coverage are recorded in the release notes. Historical release bytes remain available.",
   "tested_combination": {
-    "server": "13.0.0",
-    "client": "13.0.0",
-    "android": "13.0.0",
-    "agent": "13.0.0"
+    "server": "14.0.0",
+    "client": "14.0.0",
+    "android": "14.0.0",
+    "agent": "14.0.0"
   },
   "component_verification": {
-    "repository": "ZHanry/home-tunnel",
-    "source_revision": "f0d7aeeb4828e5e68665df93c01ff04d7d3fa34e",
-    "run_id": 37975082230,
-    "url": "https://github.com/ZHanry/home-tunnel/actions/runs/37975082230",
-    "scope": "All released component files downloaded and independently hashed; source and Sigstore verified. No product rebuild."
-  }
+    "version": "14.0.0",
+    "verified_at": "2026-10-11T06:23:29.215553+00:00",
+    "method": "Independent GitHub Release downloads, SHA-256, exact tag/source, signed BUILD and current acceptance checks",
+    "records": "docs/release/components-14.0.0.json"
+  },
+  "tested_combination_scope": "server: Exact signed299 server CI payload/immutable amd64 control/gateway/FRPS and installed feaf client in local Windows/WSL X11 task fixture; six real browser modes, native and three-phase four-protocol tunnel evidence. Historical server-only migration/API/Web retain their original scope and clock domains; no production deployment. PIN set extra trusted_devices flush remains failed/semantically unknown; OS root-password GUI unlock unverified.\nclient: Exact feaf client CI products and installed Windows x64/Linux amd64; task X11 native/browser media with299 control/gateway and signed FRPS, local Android dcdf peer presence. Includes truthful original clock domains and failed attempts retained outside passed scenario selections.\nandroid: Exact signed universal14 APK on disposable API35 x86_64 AVD; actual original-certificate public13 to exact14 overwrite upgrade; observed account/UI/OS permission matrix; native media acceptance covers Android controller to Linux x64 same/cross sessions only. Android receiver media and cross-account installation ownership transfer remain unverified. Production server unchanged; private pixels/logs not published."
 }

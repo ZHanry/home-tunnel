@@ -1,11 +1,34 @@
-# nestlink
+# NestLink 14.0.0 product design
 
-统一英文名称与原创桥形图标。产品以设备连接为中心，采用方案 A 的蓝白工作台：蓝色 #2D6AE8、页面 #F3F6FC、内容 #FFFFFF、文字 #18243B、边线 #E3E9F3；深色保持同一结构。
+The desktop baseline uses the supplied UU Remote image as a layout reference: a quiet left navigation and a grouped, full-width device list. NestLink keeps its own purple identity and existing account, remote approval and tunnel behavior.
 
-使用系统界面字体，页面标题 24px、模块标题 16px、正文 14px。桌面侧栏承载远控、穿透、设备、设置，窄窗收缩为图标栏，Android 使用底部导航。账号、主题、语言和版本入口整齐排列。
+## Tokens
 
-桌面首页直接呈现连接设备、本机 ID、共享授权与最近连接，常用操作无需进入底层信令设置。所有页面隐藏滚动条并保留滚轮、触控、键盘、焦点与无障碍操作。空状态居中，分页统一，更新使用弹窗。
+| Role | Color |
+| --- | --- |
+| Eggplant purple / primary actions | `#7955CF` |
+| Purple text / selected navigation | `#6842BB` |
+| Pale lavender / navigation chrome | `#F2EFF9` |
+| Canvas | `#FAF9FD` |
+| Content | `#FFFFFF` |
+| Text | `#282235` |
 
-只展示 13.0 当前界面；旧截图从当前文档和站点移除。Web 在浏览器内远控，Windows/Linux 提供双向远控与穿透中枢，Android 提供管理与远控。不分发独立 CLI/NAS 或 macOS GUI。
+Use the existing system UI fonts. Titles are 24 px, device names 14 px, secondary information 12–13 px. Left-align names, groups and headings. Device rows have 8 px corners and no shadows; the list remains readable at narrow widths and larger text sizes.
 
-应用图标、窗口、托盘、安装器、网页图标及发行资产由同一 SVG 生成。配置、设备、安装升级和 Android 签名身份保持兼容。
+```text
+ [linked N] NestLink                      language / theme / version / window controls
+ Device management  | All devices                                      Search devices
+ Remote assistance  | Computers 2
+ Tunnels            | [PC] This computer    local                                 info
+                    | [PC] Another computer  online                    connect / info
+                    | Phones / tablets 1
+                    | [phone] Device name  offline                               info
+                    |
+ Account and settings |
+```
+
+The linked N is the only expressive brand element. Its two rounded brackets and joining stroke suggest devices being linked. A single SVG source exports the Windows executable, tray and installer icons, Flutter assets, Android launcher and monochrome notification icons, and Web branding. Large blue dashboards, repeated metric cards and decorative gradients have been removed from the desktop home.
+
+Windows/Linux, the Web server and Android share the 14.0.0 product identity and action names. Web adapts the grouped device directory to a browser workspace; Android uses touch-sized navigation and controls. The underlying account, approval, revocation and tunnel boundaries remain intact. Release builds require version-specific installation and integration evidence, exact payload hashes and signed build provenance.
+
+Run `packaging/windows/install-local-clean.ps1` before every local installation; it backs up and removes the prior install and configuration before running the installer. Local installation and published installer upgrade acceptance are recorded separately.

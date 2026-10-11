@@ -33,10 +33,14 @@ def version():
     return (ROOT / "VERSION").read_text(encoding="utf8").strip()
 
 
+def is_stable_release(value):
+    return re.fullmatch(r"(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)", value) is not None
+
+
 def candidate_metadata():
     value = version()
     tag = os.environ.get("GITHUB_REF_NAME", "")
-    stable = value == "13.0.0"
+    stable = is_stable_release(value)
     candidate = re.fullmatch(r"\d+\.\d+\.\d+-(?:RC[1-9]\d*|rc\.[1-9]\d*)", value)
     if (not stable and not candidate) or tag != "v" + value:
         raise SystemExit("A matching supported product tag is required")
@@ -78,18 +82,19 @@ REQUIRED_SCENARIOS = {
 }
 
 def validate_acceptance(component, revision, payload=None):
-    path = ROOT/"docs/release/acceptance-13.0.0.json"
+    value = version()
+    path = ROOT / f"docs/release/acceptance-{value}.json"
     if not path.is_file():
-        raise SystemExit("13.0.0 requires recorded reproducible acceptance before publication")
+        raise SystemExit(f"{value} requires recorded reproducible acceptance before publication")
     record = json.loads(path.read_text(encoding="utf8"))
-    if record.get("version") != "13.0.0" or record.get("component") != component or record.get("status") != "passed_reproducible":
+    if record.get("version") != value or record.get("component") != component or record.get("status") != "passed_reproducible":
         raise SystemExit("Release acceptance identity or status is invalid")
     source = record.get("source_revision", "")
     if not re.fullmatch(r"[a-f0-9]{40}", source):
         raise SystemExit("Acceptance needs the tested source commit")
     run("git", "merge-base", "--is-ancestor", source, revision)
     changes = run("git", "diff", "--name-only", source, revision, capture=True).splitlines()
-    allowed = {"docs/release/acceptance-13.0.0.json", "docs/HOMEDESK_RELEASE.md", "docs/RELEASE_NOTES.md"}
+    allowed = {f"docs/release/acceptance-{value}.json", "docs/HOMEDESK_RELEASE.md", "docs/RELEASE_NOTES.md"}
     if any(name not in allowed for name in changes):
         raise SystemExit("Runtime source changed after acceptance: " + ", ".join(name for name in changes if name not in allowed))
     scenarios = {item.get("name") for item in record.get("scenarios", []) if item.get("status") == "passed" and item.get("evidence")}
@@ -151,7 +156,7 @@ def pack(args):
             raise SystemExit(f"Missing deliverable: {name}")
         shutil.copyfile(source, output / name)
         selected.append(output / name)
-    acceptance = validate_acceptance(args.component, revision, selected) if value == "13.0.0" else None
+    acceptance = validate_acceptance(args.component, revision, selected) if is_stable_release(value) else None
     # The hub's only package already contains its distribution and corresponding source.
     material_name = f"NestLink-Distribution-{value}.zip" if args.component == "hub" else f"NestLink-{args.component}-Materials-{value}.zip"
     material = output / material_name
@@ -200,6 +205,7 @@ def pack(args):
 
 def verify_server(args):
     """Verify and retag the accepted image digests; never rebuild stable runtime bytes."""
+    value = version()
     revision = run("git", "rev-parse", "HEAD", capture=True)
     acceptance = validate_acceptance("server", revision)
     repository = os.environ["GITHUB_REPOSITORY"]
@@ -224,14 +230,14 @@ def verify_server(args):
     if listed != actual:
         raise SystemExit("Unexpected or missing server candidate evidence")
     manifest = json.loads((directory/"release-manifest.json").read_text())
-    if any(manifest.get(k) != v for k,v in {"revision":source,"version":"13.0.0","repository":repository,
+    if any(manifest.get(k) != v for k,v in {"revision":source,"version":value,"repository":repository,
             "component":"server","run_id":str(acceptance["build_run"]),"channel":"candidate"}.items()):
         raise SystemExit("Server candidate source identity is invalid")
     images = {}
     for name in ("control-center", "traffic-gateway"):
         record = json.loads((directory/f"image-{name}.json").read_text())
         if (record.get("image") != "ghcr.io/zhanry/home-tunnel-" + name or record.get("revision") != source
-                or record.get("version") != "13.0.0" or record != {**record,"name":name}
+                or record.get("version") != value or record != {**record,"name":name}
                 or not re.fullmatch(r"sha256:[a-f0-9]{64}", record.get("digest", ""))):
             raise SystemExit("Server image identity is invalid")
         images[name] = {k:record[k] for k in ("image","digest","revision")}
@@ -242,7 +248,7 @@ def verify_server(args):
             "--certificate-oidc-issuer", "https://token.actions.githubusercontent.com", capture=True)
     if images != acceptance.get("images"):
         raise SystemExit("Released images differ from the actual integration fixture")
-    archive = directory/"NestLink-Server-13.0.0.tar.gz"
+    archive = directory / f"NestLink-Server-{value}.tar.gz"
     validate_acceptance("server", revision, [archive])
     for arch in ("amd64", "arm64"):
         smoke = json.loads((directory/f"server-smoke-{arch}.json").read_text())
@@ -252,8 +258,8 @@ def verify_server(args):
                 or images["traffic-gateway"]["digest"] not in smoke.get("gateway_image", "")):
             raise SystemExit("Server platform integration evidence differs from the accepted source")
     for image in images.values():
-        run("docker", "buildx", "imagetools", "create", "--tag", image["image"]+":13.0.0", image["image"]+"@"+image["digest"])
-        resolved = run("docker", "buildx", "imagetools", "inspect", "--format", "{{json .Manifest}}", image["image"]+":13.0.0", capture=True)
+        run("docker", "buildx", "imagetools", "create", "--tag", image["image"] + ":" + value, image["image"]+"@"+image["digest"])
+        resolved = run("docker", "buildx", "imagetools", "inspect", "--format", "{{json .Manifest}}", image["image"] + ":" + value, capture=True)
         if json.loads(resolved).get("digest") != image["digest"]:
             raise SystemExit("Stable image tag does not resolve to the accepted digest")
 
@@ -272,9 +278,9 @@ def publish(args):
     tag = "v" + version()
     repository = os.environ["GITHUB_REPOSITORY"]
     notes = ROOT / "docs" / "HOMEDESK_RELEASE.md"
-    stable = version() == "13.0.0"
+    stable = is_stable_release(version())
     creation = ["gh", "release", "create", tag, "--repo", repository, "--verify-tag", "--draft",
-                "--title", "nestlink " + version(), "--notes-file", str(notes)]
+                "--title", "NestLink " + version(), "--notes-file", str(notes)]
     if not stable: creation.append("--prerelease")
     run(*creation)
     run("gh", "release", "upload", tag, "--repo", repository, *[str(p) for p in sorted(directory.iterdir())])

@@ -1,0 +1,348 @@
+{
+  "schema_version": 1,
+  "product_version": "14.0.0",
+  "version": "14.0.0",
+  "repository": "ZHanry/home-tunnel-server",
+  "source_repository": "https://github.com/ZHanry/home-tunnel-server",
+  "source_sha": "299753a4c6580ac6bbc748cdee743489a3e17dba",
+  "source_ref": "299753a4c6580ac6bbc748cdee743489a3e17dba",
+  "started_at": "2026-10-10T13:38:50.225Z",
+  "captured_at": "2026-10-10T13:38:56.064Z",
+  "browser": "145.0.7632.6",
+  "initial_viewport": [
+    1440,
+    960
+  ],
+  "viewports": [
+    [
+      1440,
+      960
+    ],
+    [
+      390,
+      844
+    ],
+    [
+      320,
+      720
+    ]
+  ],
+  "locale": "zh-CN",
+  "image_digest": "sha256:b6e43b72494cca541c023b366e27504a46ac1acea0ec4c504adb4f15a6b0cb46",
+  "image_record_sha256": "d0381a10158d71f414520809d9a9b6b31707b7d920591c61985d2f6be6307aea",
+  "installed_images": {
+    "status": "passed",
+    "version": "14.0.0",
+    "server_source": "299753a4c6580ac6bbc748cdee743489a3e17dba",
+    "frps_image": "ghcr.io/zhanry/home-tunnel-frps@sha256:69dd1e9a05dbef35f44436db77f88e266a2772d57a86f889ffbd982ca7798ddb",
+    "fixture_images": {
+      "control-center": "ghcr.io/zhanry/home-tunnel-control-center@sha256:b6e43b72494cca541c023b366e27504a46ac1acea0ec4c504adb4f15a6b0cb46",
+      "traffic-gateway": "ghcr.io/zhanry/home-tunnel-traffic-gateway@sha256:8c07824ea38e5cf2297ad0ff80711c90f688b1a82f7fe9dc62d406a9328515cb",
+      "frps": "ghcr.io/zhanry/home-tunnel-frps@sha256:69dd1e9a05dbef35f44436db77f88e266a2772d57a86f889ffbd982ca7798ddb"
+    },
+    "checked_at": "2026-10-10T13:38:52.959369+00:00",
+    "images": {
+      "control-center": {
+        "immutable_image": "ghcr.io/zhanry/home-tunnel-control-center@sha256:b6e43b72494cca541c023b366e27504a46ac1acea0ec4c504adb4f15a6b0cb46",
+        "digest": "sha256:b6e43b72494cca541c023b366e27504a46ac1acea0ec4c504adb4f15a6b0cb46",
+        "image_id": "sha256:b6e43b72494cca541c023b366e27504a46ac1acea0ec4c504adb4f15a6b0cb46",
+        "source_revision": "299753a4c6580ac6bbc748cdee743489a3e17dba",
+        "image_record_sha256": "d0381a10158d71f414520809d9a9b6b31707b7d920591c61985d2f6be6307aea",
+        "architecture": "amd64"
+      },
+      "traffic-gateway": {
+        "immutable_image": "ghcr.io/zhanry/home-tunnel-traffic-gateway@sha256:8c07824ea38e5cf2297ad0ff80711c90f688b1a82f7fe9dc62d406a9328515cb",
+        "digest": "sha256:8c07824ea38e5cf2297ad0ff80711c90f688b1a82f7fe9dc62d406a9328515cb",
+        "image_id": "sha256:8c07824ea38e5cf2297ad0ff80711c90f688b1a82f7fe9dc62d406a9328515cb",
+        "source_revision": "299753a4c6580ac6bbc748cdee743489a3e17dba",
+        "image_record_sha256": "89d47e13b7691d4800edc845d28e2e16bb2d5e5a9d1953376b3ffb9450c3b72b",
+        "architecture": "amd64"
+      },
+      "frps": {
+        "immutable_image": "ghcr.io/zhanry/home-tunnel-frps@sha256:69dd1e9a05dbef35f44436db77f88e266a2772d57a86f889ffbd982ca7798ddb",
+        "digest": "sha256:69dd1e9a05dbef35f44436db77f88e266a2772d57a86f889ffbd982ca7798ddb",
+        "image_id": "sha256:69dd1e9a05dbef35f44436db77f88e266a2772d57a86f889ffbd982ca7798ddb",
+        "source_revision": "0ad5a6d0e463d8d1b496e0642bf8b010ba3ec263",
+        "image_record_sha256": "995468895350a9687d1eb7130e8cc59d38857686184a75d920ed03fb7597dff2",
+        "architecture": "amd64"
+      }
+    },
+    "scope": "Read-only inspection of task Docker daemon and container/image identities"
+  },
+  "installed_images_after_capture": {
+    "status": "passed",
+    "version": "14.0.0",
+    "server_source": "299753a4c6580ac6bbc748cdee743489a3e17dba",
+    "frps_image": "ghcr.io/zhanry/home-tunnel-frps@sha256:69dd1e9a05dbef35f44436db77f88e266a2772d57a86f889ffbd982ca7798ddb",
+    "fixture_images": {
+      "control-center": "ghcr.io/zhanry/home-tunnel-control-center@sha256:b6e43b72494cca541c023b366e27504a46ac1acea0ec4c504adb4f15a6b0cb46",
+      "traffic-gateway": "ghcr.io/zhanry/home-tunnel-traffic-gateway@sha256:8c07824ea38e5cf2297ad0ff80711c90f688b1a82f7fe9dc62d406a9328515cb",
+      "frps": "ghcr.io/zhanry/home-tunnel-frps@sha256:69dd1e9a05dbef35f44436db77f88e266a2772d57a86f889ffbd982ca7798ddb"
+    },
+    "checked_at": "2026-10-10T13:38:59.566719+00:00",
+    "images": {
+      "control-center": {
+        "immutable_image": "ghcr.io/zhanry/home-tunnel-control-center@sha256:b6e43b72494cca541c023b366e27504a46ac1acea0ec4c504adb4f15a6b0cb46",
+        "digest": "sha256:b6e43b72494cca541c023b366e27504a46ac1acea0ec4c504adb4f15a6b0cb46",
+        "image_id": "sha256:b6e43b72494cca541c023b366e27504a46ac1acea0ec4c504adb4f15a6b0cb46",
+        "source_revision": "299753a4c6580ac6bbc748cdee743489a3e17dba",
+        "image_record_sha256": "d0381a10158d71f414520809d9a9b6b31707b7d920591c61985d2f6be6307aea",
+        "architecture": "amd64"
+      },
+      "traffic-gateway": {
+        "immutable_image": "ghcr.io/zhanry/home-tunnel-traffic-gateway@sha256:8c07824ea38e5cf2297ad0ff80711c90f688b1a82f7fe9dc62d406a9328515cb",
+        "digest": "sha256:8c07824ea38e5cf2297ad0ff80711c90f688b1a82f7fe9dc62d406a9328515cb",
+        "image_id": "sha256:8c07824ea38e5cf2297ad0ff80711c90f688b1a82f7fe9dc62d406a9328515cb",
+        "source_revision": "299753a4c6580ac6bbc748cdee743489a3e17dba",
+        "image_record_sha256": "89d47e13b7691d4800edc845d28e2e16bb2d5e5a9d1953376b3ffb9450c3b72b",
+        "architecture": "amd64"
+      },
+      "frps": {
+        "immutable_image": "ghcr.io/zhanry/home-tunnel-frps@sha256:69dd1e9a05dbef35f44436db77f88e266a2772d57a86f889ffbd982ca7798ddb",
+        "digest": "sha256:69dd1e9a05dbef35f44436db77f88e266a2772d57a86f889ffbd982ca7798ddb",
+        "image_id": "sha256:69dd1e9a05dbef35f44436db77f88e266a2772d57a86f889ffbd982ca7798ddb",
+        "source_revision": "0ad5a6d0e463d8d1b496e0642bf8b010ba3ec263",
+        "image_record_sha256": "995468895350a9687d1eb7130e8cc59d38857686184a75d920ed03fb7597dff2",
+        "architecture": "amd64"
+      }
+    },
+    "scope": "Read-only inspection of task Docker daemon and container/image identities"
+  },
+  "frps_image": "ghcr.io/zhanry/home-tunnel-frps@sha256:69dd1e9a05dbef35f44436db77f88e266a2772d57a86f889ffbd982ca7798ddb",
+  "fixture_images": {
+    "control-center": "ghcr.io/zhanry/home-tunnel-control-center@sha256:b6e43b72494cca541c023b366e27504a46ac1acea0ec4c504adb4f15a6b0cb46",
+    "traffic-gateway": "ghcr.io/zhanry/home-tunnel-traffic-gateway@sha256:8c07824ea38e5cf2297ad0ff80711c90f688b1a82f7fe9dc62d406a9328515cb",
+    "frps": "ghcr.io/zhanry/home-tunnel-frps@sha256:69dd1e9a05dbef35f44436db77f88e266a2772d57a86f889ffbd982ca7798ddb"
+  },
+  "fixture_data": true,
+  "synthetic_data": false,
+  "capture_kind": "web-ui",
+  "installed_application": true,
+  "actual_product_ui": true,
+  "ui_source_modified": false,
+  "static_ui_source_verified": true,
+  "verified_static_assets": [
+    {
+      "path": "Hearth.svg",
+      "sha256": "7d7f9364ff04a67f3995e6f2e7e323205b1f08a957aaffee5ff9eb1b5d63d63c",
+      "size_bytes": 623
+    },
+    {
+      "path": "HomeTunnel.svg",
+      "sha256": "7d7f9364ff04a67f3995e6f2e7e323205b1f08a957aaffee5ff9eb1b5d63d63c",
+      "size_bytes": 623
+    },
+    {
+      "path": "NestLink.svg",
+      "sha256": "7d7f9364ff04a67f3995e6f2e7e323205b1f08a957aaffee5ff9eb1b5d63d63c",
+      "size_bytes": 623
+    },
+    {
+      "path": "app.js",
+      "sha256": "df81d46c8da8e9feb1926fa86225e23fc5019f7387a06e09086f156e0ecc4951",
+      "size_bytes": 99976
+    },
+    {
+      "path": "console.css",
+      "sha256": "025bc754d85cae36d3091df75ca81c7a5b383f9d6480e74a92bc4a9e88f18a87",
+      "size_bytes": 33609
+    },
+    {
+      "path": "index.html",
+      "sha256": "e6014319a413fe7e22df437b38991da607613bb68c4e9535120cbdd097116cb7",
+      "size_bytes": 17738
+    },
+    {
+      "path": "modules/account-security.js",
+      "sha256": "161e794f380249ad868329f1b9461aba3638c50f7be80afeec8c7dfaeddf5f50",
+      "size_bytes": 1629
+    },
+    {
+      "path": "modules/api.js",
+      "sha256": "82222662fdc8a849f8ffe7a92dddb1bf56240b6a4e38088e1b2706b3b9d256f8",
+      "size_bytes": 5658
+    },
+    {
+      "path": "modules/browser-remote.js",
+      "sha256": "2a051492255b0d3b50eeae6850da026eecb95784c560ccec4a532feede5e0bf4",
+      "size_bytes": 12259
+    },
+    {
+      "path": "modules/connections.js",
+      "sha256": "e6326421975d2f156970918b0d438937b7f7246b07d191ec763ba48105218936",
+      "size_bytes": 7103
+    },
+    {
+      "path": "modules/devices.js",
+      "sha256": "25c543b3e2c94694969a4689d20d93ee0e1720719acc7647bcc80ff03dc54405",
+      "size_bytes": 7215
+    },
+    {
+      "path": "modules/format.js",
+      "sha256": "b72123e07ead6d4a7bbb335c9146bd610af4dcd561dfe03a03a9397f25742854",
+      "size_bytes": 2894
+    },
+    {
+      "path": "modules/forms.js",
+      "sha256": "869c4fd91e62fa2ff86c5c9eceda89dd9c6c092a8f0a611b4403084e80fe245d",
+      "size_bytes": 2982
+    },
+    {
+      "path": "modules/homedesk.js",
+      "sha256": "406b1e08c254a52887ae1eaeeca587587dd87a80e5b0bb3cefb0738aaf9b0beb",
+      "size_bytes": 3684
+    },
+    {
+      "path": "modules/locale.js",
+      "sha256": "9ea30d9dc9d80539bbd7e1d67b3b3106bb669522877cfbb9050d28ec8501f334",
+      "size_bytes": 74798
+    },
+    {
+      "path": "modules/pagination.js",
+      "sha256": "ddca3cd92859ed438cd9ccccb6512c5ffb6ee921f56ffa89633fea0b60cb95d8",
+      "size_bytes": 1010
+    },
+    {
+      "path": "modules/physical-devices.js",
+      "sha256": "99699585f2ab099d3c9945b429b30913f9ddca6fa3810efbb05e9525c16fbb33",
+      "size_bytes": 2968
+    },
+    {
+      "path": "modules/realtime.js",
+      "sha256": "735922511f2da65b97a4cb35c1052878ec4fd8da6b14f8c570828c2b7c3f76f3",
+      "size_bytes": 2714
+    },
+    {
+      "path": "modules/remote/http.js",
+      "sha256": "c4f39657f93fdd28c6688b10ebe8b2dcecd1223818fb8f9cf0fbae92ebca270c",
+      "size_bytes": 5559
+    },
+    {
+      "path": "modules/remote/identity.js",
+      "sha256": "01336ee39c6fdffb49b31c78e0010f7676266de80ab9b6706594706526dfad9a",
+      "size_bytes": 9613
+    },
+    {
+      "path": "modules/remote/input.js",
+      "sha256": "d460782af754a81066dcf5a59320ff0ad6da4af559b53742ed200acddffb2850",
+      "size_bytes": 10962
+    },
+    {
+      "path": "modules/remote/payload.generated.js",
+      "sha256": "f556b7fde86e3bb7fcb21e346348653c242efe355b9e18958ee786dffba23940",
+      "size_bytes": 3444
+    },
+    {
+      "path": "modules/remote/protocol.generated.js",
+      "sha256": "ba94122832b8849d5854432d102208d96dbc0e0f6a998aec8d58e6eaf4e4f55e",
+      "size_bytes": 54217
+    },
+    {
+      "path": "modules/remote/protocol.js",
+      "sha256": "4fa7ff66cd0c1866521397458e5be35d4e7d02d38e4575f5233dff1b6199d8a7",
+      "size_bytes": 9723
+    },
+    {
+      "path": "modules/remote/session.js",
+      "sha256": "15bb00cb74b80e3d27aa62dc4bf9e900a8c2e35354d192d4181ccc88eb99600b",
+      "size_bytes": 34650
+    },
+    {
+      "path": "modules/remote/sha256-stream.js",
+      "sha256": "73fad96572877e454e16c7d5b3274ad54e12cceb22e82964ee2254ff30bebe28",
+      "size_bytes": 3416
+    },
+    {
+      "path": "modules/remote/signal.js",
+      "sha256": "13dc5b29ea900bd9b000f42bfe7664d7bac0e7c3e1cacf137208d16fd8a05ae4",
+      "size_bytes": 4852
+    },
+    {
+      "path": "modules/remote/transfer.js",
+      "sha256": "cfc0830e8593cebe1afbd478099b822c0f354cb1803887783bb86fc24cab0fca",
+      "size_bytes": 20087
+    },
+    {
+      "path": "modules/remote/translations.js",
+      "sha256": "a7789dde614615e332ea17dd5d06e429bd2343bd1d7bb734f1da86a204496f2e",
+      "size_bytes": 12426
+    },
+    {
+      "path": "modules/remote/view.js",
+      "sha256": "315e81b9ebaf4150c21f7843e724911e33b3b13d02fccd76161076b303c63103",
+      "size_bytes": 71018
+    },
+    {
+      "path": "modules/state.js",
+      "sha256": "8ad4cd8fb91b3dc53eec4668f653bafb2732a79bf375f21c2df23ae4045ec029",
+      "size_bytes": 528
+    },
+    {
+      "path": "modules/tunnel-model.js",
+      "sha256": "d84115718fa2067e8ad7c9a38607e301b056a76bea0aa9ba6417f9078534e3f3",
+      "size_bytes": 2782
+    },
+    {
+      "path": "modules/tunnel-wizard.js",
+      "sha256": "847cbe2f7cfda1bac0ffd2d3146da4cdc2773acf3b2f99e3cf207aeb7d56e750",
+      "size_bytes": 15183
+    },
+    {
+      "path": "nestlink.css",
+      "sha256": "394e623c45a9d2f62d2ac90fa4048b8af18d46f28c52d3569dc7346346adb769",
+      "size_bytes": 13534
+    },
+    {
+      "path": "prototype-theme.css",
+      "sha256": "0e6896b2dc688b6b446598815d9c3a1575e89392a834d1f86772f0fb5a9233d3",
+      "size_bytes": 28312
+    },
+    {
+      "path": "remote.css",
+      "sha256": "e79b67245a1b609350abbe3c0fe6492f52b57e7e400e53034d78df6727fb3d8a",
+      "size_bytes": 26536
+    },
+    {
+      "path": "theme.js",
+      "sha256": "ef07931dd68a85cbf752a9ac1e6fb6dee75bfccfb5cc65d50f076aaf4b4292ce",
+      "size_bytes": 837
+    }
+  ],
+  "remote_session_verified": false,
+  "capture_status": "captured-awaiting-visual-review",
+  "edited": false,
+  "capture_script_sha256": "ee342a7abea3ed76d9a6c2dc15f15b8de5721887c10a846a0c02e570b0e78eb7",
+  "capture_views_sha256": "7ff65f43a893c8dec0fc0e2adb6bf247bf8a61b6c00d77acf8cae52aecbb2c92",
+  "method": "Playwright Chromium original PNGs of actual pinned S3 server UI; verified served bytes against exact Git blobs before capture and actual three images before/after",
+  "scope": "Server UI pixels only. New independent sessions. Existing devices, credentials and configurations preserved. No client runtime, media or physical network claim.",
+  "captures": [
+    {
+      "file": "admin-console.png",
+      "description": "14.0.0 actual administrator system overview after task host-network health port adaptation",
+      "sha256": "5c775d6bd5f9fc148bfae0624dd50ee0d404a70e177ed9e448634440d5a126b5",
+      "bytes": 55039,
+      "width": 1440,
+      "height": 960,
+      "full_page": true,
+      "edited": false,
+      "captured_at": "2026-10-10T13:38:53.822Z",
+      "capture_context": {
+        "role": "admin",
+        "session": "new independent capture session"
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 960
+      },
+      "observed_component_text": "在线设备\n1\n当前在线\n运行中连接\n1\n共 1 条连接\n24 小时流量\n25 B\n实际使用量\n启用账号\n4\n独立访问\n流量最高的连接\n过去 24 小时 · 按实际使用量排序\n全部连接\n服务\t上传\t下载\t请求\n\nNestLink14 migration baseline\nqa14-controller\n\t0 B\t25 B\t1\n系统组件\n健康\n控制中心\n正常\nSQLite\n正常 · 0 ms\n策略队列\n正常 · 待处理 0\n流量网关\n正常 · 23 ms\nFRPS\n正常 · 7.2 ms\nCaddy\n正常 · 7.7 ms\n备份\n待确认 · 尚无备份记录"
+    }
+  ],
+  "task_health_adapter": {
+    "purpose": "Fixture host-network port adaptation only; original abnormal screenshot preserved.",
+    "repair_record_sha256": "744feca48292469afff7606f8d47a9f64e67f6608773d05aa594e4411c2a1012",
+    "listen": "127.0.0.1:8080",
+    "upstream": "http://127.0.0.1:18080/healthz",
+    "upstream_host": "127.0.0.1:8080",
+    "changed_environment_key": "GATEWAY_HEALTH_URL"
+  }
+}

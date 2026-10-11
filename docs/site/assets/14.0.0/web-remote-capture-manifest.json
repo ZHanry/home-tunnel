@@ -1,0 +1,3056 @@
+{
+  "schema_version": 1,
+  "product_version": "14.0.0",
+  "version": "14.0.0",
+  "repository": "ZHanry/home-tunnel-server",
+  "source_repository": "https://github.com/ZHanry/home-tunnel-server",
+  "source_sha": "299753a4c6580ac6bbc748cdee743489a3e17dba",
+  "source_ref": "299753a4c6580ac6bbc748cdee743489a3e17dba",
+  "started_at": "2026-10-10T13:27:13.156Z",
+  "captured_at": "2026-10-10T13:27:30.457Z",
+  "browser": "145.0.7632.6",
+  "initial_viewport": [
+    1440,
+    960
+  ],
+  "viewports": [
+    [
+      1440,
+      960
+    ],
+    [
+      390,
+      844
+    ],
+    [
+      320,
+      720
+    ]
+  ],
+  "locale": "zh-CN",
+  "image_digest": "sha256:b6e43b72494cca541c023b366e27504a46ac1acea0ec4c504adb4f15a6b0cb46",
+  "image_record_sha256": "d0381a10158d71f414520809d9a9b6b31707b7d920591c61985d2f6be6307aea",
+  "installed_images": {
+    "status": "passed",
+    "version": "14.0.0",
+    "server_source": "299753a4c6580ac6bbc748cdee743489a3e17dba",
+    "frps_image": "ghcr.io/zhanry/home-tunnel-frps@sha256:69dd1e9a05dbef35f44436db77f88e266a2772d57a86f889ffbd982ca7798ddb",
+    "fixture_images": {
+      "control-center": "ghcr.io/zhanry/home-tunnel-control-center@sha256:b6e43b72494cca541c023b366e27504a46ac1acea0ec4c504adb4f15a6b0cb46",
+      "traffic-gateway": "ghcr.io/zhanry/home-tunnel-traffic-gateway@sha256:8c07824ea38e5cf2297ad0ff80711c90f688b1a82f7fe9dc62d406a9328515cb",
+      "frps": "ghcr.io/zhanry/home-tunnel-frps@sha256:69dd1e9a05dbef35f44436db77f88e266a2772d57a86f889ffbd982ca7798ddb"
+    },
+    "checked_at": "2026-10-10T13:27:15.576015+00:00",
+    "images": {
+      "control-center": {
+        "immutable_image": "ghcr.io/zhanry/home-tunnel-control-center@sha256:b6e43b72494cca541c023b366e27504a46ac1acea0ec4c504adb4f15a6b0cb46",
+        "digest": "sha256:b6e43b72494cca541c023b366e27504a46ac1acea0ec4c504adb4f15a6b0cb46",
+        "image_id": "sha256:b6e43b72494cca541c023b366e27504a46ac1acea0ec4c504adb4f15a6b0cb46",
+        "source_revision": "299753a4c6580ac6bbc748cdee743489a3e17dba",
+        "image_record_sha256": "d0381a10158d71f414520809d9a9b6b31707b7d920591c61985d2f6be6307aea",
+        "architecture": "amd64"
+      },
+      "traffic-gateway": {
+        "immutable_image": "ghcr.io/zhanry/home-tunnel-traffic-gateway@sha256:8c07824ea38e5cf2297ad0ff80711c90f688b1a82f7fe9dc62d406a9328515cb",
+        "digest": "sha256:8c07824ea38e5cf2297ad0ff80711c90f688b1a82f7fe9dc62d406a9328515cb",
+        "image_id": "sha256:8c07824ea38e5cf2297ad0ff80711c90f688b1a82f7fe9dc62d406a9328515cb",
+        "source_revision": "299753a4c6580ac6bbc748cdee743489a3e17dba",
+        "image_record_sha256": "89d47e13b7691d4800edc845d28e2e16bb2d5e5a9d1953376b3ffb9450c3b72b",
+        "architecture": "amd64"
+      },
+      "frps": {
+        "immutable_image": "ghcr.io/zhanry/home-tunnel-frps@sha256:69dd1e9a05dbef35f44436db77f88e266a2772d57a86f889ffbd982ca7798ddb",
+        "digest": "sha256:69dd1e9a05dbef35f44436db77f88e266a2772d57a86f889ffbd982ca7798ddb",
+        "image_id": "sha256:69dd1e9a05dbef35f44436db77f88e266a2772d57a86f889ffbd982ca7798ddb",
+        "source_revision": "0ad5a6d0e463d8d1b496e0642bf8b010ba3ec263",
+        "image_record_sha256": "995468895350a9687d1eb7130e8cc59d38857686184a75d920ed03fb7597dff2",
+        "architecture": "amd64"
+      }
+    },
+    "scope": "Read-only inspection of task Docker daemon and container/image identities"
+  },
+  "installed_images_after_capture": {
+    "status": "passed",
+    "version": "14.0.0",
+    "server_source": "299753a4c6580ac6bbc748cdee743489a3e17dba",
+    "frps_image": "ghcr.io/zhanry/home-tunnel-frps@sha256:69dd1e9a05dbef35f44436db77f88e266a2772d57a86f889ffbd982ca7798ddb",
+    "fixture_images": {
+      "control-center": "ghcr.io/zhanry/home-tunnel-control-center@sha256:b6e43b72494cca541c023b366e27504a46ac1acea0ec4c504adb4f15a6b0cb46",
+      "traffic-gateway": "ghcr.io/zhanry/home-tunnel-traffic-gateway@sha256:8c07824ea38e5cf2297ad0ff80711c90f688b1a82f7fe9dc62d406a9328515cb",
+      "frps": "ghcr.io/zhanry/home-tunnel-frps@sha256:69dd1e9a05dbef35f44436db77f88e266a2772d57a86f889ffbd982ca7798ddb"
+    },
+    "checked_at": "2026-10-10T13:27:33.117076+00:00",
+    "images": {
+      "control-center": {
+        "immutable_image": "ghcr.io/zhanry/home-tunnel-control-center@sha256:b6e43b72494cca541c023b366e27504a46ac1acea0ec4c504adb4f15a6b0cb46",
+        "digest": "sha256:b6e43b72494cca541c023b366e27504a46ac1acea0ec4c504adb4f15a6b0cb46",
+        "image_id": "sha256:b6e43b72494cca541c023b366e27504a46ac1acea0ec4c504adb4f15a6b0cb46",
+        "source_revision": "299753a4c6580ac6bbc748cdee743489a3e17dba",
+        "image_record_sha256": "d0381a10158d71f414520809d9a9b6b31707b7d920591c61985d2f6be6307aea",
+        "architecture": "amd64"
+      },
+      "traffic-gateway": {
+        "immutable_image": "ghcr.io/zhanry/home-tunnel-traffic-gateway@sha256:8c07824ea38e5cf2297ad0ff80711c90f688b1a82f7fe9dc62d406a9328515cb",
+        "digest": "sha256:8c07824ea38e5cf2297ad0ff80711c90f688b1a82f7fe9dc62d406a9328515cb",
+        "image_id": "sha256:8c07824ea38e5cf2297ad0ff80711c90f688b1a82f7fe9dc62d406a9328515cb",
+        "source_revision": "299753a4c6580ac6bbc748cdee743489a3e17dba",
+        "image_record_sha256": "89d47e13b7691d4800edc845d28e2e16bb2d5e5a9d1953376b3ffb9450c3b72b",
+        "architecture": "amd64"
+      },
+      "frps": {
+        "immutable_image": "ghcr.io/zhanry/home-tunnel-frps@sha256:69dd1e9a05dbef35f44436db77f88e266a2772d57a86f889ffbd982ca7798ddb",
+        "digest": "sha256:69dd1e9a05dbef35f44436db77f88e266a2772d57a86f889ffbd982ca7798ddb",
+        "image_id": "sha256:69dd1e9a05dbef35f44436db77f88e266a2772d57a86f889ffbd982ca7798ddb",
+        "source_revision": "0ad5a6d0e463d8d1b496e0642bf8b010ba3ec263",
+        "image_record_sha256": "995468895350a9687d1eb7130e8cc59d38857686184a75d920ed03fb7597dff2",
+        "architecture": "amd64"
+      }
+    },
+    "scope": "Read-only inspection of task Docker daemon and container/image identities"
+  },
+  "frps_image": "ghcr.io/zhanry/home-tunnel-frps@sha256:69dd1e9a05dbef35f44436db77f88e266a2772d57a86f889ffbd982ca7798ddb",
+  "fixture_images": {
+    "control-center": "ghcr.io/zhanry/home-tunnel-control-center@sha256:b6e43b72494cca541c023b366e27504a46ac1acea0ec4c504adb4f15a6b0cb46",
+    "traffic-gateway": "ghcr.io/zhanry/home-tunnel-traffic-gateway@sha256:8c07824ea38e5cf2297ad0ff80711c90f688b1a82f7fe9dc62d406a9328515cb",
+    "frps": "ghcr.io/zhanry/home-tunnel-frps@sha256:69dd1e9a05dbef35f44436db77f88e266a2772d57a86f889ffbd982ca7798ddb"
+  },
+  "fixture_data": true,
+  "synthetic_data": false,
+  "capture_kind": "web-ui",
+  "installed_application": true,
+  "actual_product_ui": true,
+  "ui_source_modified": false,
+  "static_ui_source_verified": true,
+  "verified_static_assets": [
+    {
+      "path": "Hearth.svg",
+      "sha256": "7d7f9364ff04a67f3995e6f2e7e323205b1f08a957aaffee5ff9eb1b5d63d63c",
+      "size_bytes": 623
+    },
+    {
+      "path": "HomeTunnel.svg",
+      "sha256": "7d7f9364ff04a67f3995e6f2e7e323205b1f08a957aaffee5ff9eb1b5d63d63c",
+      "size_bytes": 623
+    },
+    {
+      "path": "NestLink.svg",
+      "sha256": "7d7f9364ff04a67f3995e6f2e7e323205b1f08a957aaffee5ff9eb1b5d63d63c",
+      "size_bytes": 623
+    },
+    {
+      "path": "app.js",
+      "sha256": "df81d46c8da8e9feb1926fa86225e23fc5019f7387a06e09086f156e0ecc4951",
+      "size_bytes": 99976
+    },
+    {
+      "path": "console.css",
+      "sha256": "025bc754d85cae36d3091df75ca81c7a5b383f9d6480e74a92bc4a9e88f18a87",
+      "size_bytes": 33609
+    },
+    {
+      "path": "index.html",
+      "sha256": "e6014319a413fe7e22df437b38991da607613bb68c4e9535120cbdd097116cb7",
+      "size_bytes": 17738
+    },
+    {
+      "path": "modules/account-security.js",
+      "sha256": "161e794f380249ad868329f1b9461aba3638c50f7be80afeec8c7dfaeddf5f50",
+      "size_bytes": 1629
+    },
+    {
+      "path": "modules/api.js",
+      "sha256": "82222662fdc8a849f8ffe7a92dddb1bf56240b6a4e38088e1b2706b3b9d256f8",
+      "size_bytes": 5658
+    },
+    {
+      "path": "modules/browser-remote.js",
+      "sha256": "2a051492255b0d3b50eeae6850da026eecb95784c560ccec4a532feede5e0bf4",
+      "size_bytes": 12259
+    },
+    {
+      "path": "modules/connections.js",
+      "sha256": "e6326421975d2f156970918b0d438937b7f7246b07d191ec763ba48105218936",
+      "size_bytes": 7103
+    },
+    {
+      "path": "modules/devices.js",
+      "sha256": "25c543b3e2c94694969a4689d20d93ee0e1720719acc7647bcc80ff03dc54405",
+      "size_bytes": 7215
+    },
+    {
+      "path": "modules/format.js",
+      "sha256": "b72123e07ead6d4a7bbb335c9146bd610af4dcd561dfe03a03a9397f25742854",
+      "size_bytes": 2894
+    },
+    {
+      "path": "modules/forms.js",
+      "sha256": "869c4fd91e62fa2ff86c5c9eceda89dd9c6c092a8f0a611b4403084e80fe245d",
+      "size_bytes": 2982
+    },
+    {
+      "path": "modules/homedesk.js",
+      "sha256": "406b1e08c254a52887ae1eaeeca587587dd87a80e5b0bb3cefb0738aaf9b0beb",
+      "size_bytes": 3684
+    },
+    {
+      "path": "modules/locale.js",
+      "sha256": "9ea30d9dc9d80539bbd7e1d67b3b3106bb669522877cfbb9050d28ec8501f334",
+      "size_bytes": 74798
+    },
+    {
+      "path": "modules/pagination.js",
+      "sha256": "ddca3cd92859ed438cd9ccccb6512c5ffb6ee921f56ffa89633fea0b60cb95d8",
+      "size_bytes": 1010
+    },
+    {
+      "path": "modules/physical-devices.js",
+      "sha256": "99699585f2ab099d3c9945b429b30913f9ddca6fa3810efbb05e9525c16fbb33",
+      "size_bytes": 2968
+    },
+    {
+      "path": "modules/realtime.js",
+      "sha256": "735922511f2da65b97a4cb35c1052878ec4fd8da6b14f8c570828c2b7c3f76f3",
+      "size_bytes": 2714
+    },
+    {
+      "path": "modules/remote/http.js",
+      "sha256": "c4f39657f93fdd28c6688b10ebe8b2dcecd1223818fb8f9cf0fbae92ebca270c",
+      "size_bytes": 5559
+    },
+    {
+      "path": "modules/remote/identity.js",
+      "sha256": "01336ee39c6fdffb49b31c78e0010f7676266de80ab9b6706594706526dfad9a",
+      "size_bytes": 9613
+    },
+    {
+      "path": "modules/remote/input.js",
+      "sha256": "d460782af754a81066dcf5a59320ff0ad6da4af559b53742ed200acddffb2850",
+      "size_bytes": 10962
+    },
+    {
+      "path": "modules/remote/payload.generated.js",
+      "sha256": "f556b7fde86e3bb7fcb21e346348653c242efe355b9e18958ee786dffba23940",
+      "size_bytes": 3444
+    },
+    {
+      "path": "modules/remote/protocol.generated.js",
+      "sha256": "ba94122832b8849d5854432d102208d96dbc0e0f6a998aec8d58e6eaf4e4f55e",
+      "size_bytes": 54217
+    },
+    {
+      "path": "modules/remote/protocol.js",
+      "sha256": "4fa7ff66cd0c1866521397458e5be35d4e7d02d38e4575f5233dff1b6199d8a7",
+      "size_bytes": 9723
+    },
+    {
+      "path": "modules/remote/session.js",
+      "sha256": "15bb00cb74b80e3d27aa62dc4bf9e900a8c2e35354d192d4181ccc88eb99600b",
+      "size_bytes": 34650
+    },
+    {
+      "path": "modules/remote/sha256-stream.js",
+      "sha256": "73fad96572877e454e16c7d5b3274ad54e12cceb22e82964ee2254ff30bebe28",
+      "size_bytes": 3416
+    },
+    {
+      "path": "modules/remote/signal.js",
+      "sha256": "13dc5b29ea900bd9b000f42bfe7664d7bac0e7c3e1cacf137208d16fd8a05ae4",
+      "size_bytes": 4852
+    },
+    {
+      "path": "modules/remote/transfer.js",
+      "sha256": "cfc0830e8593cebe1afbd478099b822c0f354cb1803887783bb86fc24cab0fca",
+      "size_bytes": 20087
+    },
+    {
+      "path": "modules/remote/translations.js",
+      "sha256": "a7789dde614615e332ea17dd5d06e429bd2343bd1d7bb734f1da86a204496f2e",
+      "size_bytes": 12426
+    },
+    {
+      "path": "modules/remote/view.js",
+      "sha256": "315e81b9ebaf4150c21f7843e724911e33b3b13d02fccd76161076b303c63103",
+      "size_bytes": 71018
+    },
+    {
+      "path": "modules/state.js",
+      "sha256": "8ad4cd8fb91b3dc53eec4668f653bafb2732a79bf375f21c2df23ae4045ec029",
+      "size_bytes": 528
+    },
+    {
+      "path": "modules/tunnel-model.js",
+      "sha256": "d84115718fa2067e8ad7c9a38607e301b056a76bea0aa9ba6417f9078534e3f3",
+      "size_bytes": 2782
+    },
+    {
+      "path": "modules/tunnel-wizard.js",
+      "sha256": "847cbe2f7cfda1bac0ffd2d3146da4cdc2773acf3b2f99e3cf207aeb7d56e750",
+      "size_bytes": 15183
+    },
+    {
+      "path": "nestlink.css",
+      "sha256": "394e623c45a9d2f62d2ac90fa4048b8af18d46f28c52d3569dc7346346adb769",
+      "size_bytes": 13534
+    },
+    {
+      "path": "prototype-theme.css",
+      "sha256": "0e6896b2dc688b6b446598815d9c3a1575e89392a834d1f86772f0fb5a9233d3",
+      "size_bytes": 28312
+    },
+    {
+      "path": "remote.css",
+      "sha256": "e79b67245a1b609350abbe3c0fe6492f52b57e7e400e53034d78df6727fb3d8a",
+      "size_bytes": 26536
+    },
+    {
+      "path": "theme.js",
+      "sha256": "ef07931dd68a85cbf752a9ac1e6fb6dee75bfccfb5cc65d50f076aaf4b4292ce",
+      "size_bytes": 837
+    }
+  ],
+  "remote_session_verified": false,
+  "capture_status": "captured-awaiting-visual-review",
+  "edited": false,
+  "capture_script_sha256": "6f9fffde06be64b7d3d1336fdd1f422f3b2cd0263e2312d27290429b1e0ef167",
+  "capture_views_sha256": "7ff65f43a893c8dec0fc0e2adb6bf247bf8a61b6c00d77acf8cae52aecbb2c92",
+  "method": "Playwright Chromium original PNGs of actual pinned S3 server UI; verified served bytes against exact Git blobs before capture and actual three images before/after",
+  "scope": "Server UI pixels only. New independent sessions. Existing devices, credentials and configurations preserved. No client runtime, media or physical network claim.",
+  "captures": [
+    {
+      "file": "devices-light.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:16.843Z",
+      "capture_context": {
+        "role": "admin",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web device management, light theme; existing isolated test accounts and device records; UI only",
+      "sha256": "96e3c07e72d216f02141a14df5dbedaee473422e1e46eb7a1f0621dff25d9b1f",
+      "bytes": 30679,
+      "width": 1440,
+      "height": 960,
+      "full_page": true,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 1440,
+        "height": 960
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 0
+      },
+      "document_size": {
+        "width": 1440,
+        "height": 960
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "light",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 49,
+        "width": 220,
+        "height": 911,
+        "bottom": 960,
+        "right": 220
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 16,
+          "y": 77,
+          "width": 187,
+          "height": 44,
+          "bottom": 121,
+          "right": 203
+        },
+        {
+          "view": "remote",
+          "x": 16,
+          "y": 125,
+          "width": 187,
+          "height": 44,
+          "bottom": 169,
+          "right": 203
+        },
+        {
+          "view": "connections",
+          "x": 16,
+          "y": 173,
+          "width": 187,
+          "height": 44,
+          "bottom": 217,
+          "right": 203
+        },
+        {
+          "view": "account",
+          "x": 68,
+          "y": 884,
+          "width": 125,
+          "height": 44,
+          "bottom": 928,
+          "right": 193
+        }
+      ]
+    },
+    {
+      "file": "devices-dark.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:17.029Z",
+      "capture_context": {
+        "role": "admin",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web device management, dark theme; existing isolated test accounts and device records; UI only",
+      "sha256": "6fbe0d21f935be4f6a07873a34877e44ef2ce216dd20a571c692d75811ed5c02",
+      "bytes": 30856,
+      "width": 1440,
+      "height": 960,
+      "full_page": true,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 1440,
+        "height": 960
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 0
+      },
+      "document_size": {
+        "width": 1440,
+        "height": 960
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "dark",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 49,
+        "width": 220,
+        "height": 911,
+        "bottom": 960,
+        "right": 220
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 16,
+          "y": 77,
+          "width": 187,
+          "height": 44,
+          "bottom": 121,
+          "right": 203
+        },
+        {
+          "view": "remote",
+          "x": 16,
+          "y": 125,
+          "width": 187,
+          "height": 44,
+          "bottom": 169,
+          "right": 203
+        },
+        {
+          "view": "connections",
+          "x": 16,
+          "y": 173,
+          "width": 187,
+          "height": 44,
+          "bottom": 217,
+          "right": 203
+        },
+        {
+          "view": "account",
+          "x": 68,
+          "y": 884,
+          "width": 125,
+          "height": 44,
+          "bottom": 928,
+          "right": 193
+        }
+      ]
+    },
+    {
+      "file": "remote-entry.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:17.256Z",
+      "capture_context": {
+        "role": "admin",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web remote assistance entry; no session or media assertion; existing isolated test accounts and device records; UI only",
+      "sha256": "ca90ce27240f2f2accce75038591cafaa76925f3c85bc8a14967e1560a70db7f",
+      "bytes": 34880,
+      "width": 1440,
+      "height": 960,
+      "full_page": true,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 1440,
+        "height": 960
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 0
+      },
+      "document_size": {
+        "width": 1440,
+        "height": 960
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "light",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 49,
+        "width": 220,
+        "height": 911,
+        "bottom": 960,
+        "right": 220
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 16,
+          "y": 77,
+          "width": 187,
+          "height": 44,
+          "bottom": 121,
+          "right": 203
+        },
+        {
+          "view": "remote",
+          "x": 16,
+          "y": 125,
+          "width": 187,
+          "height": 44,
+          "bottom": 169,
+          "right": 203
+        },
+        {
+          "view": "connections",
+          "x": 16,
+          "y": 173,
+          "width": 187,
+          "height": 44,
+          "bottom": 217,
+          "right": 203
+        },
+        {
+          "view": "account",
+          "x": 68,
+          "y": 884,
+          "width": 125,
+          "height": 44,
+          "bottom": 928,
+          "right": 193
+        }
+      ]
+    },
+    {
+      "file": "account-settings.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:17.465Z",
+      "capture_context": {
+        "role": "admin",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web account and settings; existing isolated test accounts and device records; UI only",
+      "sha256": "9e48865a634d9f7c9a581572c1aee250e1fb2a11686d47b53ab51e916ccd3183",
+      "bytes": 59708,
+      "width": 1440,
+      "height": 960,
+      "full_page": true,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 1440,
+        "height": 960
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 0
+      },
+      "document_size": {
+        "width": 1440,
+        "height": 960
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "light",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 49,
+        "width": 220,
+        "height": 911,
+        "bottom": 960,
+        "right": 220
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 16,
+          "y": 77,
+          "width": 187,
+          "height": 44,
+          "bottom": 121,
+          "right": 203
+        },
+        {
+          "view": "remote",
+          "x": 16,
+          "y": 125,
+          "width": 187,
+          "height": 44,
+          "bottom": 169,
+          "right": 203
+        },
+        {
+          "view": "connections",
+          "x": 16,
+          "y": 173,
+          "width": 187,
+          "height": 44,
+          "bottom": 217,
+          "right": 203
+        },
+        {
+          "view": "account",
+          "x": 68,
+          "y": 884,
+          "width": 125,
+          "height": 44,
+          "bottom": 928,
+          "right": 193
+        }
+      ]
+    },
+    {
+      "file": "admin-console.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:17.709Z",
+      "capture_context": {
+        "role": "admin",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web system overview reached through account and settings; existing isolated test accounts and device records; UI only",
+      "sha256": "ff5169b717a2a733eb4f477115b6ab9ff4717ff615176b0991f5be225228b8a1",
+      "bytes": 55087,
+      "width": 1440,
+      "height": 960,
+      "full_page": true,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 1440,
+        "height": 960
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 0
+      },
+      "document_size": {
+        "width": 1440,
+        "height": 960
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "light",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 49,
+        "width": 220,
+        "height": 911,
+        "bottom": 960,
+        "right": 220
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 16,
+          "y": 77,
+          "width": 187,
+          "height": 44,
+          "bottom": 121,
+          "right": 203
+        },
+        {
+          "view": "remote",
+          "x": 16,
+          "y": 125,
+          "width": 187,
+          "height": 44,
+          "bottom": 169,
+          "right": 203
+        },
+        {
+          "view": "connections",
+          "x": 16,
+          "y": 173,
+          "width": 187,
+          "height": 44,
+          "bottom": 217,
+          "right": 203
+        },
+        {
+          "view": "account",
+          "x": 68,
+          "y": 884,
+          "width": 125,
+          "height": 44,
+          "bottom": 928,
+          "right": 193
+        }
+      ]
+    },
+    {
+      "file": "admin-devices.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:17.978Z",
+      "capture_context": {
+        "role": "admin",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web administrative device management; existing isolated test accounts and device records; UI only",
+      "sha256": "25eb889b1a4dd837f5956ce30f3ca22bdf5ecc5c5b1f7ee253096e82b6b0e25c",
+      "bytes": 67543,
+      "width": 1440,
+      "height": 960,
+      "full_page": true,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 1440,
+        "height": 960
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 0
+      },
+      "document_size": {
+        "width": 1440,
+        "height": 960
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "light",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 49,
+        "width": 220,
+        "height": 911,
+        "bottom": 960,
+        "right": 220
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 16,
+          "y": 77,
+          "width": 187,
+          "height": 44,
+          "bottom": 121,
+          "right": 203
+        },
+        {
+          "view": "remote",
+          "x": 16,
+          "y": 125,
+          "width": 187,
+          "height": 44,
+          "bottom": 169,
+          "right": 203
+        },
+        {
+          "view": "connections",
+          "x": 16,
+          "y": 173,
+          "width": 187,
+          "height": 44,
+          "bottom": 217,
+          "right": 203
+        },
+        {
+          "view": "account",
+          "x": 68,
+          "y": 884,
+          "width": 125,
+          "height": 44,
+          "bottom": 928,
+          "right": 193
+        }
+      ]
+    },
+    {
+      "file": "device-details.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:18.161Z",
+      "capture_context": {
+        "role": "admin",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web administrative device details; existing isolated test accounts and device records; UI only",
+      "sha256": "adbfc312098c04b4490c007f6faf42c31e1902316c6a27083a85685d0f29401b",
+      "bytes": 80748,
+      "width": 1440,
+      "height": 960,
+      "full_page": true,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 1440,
+        "height": 960
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 0
+      },
+      "document_size": {
+        "width": 1440,
+        "height": 960
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "light",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 49,
+        "width": 220,
+        "height": 911,
+        "bottom": 960,
+        "right": 220
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 16,
+          "y": 77,
+          "width": 187,
+          "height": 44,
+          "bottom": 121,
+          "right": 203
+        },
+        {
+          "view": "remote",
+          "x": 16,
+          "y": 125,
+          "width": 187,
+          "height": 44,
+          "bottom": 169,
+          "right": 203
+        },
+        {
+          "view": "connections",
+          "x": 16,
+          "y": 173,
+          "width": 187,
+          "height": 44,
+          "bottom": 217,
+          "right": 203
+        },
+        {
+          "view": "account",
+          "x": 68,
+          "y": 884,
+          "width": 125,
+          "height": 44,
+          "bottom": 928,
+          "right": 193
+        }
+      ]
+    },
+    {
+      "file": "admin-users.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:18.446Z",
+      "capture_context": {
+        "role": "admin",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web user management; existing isolated test accounts and device records; UI only",
+      "sha256": "9ba3ed637612d997987ca770335785cebae8d65fa43b496022cc4571076b542e",
+      "bytes": 73024,
+      "width": 1440,
+      "height": 960,
+      "full_page": true,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 1440,
+        "height": 960
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 0
+      },
+      "document_size": {
+        "width": 1440,
+        "height": 960
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "light",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 49,
+        "width": 220,
+        "height": 911,
+        "bottom": 960,
+        "right": 220
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 16,
+          "y": 77,
+          "width": 187,
+          "height": 44,
+          "bottom": 121,
+          "right": 203
+        },
+        {
+          "view": "remote",
+          "x": 16,
+          "y": 125,
+          "width": 187,
+          "height": 44,
+          "bottom": 169,
+          "right": 203
+        },
+        {
+          "view": "connections",
+          "x": 16,
+          "y": 173,
+          "width": 187,
+          "height": 44,
+          "bottom": 217,
+          "right": 203
+        },
+        {
+          "view": "account",
+          "x": 68,
+          "y": 884,
+          "width": 125,
+          "height": 44,
+          "bottom": 928,
+          "right": 193
+        }
+      ]
+    },
+    {
+      "file": "tunnel-list.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:19.626Z",
+      "capture_context": {
+        "role": "user",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web tunnel management; existing isolated test accounts and device records; UI only",
+      "sha256": "83d18be770f96e932bd2616a8b325ebe899064ff6a407c020e23fc8dd640f31b",
+      "bytes": 49241,
+      "width": 1440,
+      "height": 960,
+      "full_page": true,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 1440,
+        "height": 960
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 0
+      },
+      "document_size": {
+        "width": 1440,
+        "height": 960
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "light",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 49,
+        "width": 220,
+        "height": 911,
+        "bottom": 960,
+        "right": 220
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 16,
+          "y": 77,
+          "width": 187,
+          "height": 44,
+          "bottom": 121,
+          "right": 203
+        },
+        {
+          "view": "remote",
+          "x": 16,
+          "y": 125,
+          "width": 187,
+          "height": 44,
+          "bottom": 169,
+          "right": 203
+        },
+        {
+          "view": "connections",
+          "x": 16,
+          "y": 173,
+          "width": 187,
+          "height": 44,
+          "bottom": 217,
+          "right": 203
+        },
+        {
+          "view": "account",
+          "x": 68,
+          "y": 884,
+          "width": 125,
+          "height": 44,
+          "bottom": 928,
+          "right": 193
+        }
+      ]
+    },
+    {
+      "file": "tunnel-wizard.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:19.866Z",
+      "capture_context": {
+        "role": "user",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web tunnel wizard, device and template step; nothing published; existing isolated test accounts and device records; UI only",
+      "sha256": "6fcdf1942f3194e1bccb59f37f10568ddbc49f7b954f7b15f25017a99b338a46",
+      "bytes": 68761,
+      "width": 1440,
+      "height": 960,
+      "full_page": true,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 1440,
+        "height": 960
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 0
+      },
+      "document_size": {
+        "width": 1440,
+        "height": 960
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "light",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 49,
+        "width": 220,
+        "height": 911,
+        "bottom": 960,
+        "right": 220
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 16,
+          "y": 77,
+          "width": 187,
+          "height": 44,
+          "bottom": 121,
+          "right": 203
+        },
+        {
+          "view": "remote",
+          "x": 16,
+          "y": 125,
+          "width": 187,
+          "height": 44,
+          "bottom": 169,
+          "right": 203
+        },
+        {
+          "view": "connections",
+          "x": 16,
+          "y": 173,
+          "width": 187,
+          "height": 44,
+          "bottom": 217,
+          "right": 203
+        },
+        {
+          "view": "account",
+          "x": 68,
+          "y": 884,
+          "width": 125,
+          "height": 44,
+          "bottom": 928,
+          "right": 193
+        }
+      ]
+    },
+    {
+      "file": "tunnel-target.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:20.062Z",
+      "capture_context": {
+        "role": "user",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web tunnel wizard, local target step; nothing published; existing isolated test accounts and device records; UI only",
+      "sha256": "8daefc9d3a892fd479f4f854483b6948598268071d60b674d31b7bf3656ba5ea",
+      "bytes": 68250,
+      "width": 1440,
+      "height": 960,
+      "full_page": true,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 1440,
+        "height": 960
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 0
+      },
+      "document_size": {
+        "width": 1440,
+        "height": 960
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "light",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 49,
+        "width": 220,
+        "height": 911,
+        "bottom": 960,
+        "right": 220
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 16,
+          "y": 77,
+          "width": 187,
+          "height": 44,
+          "bottom": 121,
+          "right": 203
+        },
+        {
+          "view": "remote",
+          "x": 16,
+          "y": 125,
+          "width": 187,
+          "height": 44,
+          "bottom": 169,
+          "right": 203
+        },
+        {
+          "view": "connections",
+          "x": 16,
+          "y": 173,
+          "width": 187,
+          "height": 44,
+          "bottom": 217,
+          "right": 203
+        },
+        {
+          "view": "account",
+          "x": 68,
+          "y": 884,
+          "width": 125,
+          "height": 44,
+          "bottom": 928,
+          "right": 193
+        }
+      ]
+    },
+    {
+      "file": "tunnel-access.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:20.249Z",
+      "capture_context": {
+        "role": "user",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web tunnel wizard, access step; no secret entered and nothing published; existing isolated test accounts and device records; UI only",
+      "sha256": "08aa7c65e5fca4de3192b4ab9dc330d02425f5a5636f58a24affb09d5f02ca4a",
+      "bytes": 61510,
+      "width": 1440,
+      "height": 960,
+      "full_page": true,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 1440,
+        "height": 960
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 0
+      },
+      "document_size": {
+        "width": 1440,
+        "height": 960
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "light",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 49,
+        "width": 220,
+        "height": 911,
+        "bottom": 960,
+        "right": 220
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 16,
+          "y": 77,
+          "width": 187,
+          "height": 44,
+          "bottom": 121,
+          "right": 203
+        },
+        {
+          "view": "remote",
+          "x": 16,
+          "y": 125,
+          "width": 187,
+          "height": 44,
+          "bottom": 169,
+          "right": 203
+        },
+        {
+          "view": "connections",
+          "x": 16,
+          "y": 173,
+          "width": 187,
+          "height": 44,
+          "bottom": 217,
+          "right": 203
+        },
+        {
+          "view": "account",
+          "x": 68,
+          "y": 884,
+          "width": 125,
+          "height": 44,
+          "bottom": 928,
+          "right": 193
+        }
+      ]
+    },
+    {
+      "file": "web-devices-390-light-top.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:24.975Z",
+      "capture_context": {
+        "role": "user",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web devices, 390px light viewport at top; existing isolated test accounts and device records; UI only",
+      "sha256": "02079700ee76c8bf575cca80df7f5161c01f80b1942ffd98060b4156244b7be6",
+      "bytes": 32707,
+      "width": 390,
+      "height": 844,
+      "full_page": false,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 0
+      },
+      "document_size": {
+        "width": 390,
+        "height": 1114
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "light",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 772,
+        "width": 390,
+        "height": 72,
+        "bottom": 844,
+        "right": 390
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 8,
+          "y": 779,
+          "width": 92.15625,
+          "height": 59,
+          "bottom": 838,
+          "right": 100.15625
+        },
+        {
+          "view": "remote",
+          "x": 102.15625,
+          "y": 779,
+          "width": 92.171875,
+          "height": 59,
+          "bottom": 838,
+          "right": 194.328125
+        },
+        {
+          "view": "connections",
+          "x": 196.328125,
+          "y": 779,
+          "width": 92.171875,
+          "height": 59,
+          "bottom": 838,
+          "right": 288.5
+        },
+        {
+          "view": "account",
+          "x": 292.5,
+          "y": 786,
+          "width": 85.5,
+          "height": 48,
+          "bottom": 834,
+          "right": 378
+        }
+      ]
+    },
+    {
+      "file": "web-devices-390-light-bottom.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:25.073Z",
+      "capture_context": {
+        "role": "user",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web devices, 390px light viewport after actual scroll to bottom; existing isolated test accounts and device records; UI only",
+      "sha256": "c0846c20c9bc8234d5c4e70e5a693952479bd5d799a80cd6f479fd10583b31f4",
+      "bytes": 30646,
+      "width": 390,
+      "height": 844,
+      "full_page": false,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 270
+      },
+      "document_size": {
+        "width": 390,
+        "height": 1114
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "light",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 772,
+        "width": 390,
+        "height": 72,
+        "bottom": 844,
+        "right": 390
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 8,
+          "y": 779,
+          "width": 92.15625,
+          "height": 59,
+          "bottom": 838,
+          "right": 100.15625
+        },
+        {
+          "view": "remote",
+          "x": 102.15625,
+          "y": 779,
+          "width": 92.171875,
+          "height": 59,
+          "bottom": 838,
+          "right": 194.328125
+        },
+        {
+          "view": "connections",
+          "x": 196.328125,
+          "y": 779,
+          "width": 92.171875,
+          "height": 59,
+          "bottom": 838,
+          "right": 288.5
+        },
+        {
+          "view": "account",
+          "x": 292.5,
+          "y": 786,
+          "width": 85.5,
+          "height": 48,
+          "bottom": 834,
+          "right": 378
+        }
+      ]
+    },
+    {
+      "file": "web-remote-390-light-top.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:25.241Z",
+      "capture_context": {
+        "role": "user",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web remote, 390px light viewport at top; existing isolated test accounts and device records; UI only",
+      "sha256": "cacf2856121380f85caeedc327d7b36de7343dfcb71d73509bb8d8fd3a3e09b4",
+      "bytes": 28211,
+      "width": 390,
+      "height": 844,
+      "full_page": false,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 0
+      },
+      "document_size": {
+        "width": 390,
+        "height": 856
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "light",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 772,
+        "width": 390,
+        "height": 72,
+        "bottom": 844,
+        "right": 390
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 8,
+          "y": 779,
+          "width": 92.15625,
+          "height": 59,
+          "bottom": 838,
+          "right": 100.15625
+        },
+        {
+          "view": "remote",
+          "x": 102.15625,
+          "y": 779,
+          "width": 92.171875,
+          "height": 59,
+          "bottom": 838,
+          "right": 194.328125
+        },
+        {
+          "view": "connections",
+          "x": 196.328125,
+          "y": 779,
+          "width": 92.171875,
+          "height": 59,
+          "bottom": 838,
+          "right": 288.5
+        },
+        {
+          "view": "account",
+          "x": 292.5,
+          "y": 786,
+          "width": 85.5,
+          "height": 48,
+          "bottom": 834,
+          "right": 378
+        }
+      ]
+    },
+    {
+      "file": "web-remote-390-light-bottom.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:25.342Z",
+      "capture_context": {
+        "role": "user",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web remote, 390px light viewport after actual scroll to bottom; existing isolated test accounts and device records; UI only",
+      "sha256": "bf53f0b9b097b0f105df7d8b5769baeef3c71ec46f4be822abf31a59069a6e03",
+      "bytes": 28212,
+      "width": 390,
+      "height": 844,
+      "full_page": false,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 12
+      },
+      "document_size": {
+        "width": 390,
+        "height": 856
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "light",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 772,
+        "width": 390,
+        "height": 72,
+        "bottom": 844,
+        "right": 390
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 8,
+          "y": 779,
+          "width": 92.15625,
+          "height": 59,
+          "bottom": 838,
+          "right": 100.15625
+        },
+        {
+          "view": "remote",
+          "x": 102.15625,
+          "y": 779,
+          "width": 92.171875,
+          "height": 59,
+          "bottom": 838,
+          "right": 194.328125
+        },
+        {
+          "view": "connections",
+          "x": 196.328125,
+          "y": 779,
+          "width": 92.171875,
+          "height": 59,
+          "bottom": 838,
+          "right": 288.5
+        },
+        {
+          "view": "account",
+          "x": 292.5,
+          "y": 786,
+          "width": 85.5,
+          "height": 48,
+          "bottom": 834,
+          "right": 378
+        }
+      ]
+    },
+    {
+      "file": "web-connections-390-light-top.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:25.508Z",
+      "capture_context": {
+        "role": "user",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web connections, 390px light viewport at top; existing isolated test accounts and device records; UI only",
+      "sha256": "08e982c702083cd78b4af47ff5fda9d7f0141e55cb7ffd348bd3821264d7d592",
+      "bytes": 35758,
+      "width": 390,
+      "height": 844,
+      "full_page": false,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 0
+      },
+      "document_size": {
+        "width": 390,
+        "height": 983
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "light",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 772,
+        "width": 390,
+        "height": 72,
+        "bottom": 844,
+        "right": 390
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 8,
+          "y": 779,
+          "width": 92.15625,
+          "height": 59,
+          "bottom": 838,
+          "right": 100.15625
+        },
+        {
+          "view": "remote",
+          "x": 102.15625,
+          "y": 779,
+          "width": 92.171875,
+          "height": 59,
+          "bottom": 838,
+          "right": 194.328125
+        },
+        {
+          "view": "connections",
+          "x": 196.328125,
+          "y": 779,
+          "width": 92.171875,
+          "height": 59,
+          "bottom": 838,
+          "right": 288.5
+        },
+        {
+          "view": "account",
+          "x": 292.5,
+          "y": 786,
+          "width": 85.5,
+          "height": 48,
+          "bottom": 834,
+          "right": 378
+        }
+      ]
+    },
+    {
+      "file": "web-connections-390-light-bottom.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:25.611Z",
+      "capture_context": {
+        "role": "user",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web connections, 390px light viewport after actual scroll to bottom; existing isolated test accounts and device records; UI only",
+      "sha256": "bf4874f30603039eabe2ee8bb746ec929ebfb0762ec7d4b0b5db11d2f3c3758a",
+      "bytes": 32855,
+      "width": 390,
+      "height": 844,
+      "full_page": false,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 139
+      },
+      "document_size": {
+        "width": 390,
+        "height": 983
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "light",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 772,
+        "width": 390,
+        "height": 72,
+        "bottom": 844,
+        "right": 390
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 8,
+          "y": 779,
+          "width": 92.15625,
+          "height": 59,
+          "bottom": 838,
+          "right": 100.15625
+        },
+        {
+          "view": "remote",
+          "x": 102.15625,
+          "y": 779,
+          "width": 92.171875,
+          "height": 59,
+          "bottom": 838,
+          "right": 194.328125
+        },
+        {
+          "view": "connections",
+          "x": 196.328125,
+          "y": 779,
+          "width": 92.171875,
+          "height": 59,
+          "bottom": 838,
+          "right": 288.5
+        },
+        {
+          "view": "account",
+          "x": 292.5,
+          "y": 786,
+          "width": 85.5,
+          "height": 48,
+          "bottom": 834,
+          "right": 378
+        }
+      ]
+    },
+    {
+      "file": "web-devices-390-dark-top.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:25.825Z",
+      "capture_context": {
+        "role": "user",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web devices, 390px dark viewport at top; existing isolated test accounts and device records; UI only",
+      "sha256": "e019c415337e8615286acaa569933411a1ffe9130d1575f252898adf79aeb54e",
+      "bytes": 32949,
+      "width": 390,
+      "height": 844,
+      "full_page": false,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 0
+      },
+      "document_size": {
+        "width": 390,
+        "height": 1114
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "dark",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 772,
+        "width": 390,
+        "height": 72,
+        "bottom": 844,
+        "right": 390
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 8,
+          "y": 779,
+          "width": 92.15625,
+          "height": 59,
+          "bottom": 838,
+          "right": 100.15625
+        },
+        {
+          "view": "remote",
+          "x": 102.15625,
+          "y": 779,
+          "width": 92.171875,
+          "height": 59,
+          "bottom": 838,
+          "right": 194.328125
+        },
+        {
+          "view": "connections",
+          "x": 196.328125,
+          "y": 779,
+          "width": 92.171875,
+          "height": 59,
+          "bottom": 838,
+          "right": 288.5
+        },
+        {
+          "view": "account",
+          "x": 292.5,
+          "y": 786,
+          "width": 85.5,
+          "height": 48,
+          "bottom": 834,
+          "right": 378
+        }
+      ]
+    },
+    {
+      "file": "web-devices-390-dark-bottom.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:25.925Z",
+      "capture_context": {
+        "role": "user",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web devices, 390px dark viewport after actual scroll to bottom; existing isolated test accounts and device records; UI only",
+      "sha256": "8961aa16e164243f7a25552dc038aeb0d6ebea4936d68d48e1e1b9479017010d",
+      "bytes": 31014,
+      "width": 390,
+      "height": 844,
+      "full_page": false,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 270
+      },
+      "document_size": {
+        "width": 390,
+        "height": 1114
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "dark",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 772,
+        "width": 390,
+        "height": 72,
+        "bottom": 844,
+        "right": 390
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 8,
+          "y": 779,
+          "width": 92.15625,
+          "height": 59,
+          "bottom": 838,
+          "right": 100.15625
+        },
+        {
+          "view": "remote",
+          "x": 102.15625,
+          "y": 779,
+          "width": 92.171875,
+          "height": 59,
+          "bottom": 838,
+          "right": 194.328125
+        },
+        {
+          "view": "connections",
+          "x": 196.328125,
+          "y": 779,
+          "width": 92.171875,
+          "height": 59,
+          "bottom": 838,
+          "right": 288.5
+        },
+        {
+          "view": "account",
+          "x": 292.5,
+          "y": 786,
+          "width": 85.5,
+          "height": 48,
+          "bottom": 834,
+          "right": 378
+        }
+      ]
+    },
+    {
+      "file": "web-remote-390-dark-top.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:26.090Z",
+      "capture_context": {
+        "role": "user",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web remote, 390px dark viewport at top; existing isolated test accounts and device records; UI only",
+      "sha256": "252278e23888050a932b09064c30a7a4661b378f6c5be1293bf40069e6a0de09",
+      "bytes": 28273,
+      "width": 390,
+      "height": 844,
+      "full_page": false,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 0
+      },
+      "document_size": {
+        "width": 390,
+        "height": 856
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "dark",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 772,
+        "width": 390,
+        "height": 72,
+        "bottom": 844,
+        "right": 390
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 8,
+          "y": 779,
+          "width": 92.15625,
+          "height": 59,
+          "bottom": 838,
+          "right": 100.15625
+        },
+        {
+          "view": "remote",
+          "x": 102.15625,
+          "y": 779,
+          "width": 92.171875,
+          "height": 59,
+          "bottom": 838,
+          "right": 194.328125
+        },
+        {
+          "view": "connections",
+          "x": 196.328125,
+          "y": 779,
+          "width": 92.171875,
+          "height": 59,
+          "bottom": 838,
+          "right": 288.5
+        },
+        {
+          "view": "account",
+          "x": 292.5,
+          "y": 786,
+          "width": 85.5,
+          "height": 48,
+          "bottom": 834,
+          "right": 378
+        }
+      ]
+    },
+    {
+      "file": "web-remote-390-dark-bottom.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:26.191Z",
+      "capture_context": {
+        "role": "user",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web remote, 390px dark viewport after actual scroll to bottom; existing isolated test accounts and device records; UI only",
+      "sha256": "17a8c02eae4c942f1cb543bab4ffa1c2396f74a9887711a43bdbfa27e00b549a",
+      "bytes": 28274,
+      "width": 390,
+      "height": 844,
+      "full_page": false,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 12
+      },
+      "document_size": {
+        "width": 390,
+        "height": 856
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "dark",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 772,
+        "width": 390,
+        "height": 72,
+        "bottom": 844,
+        "right": 390
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 8,
+          "y": 779,
+          "width": 92.15625,
+          "height": 59,
+          "bottom": 838,
+          "right": 100.15625
+        },
+        {
+          "view": "remote",
+          "x": 102.15625,
+          "y": 779,
+          "width": 92.171875,
+          "height": 59,
+          "bottom": 838,
+          "right": 194.328125
+        },
+        {
+          "view": "connections",
+          "x": 196.328125,
+          "y": 779,
+          "width": 92.171875,
+          "height": 59,
+          "bottom": 838,
+          "right": 288.5
+        },
+        {
+          "view": "account",
+          "x": 292.5,
+          "y": 786,
+          "width": 85.5,
+          "height": 48,
+          "bottom": 834,
+          "right": 378
+        }
+      ]
+    },
+    {
+      "file": "web-connections-390-dark-top.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:26.357Z",
+      "capture_context": {
+        "role": "user",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web connections, 390px dark viewport at top; existing isolated test accounts and device records; UI only",
+      "sha256": "f854de6b2255608af05e28ad373b1c5ed655cbc57be2148a9650130aa9c42283",
+      "bytes": 36636,
+      "width": 390,
+      "height": 844,
+      "full_page": false,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 0
+      },
+      "document_size": {
+        "width": 390,
+        "height": 983
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "dark",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 772,
+        "width": 390,
+        "height": 72,
+        "bottom": 844,
+        "right": 390
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 8,
+          "y": 779,
+          "width": 92.15625,
+          "height": 59,
+          "bottom": 838,
+          "right": 100.15625
+        },
+        {
+          "view": "remote",
+          "x": 102.15625,
+          "y": 779,
+          "width": 92.171875,
+          "height": 59,
+          "bottom": 838,
+          "right": 194.328125
+        },
+        {
+          "view": "connections",
+          "x": 196.328125,
+          "y": 779,
+          "width": 92.171875,
+          "height": 59,
+          "bottom": 838,
+          "right": 288.5
+        },
+        {
+          "view": "account",
+          "x": 292.5,
+          "y": 786,
+          "width": 85.5,
+          "height": 48,
+          "bottom": 834,
+          "right": 378
+        }
+      ]
+    },
+    {
+      "file": "web-connections-390-dark-bottom.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:26.459Z",
+      "capture_context": {
+        "role": "user",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web connections, 390px dark viewport after actual scroll to bottom; existing isolated test accounts and device records; UI only",
+      "sha256": "adfe35fd63269b1c16df8714e26d09875f722e2fb86d57cee631aa714d2de83b",
+      "bytes": 33791,
+      "width": 390,
+      "height": 844,
+      "full_page": false,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 139
+      },
+      "document_size": {
+        "width": 390,
+        "height": 983
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "dark",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 772,
+        "width": 390,
+        "height": 72,
+        "bottom": 844,
+        "right": 390
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 8,
+          "y": 779,
+          "width": 92.15625,
+          "height": 59,
+          "bottom": 838,
+          "right": 100.15625
+        },
+        {
+          "view": "remote",
+          "x": 102.15625,
+          "y": 779,
+          "width": 92.171875,
+          "height": 59,
+          "bottom": 838,
+          "right": 194.328125
+        },
+        {
+          "view": "connections",
+          "x": 196.328125,
+          "y": 779,
+          "width": 92.171875,
+          "height": 59,
+          "bottom": 838,
+          "right": 288.5
+        },
+        {
+          "view": "account",
+          "x": 292.5,
+          "y": 786,
+          "width": 85.5,
+          "height": 48,
+          "bottom": 834,
+          "right": 378
+        }
+      ]
+    },
+    {
+      "file": "web-devices-320-light-top.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:26.670Z",
+      "capture_context": {
+        "role": "user",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web devices, 320px light viewport at top; existing isolated test accounts and device records; UI only",
+      "sha256": "30a7a666ae9e834f93c8fcf57757b9ba0549afab30fb614d80c4ae95e83c673e",
+      "bytes": 28626,
+      "width": 320,
+      "height": 720,
+      "full_page": false,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 320,
+        "height": 720
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 0
+      },
+      "document_size": {
+        "width": 320,
+        "height": 1134
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "light",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 648,
+        "width": 320,
+        "height": 72,
+        "bottom": 720,
+        "right": 320
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 8,
+          "y": 655,
+          "width": 74.65625,
+          "height": 59,
+          "bottom": 714,
+          "right": 82.65625
+        },
+        {
+          "view": "remote",
+          "x": 84.65625,
+          "y": 655,
+          "width": 74.671875,
+          "height": 59,
+          "bottom": 714,
+          "right": 159.328125
+        },
+        {
+          "view": "connections",
+          "x": 161.328125,
+          "y": 655,
+          "width": 74.671875,
+          "height": 59,
+          "bottom": 714,
+          "right": 236
+        },
+        {
+          "view": "account",
+          "x": 240,
+          "y": 662,
+          "width": 68,
+          "height": 48,
+          "bottom": 710,
+          "right": 308
+        }
+      ]
+    },
+    {
+      "file": "web-devices-320-light-bottom.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:26.770Z",
+      "capture_context": {
+        "role": "user",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web devices, 320px light viewport after actual scroll to bottom; existing isolated test accounts and device records; UI only",
+      "sha256": "c079548a9a0ce06b933b0ca2b35933f8d00a3f39847c0fedbd38939038db1498",
+      "bytes": 24942,
+      "width": 320,
+      "height": 720,
+      "full_page": false,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 320,
+        "height": 720
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 414
+      },
+      "document_size": {
+        "width": 320,
+        "height": 1134
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "light",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 648,
+        "width": 320,
+        "height": 72,
+        "bottom": 720,
+        "right": 320
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 8,
+          "y": 655,
+          "width": 74.65625,
+          "height": 59,
+          "bottom": 714,
+          "right": 82.65625
+        },
+        {
+          "view": "remote",
+          "x": 84.65625,
+          "y": 655,
+          "width": 74.671875,
+          "height": 59,
+          "bottom": 714,
+          "right": 159.328125
+        },
+        {
+          "view": "connections",
+          "x": 161.328125,
+          "y": 655,
+          "width": 74.671875,
+          "height": 59,
+          "bottom": 714,
+          "right": 236
+        },
+        {
+          "view": "account",
+          "x": 240,
+          "y": 662,
+          "width": 68,
+          "height": 48,
+          "bottom": 710,
+          "right": 308
+        }
+      ]
+    },
+    {
+      "file": "web-remote-320-light-top.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:26.937Z",
+      "capture_context": {
+        "role": "user",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web remote, 320px light viewport at top; existing isolated test accounts and device records; UI only",
+      "sha256": "4160770a615fe44925f5f612e8d4433debca5f7578229278638acc77c20dc501",
+      "bytes": 26919,
+      "width": 320,
+      "height": 720,
+      "full_page": false,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 320,
+        "height": 720
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 0
+      },
+      "document_size": {
+        "width": 320,
+        "height": 800
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "light",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 648,
+        "width": 320,
+        "height": 72,
+        "bottom": 720,
+        "right": 320
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 8,
+          "y": 655,
+          "width": 74.65625,
+          "height": 59,
+          "bottom": 714,
+          "right": 82.65625
+        },
+        {
+          "view": "remote",
+          "x": 84.65625,
+          "y": 655,
+          "width": 74.671875,
+          "height": 59,
+          "bottom": 714,
+          "right": 159.328125
+        },
+        {
+          "view": "connections",
+          "x": 161.328125,
+          "y": 655,
+          "width": 74.671875,
+          "height": 59,
+          "bottom": 714,
+          "right": 236
+        },
+        {
+          "view": "account",
+          "x": 240,
+          "y": 662,
+          "width": 68,
+          "height": 48,
+          "bottom": 710,
+          "right": 308
+        }
+      ]
+    },
+    {
+      "file": "web-remote-320-light-bottom.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:27.037Z",
+      "capture_context": {
+        "role": "user",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web remote, 320px light viewport after actual scroll to bottom; existing isolated test accounts and device records; UI only",
+      "sha256": "af0725349521f597f4453ae7a4e1bd434c537831307b5e13fa7ee541c7fd23c7",
+      "bytes": 25223,
+      "width": 320,
+      "height": 720,
+      "full_page": false,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 320,
+        "height": 720
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 80
+      },
+      "document_size": {
+        "width": 320,
+        "height": 800
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "light",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 648,
+        "width": 320,
+        "height": 72,
+        "bottom": 720,
+        "right": 320
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 8,
+          "y": 655,
+          "width": 74.65625,
+          "height": 59,
+          "bottom": 714,
+          "right": 82.65625
+        },
+        {
+          "view": "remote",
+          "x": 84.65625,
+          "y": 655,
+          "width": 74.671875,
+          "height": 59,
+          "bottom": 714,
+          "right": 159.328125
+        },
+        {
+          "view": "connections",
+          "x": 161.328125,
+          "y": 655,
+          "width": 74.671875,
+          "height": 59,
+          "bottom": 714,
+          "right": 236
+        },
+        {
+          "view": "account",
+          "x": 240,
+          "y": 662,
+          "width": 68,
+          "height": 48,
+          "bottom": 710,
+          "right": 308
+        }
+      ]
+    },
+    {
+      "file": "web-connections-320-light-top.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:27.205Z",
+      "capture_context": {
+        "role": "user",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web connections, 320px light viewport at top; existing isolated test accounts and device records; UI only",
+      "sha256": "cade55aec72d4ac36136a157ddfaba95ef86d43aa9ecc403b65ba4f1d94e5b86",
+      "bytes": 27776,
+      "width": 320,
+      "height": 720,
+      "full_page": false,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 320,
+        "height": 720
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 0
+      },
+      "document_size": {
+        "width": 320,
+        "height": 1033
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "light",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 648,
+        "width": 320,
+        "height": 72,
+        "bottom": 720,
+        "right": 320
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 8,
+          "y": 655,
+          "width": 74.65625,
+          "height": 59,
+          "bottom": 714,
+          "right": 82.65625
+        },
+        {
+          "view": "remote",
+          "x": 84.65625,
+          "y": 655,
+          "width": 74.671875,
+          "height": 59,
+          "bottom": 714,
+          "right": 159.328125
+        },
+        {
+          "view": "connections",
+          "x": 161.328125,
+          "y": 655,
+          "width": 74.671875,
+          "height": 59,
+          "bottom": 714,
+          "right": 236
+        },
+        {
+          "view": "account",
+          "x": 240,
+          "y": 662,
+          "width": 68,
+          "height": 48,
+          "bottom": 710,
+          "right": 308
+        }
+      ]
+    },
+    {
+      "file": "web-connections-320-light-bottom.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:27.303Z",
+      "capture_context": {
+        "role": "user",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web connections, 320px light viewport after actual scroll to bottom; existing isolated test accounts and device records; UI only",
+      "sha256": "6aa3ca171bb99d481b615d311ecd30d3ea4f6bcbb69c59d1fdd92a5725c62689",
+      "bytes": 26845,
+      "width": 320,
+      "height": 720,
+      "full_page": false,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 320,
+        "height": 720
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 313
+      },
+      "document_size": {
+        "width": 320,
+        "height": 1033
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "light",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 648,
+        "width": 320,
+        "height": 72,
+        "bottom": 720,
+        "right": 320
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 8,
+          "y": 655,
+          "width": 74.65625,
+          "height": 59,
+          "bottom": 714,
+          "right": 82.65625
+        },
+        {
+          "view": "remote",
+          "x": 84.65625,
+          "y": 655,
+          "width": 74.671875,
+          "height": 59,
+          "bottom": 714,
+          "right": 159.328125
+        },
+        {
+          "view": "connections",
+          "x": 161.328125,
+          "y": 655,
+          "width": 74.671875,
+          "height": 59,
+          "bottom": 714,
+          "right": 236
+        },
+        {
+          "view": "account",
+          "x": 240,
+          "y": 662,
+          "width": 68,
+          "height": 48,
+          "bottom": 710,
+          "right": 308
+        }
+      ]
+    },
+    {
+      "file": "web-devices-320-dark-top.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:27.521Z",
+      "capture_context": {
+        "role": "user",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web devices, 320px dark viewport at top; existing isolated test accounts and device records; UI only",
+      "sha256": "aba1ee3a2716b5250a9fe88426447dc0fea8b5f5088da1af0810ce1f663e9ae7",
+      "bytes": 28881,
+      "width": 320,
+      "height": 720,
+      "full_page": false,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 320,
+        "height": 720
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 0
+      },
+      "document_size": {
+        "width": 320,
+        "height": 1134
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "dark",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 648,
+        "width": 320,
+        "height": 72,
+        "bottom": 720,
+        "right": 320
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 8,
+          "y": 655,
+          "width": 74.65625,
+          "height": 59,
+          "bottom": 714,
+          "right": 82.65625
+        },
+        {
+          "view": "remote",
+          "x": 84.65625,
+          "y": 655,
+          "width": 74.671875,
+          "height": 59,
+          "bottom": 714,
+          "right": 159.328125
+        },
+        {
+          "view": "connections",
+          "x": 161.328125,
+          "y": 655,
+          "width": 74.671875,
+          "height": 59,
+          "bottom": 714,
+          "right": 236
+        },
+        {
+          "view": "account",
+          "x": 240,
+          "y": 662,
+          "width": 68,
+          "height": 48,
+          "bottom": 710,
+          "right": 308
+        }
+      ]
+    },
+    {
+      "file": "web-devices-320-dark-bottom.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:27.623Z",
+      "capture_context": {
+        "role": "user",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web devices, 320px dark viewport after actual scroll to bottom; existing isolated test accounts and device records; UI only",
+      "sha256": "cb76514a4b22b90ff492889dc2580b96d566b9fa7d211656da843c2fd7983218",
+      "bytes": 25389,
+      "width": 320,
+      "height": 720,
+      "full_page": false,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 320,
+        "height": 720
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 414
+      },
+      "document_size": {
+        "width": 320,
+        "height": 1134
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "dark",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 648,
+        "width": 320,
+        "height": 72,
+        "bottom": 720,
+        "right": 320
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 8,
+          "y": 655,
+          "width": 74.65625,
+          "height": 59,
+          "bottom": 714,
+          "right": 82.65625
+        },
+        {
+          "view": "remote",
+          "x": 84.65625,
+          "y": 655,
+          "width": 74.671875,
+          "height": 59,
+          "bottom": 714,
+          "right": 159.328125
+        },
+        {
+          "view": "connections",
+          "x": 161.328125,
+          "y": 655,
+          "width": 74.671875,
+          "height": 59,
+          "bottom": 714,
+          "right": 236
+        },
+        {
+          "view": "account",
+          "x": 240,
+          "y": 662,
+          "width": 68,
+          "height": 48,
+          "bottom": 710,
+          "right": 308
+        }
+      ]
+    },
+    {
+      "file": "web-remote-320-dark-top.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:27.787Z",
+      "capture_context": {
+        "role": "user",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web remote, 320px dark viewport at top; existing isolated test accounts and device records; UI only",
+      "sha256": "43d8677ff08a130a0303c4b2923c6c4e96939de973f5d7a05dd87fe36093a377",
+      "bytes": 26970,
+      "width": 320,
+      "height": 720,
+      "full_page": false,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 320,
+        "height": 720
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 0
+      },
+      "document_size": {
+        "width": 320,
+        "height": 800
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "dark",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 648,
+        "width": 320,
+        "height": 72,
+        "bottom": 720,
+        "right": 320
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 8,
+          "y": 655,
+          "width": 74.65625,
+          "height": 59,
+          "bottom": 714,
+          "right": 82.65625
+        },
+        {
+          "view": "remote",
+          "x": 84.65625,
+          "y": 655,
+          "width": 74.671875,
+          "height": 59,
+          "bottom": 714,
+          "right": 159.328125
+        },
+        {
+          "view": "connections",
+          "x": 161.328125,
+          "y": 655,
+          "width": 74.671875,
+          "height": 59,
+          "bottom": 714,
+          "right": 236
+        },
+        {
+          "view": "account",
+          "x": 240,
+          "y": 662,
+          "width": 68,
+          "height": 48,
+          "bottom": 710,
+          "right": 308
+        }
+      ]
+    },
+    {
+      "file": "web-remote-320-dark-bottom.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:27.886Z",
+      "capture_context": {
+        "role": "user",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web remote, 320px dark viewport after actual scroll to bottom; existing isolated test accounts and device records; UI only",
+      "sha256": "caa158e329944abbd1e566e10ceae6cfed31c53044c6395dc60f7c50e77ad66d",
+      "bytes": 25181,
+      "width": 320,
+      "height": 720,
+      "full_page": false,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 320,
+        "height": 720
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 80
+      },
+      "document_size": {
+        "width": 320,
+        "height": 800
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "dark",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 648,
+        "width": 320,
+        "height": 72,
+        "bottom": 720,
+        "right": 320
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 8,
+          "y": 655,
+          "width": 74.65625,
+          "height": 59,
+          "bottom": 714,
+          "right": 82.65625
+        },
+        {
+          "view": "remote",
+          "x": 84.65625,
+          "y": 655,
+          "width": 74.671875,
+          "height": 59,
+          "bottom": 714,
+          "right": 159.328125
+        },
+        {
+          "view": "connections",
+          "x": 161.328125,
+          "y": 655,
+          "width": 74.671875,
+          "height": 59,
+          "bottom": 714,
+          "right": 236
+        },
+        {
+          "view": "account",
+          "x": 240,
+          "y": 662,
+          "width": 68,
+          "height": 48,
+          "bottom": 710,
+          "right": 308
+        }
+      ]
+    },
+    {
+      "file": "web-connections-320-dark-top.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:28.056Z",
+      "capture_context": {
+        "role": "user",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web connections, 320px dark viewport at top; existing isolated test accounts and device records; UI only",
+      "sha256": "30742a69c72f1b9d20770cf549dd734f775611787c7668c4347bb721915fe315",
+      "bytes": 28145,
+      "width": 320,
+      "height": 720,
+      "full_page": false,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 320,
+        "height": 720
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 0
+      },
+      "document_size": {
+        "width": 320,
+        "height": 1033
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "dark",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 648,
+        "width": 320,
+        "height": 72,
+        "bottom": 720,
+        "right": 320
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 8,
+          "y": 655,
+          "width": 74.65625,
+          "height": 59,
+          "bottom": 714,
+          "right": 82.65625
+        },
+        {
+          "view": "remote",
+          "x": 84.65625,
+          "y": 655,
+          "width": 74.671875,
+          "height": 59,
+          "bottom": 714,
+          "right": 159.328125
+        },
+        {
+          "view": "connections",
+          "x": 161.328125,
+          "y": 655,
+          "width": 74.671875,
+          "height": 59,
+          "bottom": 714,
+          "right": 236
+        },
+        {
+          "view": "account",
+          "x": 240,
+          "y": 662,
+          "width": 68,
+          "height": 48,
+          "bottom": 710,
+          "right": 308
+        }
+      ]
+    },
+    {
+      "file": "web-connections-320-dark-bottom.png",
+      "edited": false,
+      "captured_at": "2026-10-10T13:27:28.154Z",
+      "capture_context": {
+        "role": "user",
+        "session": "new independent capture session"
+      },
+      "description": "14.0.0 Web connections, 320px dark viewport after actual scroll to bottom; existing isolated test accounts and device records; UI only",
+      "sha256": "d75a230f7e952d8390d3679d7064b96dacd008c222cebb85f3b40344a8af072e",
+      "bytes": 27545,
+      "width": 320,
+      "height": 720,
+      "full_page": false,
+      "paint_stabilization": "fonts ready; two animation frames; finite CSS animations/transitions completed; two final frames; screenshot animations disabled",
+      "viewport": {
+        "width": 320,
+        "height": 720
+      },
+      "scroll_position": {
+        "x": 0,
+        "y": 313
+      },
+      "document_size": {
+        "width": 320,
+        "height": 1033
+      },
+      "horizontal_overflow_pixels": 0,
+      "theme": "dark",
+      "navigation_bounds": {
+        "x": 0,
+        "y": 648,
+        "width": 320,
+        "height": 72,
+        "bottom": 720,
+        "right": 320
+      },
+      "navigation_items": [
+        {
+          "view": "devices",
+          "x": 8,
+          "y": 655,
+          "width": 74.65625,
+          "height": 59,
+          "bottom": 714,
+          "right": 82.65625
+        },
+        {
+          "view": "remote",
+          "x": 84.65625,
+          "y": 655,
+          "width": 74.671875,
+          "height": 59,
+          "bottom": 714,
+          "right": 159.328125
+        },
+        {
+          "view": "connections",
+          "x": 161.328125,
+          "y": 655,
+          "width": 74.671875,
+          "height": 59,
+          "bottom": 714,
+          "right": 236
+        },
+        {
+          "view": "account",
+          "x": 240,
+          "y": 662,
+          "width": 68,
+          "height": 48,
+          "bottom": 710,
+          "right": 308
+        }
+      ]
+    }
+  ]
+}

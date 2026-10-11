@@ -22,6 +22,15 @@ class ScreenshotProvenanceTests(unittest.TestCase):
         for name in ("README.md", "README.en.md"):
             shutil.copyfile(ROOT / name, self.root / name)
 
+    def slot(self, name):
+        return next(item for item in json.loads((self.site / "screenshot-slots.json").read_text(encoding="utf8"))["slots"] if item["id"] == name)
+
+    def asset(self, name):
+        return self.site / self.slot(name)["asset"]
+
+    def manifest(self, name):
+        return self.site / self.slot(name)["capture_manifest"]
+
     def errors(self):
         return site_policy.audit(self.root)
 
@@ -29,23 +38,23 @@ class ScreenshotProvenanceTests(unittest.TestCase):
         self.assertEqual(self.errors(), [])
 
     def test_modified_pixels_are_rejected(self):
-        image = self.site / "assets/13.0.0/desktop-workbench-light.png"
+        image = self.asset("desktop-light")
         image.write_bytes(image.read_bytes() + b"modified")
         self.assertTrue(any("image digest does not match" in error for error in self.errors()))
 
     def test_missing_capture_manifest_is_rejected(self):
-        (self.site / "assets/13.0.0/desktop-capture-manifest.json").unlink()
+        (self.manifest("desktop-light")).unlink()
         self.assertTrue(any("invalid capture provenance" in error for error in self.errors()))
 
     def test_capture_version_must_match(self):
-        path = self.site / "assets/13.0.0/desktop-capture-manifest.json"
+        path = self.manifest("desktop-light")
         manifest = json.loads(path.read_text())
         manifest["product_version"] = "7.0.0"
         path.write_text(json.dumps(manifest))
         self.assertTrue(any("capture version must match" in error for error in self.errors()))
 
     def test_capture_dimensions_must_match(self):
-        path = self.site / "assets/13.0.0/desktop-capture-manifest.json"
+        path = self.manifest("desktop-light")
         manifest = json.loads(path.read_text())
         manifest["captures"][0]["width"] = 1
         path.write_text(json.dumps(manifest))
@@ -61,7 +70,7 @@ class ScreenshotProvenanceTests(unittest.TestCase):
             text=(self.site/name).read_text()
             self.assertNotRegex(text,r'v10/|rc12/|admin-dashboard-7|desktop\.jpg')
     def test_component_preview_does_not_claim_installed_app_acceptance(self):
-        path=self.site/"assets/13.0.0/desktop-capture-manifest.json"
+        path=self.manifest("desktop-light")
         manifest=json.loads(path.read_text())
         manifest["capture_kind"]="component-preview"
         manifest["installed_application"]=True
@@ -75,7 +84,7 @@ class ScreenshotProvenanceTests(unittest.TestCase):
         self.assertTrue(any("cannot claim installed-app" in error for error in self.errors()))
 
     def test_native_linux_capture_needs_installed_package_and_gui_hashes(self):
-        path=self.site/"assets/13.0.0/desktop-capture-manifest.json"
+        path=self.manifest("desktop-light")
         manifest=json.loads(path.read_text())
         manifest.update(capture_kind="native-linux", installed_application=True, interactive=True)
         manifest.pop("package_sha256", None)

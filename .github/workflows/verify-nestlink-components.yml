@@ -22,16 +22,18 @@ jobs:
           python3 - <<'PY'
           import json
           from pathlib import Path
-          assert Path('VERSION').read_text().strip() == '13.0.0'
+          version = Path('VERSION').read_text().strip()
+          assert __import__('re').fullmatch(r'[1-9][0-9]*\.[0-9]+\.[0-9]+', version)
           candidate = json.loads(Path('distribution.json').read_text())['channels']['candidate']
-          assert candidate['version'] == '13.0.0' and candidate['prerelease'] is False
+          assert candidate['version'] == version and candidate['prerelease'] is False
           PY
       - name: Verify actual downloads, SHA-256, corresponding source and Sigstore
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          VERSION="$(cat VERSION)"
           python3 scripts/verify-homedesk-components.py --record --signatures \
-            --download-dir verified-downloads --output verified/components-13.0.0.json
+            --download-dir verified-downloads --output "verified/components-$VERSION.json"
           cp distribution.json verified/distribution.json
           python3 - <<'PY'
           import json, os

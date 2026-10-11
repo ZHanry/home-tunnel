@@ -22,12 +22,18 @@ STABLE_101_SHA256 = "52d40cbfeb9d3c04646daed3bfde7c6f88bebc860f9976c4e42028e9177
 HOMEDESK_TARGET = {"hub": "11.0.0-rc.1", "server": "11.0.0-rc.2", "client": "11.0.0-rc.1", "android": "11.0.0-rc.1"}
 HOMEDESK_UNVERIFIED = {"cross-network-nat", "sustained-remote-media", "physical-android-device", "installed-two-peer-remote-session"}
 HOMEDESK_ATTACHMENTS = {"server": 3, "client": 4, "android": 3}
-NESTLINK_TARGET = {name: "13.0.0" for name in COMPONENTS}
+CURRENT_PRODUCT_VERSION = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
+NESTLINK_TARGET = {name: CURRENT_PRODUCT_VERSION for name in COMPONENTS}
+STABLE_13_SHA256 = "84b23f52a12c1b75da292b3e693d3db186b239371019fc597a8b76e83ba1a846"
+
+
+def is_nestlink_version(value):
+    return isinstance(value, str) and re.fullmatch(r"(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)", value) is not None and int(value.split(".", 1)[0]) >= 13
 NESTLINK_ATTACHMENTS = {"server": 3, "client": 5, "android": 3}
 
 
 def attachment_counts(version):
-    return NESTLINK_ATTACHMENTS if version == NESTLINK_TARGET["hub"] else HOMEDESK_ATTACHMENTS
+    return NESTLINK_ATTACHMENTS if is_nestlink_version(version) else HOMEDESK_ATTACHMENTS
 REQUIRED_UNVERIFIED = {
     "secure-desktop",
     "system-audio",
@@ -135,17 +141,20 @@ def validate_homedesk(candidate, stable, *, root=ROOT):
 
 
 def validate_nestlink(candidate, stable, *, root=ROOT):
-    """13.0 has a stable channel with independently verified original product bytes."""
+    """Current NestLink releases require independently verified product bytes."""
+    value = candidate.get("version")
     errors=[]
-    previous=root/"docs/release/stable-10.1.0.json"
-    if not previous.is_file() or hashlib.sha256(previous.read_bytes()).hexdigest()!=STABLE_101_SHA256:
-        errors.append("published 10.1.0 snapshot bytes changed or are missing")
-    if (candidate.get("version")!="13.0.0" or candidate.get("tag")!="v13.0.0" or candidate.get("prerelease") is not False
+    previous_version = "10.1.0" if value == "13.0.0" else "13.0.0"
+    previous = root / f"docs/release/stable-{previous_version}.json"
+    expected_previous_hash = STABLE_101_SHA256 if value == "13.0.0" else STABLE_13_SHA256
+    if not previous.is_file() or hashlib.sha256(previous.read_bytes()).hexdigest() != expected_previous_hash:
+        errors.append(f"published {previous_version} snapshot bytes changed or are missing")
+    if (not is_nestlink_version(value) or candidate.get("tag") != "v" + value or candidate.get("prerelease") is not False
             or candidate.get("promotion_status") not in ("not_promoted","promoted") or candidate.get("stage") not in ("development","stable")):
-        errors.append("nestlink 13.0.0 must use its stable tag and channel")
+        errors.append("NestLink must use its matching stable tag and channel")
     if candidate.get("remote_policy")!="require_direct" or candidate.get("relay_enabled") is not False:
         errors.append("nestlink remote control must use authenticated encrypted direct P2P")
-    if candidate.get("frp")!="0.70.1" or candidate.get("agent_version")!="13.0.0":
+    if candidate.get("frp")!="0.70.1" or candidate.get("agent_version") != value:
         errors.append("Internal FRP and managed Agent versions must be explicit")
     if not {"physical-android-device","carrier-network-nat","long-duration-media"}<=set(candidate.get("not_verified",[])):
         errors.append("Current release must disclose the unverified physical/network/media scope")
@@ -168,44 +177,48 @@ def validate_nestlink(candidate, stable, *, root=ROOT):
     for name in COMPONENTS:
         item=components.get(name,{})
         repository=v10_evidence.REPOSITORIES[name]
-        if any(item.get(k)!=v for k,v in {"repository":repository,"version":"13.0.0","tag":"v13.0.0","prerelease":False}.items()):
+        if any(item.get(k)!=v for k,v in {"repository":repository,"version":value,"tag":"v" + value,"prerelease":False}.items()):
             errors.append("Current component identity drifted: "+name)
         if name=="hub":
             if item.get("source_sha") is not None or item.get("artifacts")!=[]:errors.append("Hub must resolve its self-reference from its signed Release materials")
             continue
-        if not re.fullmatch(r"[a-f0-9]{40}",item.get("source_sha","")):errors.append("Exact current source required: "+name)
+        if (item.get("published") is True or item.get("source_sha") is not None) and not re.fullmatch(r"[a-f0-9]{40}", item.get("source_sha") or ""):
+            errors.append("Exact current source required: " + name)
         artifacts=item.get("artifacts",[])
         publication.append(item.get("published") is True)
         if item.get("published") is not True:
             if artifacts or item.get("release_url"):errors.append("Unpublished component cannot invent downloads: "+name)
             continue
-        if item.get("release_url")!=f"https://github.com/{repository}/releases/tag/v13.0.0":errors.append("Current release URL drifted: "+name)
+        if item.get("release_url")!=f"https://github.com/{repository}/releases/tag/v{value}":errors.append("Current release URL drifted: "+name)
         filenames=[entry.get("filename") for entry in artifacts]
-        expected={"SHA256SUMS.txt",f"NestLink-{name}-Materials-13.0.0.zip"}
-        expected.update({"client":{"NestLink-Setup-13.0.0-x64.exe","NestLink-Linux-13.0.0-x64.deb","NestLink-Linux-13.0.0-arm64.deb"},
-                         "server":{"NestLink-Server-13.0.0.tar.gz"},"android":{"NestLink-Android-13.0.0.apk"}}[name])
+        expected={"SHA256SUMS.txt",f"NestLink-{name}-Materials-{value}.zip"}
+        expected.update({"client":{f"NestLink-Setup-{value}-x64.exe",f"NestLink-Linux-{value}-x64.deb",f"NestLink-Linux-{value}-arm64.deb"},
+                         "server":{f"NestLink-Server-{value}.tar.gz"},"android":{f"NestLink-Android-{value}.apk"}}[name])
         if set(filenames)!=expected or len(filenames)!=len(expected):errors.append("Current platform attachment set is incomplete: "+name)
         for entry in artifacts:
             filename=entry.get("filename","")
             if (Path(filename).name!=filename or "\\" in filename or not re.fullmatch(r"[a-f0-9]{64}",entry.get("sha256",""))
                     or not isinstance(entry.get("size_bytes"),int) or isinstance(entry["size_bytes"],bool) or entry["size_bytes"]<1
-                    or entry.get("url")!=f"https://github.com/{repository}/releases/download/v13.0.0/{filename}"):
+                    or entry.get("url")!=f"https://github.com/{repository}/releases/download/v{value}/{filename}"):
                 errors.append("Current asset bytes or identity are invalid: "+name)
     if len(publication)!=3 or candidate.get("downloads_published") is not all(publication):
         errors.append("Publication state must reflect all three actual component releases")
     promoted=candidate.get("promotion_status")=="promoted"
+    proof = candidate.get("component_verification")
+    if proof is not None and (not isinstance(proof, dict) or proof.get("version") != value):
+        errors.append("Current component verification cannot reuse a historical record")
     if not promoted:
-        if previous.is_file() and stable!=json.loads(previous.read_text()):errors.append("Stable channel changed before 13.0.0 acceptance")
+        if previous.is_file() and stable!=json.loads(previous.read_text()):errors.append(f"Stable channel changed before {value} acceptance")
         if candidate.get("acceptance_status")!="pending" or candidate.get("tested_combination") is not None:errors.append("Unverified target cannot claim installed-app acceptance")
         return errors
     if not all(publication) or candidate.get("acceptance_status")!="passed_reproducible" or candidate.get("stage")!="stable":
         errors.append("Stable promotion requires actual reproducible acceptance and component releases")
-    expected_combination={name:"13.0.0" for name in ("server","client","android","agent")}
+    expected_combination={name:value for name in ("server","client","android","agent")}
     if candidate.get("tested_combination")!=expected_combination or stable.get("tested_combination")!=expected_combination:
         errors.append("Tested combination must match the current installed product versions")
-    if stable.get("version")!="13.0.0" or stable.get("stage")!="stable" or stable.get("product")!="nestlink":
+    if stable.get("version") != value or stable.get("stage")!="stable" or stable.get("product")!="nestlink":
         errors.append("Promoted stable channel identity is invalid")
-    record_path=root/"docs/release/components-13.0.0.json"
+    record_path = root / f"docs/release/components-{value}.json"
     if not record_path.is_file():errors.append("Promotion is fail-closed without independent byte and signature evidence")
     else:
         records=json.loads(record_path.read_text())
@@ -233,12 +246,12 @@ def validate_distribution(dist, *, root=ROOT, evidence_errors=None, evidence_rec
         errors.append(message)
 
     version = (root / "VERSION").read_text(encoding="utf-8").strip()
-    product = "nestlink" if version == NESTLINK_TARGET["hub"] else "Home Tunnel"
+    product = "nestlink" if is_nestlink_version(version) else "Home Tunnel"
     if not isinstance(dist, dict) or dist.get("schema_version") != 1 or dist.get("product") != product:
         bad("distribution identity is wrong")
     if dist.get("source_of_truth") != "distribution.json":
         bad("distribution.json must remain the only channel source")
-    homedesk = version in (HOMEDESK_TARGET["hub"], NESTLINK_TARGET["hub"])
+    homedesk = version == HOMEDESK_TARGET["hub"] or is_nestlink_version(version)
     if dist.get("development_line") != version or not (v10_evidence.component_versions(version) or homedesk):
         bad("development_line must match VERSION and a supported release line")
     channels = dist.get("channels")
@@ -269,7 +282,7 @@ def validate_distribution(dist, *, root=ROOT, evidence_errors=None, evidence_rec
             if (previous.get("version") != "10.0.0" or previous.get("stage") != "stable" or
                     previous.get("components", {}).get("client", {}).get("release_revision") != "5eb6768f0d21a842c01d66d3d979a4f935a2ed61"):
                 bad("published 10.0.0 snapshot lost its client identity")
-    if version == "13.0.0":
+    if is_nestlink_version(version):
         return errors + validate_nestlink(candidate, stable, root=root)
     if homedesk:
         return errors + validate_homedesk(candidate, stable, root=root)

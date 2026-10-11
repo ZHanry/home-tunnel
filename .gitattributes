@@ -51,3 +51,6 @@ docs/site/assets/v10/windows-capture-manifest.json -text
 docs/release/v10.1/client-candidate-download.json -text
 docs/release/v10.1/remote-host-provenance.json -text
 validation/client/41c0e21fbb3a4c634fbc9d63fcd7453337e4d029/windows-final-defender-scan.json -text
+# Preserve the original installed Android 14 capture manifest and stable 13 record bytes.
+docs/site/assets/14.0.0/android-devices-capture-manifest.json -text
+docs/release/stable-13.0.0.json -text

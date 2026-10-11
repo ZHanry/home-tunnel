@@ -23,10 +23,10 @@ const ROUTES = [
   { locale: "en", page: "downloads", path: "/en/downloads.html", faq: false, status: true },
 ];
 const THEMES = [
-  { name: "light", query: "light", scheme: "light", bg: "rgb(247, 249, 252)" },
-  { name: "dark", query: "dark", scheme: "dark", bg: "rgb(16, 26, 43)" },
-  { name: "system-light", query: "system", scheme: "light", bg: "rgb(247, 249, 252)" },
-  { name: "system-dark", query: "system", scheme: "dark", bg: "rgb(16, 26, 43)" },
+  { name: "light", query: "light", scheme: "light", bg: "rgb(250, 249, 253)" },
+  { name: "dark", query: "dark", scheme: "dark", bg: "rgb(24, 21, 31)" },
+  { name: "system-light", query: "system", scheme: "light", bg: "rgb(250, 249, 253)" },
+  { name: "system-dark", query: "system", scheme: "dark", bg: "rgb(24, 21, 31)" },
 ];
 const DESKTOP = { name: "desktop", width: 1440, height: 900, dsf: 1 };
 const TABLET = { name: "tablet", width: 768, height: 1024, dsf: 1 };
@@ -38,8 +38,8 @@ const REFLOW_DESKTOP = { name: "reflow-720", width: 720, height: 900, dsf: 1 };
 const LANDSCAPE = { name: "landscape-mobile", width: 844, height: 390, dsf: 1 };
 const MAIN = [DESKTOP, TABLET, MOBILE];
 const SNIPPET = {
-  "zh-CN": { ready: "稳定下载是", loading: "正在读取", error: "没有读到", empty: "没有读到", invalid: "没有读到", offline: "离线" },
-  en: { ready: "Stable downloads are", loading: "Reading the download manifest", error: "could not be read", empty: "could not be read", invalid: "could not be read", offline: "offline" },
+  "zh-CN": { ready: "NestLink", loading: "正在读取", error: "没有读到", empty: "没有读到", invalid: "没有读到", offline: "离线" },
+  en: { ready: "NestLink", loading: "Reading the download manifest", error: "could not be read", empty: "could not be read", invalid: "could not be read", offline: "offline" },
 };
 
 function arg(name, fallback = "") {
@@ -130,8 +130,8 @@ function buildCases() {
     add(makeCase(route, MOBILE, "light", "ready", "focus-nav"));
     add(makeCase(route, MOBILE, "dark", "ready", "nav-escape"));
   }
-  add(makeCase(ROUTES[0], DESKTOP, "light", "ready", "theme-beats-system", { scheme: "dark", expectBg: "rgb(244, 245, 240)" }));
-  add(makeCase(ROUTES[1], DESKTOP, "dark", "ready", "theme-beats-system", { scheme: "light", expectBg: "rgb(17, 28, 25)" }));
+  add(makeCase(ROUTES[0], DESKTOP, "light", "ready", "theme-beats-system", { scheme: "dark", expectBg: "rgb(250, 249, 253)" }));
+  add(makeCase(ROUTES[1], DESKTOP, "dark", "ready", "theme-beats-system", { scheme: "light", expectBg: "rgb(24, 21, 31)" }));
   add(makeCase(ROUTES[0], NARROW, "system-dark", "ready", "default"));
   add(makeCase(ROUTES[6], NARROW, "system-light", "ready", "default"));
   add(makeCase(ROUTES[0], REFLOW_NARROW, "dark", "ready", "default"));
@@ -147,8 +147,8 @@ function buildCases() {
     { area: "faq-other-pages", reason: "The FAQ disclosure is only on the landing pages. Privacy, preview, and downloads link to it." },
     { area: "download-states-privacy-preview", reason: "Privacy and preview do not render #download-status. Loading, error, and offline apply to landing and downloads." },
     { area: "reduced-motion-screenshot", reason: "The site has no motion design other than smooth scrolling. Captures emulate prefers-reduced-motion: reduce and the a11y check records scroll-behavior." },
-    { area: "installer-steps", reason: "This site links to published 9.0.0 files. It does not render an installer or update wizard." },
-    { area: "v10-product-screenshots", reason: "assets/v10 slots stay empty until real product captures exist. They are visible inside landing and preview full pages and are not invented here." },
+    { area: "installer-steps", reason: "This site links to the stable manifest’s verified published files. It does not render an installer or update wizard." },
+    { area: "product-screenshots", reason: "Each published product screenshot has its own exact source, original pixel digest and capture-kind record; site layout captures do not invent product screenshots." },
   ];
   const original = [];
   for (const locale of ["zh-CN", "en"]) {

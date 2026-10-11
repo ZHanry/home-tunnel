@@ -1,16 +1,58 @@
 {
   "schema_version": 2,
-  "note": "Only current nestlink 13.0.0 images, captured from the installed Linux GUI and running Web server with disposable example data. Capture manifests bind original pixels to exact source and package bytes.",
+  "note": "Original installed 14.0.0 Windows login, Linux desktop, running Web server and Android UI pixels; exact signed payload sources and original manifest/image hashes retained.",
   "slots": [
+    {
+      "id": "windows-login",
+      "status": "current-ui",
+      "asset": "assets/14.0.0/windows-login.jpg",
+      "capture_manifest": "assets/14.0.0/windows-login-capture-manifest.json",
+      "source_file": "login-zh-light14-schemafix.jpg",
+      "captured_product_version": "14.0.0",
+      "fixture_data": true,
+      "capture_kind": "native-windows",
+      "width": 1109,
+      "height": 754,
+      "package_filename": "NestLink-Setup-14.0.0-x64.exe",
+      "visual_review": {
+        "status": "passed",
+        "manifest_sha256": "82f730329a4fc663e645531040e3adb1dd45e061568d2ef6521356c2cd25b9ac",
+        "image_sha256": "92f8caba817a872d2f199f6b421e7816315d3ceb48bbe0096cd6403f1a02e82c",
+        "reviewed_at": "2026-10-10T19:48:29.202116+00:00",
+        "observation": "Chinese light login: NestLink logo/name, purple CTA and controls, complete three-field form and top language/theme controls; no entered credentials.",
+        "review_method": "Root directly viewed the unchanged original file with view_image",
+        "scope": "Visual inspection of this original capture only; no additional platform/media/flow claim"
+      },
+      "pages": [
+        "preview.html",
+        "en/preview.html"
+      ],
+      "label_must_include": [
+        "14.0.0",
+        "Windows"
+      ]
+    },
     {
       "id": "desktop-light",
       "status": "current-ui",
-      "asset": "assets/13.0.0/desktop-workbench-light.png",
-      "capture_manifest": "assets/13.0.0/desktop-capture-manifest.json",
-      "source_file": "desktop-workbench-light.png",
-      "captured_product_version": "13.0.0",
+      "asset": "assets/14.0.0/desktop-light.png",
+      "capture_manifest": "assets/14.0.0/desktop-light-capture-manifest.json",
+      "source_file": "linux-devices14.png",
+      "captured_product_version": "14.0.0",
       "fixture_data": true,
       "capture_kind": "native-linux",
+      "width": 1120,
+      "height": 760,
+      "package_filename": "NestLink-Linux-14.0.0-x64.deb",
+      "visual_review": {
+        "status": "passed",
+        "manifest_sha256": "c0b865adbb4bf7566c77ce87ee741e38347910a0b10f82ee6443cbdf5e84249c",
+        "image_sha256": "553adb81b802ea40f49209dd03d79d94e3eb9cc8fe1005118eb0e1041a200df1",
+        "reviewed_at": "2026-10-10T19:48:29.202116+00:00",
+        "observation": "Chinese light installed Linux device directory: three purple business navigation items and bottom account; one physical HL computer card separately shows remote/tunnel online with five services; Android card is honestly offline at capture.",
+        "review_method": "Root directly viewed the unchanged original file with view_image",
+        "scope": "Visual inspection of this original capture only; no additional platform/media/flow claim"
+      },
       "pages": [
         "preview.html",
         "en/preview.html",
@@ -18,92 +60,185 @@
         "en/index.html"
       ],
       "label_must_include": [
-        "13.0.0"
+        "14.0.0",
+        "Linux"
       ]
     },
     {
-      "id": "desktop-dark",
+      "id": "desktop-remote",
       "status": "current-ui",
-      "asset": "assets/13.0.0/desktop-workbench-dark.png",
-      "capture_manifest": "assets/13.0.0/desktop-capture-manifest.json",
-      "source_file": "desktop-workbench-dark.png",
-      "captured_product_version": "13.0.0",
+      "asset": "assets/14.0.0/desktop-remote.png",
+      "capture_manifest": "assets/14.0.0/desktop-remote-capture-manifest.json",
+      "source_file": "linux-remote14.png",
+      "captured_product_version": "14.0.0",
       "fixture_data": true,
       "capture_kind": "native-linux",
+      "width": 1120,
+      "height": 760,
+      "package_filename": "NestLink-Linux-14.0.0-x64.deb",
+      "visual_review": {
+        "status": "passed",
+        "manifest_sha256": "6858afb4117ec731c438240cd0bb724172b2ab496f9f7c83291114ab3291ac10",
+        "image_sha256": "761caa4b56575ddd8e556f52b0a8a28b06cf36ee36d06fbd126a4385aa744ba1",
+        "reviewed_at": "2026-10-10T19:48:29.202116+00:00",
+        "observation": "Chinese light installed Linux remote page: ready local task ID, purple connection button, recent connection and remote settings. Original image contains a task one-time credential; public use must wait for credential invalidation and task cleanup.",
+        "review_method": "Root directly viewed the unchanged original file with view_image",
+        "scope": "Visual inspection of this original capture only; no additional platform/media/flow claim"
+      },
       "pages": [
         "preview.html",
         "en/preview.html"
       ],
       "label_must_include": [
-        "13.0.0"
+        "14.0.0",
+        "Linux"
       ]
     },
     {
-      "id": "desktop-empty",
+      "id": "desktop-tunnel",
       "status": "current-ui",
-      "asset": "assets/13.0.0/desktop-workbench-empty.png",
-      "capture_manifest": "assets/13.0.0/desktop-capture-manifest.json",
-      "source_file": "desktop-workbench-empty.png",
-      "captured_product_version": "13.0.0",
+      "asset": "assets/14.0.0/desktop-tunnel.png",
+      "capture_manifest": "assets/14.0.0/desktop-tunnel-capture-manifest.json",
+      "source_file": "linux-tunnels14.png",
+      "captured_product_version": "14.0.0",
       "fixture_data": true,
       "capture_kind": "native-linux",
+      "width": 1120,
+      "height": 760,
+      "package_filename": "NestLink-Linux-14.0.0-x64.deb",
+      "visual_review": {
+        "status": "passed",
+        "manifest_sha256": "a5a65607aef8174428288aa4c499ff6b3b01cd6cbc3aff4c7b197a70fe8f5517",
+        "image_sha256": "ad53b6a134bd2d58f7103f79856410e215ac26af8e149a521b58972e87528d76",
+        "reviewed_at": "2026-10-10T19:48:29.202116+00:00",
+        "observation": "Chinese light installed Linux tunnels: purple service action controls and protocol tabs; four new task service cards online plus visible migration baseline fifth service; long addresses wrap and longer titles truncate.",
+        "review_method": "Root directly viewed the unchanged original file with view_image",
+        "scope": "Visual inspection of this original capture only; no additional platform/media/flow claim"
+      },
       "pages": [
         "preview.html",
         "en/preview.html"
       ],
       "label_must_include": [
-        "13.0.0"
+        "14.0.0",
+        "Linux"
       ]
     },
     {
       "id": "web-admin",
       "status": "current-ui",
-      "asset": "assets/13.0.0/admin-console.png",
-      "capture_manifest": "assets/13.0.0/web-capture-manifest.json",
+      "asset": "assets/14.0.0/web-admin.png",
+      "capture_manifest": "assets/14.0.0/web-admin-capture-manifest.json",
       "source_file": "admin-console.png",
-      "captured_product_version": "13.0.0",
+      "captured_product_version": "14.0.0",
       "fixture_data": true,
       "capture_kind": "web-ui",
+      "width": 1440,
+      "height": 960,
+      "visual_review": {
+        "status": "passed",
+        "manifest_sha256": "2118151f9f75545d8a87b512339efafb22d2f63e2fdff55f8d72613978250429",
+        "image_sha256": "5c775d6bd5f9fc148bfae0624dd50ee0d404a70e177ed9e448634440d5a126b5",
+        "reviewed_at": "2026-10-10T13:40:04.659945+00:00",
+        "observation": "NestLink branding and icons align with final UI. Overview cards and health rows fit without unintended clipping or overlap. Gateway row displays healthy; backup row honestly remains unconfirmed with no backup record.",
+        "review_record": "D:\\代码\\远程控制\\.work\\14.0.0\\evidence\\web-product-health-final14\\visual-review.json",
+        "review_record_sha256": "f7e0d94a6d300766c97a18cbe5d503ef644262210549a05a0c657c07f15e9e19"
+      },
       "pages": [
         "preview.html",
         "en/preview.html"
       ],
       "label_must_include": [
-        "13.0.0"
+        "14.0.0",
+        "Web"
       ]
     },
     {
       "id": "web-remote",
       "status": "current-ui",
-      "asset": "assets/13.0.0/remote-entry.png",
-      "capture_manifest": "assets/13.0.0/web-capture-manifest.json",
+      "asset": "assets/14.0.0/web-remote.png",
+      "capture_manifest": "assets/14.0.0/web-remote-capture-manifest.json",
       "source_file": "remote-entry.png",
-      "captured_product_version": "13.0.0",
+      "captured_product_version": "14.0.0",
       "fixture_data": true,
       "capture_kind": "web-ui",
+      "width": 1440,
+      "height": 960,
+      "visual_review": {
+        "status": "passed",
+        "manifest_sha256": "c8a5c682e3323742d0a4471a09c9b8313a76b302585612e718808849564a3132",
+        "image_sha256": "ca90ce27240f2f2accce75038591cafaa76925f3c85bc8a14967e1560a70db7f",
+        "reviewed_at": "2026-10-10T13:34:17.734215+00:00",
+        "observation": "NestLink naming, purple brand, navigation icons and section names are consistent. Desktop dialogs fit. 390/320 light/dark viewport captures show reachable final cards and pagination above bottom navigation; no unintended horizontal overflow or component text clipping observed. This selection uses only the reviewed remote/tunnel original; the abnormal administrator overview is excluded and replaced by a separate healthy original capture.",
+        "review_record": "D:\\代码\\远程控制\\.work\\14.0.0\\evidence\\web-product-final14\\visual-review.json",
+        "review_record_sha256": "b3d051bc41698150efb3cdca5edf7bd314773499299f1469663659065a7b89cc"
+      },
       "pages": [
         "preview.html",
         "en/preview.html"
       ],
       "label_must_include": [
-        "13.0.0"
+        "14.0.0",
+        "Web"
       ]
     },
     {
       "id": "web-tunnel",
       "status": "current-ui",
-      "asset": "assets/13.0.0/tunnel-wizard.png",
-      "capture_manifest": "assets/13.0.0/web-capture-manifest.json",
+      "asset": "assets/14.0.0/web-tunnel.png",
+      "capture_manifest": "assets/14.0.0/web-tunnel-capture-manifest.json",
       "source_file": "tunnel-wizard.png",
-      "captured_product_version": "13.0.0",
+      "captured_product_version": "14.0.0",
       "fixture_data": true,
       "capture_kind": "web-ui",
+      "width": 1440,
+      "height": 960,
+      "visual_review": {
+        "status": "passed",
+        "manifest_sha256": "c8a5c682e3323742d0a4471a09c9b8313a76b302585612e718808849564a3132",
+        "image_sha256": "6fcdf1942f3194e1bccb59f37f10568ddbc49f7b954f7b15f25017a99b338a46",
+        "reviewed_at": "2026-10-10T13:34:17.734215+00:00",
+        "observation": "NestLink naming, purple brand, navigation icons and section names are consistent. Desktop dialogs fit. 390/320 light/dark viewport captures show reachable final cards and pagination above bottom navigation; no unintended horizontal overflow or component text clipping observed. This selection uses only the reviewed remote/tunnel original; the abnormal administrator overview is excluded and replaced by a separate healthy original capture.",
+        "review_record": "D:\\代码\\远程控制\\.work\\14.0.0\\evidence\\web-product-final14\\visual-review.json",
+        "review_record_sha256": "b3d051bc41698150efb3cdca5edf7bd314773499299f1469663659065a7b89cc"
+      },
       "pages": [
         "preview.html",
         "en/preview.html"
       ],
       "label_must_include": [
-        "13.0.0"
+        "14.0.0",
+        "Web"
+      ]
+    },
+    {
+      "id": "android-devices",
+      "status": "current-ui",
+      "asset": "assets/14.0.0/android-devices.png",
+      "capture_manifest": "assets/14.0.0/android-devices-capture-manifest.json",
+      "source_file": "android14-palette-network-recovered-controller-devices.png",
+      "captured_product_version": "14.0.0",
+      "fixture_data": true,
+      "capture_kind": "native-android",
+      "width": 412,
+      "height": 900,
+      "package_filename": "NestLink-Android-14.0.0.apk",
+      "visual_review": {
+        "status": "passed",
+        "manifest_sha256": "231088053811cc2a4def50a097dcc40a226534f1fb917e28e6876b93acfa2725",
+        "image_sha256": "59ac2d34de55e85c26dabb7c30228276740c243e7adb418dfc6ed070cd5daf5d",
+        "reviewed_at": "2026-10-10T21:23:51.171042+00:00",
+        "observation": "Root directly viewed the unchanged original PNG: NestLink purple logo, top account entry, device directory with separate remote/tunnel states, enabled connection, and three business bottom tabs. Two task physical cards fit at412dp; no password or token pixels visible.",
+        "review_method": "Root original-resolution view_image plus independent review of58 originals; this manifest only indexes original capture facts.",
+        "review_record": "D:\\代码\\远程控制\\.work\\14.0.0\\evidence\\palette-final\\hub-android-original14\\visual-review.json"
+      },
+      "pages": [
+        "preview.html",
+        "en/preview.html"
+      ],
+      "label_must_include": [
+        "14.0.0",
+        "Android"
       ]
     }
   ],

@@ -61,7 +61,7 @@ class DistributionTests(unittest.TestCase):
         self.assertEqual(status["status"], "accepted_with_waivers")
         self.assertEqual(distribution.validate_distribution(dist, root=ROOT, evidence_errors=errors, evidence_record=record), [])
         self.assertEqual(distribution.projection_errors(dist, root=ROOT), [])
-        self.assertEqual(dist["channels"]["stable"]["version"], "13.0.0" if dist["channels"]["candidate"]["promotion_status"] == "promoted" else "10.1.0")
+        self.assertEqual(dist["channels"]["stable"]["version"], dist["development_line"] if dist["channels"]["candidate"]["promotion_status"] == "promoted" else ("13.0.0" if distribution.is_nestlink_version(dist["development_line"]) else "10.1.0"))
         self.assertIn(dist["channels"]["candidate"]["acceptance_status"], ("pending", "passed_reproducible"))
         self.assertIn(dist["channels"]["candidate"]["promotion_status"], ("not_promoted", "promoted"))
         self.assertIs(dist["channels"]["candidate"]["prerelease"], False)

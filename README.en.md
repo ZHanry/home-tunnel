@@ -1,8 +1,8 @@
-# nestlink
+# NestLink
 
 [中文](README.md) · [Website](https://zhanry.github.io/home-tunnel/en/) · [Release scope](docs/HOMEDESK_RELEASE.md)
 
-Manage devices, control a remote desktop directly, and keep local services accessible through your own server. **13.0.0 is the stable release** with automated checks and reproducible integration on the released bytes. See [downloads](docs/DOWNLOADS.md) and [release notes](docs/HOMEDESK_RELEASE.md) for the exact verification scope and unverified coverage.
+Manage devices, control a remote desktop directly, and keep local services accessible through your own server. **14.0.0** brings the current desktop's purple workspace, icon and names to Web and Android. The coordinated release is available. Original files, signatures and version-specific reproducible acceptance have been independently verified; see the release notes for the exact scope and outstanding coverage. See [downloads](docs/DOWNLOADS.md).
 
 | Platform | Role | Package |
 | --- | --- | --- |
@@ -11,8 +11,6 @@ Manage devices, control a remote desktop directly, and keep local services acces
 | Linux x64 / ARM64 | Controller, host and tunnel hub | Two GUI DEBs |
 | Android ARM64 / x86_64 | Management and remote control | One universal APK |
 
-One English identity, icon and blue workspace across platforms. Sign in to your self-hosted service; connection settings are retrieved automatically. Device-ID assistance can cross accounts on the same server and still requires host approval or a remote password. Remote media is encrypted direct P2P; failed direct connections end without a relay fallback.
+All platforms share the NestLink name, icon, device directory and action names. Sign in to your self-hosted HTTPS service to retrieve connection settings. Device capabilities identify available remote and background-service actions. Cross-account assistance still requires host approval or a remote password; screen and input use authenticated encrypted direct P2P.
 
-HTTP/HTTPS, governed TCP/UDP, port pools, authorization, access control, traffic governance and diagnostics remain. Windows/Linux clients own tunnel execution, independently of remote sessions. Standalone CLI/NAS products and macOS GUI packages are removed from the release scope.
-
-Client releases contain a Windows installer, two Linux DEBs, materials and checksums. Android retains its application ID and original release certificate. Windows currently has no Authenticode publisher signature. Sources, licenses, exact binary hashes and build/integration evidence accompany the release. Historical releases remain in GitHub history; current pages show only current UI. Production deployment upgrades are separate.
+Windows/Linux clients manage HTTP/HTTPS, TCP/UDP, port pools, authorization, traffic controls and diagnostics. Remote sessions and tunnels have separate lifetimes. Android retains its application ID and original release certificate. Windows currently has no Authenticode publisher signature. Corresponding source, licenses, exact hashes and build/integration evidence accompany the release; historical releases remain available.

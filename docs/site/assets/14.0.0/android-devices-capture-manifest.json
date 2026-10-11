@@ -1,0 +1,46 @@
+{
+  "product_version": "14.0.0",
+  "repository": "ZHanry/home-tunnel-android",
+  "source_sha": "dcdfc4299d1f92f46b5f3ca8e675d304f9639982",
+  "client_source": "feaf1181efe55076dead52931203a8488cbad20d",
+  "server_source": "299753a4c6580ac6bbc748cdee743489a3e17dba",
+  "capture_kind": "native-android",
+  "installed_application": true,
+  "interactive": true,
+  "synthetic_data": false,
+  "ui_source_modified": false,
+  "package_sha256": "0d81e4a2ac6ee64b21fd95bcae00ba3cbc71b9036371475786cc8bf03bcafbab",
+  "captured_at": "2026-10-10T19:48:23.189192+00:00",
+  "installed_metadata": {
+    "application_id": "io.github.zhanry.hometunnel",
+    "version": "14.0.0",
+    "version_code": 14000000,
+    "installed_apk_sha256": "0d81e4a2ac6ee64b21fd95bcae00ba3cbc71b9036371475786cc8bf03bcafbab",
+    "first_install_time": "2026-10-09 13:43:14",
+    "certificate_sha256": "d7779e338be1039acee6dda9a43417cbf2baf4b0c9995578d9708501e95af702",
+    "build_run": 38069852456
+  },
+  "captures": [
+    {
+      "file": "android14-palette-network-recovered-controller-devices.png",
+      "sha256": "59ac2d34de55e85c26dabb7c30228276740c243e7adb418dfc6ed070cd5daf5d",
+      "width": 412,
+      "height": 900,
+      "edited": false
+    }
+  ],
+  "original_sidecar": {
+    "file": "android14-palette-network-recovered-controller-devices.capture.json",
+    "sha256": "2e1c6a417ebd40a7eb8af5a2451960bbc274bf2cd278d23e20cbc51f2f8b326d"
+  },
+  "installed_receipt": {
+    "file": "android14-installed.json",
+    "sha256": "3f5a5e58b0cc0518fbba727ef4ef0aa2f83ec2df7aa2d9c013e3e1357e6f7723"
+  },
+  "independent_review": {
+    "file": "android14-ui-independent-review.json",
+    "sha256": "4c9b2812e5697532b16b0aab2f755153269996fee161ddc61657856b1edda8ec"
+  },
+  "manifest_kind": "index-of-existing-original-capture",
+  "scope": "Existing task API35 x86_64 AVD real installed dcdf14 PNG; no new capture, pixel edit, replay, credential or media claim. Original sidecar, installation receipt and independent review retained byte-for-byte."
+}

@@ -6,6 +6,7 @@ on:
     paths:
       - .github/workflows/product-screenshots.yml
       - docs/screenshots/**
+      - scripts/capture-nestlink-views.cjs
   workflow_dispatch:
 
 permissions:
@@ -17,7 +18,7 @@ concurrency:
 
 jobs:
   capture:
-    name: Capture current 13.0.0 Web UI with example data
+    name: Capture selected Web UI with example data
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -25,11 +26,24 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Check out unchanged 13.0.0 server source
+      - id: source
+        name: Resolve selected source and version
+        run: |
+          python3 - <<'PY'
+          import json, os, re
+          from pathlib import Path
+          candidate = json.loads(Path('distribution.json').read_text())['channels']['candidate']
+          source = candidate['components']['server']['source_sha']
+          if not isinstance(source, str) or not re.fullmatch(r'[a-f0-9]{40}', source):
+              raise SystemExit('Select the exact committed server source before capture')
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write(f"sha={source}\nversion={candidate['version']}\n")
+          PY
+      - name: Check out exact selected server source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ZHanry/home-tunnel-server
-          ref: a85acca9335fa977c01e3ac25e3f99169a4f3649
+          ref: ${{ steps.source.outputs.sha }}
           path: capture-source/server
           persist-credentials: false
       - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86
@@ -49,11 +63,14 @@ jobs:
           pnpm exec playwright install --with-deps --only-shell chromium
           test -n "$(fc-list :lang=zh family)"
       - name: Capture genuine Web UI and record provenance
-        run: node docs/screenshots/capture-product.mjs capture-source/server product-captures-13
+        env:
+          CAPTURE_SOURCE_SHA: ${{ steps.source.outputs.sha }}
+          CAPTURE_PRODUCT_VERSION: ${{ steps.source.outputs.version }}
+        run: node docs/screenshots/capture-product.mjs capture-source/server product-captures
       - name: Upload screenshots for visual review
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: nestlink-13-web-screenshots-${{ github.run_id }}-${{ github.run_attempt }}
-          path: product-captures-13/
+          name: nestlink-web-screenshots-${{ github.run_id }}-${{ github.run_attempt }}
+          path: product-captures/
           if-no-files-found: error
           retention-days: 14

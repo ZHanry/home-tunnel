@@ -98,7 +98,7 @@ const incomplete = state.view({
   candidate: require('./docs/site/candidate.json'),
   fallbackStable: '10.0.0'
 });
-if (incomplete.tone !== 'ready' || !incomplete.en.includes('nestlink 13.0.0')) process.exit(10);
+if (incomplete.tone !== 'ready' || !incomplete.en.includes('NestLink ' + require('./docs/site/candidate.json').version)) process.exit(10);
 const current = require('./docs/site/candidate.json');
 if (current.promotion_status === 'not_promoted' && !incomplete.en.includes('acceptance are in progress')) process.exit(12);
 if (current.promotion_status === 'promoted' && !incomplete.en.includes('reproducible integration verified')) process.exit(13);

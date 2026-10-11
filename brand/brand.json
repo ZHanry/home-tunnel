@@ -1,11 +1,11 @@
 {
-  "name": "nestlink",
-  "version": "13.0.0",
-  "style": "blue-workbench",
-  "primary": "#1967D2",
-  "background": "#F7F9FC",
+  "name": "NestLink",
+  "version": "14.0.0",
+  "style": "lavender-device-directory",
+  "primary": "#7955CF",
+  "background": "#FAF9FD",
   "icon": "icon.svg",
-  "icon_sha256": "c7ccb5bf3908228cc4b5e02ecf71197a2d6dc1a25e3becbe72f7e138bdd8b5dd",
+  "icon_sha256": "7d7f9364ff04a67f3995e6f2e7e323205b1f08a957aaffee5ff9eb1b5d63d63c",
   "scrollbars": "hidden-with-accessible-scrolling",
   "upgrade_identity": "Preserve HomeDesk configuration namespace, installer identity, Android applicationId and signing certificate"
 }

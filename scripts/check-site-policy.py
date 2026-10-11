@@ -8,6 +8,8 @@ import re
 import sys
 from pathlib import Path
 
+from capture_image import image_info, validate_image_suffix
+
 ROOT = Path(__file__).resolve().parents[1]
 SITE = ROOT / "docs" / "site"
 BANNED = (
@@ -37,7 +39,7 @@ LANDING_PAGES = {"index.html", "en/index.html"}
 STATUS_PAGES = LANDING_PAGES | DOWNLOAD_PAGES
 
 
-def audit_capture(site, slot):
+def audit_capture(site, slot, expected_version=None):
     """Bind published product pixels to an original capture manifest."""
     errors = []
     slot_id = slot["id"]
@@ -48,7 +50,7 @@ def audit_capture(site, slot):
             return [f"slot {slot_id} capture paths must stay inside the site"]
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         version = manifest.get("product_version", manifest.get("component_version", manifest.get("version")))
-        if version != slot.get("captured_product_version") or version != "13.0.0":
+        if version != slot.get("captured_product_version") or (expected_version is not None and version != expected_version):
             errors.append(f"slot {slot_id} capture version must match its recorded product version")
         revision = manifest.get("source_sha", manifest.get("repository_revision", manifest.get("capture_revision", "")))
         if not re.fullmatch(r"[a-f0-9]{40}", revision):
@@ -72,7 +74,8 @@ def audit_capture(site, slot):
             for key in ("package_sha256", "gui_sha256"):
                 if not re.fullmatch(r"[a-f0-9]{64}", manifest.get(key, "")):
                     errors.append(f"slot {slot_id} needs the actual Windows {key}")
-            entries = [{"file": slot["source_file"], "sha256": manifest.get("screenshot_sha256")}]
+            if not entries:
+                entries = [{"file": slot["source_file"], "sha256": manifest.get("screenshot_sha256")}]
         matches = [entry for entry in entries if Path(entry.get("file", entry.get("source_path", ""))).name == slot["source_file"]]
         if len(matches) != 1:
             return errors + [f"slot {slot_id} must identify one original captured file"]
@@ -80,13 +83,12 @@ def audit_capture(site, slot):
         data = asset.read_bytes()
         if hashlib.sha256(data).hexdigest() != entry.get("sha256"):
             errors.append(f"slot {slot_id} image digest does not match capture")
-        if len(data) < 24 or data[:8] != b"\x89PNG\r\n\x1a\n":
-            errors.append(f"slot {slot_id} must contain actual PNG bytes")
-        else:
-            dimensions = (int.from_bytes(data[16:20], "big"), int.from_bytes(data[20:24], "big"))
-            expected = (entry.get("width", manifest.get("width")), entry.get("height", manifest.get("height")))
-            if dimensions != expected:
-                errors.append(f"slot {slot_id} image dimensions do not match capture")
+        image_format, width, height = image_info(data)
+        validate_image_suffix(image_format, asset.suffix)
+        validate_image_suffix(image_format, Path(slot["source_file"]).suffix)
+        expected = (entry.get("width", manifest.get("width")), entry.get("height", manifest.get("height")))
+        if (width, height) != expected:
+            errors.append(f"slot {slot_id} image dimensions do not match capture")
     except (OSError, ValueError, KeyError, TypeError) as error:
         errors.append(f"slot {slot_id} has invalid capture provenance: {error}")
     return errors
@@ -99,6 +101,8 @@ def audit(root=ROOT):
     slots=json.loads((site/"screenshot-slots.json").read_text())["slots"]
     if len(pages)!=8:errors.append("expected eight zh/en landing, preview, download and privacy pages")
     candidate=json.loads((site/"candidate.json").read_text())
+    stable=json.loads((site/"releases.json").read_text())
+    capture_versions = {candidate['version']} if candidate.get('promotion_status') == 'promoted' else {candidate['version'], stable['version']}
     css=(site/"assets/site.css").read_text()
     script=(site/"assets/site.js").read_text()
     for token in ("focus-visible","prefers-color-scheme","prefers-reduced-motion",'data-theme="dark"',"nav-toggle","table-layout:fixed","scrollbar-width:none"):
@@ -140,7 +144,7 @@ def audit(root=ROOT):
             if not match or match[1] not in seen:errors.append(relative+" has an unregistered screenshot")
             else:seen[match[1]].append((relative,figure))
         if relative in LANDING_PAGES:
-            for token in ('"softwareVersion": "13.0.0"','rel="canonical"','hreflang="en"','hreflang="zh-CN"','id="faq"','id="remote"','id="tunnel"',"FRP","P2P"):
+            for token in (f'"softwareVersion": "{candidate["version"]}"','rel="canonical"','hreflang="en"','hreflang="zh-CN"','id="faq"','id="remote"','id="tunnel"',"FRP","P2P"):
                 if token not in text:errors.append(relative+" missing "+token)
             if text.count('<details')<4:errors.append(relative+" needs four actual FAQ entries")
             if ('not run' not in text or 'unverified' not in text) if relative.startswith('en/') else ('未运行' not in text or '验证尚未完成' not in text):
@@ -151,8 +155,10 @@ def audit(root=ROOT):
                 for name in ('client','server','android'):
                     for asset in candidate['components'][name]['artifacts']:
                         if asset['url'] not in text or asset['sha256'] not in text:errors.append(relative+" is missing a verified download or digest")
-            elif 'releases/download/v13.0.0/' in text:errors.append(relative+" advertises an unpublished download")
+            elif f'releases/download/v{candidate["version"]}/' in text:errors.append(relative+" advertises an unpublished download")
     for slot in slots:
+        if slot.get("captured_product_version") not in capture_versions:
+            errors.append("Screenshot version is outside the current product or previous stable channel: " + slot["id"])
         errors.extend(audit_capture(site,slot))
         found={name for name,_ in seen[slot['id']]}
         if found!=set(slot['pages']):errors.append("Screenshot page binding drifted: "+slot['id'])
