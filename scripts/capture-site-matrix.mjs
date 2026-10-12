@@ -307,6 +307,14 @@ async function main() {
     if (!response.ok || !Buffer.from(await response.arrayBuffer()).equals(expected)) throw new Error(`Served bytes differ from this checkout: ${name}`);
     siteHashes[name] = createHash("sha256").update(expected).digest("hex");
   }
+  const stable = JSON.parse(await readFile(join(repo, "docs/site/releases.json"), "utf8"));
+  const candidate = JSON.parse(await readFile(join(repo, "docs/site/candidate.json"), "utf8"));
+  const readySnippets = { "zh-CN": SNIPPET["zh-CN"].ready, en: SNIPPET.en.ready };
+  if (candidate.version === "14.0.1" && candidate.promotion_status === "promoted" &&
+      candidate.acceptance_status === "accepted_with_waivers" && stable.version === candidate.version) {
+    readySnippets["zh-CN"] = "稳定下载是 14.0.1";
+    readySnippets.en = "Stable downloads are 14.0.1";
+  }
   await mkdir(join(out, "images"), { recursive: true });
   const binding = JSON.stringify({ source_sha: source, tree_sha: tree, source_dirty: false, site_files: siteHashes }, null, 2);
   const sourceManifestHash = createHash("sha256").update(binding).digest("hex");
@@ -430,7 +438,7 @@ async function main() {
         }
       }
       if (item.statusRegion) {
-        const snippet = SNIPPET[item.locale][item.state];
+        const snippet = item.state === "ready" ? readySnippets[item.locale] : SNIPPET[item.locale][item.state];
         const expectedTone = ["empty", "invalid"].includes(item.state) ? "error" : item.state;
         await waitFor(() => evaluate(`(() => { const node = document.getElementById('download-status'); return !!(node && node.dataset.tone === ${JSON.stringify(expectedTone)} && node.textContent.includes(${JSON.stringify(snippet)})); })()`), 8000);
       }
