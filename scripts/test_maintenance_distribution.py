@@ -1,5 +1,6 @@
 """A pending maintenance release must retain the actual published stable downloads."""
 import copy
+import hashlib
 import json
 import shutil
 import tempfile
@@ -28,7 +29,7 @@ class MaintenanceDistributionTests(unittest.TestCase):
             'remote_policy': 'require_direct', 'relay_enabled': False, 'frp': '0.70.1', 'agent_version': '14.0.1',
             'not_verified': ['physical-android-device', 'carrier-network-nat', 'long-duration-media'],
             'signing': copy.deepcopy(self.stable['signing']),
-            'contract': {'ref': 'api-v2.0.0', 'frozen': True, 'revision': '2242354fc10c6681ec0ccf33e91ab96611e60791', 'openapi_sha256': 'b7f31f073dc97383314688f728e2cfeae5474f1e2b27e073dfc1990c18dd9e78'},
+            'contract': {'ref': 'api-v2.0.0', 'frozen': True, 'revision': '2242354fc10c6681ec0ccf33e91ab96611e60791', 'openapi_sha256': hashlib.sha256((self.root / 'contracts/openapi.v2.json').read_bytes()).hexdigest()},
             'components': {name: {'repository': item['repository'], 'version': '14.0.1', 'tag': 'v14.0.1', 'prerelease': False, 'source_sha': None, 'published': False, 'artifacts': []} for name, item in self.stable['components'].items()},
         }
 
