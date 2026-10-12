@@ -2,6 +2,8 @@
 
 [中文](README.md) · [Website](https://zhanry.github.io/home-tunnel/en/) · [Release scope](docs/HOMEDESK_RELEASE.md)
 
+**14.0.1 maintenance release is available.** The coordinated release is available. Original files, signatures and sources have been independently verified. Owner-waived runtime scenarios remain not_run under accepted_with_waivers; authorization and exact scope are disclosed in the release notes. Historical downloads and records remain available.
+
 Manage devices, control a remote desktop directly, and keep local services accessible through your own server. **14.0.0** brings the current desktop's purple workspace, icon and names to Web and Android. The coordinated release is available. Original files, signatures and version-specific reproducible acceptance have been independently verified; see the release notes for the exact scope and outstanding coverage. See [downloads](docs/DOWNLOADS.md).
 
 | Platform | Role | Package |

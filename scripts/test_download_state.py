@@ -98,10 +98,11 @@ const incomplete = state.view({
   candidate: require('./docs/site/candidate.json'),
   fallbackStable: '10.0.0'
 });
-if (incomplete.tone !== 'ready' || !incomplete.en.includes('NestLink ' + require('./docs/site/candidate.json').version)) process.exit(10);
 const current = require('./docs/site/candidate.json');
+const waivedCurrent = current.version === '14.0.1' && current.acceptance_status === 'accepted_with_waivers' && current.promotion_status === 'promoted';
+if (incomplete.tone !== 'ready' || !incomplete.en.includes((waivedCurrent ? 'Stable downloads are ' : 'NestLink ') + current.version)) process.exit(10);
 if (current.promotion_status === 'not_promoted' && !incomplete.en.includes('acceptance are in progress')) process.exit(12);
-if (current.promotion_status === 'promoted' && !incomplete.en.includes('reproducible integration verified')) process.exit(13);
+if (current.promotion_status === 'promoted' && (waivedCurrent ? (!incomplete.en.includes('not run and remain unverified') || incomplete.en.includes('reproducible integration verified')) : !incomplete.en.includes('reproducible integration verified'))) process.exit(13);
 const stable13 = state.view({ transport:'ok', stable:{version:'13.0.0',stage:'stable'},candidate:{version:'13.0.0',promotion_status:'promoted',downloads_published:true,acceptance_status:'passed_reproducible',prerelease:false,remote_policy:'require_direct',relay_enabled:false} });
 if (stable13.tone !== 'ready' || !stable13.en.includes('carrier-network')) process.exit(14);
 if (/waiv|owner|豁免|负责人/i.test(incomplete.en + incomplete.zh)) process.exit(11);

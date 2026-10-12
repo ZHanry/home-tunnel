@@ -3,6 +3,8 @@ from pathlib import Path
 import argparse
 from contextlib import contextmanager
 import hashlib
+import importlib.util
+import shutil
 import json
 import subprocess
 import tempfile
@@ -32,6 +34,25 @@ def download_folder(directory, name, tag):
         folder = directory.resolve() / name / tag
         folder.mkdir(parents=True, exist_ok=True)
         yield folder
+
+
+def signed_owner_waiver(bundle, acceptance, component):
+    """Validate policy/disclosure from the digest-bound corresponding source."""
+    spec = importlib.util.spec_from_file_location("component_release_policy", Path(__file__).with_name("homedesk-release.py"))
+    policy = importlib.util.module_from_spec(spec); spec.loader.exec_module(policy)
+    with tempfile.TemporaryFile() as source:
+        with bundle.open("corresponding-source.zip") as stream:
+            shutil.copyfileobj(stream, source)
+        source.seek(0)
+        with zipfile.ZipFile(source) as sources:
+            if len(sources.namelist()) != len(set(sources.namelist())):
+                raise SystemExit("Duplicate corresponding-source member")
+            hashes = {name: hashlib.sha256(sources.read("source/" + name)).hexdigest() for name in policy.OWNER_WAIVER_POLICY_FILES}
+            notes = sources.read("source/docs/RELEASE_NOTES.md").decode("utf8")
+            committed = json.loads(sources.read("source/docs/release/acceptance-14.0.1.json"))
+            if committed != acceptance:
+                raise SystemExit("Signed acceptance differs from its corresponding source")
+    policy.validate_owner_waiver_scenarios(acceptance, component, policy_file_sha256=hashes, release_notes=notes)
 
 
 def verify(candidate, *, record=False, signatures=False, download_dir=None):
@@ -92,6 +113,10 @@ def verify(candidate, *, record=False, signatures=False, download_dir=None):
                         source.update(block)
                 if source.hexdigest() != manifest["materials"]["corresponding-source.zip"]:
                     raise SystemExit("Corresponding source digest differs from its signed build manifest")
+                if isinstance(manifest.get("acceptance"), dict) and manifest["acceptance"].get("status") == "accepted_with_waivers":
+                    if candidate["version"] != "14.0.1":
+                        raise SystemExit("Owner-waived distribution is limited to 14.0.1")
+                    signed_owner_waiver(bundle, manifest["acceptance"], name)
                 if signatures:
                     (folder / "BUILD.json").write_bytes(manifest_bytes)
                     (folder / "BUILD.json.sigstore.json").write_bytes(bundle.read("BUILD.json.sigstore.json"))
@@ -100,7 +125,7 @@ def verify(candidate, *, record=False, signatures=False, download_dir=None):
                                     "--certificate-oidc-issuer", "https://token.actions.githubusercontent.com", str(folder / "BUILD.json")], check=True)
             if distribution.is_nestlink_version(candidate["version"]):
                 acceptance=manifest.get("acceptance",{})
-                if (not isinstance(acceptance,dict) or acceptance.get("status")!="passed_reproducible"
+                if (not isinstance(acceptance,dict) or (acceptance.get("status")!="passed_reproducible" and not (candidate["version"] == "14.0.1" and acceptance.get("status") == "accepted_with_waivers"))
                         or acceptance.get("component")!=name or acceptance.get("version") != candidate["version"]
                         or acceptance.get("source_revision")!=manifest.get("payload_source_revision")
                         or acceptance.get("deliverables")!=manifest["deliverables"]):

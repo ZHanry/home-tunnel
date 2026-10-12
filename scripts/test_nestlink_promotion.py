@@ -16,16 +16,17 @@ promotion = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(promotion)
 
 
-def fixture():
+def fixture(version="14.0.0"):
     dist = distribution.load()
     candidate = dist["channels"]["candidate"]
-    candidate.update(version="14.0.0", downloads_published=True, promotion_status="not_promoted")
+    candidate.update(version=version, tag="v" + version, agent_version=version, downloads_published=True, promotion_status="not_promoted")
+    candidate["components"]["hub"].update(version=version, tag="v" + version)
     sources = {name: str(index) * 40 for index, name in enumerate(promotion.COMPONENTS, 1)}
     records = {}
     for name in promotion.COMPONENTS:
         item = candidate["components"][name]
-        item.update(source_sha=sources[name], published=True, artifacts=[{"filename": name + ".fixture", "sha256": "a" * 64}])
-        acceptance = {"status": "passed_reproducible", "version": "14.0.0", "component": name,
+        item.update(version=version, tag="v" + version, source_sha=sources[name], published=True, artifacts=[{"filename": name + ".fixture", "sha256": "a" * 64}])
+        acceptance = {"status": "passed_reproducible", "version": version, "component": name,
             "source_revision": sources[name], "scope": "Isolated installed fixture exercised the recorded scenarios.",
             "unverified": sorted(promotion.UNVERIFIED), "scenarios": [{"name": case, "status": "passed",
                 "evidence": {"fixture_sources": copy.deepcopy(sources), "execution": {"command": "execute actual fixture scenario", "exit_code": 0},

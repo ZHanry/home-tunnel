@@ -90,18 +90,26 @@ def project_stable_entry_points(dist, *, root=distribution.ROOT, check=False):
         if path.name == "downloads.html":
             expected = re.sub(r'(<span class="eyebrow">)DOWNLOAD / [^<]+',
                               lambda match: match[1] + "DOWNLOAD / " + escape(stable["version"]), expected)
-            stable_status = f'{stable["version"]} · stable release' if english else f'{stable["version"]} · 正式版'
-            expected = re.sub(r'(<p\b[^>]*\bid="download-status"[^>]*>)[^<]*',
-                              lambda match: match[1] + escape(stable_status), expected)
+        stable_status = f'{stable["version"]} · stable release' if english else f'{stable["version"]} · 正式版'
+        expected = re.sub(r'(<p\b[^>]*\bid="download-status"[^>]*>)[^<]*',
+                          lambda match: match[1] + escape(stable_status), expected)
         status = f'{candidate["version"]} · stable release' if english else f'{candidate["version"]} · 正式版'
         if not promoted:
             status = f'{candidate["version"]} · Build and acceptance' if english else f'{candidate["version"]} · 构建与验收'
         expected = re.sub(r'(<span class="version-pill">)[^<]+', lambda match: match[1] + status, expected)
         if promoted:
-            expected = expected.replace("14.0.0 自动化及可复现联调正在进行。", "本版自动化及可复现联调已通过，具体范围见发行说明。")
-            expected = expected.replace("14.0.0 automated checks and reproducible integration are in progress.", "Automated checks and reproducible integration passed; see the release notes for the exact scope.")
-            expected = expected.replace("14.0.0 正在构建与验收，下方保留已发布的 13.0.0 下载。", "浏览器、桌面与手机统一使用本版，下方列出原始发行文件与摘要。")
-            expected = expected.replace("14.0.0 is being built and verified. Published 13.0.0 downloads remain available below.", "Browser, desktop and phone share this release. Original release files and hashes are listed below.")
+            waived = candidate["version"] == "14.0.1" and candidate.get("acceptance_status") == "accepted_with_waivers"
+            zh = "本版发行字节、签名和来源已核验；运行时回归按用户要求保留 not_run（accepted_with_waivers），确切范围见发行说明。产品截图为真实 14.0.0 参考，14.0.1 产品 UI 为 not_run。" if waived else "本版自动化及可复现联调已通过，具体范围见发行说明。"
+            en = "Release bytes, signatures and sources are verified; runtime regression remains not_run at the owner's request under accepted_with_waivers. See the release notes for the exact scope. Product screenshots are actual 14.0.0 references; 14.0.1 product UI remains not_run." if waived else "Automated checks and reproducible integration passed; see the release notes for the exact scope."
+            expected = expected.replace(f'{candidate["version"]} 自动化及可复现联调正在进行。', zh)
+            expected = expected.replace(f'{candidate["version"]} automated checks and reproducible integration are in progress.', en)
+            if waived and path.name == "preview.html":
+                expected = expected.replace("NestLink 14.0.0 当前界面。", "NestLink 14.0.0 实装截图参考；14.0.1 产品 UI 为 not_run。")
+                expected = expected.replace("The current NestLink 14.0.0 interface.", "Actual NestLink 14.0.0 screenshot references; 14.0.1 product UI remains not_run.")
+                expected = expected.replace("图片来自本版实际安装和运行的应用，使用示例账号与设备数据。", "图片来自真实 14.0.0 安装和运行的应用，保留原始源码、manifest 与摘要，使用示例账号与设备数据。14.0.1 产品 UI 回归为 not_run；这些历史截图不作为新版实测结论。")
+                expected = expected.replace("Images come from installed, running apps of this release with example accounts and devices.", "Images come from actual installed, running 14.0.0 apps with example accounts and devices; original sources, manifests and hashes are preserved. The 14.0.1 product UI regression is not_run; these historical screenshots do not assert current product acceptance.")
+            expected = re.sub(r'\d+\.\d+\.\d+ 正在构建与验收，下方保留已发布的 \d+\.\d+\.\d+ 下载。', "浏览器、桌面与手机统一使用本版，下方列出原始发行文件与摘要。", expected)
+            expected = re.sub(r'\d+\.\d+\.\d+ is being built and verified\. Published \d+\.\d+\.\d+ downloads remain available below\.', "Browser, desktop and phone share this release. Original release files and hashes are listed below.", expected)
         if check and expected != original:
             raise ValueError("Stable entry points differ from distribution: " + str(path.relative_to(root)))
         if not check and expected != original:

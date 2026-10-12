@@ -1,4 +1,39 @@
-# NestLink 14.0.0
+# NestLink 14.0.1 维护版
+
+本版修复 Linux 正常首页缺少“版本与下载”入口的问题，复用客户端既有品牌及偏好菜单。四仓按现有发行组合统一升级为 14.0.1；Android versionCode 为 14000100，安装身份、证书、冻结认证 API 与设备能力扩展保持不变。
+
+本版 14.0.1 三个组件的真实 GitHub Release、原始文件 SHA-256、确切源提交及 Sigstore 签名已独立核验。稳定通道和下载清单绑定这些发行字节。各组件实际验收范围如下；14.0.0 原始记录和下载保留为历史记录。
+
+- **server**: Exact C build provenance and payload hashes are verified. The original candidate checksum Sigstore signature and immutable application image signatures are verified. Formal Release Materials and stable/latest tag resolution are verified separately after publication. Pending installed-product remote, authorization, account and tunnel runtime scenarios are not_run after the owner requested direct publication. The Android C overlay is the sole passed required installed-product scenario. Existing local Linux overlay evidence remains a separate completed check. No production server deployment or Windows reinstallation is performed.
+
+- **client**: Exact C build provenance and payload hashes are verified. Client exact-source CI provenance and payload hashes are verified. The Windows installer has no Authenticode signature. Formal Materials Sigstore verification is performed separately after publication and cannot replace platform executable signing. Pending installed-product remote, authorization, account and tunnel runtime scenarios are not_run after the owner requested direct publication. The Android C overlay is the sole passed required installed-product scenario. Existing local Linux overlay evidence remains a separate completed check. No production server deployment or Windows reinstallation is performed.
+
+- **android**: Exact C build provenance and payload hashes are verified. The actual APK retains the original Android signing certificate d7779e338be1039acee6dda9a43417cbf2baf4b0c9995578d9708501e95af702. Formal Materials Sigstore verification is performed separately after publication. Pending installed-product remote, authorization, account and tunnel runtime scenarios are not_run after the owner requested direct publication. The Android C overlay is the sole passed required installed-product scenario. Existing local Linux overlay evidence remains a separate completed check. No production server deployment or Windows reinstallation is performed.
+
+本版组件验收保留的未测索引：`account-login-management`、`account-migration`、`account-revocation`、`browser-authorization`、`browser-screen-input`、`carrier-network-nat`、`current-c-product-ui-matrix`、`installed-native-p2p`、`local-windows-14.0.1-reinstallation`、`long-duration-media`、`managed-tunnels`、`native-authorization`、`native-remote-control`、`physical-android-device`、`physical-linux-arm64-gui`。历史验收结论不替代本版；正在运行的生产服务端保持原版本。
+
+状态：accepted_with_waivers。用户授权原话：`不需要远控回归,直接做后面的`。未执行的运行时场景不宣称通过：
+
+- server/account-migration: not_run — The owner stopped pending remote-control regression and requested direct publication. This unfinished runtime scenario remains not_run; exact-source CI and payload/signature verification do not constitute installed-product runtime acceptance.
+- server/browser-authorization: not_run — The owner stopped pending remote-control regression and requested direct publication. This unfinished runtime scenario remains not_run; exact-source CI and payload/signature verification do not constitute installed-product runtime acceptance.
+- server/managed-tunnels: not_run — The owner stopped pending remote-control regression and requested direct publication. This unfinished runtime scenario remains not_run; exact-source CI and payload/signature verification do not constitute installed-product runtime acceptance.
+- server/native-authorization: not_run — The owner stopped pending remote-control regression and requested direct publication. This unfinished runtime scenario remains not_run; exact-source CI and payload/signature verification do not constitute installed-product runtime acceptance.
+- client/account-revocation: not_run — The owner stopped pending remote-control regression and requested direct publication. This unfinished runtime scenario remains not_run; exact-source CI and payload/signature verification do not constitute installed-product runtime acceptance.
+- client/browser-screen-input: not_run — The owner stopped pending remote-control regression and requested direct publication. This unfinished runtime scenario remains not_run; exact-source CI and payload/signature verification do not constitute installed-product runtime acceptance.
+- client/installed-native-p2p: not_run — The owner stopped pending remote-control regression and requested direct publication. This unfinished runtime scenario remains not_run; exact-source CI and payload/signature verification do not constitute installed-product runtime acceptance.
+- client/managed-tunnels: not_run — The owner stopped pending remote-control regression and requested direct publication. This unfinished runtime scenario remains not_run; exact-source CI and payload/signature verification do not constitute installed-product runtime acceptance.
+- android/account-login-management: not_run — The owner stopped pending remote-control regression and requested direct publication. This unfinished runtime scenario remains not_run; exact-source CI and payload/signature verification do not constitute installed-product runtime acceptance.
+- android/native-remote-control: not_run — The owner stopped pending remote-control regression and requested direct publication. This unfinished runtime scenario remains not_run; exact-source CI and payload/signature verification do not constitute installed-product runtime acceptance.
+
+Hub `current-ui-site`：not_run，本版 C 产品真实界面回归未执行；网站布局、下载字节和签名另行实际检查。官网产品截图保留真实14.0.0来源、原始manifest和摘要；14.0.1产品UI回归为not_run。Website product screenshots retain their actual 14.0.0 source, original manifests and hashes; 14.0.1 product UI regression remains not_run.
+
+原 14.0.0 标签、附件和失败记录均保留。发行后确认 Linux 版本入口不可达，Android AVD 被控媒体失败，仍有 18 项 open 依赖告警（3 high、7 medium、8 low）。这些限制不能因版本同步而宣称解决。历史完整说明见 [v14.0.0 发行文档](https://github.com/ZHanry/home-tunnel/blob/v14.0.0/docs/RELEASE_NOTES.md) 与 [14.0.0 验收记录](release/acceptance-14.0.0.json)。
+
+本版已知问题与未测范围：服务端中文远程协助页的密码提示仍显示英文 “Optional; the host can approve instead”。实体 Android、Linux ARM64／Wayland 实机、Windows 本机 14.0.1 安装与 GUI、运营商 NAT 和长时媒体均未测试；Windows 本机验证为 `not_run`（本机维护不重装），安装器仍无 Authenticode。Android 被控、PIN 和 `trusted_devices` 的既有限制及 18 项 open 依赖告警仍保留，不能因版本同步而宣称修复。线上生产服务端保持原版本。
+
+Known limitations and untested scope for 14.0.1: the password hint on the Chinese server Remote assistance page still reads “Optional; the host can approve instead”. Physical Android, Linux ARM64 and Wayland hardware, local Windows 14.0.1 installation and GUI, carrier NAT and long-duration media were not tested. Local Windows validation is `not_run` because this maintenance task does not reinstall it; the installer still has no Authenticode signature. Existing Android receiver, PIN and `trusted_devices` limitations and the 18 open dependency alerts remain; version alignment does not establish that they are fixed. The production server remains on its existing version.
+
+## NestLink 14.0.0 历史发行
 
 NestLink 14.0.0 以桌面 update11 为基准，统一 Windows、Linux、服务端 Web 与 Android 的名称、客户端 SVG Logo、紫色主题、业务图标及“设备管理、远程协助、内网穿透”入口。Web 和 Android 按浏览器、手机与平板的真实能力呈现导航与账号入口。
 

@@ -1,15 +1,15 @@
 {
-  "version": "14.0.0",
+  "version": "14.0.1",
   "stage": "stable",
   "promotion_status": "promoted",
   "downloads_published": true,
-  "acceptance_status": "passed_reproducible",
+  "acceptance_status": "accepted_with_waivers",
   "prerelease": false,
-  "tag": "v14.0.0",
+  "tag": "v14.0.1",
   "remote_policy": "require_direct",
   "relay_enabled": false,
   "frp": "0.70.1",
-  "agent_version": "14.0.0",
+  "agent_version": "14.0.1",
   "contract": {
     "ref": "api-v2.0.0",
     "frozen": true,
@@ -19,8 +19,8 @@
   "components": {
     "hub": {
       "repository": "ZHanry/home-tunnel",
-      "version": "14.0.0",
-      "tag": "v14.0.0",
+      "version": "14.0.1",
+      "tag": "v14.0.1",
       "source_sha": null,
       "artifacts": [],
       "prerelease": false,
@@ -28,125 +28,138 @@
     },
     "server": {
       "repository": "ZHanry/home-tunnel-server",
-      "version": "14.0.0",
-      "tag": "v14.0.0",
-      "source_sha": "fa765744ce56076fcde364f1f11749cfe77a744a",
+      "version": "14.0.1",
+      "tag": "v14.0.1",
+      "source_sha": "10d3f5be070b4caf4d8feb11defb86ad0e68e5d4",
       "published": true,
       "artifacts": [
         {
-          "filename": "NestLink-Server-14.0.0.tar.gz",
-          "sha256": "1a42bc2e9520c9d4d7c641af6bc3fff42bd9833880423b767485779f4e8812a7",
-          "size_bytes": 557130,
-          "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v14.0.0/NestLink-Server-14.0.0.tar.gz"
+          "filename": "NestLink-Server-14.0.1.tar.gz",
+          "sha256": "c3160a95220d9098aa9ca4c39b5c0f2e273ddd7af0a28ed4298894fd078fa474",
+          "size_bytes": 866976,
+          "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v14.0.1/NestLink-Server-14.0.1.tar.gz"
         },
         {
-          "filename": "NestLink-server-Materials-14.0.0.zip",
-          "sha256": "fe10b6bb580197338e430cebcdcbad70e1bdae3d295ce45dce8bc09c9ead3ac4",
-          "size_bytes": 2217610,
-          "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v14.0.0/NestLink-server-Materials-14.0.0.zip"
+          "filename": "NestLink-server-Materials-14.0.1.zip",
+          "sha256": "010223c7eb17d0d4703951113be1b878e2291c0bd3a3645c86b82d1a18b27d91",
+          "size_bytes": 2806960,
+          "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v14.0.1/NestLink-server-Materials-14.0.1.zip"
         },
         {
           "filename": "SHA256SUMS.txt",
-          "sha256": "b586f224ebaaf7e46a2be223ba77d8ca91e12b2a65e879a9393631708b0c7125",
+          "sha256": "8e3800affc88a18138250f309ee360fd2794b34fabbe0c37551cdf1ea457f81d",
           "size_bytes": 199,
-          "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v14.0.0/SHA256SUMS.txt"
+          "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v14.0.1/SHA256SUMS.txt"
         }
       ],
       "prerelease": false,
-      "release_url": "https://github.com/ZHanry/home-tunnel-server/releases/tag/v14.0.0"
+      "release_url": "https://github.com/ZHanry/home-tunnel-server/releases/tag/v14.0.1"
     },
     "client": {
       "repository": "ZHanry/home-tunnel-client",
-      "version": "14.0.0",
-      "tag": "v14.0.0",
-      "source_sha": "46e6194b5e0474292a175b6247b36572434fa9a4",
+      "version": "14.0.1",
+      "tag": "v14.0.1",
+      "source_sha": "181519880a5971f0618adfc81a55281a09d613a8",
       "published": true,
       "artifacts": [
         {
-          "filename": "NestLink-Linux-14.0.0-arm64.deb",
-          "sha256": "ad109bb5b1379c3a2cbfcf936ab83b35a1ce6d919126ae00d18c2a2e443662a3",
-          "size_bytes": 33890582,
-          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v14.0.0/NestLink-Linux-14.0.0-arm64.deb"
+          "filename": "NestLink-Linux-14.0.1-arm64.deb",
+          "sha256": "6fcfb2eb64c1432edc0546ee0173d4bccdb8de4d1c71f3305a77a87f5dbb0dea",
+          "size_bytes": 33895728,
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v14.0.1/NestLink-Linux-14.0.1-arm64.deb"
         },
         {
-          "filename": "NestLink-Linux-14.0.0-x64.deb",
-          "sha256": "9856a8ac83da603847f6796c006df04fdc9c83f651b1014763e5df28a308a4ce",
-          "size_bytes": 35797802,
-          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v14.0.0/NestLink-Linux-14.0.0-x64.deb"
+          "filename": "NestLink-Linux-14.0.1-x64.deb",
+          "sha256": "e65e748eff2d48fb1ccacc60245ce28f30d2b2b1d47edb49496dceebea272c4f",
+          "size_bytes": 35811168,
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v14.0.1/NestLink-Linux-14.0.1-x64.deb"
         },
         {
-          "filename": "NestLink-Setup-14.0.0-x64.exe",
-          "sha256": "6f772544fef487c2b084f83abe26a9bfb581b4cd8aeebd25b2bcc5647ebda41f",
-          "size_bytes": 32020618,
-          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v14.0.0/NestLink-Setup-14.0.0-x64.exe"
+          "filename": "NestLink-Setup-14.0.1-x64.exe",
+          "sha256": "a37e5aea80368c8d39fdbd82f621d936aea4783fa67f2b907ecc07f8faad725e",
+          "size_bytes": 32017516,
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v14.0.1/NestLink-Setup-14.0.1-x64.exe"
         },
         {
-          "filename": "NestLink-client-Materials-14.0.0.zip",
-          "sha256": "caa79d59b43dcdcaad184ebcfbac22096d03fab13c2d0e846906d94231e3c0c3",
-          "size_bytes": 1965325884,
-          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v14.0.0/NestLink-client-Materials-14.0.0.zip"
+          "filename": "NestLink-client-Materials-14.0.1.zip",
+          "sha256": "7063acc2f31b974d369e099d8798831d83eeafb406482e461ce3b89e23159307",
+          "size_bytes": 1965339189,
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v14.0.1/NestLink-client-Materials-14.0.1.zip"
         },
         {
           "filename": "SHA256SUMS.txt",
-          "sha256": "0141fd45d23b7b9176d769baa0e17b01049f8b0cce76d4077d7efede6edb9c49",
+          "sha256": "f4d507fd0844091ac39fcf8f24a787c2c928f1a43d397049e422209b752924cb",
           "size_bytes": 393,
-          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v14.0.0/SHA256SUMS.txt"
+          "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v14.0.1/SHA256SUMS.txt"
         }
       ],
       "prerelease": false,
-      "release_url": "https://github.com/ZHanry/home-tunnel-client/releases/tag/v14.0.0"
+      "release_url": "https://github.com/ZHanry/home-tunnel-client/releases/tag/v14.0.1"
     },
     "android": {
       "repository": "ZHanry/home-tunnel-android",
-      "version": "14.0.0",
-      "tag": "v14.0.0",
-      "source_sha": "a4a96b66208483b9e85f1f6dcf6298397de57e22",
+      "version": "14.0.1",
+      "tag": "v14.0.1",
+      "source_sha": "fc3690289d7bda0b0f0aec122e9379b2fa93f16c",
       "published": true,
       "artifacts": [
         {
-          "filename": "NestLink-Android-14.0.0.apk",
-          "sha256": "0d81e4a2ac6ee64b21fd95bcae00ba3cbc71b9036371475786cc8bf03bcafbab",
-          "size_bytes": 118539831,
-          "url": "https://github.com/ZHanry/home-tunnel-android/releases/download/v14.0.0/NestLink-Android-14.0.0.apk"
+          "filename": "NestLink-Android-14.0.1.apk",
+          "sha256": "c06a56a16f69e8432793abea641869e43698c74e8fb38417e6f88cecba38db37",
+          "size_bytes": 118562043,
+          "url": "https://github.com/ZHanry/home-tunnel-android/releases/download/v14.0.1/NestLink-Android-14.0.1.apk"
         },
         {
-          "filename": "NestLink-android-Materials-14.0.0.zip",
-          "sha256": "bdaaf491c6969d15f8ddd78094a44c228e519638062cfbbc7fc1efec79701044",
-          "size_bytes": 1134470998,
-          "url": "https://github.com/ZHanry/home-tunnel-android/releases/download/v14.0.0/NestLink-android-Materials-14.0.0.zip"
+          "filename": "NestLink-android-Materials-14.0.1.zip",
+          "sha256": "fd9c49dcd2e385a48386fdb852371021af3b3d7ed875e2729ecadfd462f7836f",
+          "size_bytes": 1134506097,
+          "url": "https://github.com/ZHanry/home-tunnel-android/releases/download/v14.0.1/NestLink-android-Materials-14.0.1.zip"
         },
         {
           "filename": "SHA256SUMS.txt",
-          "sha256": "6df9261153373014d80cbe429dd5bd47c30180f3aa9c6e235be1f130eff874ae",
+          "sha256": "95df6a38c327663ae3687a09b8faae7d8d1c666ec60e382b2f4e51de53121ea5",
           "size_bytes": 198,
-          "url": "https://github.com/ZHanry/home-tunnel-android/releases/download/v14.0.0/SHA256SUMS.txt"
+          "url": "https://github.com/ZHanry/home-tunnel-android/releases/download/v14.0.1/SHA256SUMS.txt"
         }
       ],
       "prerelease": false,
-      "release_url": "https://github.com/ZHanry/home-tunnel-android/releases/tag/v14.0.0"
+      "release_url": "https://github.com/ZHanry/home-tunnel-android/releases/tag/v14.0.1"
     }
   },
   "not_verified": [
+    "14.0.1-new-artifact-acceptance-pending",
     "OS-root-password-UI-unlock",
+    "account-login-management",
+    "account-migration",
+    "account-revocation",
     "android-arm64-physical-execution",
     "android-receiver-media-on-task-slirp-avd",
     "arm64-hardware-execution",
     "audio-clipboard-file-transfer",
     "audio-file-clipboard-media",
+    "browser-authorization",
+    "browser-screen-input",
     "carrier-network-NAT",
     "carrier-network-nat",
     "cross-account-android-installation-ownership-transfer",
+    "current-c-product-ui-matrix",
     "exhaustive-empty-loading-error-keyboard-navigation-matrix",
     "full-arm64-integration",
     "full-arm64-local-integration",
     "historical13-created-credential-provenance",
+    "installed-native-p2p",
     "linux-arm64-local-execution",
     "linux-dark-english-ui-in-root-review",
+    "local-windows-14.0.1-reinstallation",
     "long-duration-media",
+    "managed-tunnels",
+    "native-authorization",
+    "native-remote-control",
     "original-production13-database-migration",
     "original-trusted_devices-semantic-preservation",
     "physical-Android-device",
     "physical-android-device",
+    "physical-linux-arm64-gui",
     "post-publication-update-discovery",
     "public-CA-production-TLS",
     "public-production-ca-tls",
@@ -159,18 +172,18 @@
     "windows": "unsigned-no-certificate-configured",
     "android_certificate_sha256": "d7779e338be1039acee6dda9a43417cbf2baf4b0c9995578d9708501e95af702"
   },
-  "note": "nestlink 14.0.0 stable. Actual Release files, source manifests, Sigstore signatures and version-specific reproducible acceptance independently verified. Exact scope and outstanding coverage are recorded in the release notes. Historical release bytes remain available.",
+  "note": "nestlink 14.0.1 stable. Actual Release files, source manifests and Sigstore signatures independently verified. Owner-waived runtime scenarios remain not_run; accepted_with_waivers and exact source/build/payload/policy bindings are disclosed in the release notes. Historical release bytes remain available.",
   "tested_combination": {
-    "server": "14.0.0",
-    "client": "14.0.0",
-    "android": "14.0.0",
-    "agent": "14.0.0"
+    "server": "14.0.1",
+    "client": "14.0.1",
+    "android": "14.0.1",
+    "agent": "14.0.1"
   },
+  "tested_combination_scope": "server: Exact C build provenance and payload hashes are verified. The original candidate checksum Sigstore signature and immutable application image signatures are verified. Formal Release Materials and stable/latest tag resolution are verified separately after publication. Pending installed-product remote, authorization, account and tunnel runtime scenarios are not_run after the owner requested direct publication. The Android C overlay is the sole passed required installed-product scenario. Existing local Linux overlay evidence remains a separate completed check. No production server deployment or Windows reinstallation is performed.\nclient: Exact C build provenance and payload hashes are verified. Client exact-source CI provenance and payload hashes are verified. The Windows installer has no Authenticode signature. Formal Materials Sigstore verification is performed separately after publication and cannot replace platform executable signing. Pending installed-product remote, authorization, account and tunnel runtime scenarios are not_run after the owner requested direct publication. The Android C overlay is the sole passed required installed-product scenario. Existing local Linux overlay evidence remains a separate completed check. No production server deployment or Windows reinstallation is performed.\nandroid: Exact C build provenance and payload hashes are verified. The actual APK retains the original Android signing certificate d7779e338be1039acee6dda9a43417cbf2baf4b0c9995578d9708501e95af702. Formal Materials Sigstore verification is performed separately after publication. Pending installed-product remote, authorization, account and tunnel runtime scenarios are not_run after the owner requested direct publication. The Android C overlay is the sole passed required installed-product scenario. Existing local Linux overlay evidence remains a separate completed check. No production server deployment or Windows reinstallation is performed.",
   "component_verification": {
-    "version": "14.0.0",
-    "verified_at": "2026-10-11T06:23:29.215553+00:00",
+    "version": "14.0.1",
+    "verified_at": "2026-10-12T00:19:38.077123+00:00",
     "method": "Independent GitHub Release downloads, SHA-256, exact tag/source, signed BUILD and current acceptance checks",
-    "records": "docs/release/components-14.0.0.json"
-  },
-  "tested_combination_scope": "server: Exact signed299 server CI payload/immutable amd64 control/gateway/FRPS and installed feaf client in local Windows/WSL X11 task fixture; six real browser modes, native and three-phase four-protocol tunnel evidence. Historical server-only migration/API/Web retain their original scope and clock domains; no production deployment. PIN set extra trusted_devices flush remains failed/semantically unknown; OS root-password GUI unlock unverified.\nclient: Exact feaf client CI products and installed Windows x64/Linux amd64; task X11 native/browser media with299 control/gateway and signed FRPS, local Android dcdf peer presence. Includes truthful original clock domains and failed attempts retained outside passed scenario selections.\nandroid: Exact signed universal14 APK on disposable API35 x86_64 AVD; actual original-certificate public13 to exact14 overwrite upgrade; observed account/UI/OS permission matrix; native media acceptance covers Android controller to Linux x64 same/cross sessions only. Android receiver media and cross-account installation ownership transfer remain unverified. Production server unchanged; private pixels/logs not published."
+    "records": "docs/release/components-14.0.1.json"
+  }
 }

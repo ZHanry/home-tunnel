@@ -1,6 +1,7 @@
 """Seal versioned nestlink products with source, verified payloads and release evidence."""
 from pathlib import Path
 import argparse
+import datetime as dt
 import hashlib
 import io
 import json
@@ -64,11 +65,21 @@ def candidate_metadata():
     with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf8") as output:
         output.write(f"version={value}\nstable={str(stable).lower()}\n")
         cis = [r for r in runs if r["name"] in ("Client CI", "Android CI") and r.get("conclusion") == "success"]
-        if acceptance and component in ("client", "android", "server"):
+        if acceptance and component in ("client", "android", "server") or (acceptance and acceptance.get("status") == "accepted_with_waivers"):
             selected_run = acceptance["build_run"]
             selected = json.loads(run("gh", "api", f"repos/{repository}/actions/runs/{selected_run}", capture=True))
             if selected.get("conclusion") != "success" or selected.get("head_sha") != acceptance["source_revision"]:
                 raise SystemExit("The accepted payload must come from a successful exact-source CI run")
+            if acceptance.get("status") == "accepted_with_waivers":
+                workflow = ".github/workflows/pages.yml" if component == "hub" else ".github/workflows/ci.yml"
+                events = {"push", "workflow_dispatch"} if component == "hub" else {"workflow_dispatch" if component == "server" else "push"}
+                if (selected.get("id") != selected_run
+                        or selected.get("run_attempt") != acceptance["build_attempt"]
+                        or selected.get("head_branch") != "main"
+                        or selected.get("path") != workflow
+                        or selected.get("event") not in events
+                        or (component == "hub" and selected.get("name") != "Pages")):
+                    raise SystemExit("Owner-waived payload must retain its exact original CI identity")
             output.write(f"build-run={selected_run}\n")
         elif cis:
             output.write(f"build-run={max(cis, key=lambda r:r['id'])['id']}\n")
@@ -81,13 +92,128 @@ REQUIRED_SCENARIOS = {
     "hub": {"component-bytes-signatures", "current-ui-site"},
 }
 
+# This exception applies only to the owner's explicit 14.0.1 scope reduction.
+# It records untested scenarios; it never converts a waiver into a test pass.
+OWNER_WAIVER_VERSION = "14.0.1"
+OWNER_WAIVER_AUTHORIZATION = "不需要远控回归,直接做后面的"
+OWNER_WAIVER_POLICY_FILES = {"scripts/homedesk-release.py", "scripts/test_homedesk_release.py"}
+OWNER_WAIVER_BUILDS = {
+    "client": ("7ca0fd7186586965921e48beef2dbb2ae44fc895", 38172051186),
+    "server": ("b73ab0472cde66b8a06c1307bbca4b3fb34785df", 38167376775),
+    "android": ("dcbcf85126af88695a890137ca8ade5fed0e1296", 38172156970),
+}
+OWNER_WAIVER_SCENARIOS = {**REQUIRED_SCENARIOS, "hub": {"current-ui-site"}}
+
+
+def validate_owner_waiver(record, component, item, *, policy_file_sha256=None, release_notes=None):
+    if (record.get("version") != OWNER_WAIVER_VERSION or record.get("component") != component
+            or record.get("status") != "accepted_with_waivers" or item.get("status") != "not_run"
+            or item.get("name") not in OWNER_WAIVER_SCENARIOS.get(component, set())):
+        raise SystemExit("Owner waiver only discloses an allowed untested 14.0.1 scenario")
+    if (policy_file_sha256 is None) != (release_notes is None):
+        raise SystemExit("Remote waiver validation needs both actual policy hashes and release notes")
+    waiver = item.get("owner_waiver")
+    fields = {"approved_by", "approved_at", "authorization", "reason", "disclosed_in",
+              "version", "component", "source_revision", "build_run", "build_attempt",
+              "deliverables", "policy_file_sha256"}
+    if not isinstance(waiver, dict) or set(waiver) != fields:
+        raise SystemExit("The untested scenario needs the exact owner waiver schema")
+    if waiver["approved_by"] != "owner" or waiver["authorization"] != OWNER_WAIVER_AUTHORIZATION:
+        raise SystemExit("The explicit owner's 14.0.1 release authorization is missing")
+    try:
+        approved = dt.datetime.fromisoformat(waiver["approved_at"].replace("Z", "+00:00"))
+        valid_time = approved.tzinfo is not None and approved.utcoffset() == dt.timedelta(0)
+        valid_time = valid_time and approved <= dt.datetime.now(dt.timezone.utc)
+    except (AttributeError, TypeError, ValueError):
+        valid_time = False
+    if not valid_time:
+        raise SystemExit("Owner waiver needs the actual UTC authorization time, never a future time")
+    binding = {key: record.get(key) for key in
+               ("version", "component", "source_revision", "build_run", "build_attempt", "deliverables")}
+    if any(waiver[key] != value for key, value in binding.items()):
+        raise SystemExit("Owner waiver is not bound to this exact source, build and payload")
+    if (not isinstance(waiver["reason"], str) or len(waiver["reason"].strip()) < 10
+            or waiver["disclosed_in"] != "docs/RELEASE_NOTES.md"):
+        raise SystemExit("Owner waiver needs a specific reason and release-note disclosure")
+    policies = waiver["policy_file_sha256"]
+    if not isinstance(policies, dict) or set(policies) != OWNER_WAIVER_POLICY_FILES:
+        raise SystemExit("Owner waiver must seal both permitted release-policy files")
+    if policy_file_sha256 is None:
+        actual_policies = {}
+        for name in OWNER_WAIVER_POLICY_FILES:
+            path = ROOT / name
+            if not path.is_file() or path.is_symlink():
+                raise SystemExit("Owner waiver release-policy file is missing")
+            actual_policies[name] = digest(path)
+        disclosure = ROOT / waiver["disclosed_in"]
+        if not disclosure.is_file() or disclosure.is_symlink():
+            raise SystemExit("Owner waiver release-note disclosure is missing")
+        text = disclosure.read_text(encoding="utf8")
+    else:
+        actual_policies, text = policy_file_sha256, release_notes
+    if (not isinstance(actual_policies, dict) or set(actual_policies) != OWNER_WAIVER_POLICY_FILES
+            or not all(isinstance(value, str) and re.fullmatch(r"[a-f0-9]{64}", value)
+                       for value in actual_policies.values()) or policies != actual_policies):
+        raise SystemExit("Owner waiver release-policy bytes differ from the approved record")
+    if not isinstance(text, str):
+        raise SystemExit("Owner waiver release-note disclosure must be actual UTF-8 text")
+    if not all(value in text for value in ("accepted_with_waivers", OWNER_WAIVER_AUTHORIZATION, item["name"])):
+        raise SystemExit("Release notes must disclose the authorization and every untested scenario")
+
+
+def validate_owner_waiver_scenarios(record, component, *, policy_file_sha256=None, release_notes=None):
+    if record.get("version") != OWNER_WAIVER_VERSION or record.get("status") != "accepted_with_waivers":
+        raise SystemExit("Owner-waived publication is limited to 14.0.1")
+    if component not in REQUIRED_SCENARIOS or record.get("component") != component:
+        raise SystemExit("Owner waiver component identity is invalid")
+    if (type(record.get("build_run")) is not int or record["build_run"] <= 0
+            or type(record.get("build_attempt")) is not int or record["build_attempt"] <= 0
+            or not isinstance(record.get("deliverables"), dict)):
+        raise SystemExit("Owner waiver needs the actual original build and deliverable map")
+    if component in OWNER_WAIVER_BUILDS:
+        source, run_id = OWNER_WAIVER_BUILDS[component]
+        if (record.get("source_revision") != source or record["build_run"] != run_id
+                or record["build_attempt"] != 1):
+            raise SystemExit("Owner waiver cannot reuse an earlier A/B source or build")
+    if component == "android" and record.get("client_core_revision") != OWNER_WAIVER_BUILDS["client"][0]:
+        raise SystemExit("Owner waiver must preserve Android's exact C shared core")
+    items = record.get("scenarios")
+    if not isinstance(items, list) or not all(isinstance(item, dict) for item in items):
+        raise SystemExit("Owner waiver scenarios must be a structured list")
+    names = [item.get("name") for item in items]
+    if (any(not isinstance(name, str) for name in names) or len(names) != len(set(names))
+            or not REQUIRED_SCENARIOS[component] <= set(names)):
+        raise SystemExit("Owner waiver scenarios are missing or duplicated")
+    untested = set()
+    for item in items:
+        if item.get("status") == "passed":
+            if not item.get("evidence") or "owner_waiver" in item:
+                raise SystemExit("A passed scenario needs actual evidence and cannot carry an owner waiver")
+        elif item.get("status") == "not_run":
+            if item["name"] not in OWNER_WAIVER_SCENARIOS[component]:
+                raise SystemExit("This scenario cannot be waived: " + item["name"])
+            if (set(item) - {"name", "status", "evidence", "owner_waiver", "reason", "observation"}
+                    or item.get("evidence") not in (None, {}, [])):
+                raise SystemExit("An untested scenario cannot carry an execution, measurement or pass evidence")
+            validate_owner_waiver(record, component, item, policy_file_sha256=policy_file_sha256,
+                                 release_notes=release_notes)
+            untested.add(item["name"])
+        else:
+            raise SystemExit("A missing, failed or unknown scenario is not an owner-waived test")
+    if not untested or not untested <= set(record.get("unverified", [])):
+        raise SystemExit("Owner-waived publication must explicitly preserve every untested scenario")
+    return untested
+
+
 def validate_acceptance(component, revision, payload=None):
     value = version()
     path = ROOT / f"docs/release/acceptance-{value}.json"
     if not path.is_file():
         raise SystemExit(f"{value} requires recorded reproducible acceptance before publication")
     record = json.loads(path.read_text(encoding="utf8"))
-    if record.get("version") != value or record.get("component") != component or record.get("status") != "passed_reproducible":
+    waived = value == OWNER_WAIVER_VERSION and record.get("status") == "accepted_with_waivers"
+    if (record.get("version") != value or record.get("component") != component
+            or (record.get("status") != "passed_reproducible" and not waived)):
         raise SystemExit("Release acceptance identity or status is invalid")
     source = record.get("source_revision", "")
     if not re.fullmatch(r"[a-f0-9]{40}", source):
@@ -95,10 +221,13 @@ def validate_acceptance(component, revision, payload=None):
     run("git", "merge-base", "--is-ancestor", source, revision)
     changes = run("git", "diff", "--name-only", source, revision, capture=True).splitlines()
     allowed = {f"docs/release/acceptance-{value}.json", "docs/HOMEDESK_RELEASE.md", "docs/RELEASE_NOTES.md"}
+    if waived:
+        validate_owner_waiver_scenarios(record, component)
+        allowed.update(OWNER_WAIVER_POLICY_FILES)
     if any(name not in allowed for name in changes):
         raise SystemExit("Runtime source changed after acceptance: " + ", ".join(name for name in changes if name not in allowed))
     scenarios = {item.get("name") for item in record.get("scenarios", []) if item.get("status") == "passed" and item.get("evidence")}
-    if not REQUIRED_SCENARIOS[component] <= scenarios:
+    if not waived and not REQUIRED_SCENARIOS[component] <= scenarios:
         raise SystemExit("Required reproducible integration scenarios did not pass")
     if not {"physical-android-device", "carrier-network-nat", "long-duration-media"} <= set(record.get("unverified", [])):
         raise SystemExit("The recorded scope must preserve the outstanding physical/network/media checks")

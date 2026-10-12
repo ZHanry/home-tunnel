@@ -103,6 +103,8 @@ def audit(root=ROOT):
     candidate=json.loads((site/"candidate.json").read_text())
     stable=json.loads((site/"releases.json").read_text())
     capture_versions = {candidate['version']} if candidate.get('promotion_status') == 'promoted' else {candidate['version'], stable['version']}
+    if candidate['version'] == '14.0.1' and candidate.get('promotion_status') == 'promoted' and candidate.get('acceptance_status') == 'accepted_with_waivers':
+        capture_versions.add('14.0.0')
     css=(site/"assets/site.css").read_text()
     script=(site/"assets/site.js").read_text()
     for token in ("focus-visible","prefers-color-scheme","prefers-reduced-motion",'data-theme="dark"',"nav-toggle","table-layout:fixed","scrollbar-width:none"):

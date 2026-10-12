@@ -1,0 +1,637 @@
+{
+  "server": {
+    "repository": "ZHanry/home-tunnel-server",
+    "tag": "v14.0.1",
+    "revision": "10d3f5be070b4caf4d8feb11defb86ad0e68e5d4",
+    "assets": [
+      {
+        "filename": "NestLink-Server-14.0.1.tar.gz",
+        "sha256": "c3160a95220d9098aa9ca4c39b5c0f2e273ddd7af0a28ed4298894fd078fa474",
+        "size_bytes": 866976,
+        "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v14.0.1/NestLink-Server-14.0.1.tar.gz"
+      },
+      {
+        "filename": "NestLink-server-Materials-14.0.1.zip",
+        "sha256": "010223c7eb17d0d4703951113be1b878e2291c0bd3a3645c86b82d1a18b27d91",
+        "size_bytes": 2806960,
+        "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v14.0.1/NestLink-server-Materials-14.0.1.zip"
+      },
+      {
+        "filename": "SHA256SUMS.txt",
+        "sha256": "8e3800affc88a18138250f309ee360fd2794b34fabbe0c37551cdf1ea457f81d",
+        "size_bytes": 199,
+        "url": "https://github.com/ZHanry/home-tunnel-server/releases/download/v14.0.1/SHA256SUMS.txt"
+      }
+    ],
+    "source_manifest_verified": true,
+    "sigstore_verified": true,
+    "reproducible_acceptance_verified": true,
+    "payload_source_revision": "b73ab0472cde66b8a06c1307bbca4b3fb34785df",
+    "acceptance": {
+      "schema_version": 1,
+      "version": "14.0.1",
+      "component": "server",
+      "status": "accepted_with_waivers",
+      "source_revision": "b73ab0472cde66b8a06c1307bbca4b3fb34785df",
+      "build_run": 38167376775,
+      "build_attempt": 1,
+      "recorded_at": "2026-10-11T22:38:10.409209+00:00",
+      "deliverables": {
+        "NestLink-Server-14.0.1.tar.gz": "c3160a95220d9098aa9ca4c39b5c0f2e273ddd7af0a28ed4298894fd078fa474"
+      },
+      "scenarios": [
+        {
+          "name": "account-migration",
+          "status": "not_run",
+          "evidence": [],
+          "owner_waiver": {
+            "approved_by": "owner",
+            "approved_at": "2026-10-11T22:23:17+00:00",
+            "authorization": "不需要远控回归,直接做后面的",
+            "reason": "The owner stopped pending remote-control regression and requested direct publication. This unfinished runtime scenario remains not_run; exact-source CI and payload/signature verification do not constitute installed-product runtime acceptance.",
+            "disclosed_in": "docs/RELEASE_NOTES.md",
+            "version": "14.0.1",
+            "component": "server",
+            "source_revision": "b73ab0472cde66b8a06c1307bbca4b3fb34785df",
+            "build_run": 38167376775,
+            "build_attempt": 1,
+            "deliverables": {
+              "NestLink-Server-14.0.1.tar.gz": "c3160a95220d9098aa9ca4c39b5c0f2e273ddd7af0a28ed4298894fd078fa474"
+            },
+            "policy_file_sha256": {
+              "scripts/homedesk-release.py": "4319bd01f6687405bacb9a1f94eac609b7c1308a8b921f0f3fd40a3be5cc49cb",
+              "scripts/test_homedesk_release.py": "f86d679ed837485262d7f3e282036caecb1eb0104f19d87261939d5a5d2582bd"
+            }
+          }
+        },
+        {
+          "name": "browser-authorization",
+          "status": "not_run",
+          "evidence": [],
+          "owner_waiver": {
+            "approved_by": "owner",
+            "approved_at": "2026-10-11T22:23:17+00:00",
+            "authorization": "不需要远控回归,直接做后面的",
+            "reason": "The owner stopped pending remote-control regression and requested direct publication. This unfinished runtime scenario remains not_run; exact-source CI and payload/signature verification do not constitute installed-product runtime acceptance.",
+            "disclosed_in": "docs/RELEASE_NOTES.md",
+            "version": "14.0.1",
+            "component": "server",
+            "source_revision": "b73ab0472cde66b8a06c1307bbca4b3fb34785df",
+            "build_run": 38167376775,
+            "build_attempt": 1,
+            "deliverables": {
+              "NestLink-Server-14.0.1.tar.gz": "c3160a95220d9098aa9ca4c39b5c0f2e273ddd7af0a28ed4298894fd078fa474"
+            },
+            "policy_file_sha256": {
+              "scripts/homedesk-release.py": "4319bd01f6687405bacb9a1f94eac609b7c1308a8b921f0f3fd40a3be5cc49cb",
+              "scripts/test_homedesk_release.py": "f86d679ed837485262d7f3e282036caecb1eb0104f19d87261939d5a5d2582bd"
+            }
+          }
+        },
+        {
+          "name": "managed-tunnels",
+          "status": "not_run",
+          "evidence": [],
+          "owner_waiver": {
+            "approved_by": "owner",
+            "approved_at": "2026-10-11T22:23:17+00:00",
+            "authorization": "不需要远控回归,直接做后面的",
+            "reason": "The owner stopped pending remote-control regression and requested direct publication. This unfinished runtime scenario remains not_run; exact-source CI and payload/signature verification do not constitute installed-product runtime acceptance.",
+            "disclosed_in": "docs/RELEASE_NOTES.md",
+            "version": "14.0.1",
+            "component": "server",
+            "source_revision": "b73ab0472cde66b8a06c1307bbca4b3fb34785df",
+            "build_run": 38167376775,
+            "build_attempt": 1,
+            "deliverables": {
+              "NestLink-Server-14.0.1.tar.gz": "c3160a95220d9098aa9ca4c39b5c0f2e273ddd7af0a28ed4298894fd078fa474"
+            },
+            "policy_file_sha256": {
+              "scripts/homedesk-release.py": "4319bd01f6687405bacb9a1f94eac609b7c1308a8b921f0f3fd40a3be5cc49cb",
+              "scripts/test_homedesk_release.py": "f86d679ed837485262d7f3e282036caecb1eb0104f19d87261939d5a5d2582bd"
+            }
+          }
+        },
+        {
+          "name": "native-authorization",
+          "status": "not_run",
+          "evidence": [],
+          "owner_waiver": {
+            "approved_by": "owner",
+            "approved_at": "2026-10-11T22:23:17+00:00",
+            "authorization": "不需要远控回归,直接做后面的",
+            "reason": "The owner stopped pending remote-control regression and requested direct publication. This unfinished runtime scenario remains not_run; exact-source CI and payload/signature verification do not constitute installed-product runtime acceptance.",
+            "disclosed_in": "docs/RELEASE_NOTES.md",
+            "version": "14.0.1",
+            "component": "server",
+            "source_revision": "b73ab0472cde66b8a06c1307bbca4b3fb34785df",
+            "build_run": 38167376775,
+            "build_attempt": 1,
+            "deliverables": {
+              "NestLink-Server-14.0.1.tar.gz": "c3160a95220d9098aa9ca4c39b5c0f2e273ddd7af0a28ed4298894fd078fa474"
+            },
+            "policy_file_sha256": {
+              "scripts/homedesk-release.py": "4319bd01f6687405bacb9a1f94eac609b7c1308a8b921f0f3fd40a3be5cc49cb",
+              "scripts/test_homedesk_release.py": "f86d679ed837485262d7f3e282036caecb1eb0104f19d87261939d5a5d2582bd"
+            }
+          }
+        }
+      ],
+      "quality_evidence": {
+        "source_ci": "https://github.com/ZHanry/home-tunnel-server/actions/runs/38167376775",
+        "CodeQL": "https://github.com/ZHanry/home-tunnel-server/actions/runs/38167005882",
+        "Secret scan": "https://github.com/ZHanry/home-tunnel-server/actions/runs/38167005863"
+      },
+      "scope": "Exact C build provenance and payload hashes are verified. The original candidate checksum Sigstore signature and immutable application image signatures are verified. Formal Release Materials and stable/latest tag resolution are verified separately after publication. Pending installed-product remote, authorization, account and tunnel runtime scenarios are not_run after the owner requested direct publication. The Android C overlay is the sole passed required installed-product scenario. Existing local Linux overlay evidence remains a separate completed check. No production server deployment or Windows reinstallation is performed.",
+      "signature_scope": "The original candidate checksum Sigstore signature and immutable application image signatures are verified. Formal Release Materials and stable/latest tag resolution are verified separately after publication.",
+      "preparation_events": [
+        {
+          "event": "linux-c-payload-overlay",
+          "status": "passed",
+          "evidence": {
+            "path": "preparation/fixture1401-candidate-c-dispatch-20261012-attempt01/actual-c-transition-terminal1401-attempt01.json",
+            "sha256": "d5134de4001eac3d987abdfd362cb24769743fd4a757f92ea7aff0e8c335b0e8",
+            "size_bytes": 5134
+          },
+          "observation": "Exact C Linux x64 payload installed with identity, configuration and keyring preserved; GUI and media not run."
+        },
+        {
+          "event": "private-fixture-c-conversion-preflight",
+          "status": "failed_before_dispatch",
+          "evidence": {
+            "path": "preparation/fixture1401-candidate-c-dispatch-20261012-attempt01/actual-c-transition-terminal1401-attempt01.json",
+            "sha256": "d5134de4001eac3d987abdfd362cb24769743fd4a757f92ea7aff0e8c335b0e8",
+            "size_bytes": 5134
+          },
+          "observation": "The private application-image transition refused its shim identity preflight before any dispatch. Existing B application containers and FRPS remained unchanged. No C GUI or runtime fixture acceptance is asserted."
+        }
+      ],
+      "unverified": [
+        "account-migration",
+        "browser-authorization",
+        "carrier-network-nat",
+        "current-c-product-ui-matrix",
+        "local-windows-14.0.1-reinstallation",
+        "long-duration-media",
+        "managed-tunnels",
+        "native-authorization",
+        "physical-android-device",
+        "physical-linux-arm64-gui"
+      ],
+      "reproduction": {
+        "artifacts": "Use the original fixed candidate inventory to reproduce exact C build, signature and payload mapping; do not rebuild release installer/APK/image bytes.",
+        "scope": "Unfinished runtime scenarios were deliberately not executed; preserve their not_run status and the direct owner authorization."
+      },
+      "release_scope_authorization": {
+        "path": "evidence/user-release-scope-change1401-attempt01.json",
+        "sha256": "696104008968f4609ba6503afb99ca2adaec36133b521f5425666facdcaf2486",
+        "size_bytes": 837
+      },
+      "original_candidate_inputs": [
+        {
+          "path": "plan1401.candidate-attempt03.json",
+          "sha256": "92554e2977e8c34b1c0296248163bf6c639b68a12d82cf5b4cc519c5c6310618",
+          "size_bytes": 5324
+        },
+        {
+          "path": "evidence/candidate-fetch-server-attempt03/inventory.json",
+          "sha256": "b901e2571e9f7e3a8a092d2b0936d1a3bb57051816e81ae95d38a28504f20af5",
+          "size_bytes": 23392
+        }
+      ],
+      "images": {
+        "control-center": {
+          "image": "ghcr.io/zhanry/home-tunnel-control-center",
+          "digest": "sha256:026f676cd6112e99d68c2f7f33fd7681bc4f88d35d915e717cb5bad1835e83ba",
+          "revision": "b73ab0472cde66b8a06c1307bbca4b3fb34785df"
+        },
+        "traffic-gateway": {
+          "image": "ghcr.io/zhanry/home-tunnel-traffic-gateway",
+          "digest": "sha256:c721f0e1560223795da2c63c4d1ce2c54d05c8b14997914f53dd1a27557dc1aa",
+          "revision": "b73ab0472cde66b8a06c1307bbca4b3fb34785df"
+        }
+      }
+    },
+    "images": {}
+  },
+  "client": {
+    "repository": "ZHanry/home-tunnel-client",
+    "tag": "v14.0.1",
+    "revision": "181519880a5971f0618adfc81a55281a09d613a8",
+    "assets": [
+      {
+        "filename": "NestLink-Linux-14.0.1-arm64.deb",
+        "sha256": "6fcfb2eb64c1432edc0546ee0173d4bccdb8de4d1c71f3305a77a87f5dbb0dea",
+        "size_bytes": 33895728,
+        "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v14.0.1/NestLink-Linux-14.0.1-arm64.deb"
+      },
+      {
+        "filename": "NestLink-Linux-14.0.1-x64.deb",
+        "sha256": "e65e748eff2d48fb1ccacc60245ce28f30d2b2b1d47edb49496dceebea272c4f",
+        "size_bytes": 35811168,
+        "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v14.0.1/NestLink-Linux-14.0.1-x64.deb"
+      },
+      {
+        "filename": "NestLink-Setup-14.0.1-x64.exe",
+        "sha256": "a37e5aea80368c8d39fdbd82f621d936aea4783fa67f2b907ecc07f8faad725e",
+        "size_bytes": 32017516,
+        "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v14.0.1/NestLink-Setup-14.0.1-x64.exe"
+      },
+      {
+        "filename": "NestLink-client-Materials-14.0.1.zip",
+        "sha256": "7063acc2f31b974d369e099d8798831d83eeafb406482e461ce3b89e23159307",
+        "size_bytes": 1965339189,
+        "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v14.0.1/NestLink-client-Materials-14.0.1.zip"
+      },
+      {
+        "filename": "SHA256SUMS.txt",
+        "sha256": "f4d507fd0844091ac39fcf8f24a787c2c928f1a43d397049e422209b752924cb",
+        "size_bytes": 393,
+        "url": "https://github.com/ZHanry/home-tunnel-client/releases/download/v14.0.1/SHA256SUMS.txt"
+      }
+    ],
+    "source_manifest_verified": true,
+    "sigstore_verified": true,
+    "reproducible_acceptance_verified": true,
+    "payload_source_revision": "7ca0fd7186586965921e48beef2dbb2ae44fc895",
+    "acceptance": {
+      "schema_version": 1,
+      "version": "14.0.1",
+      "component": "client",
+      "status": "accepted_with_waivers",
+      "source_revision": "7ca0fd7186586965921e48beef2dbb2ae44fc895",
+      "build_run": 38172051186,
+      "build_attempt": 1,
+      "recorded_at": "2026-10-11T22:38:10.409209+00:00",
+      "deliverables": {
+        "NestLink-Setup-14.0.1-x64.exe": "a37e5aea80368c8d39fdbd82f621d936aea4783fa67f2b907ecc07f8faad725e",
+        "NestLink-Linux-14.0.1-x64.deb": "e65e748eff2d48fb1ccacc60245ce28f30d2b2b1d47edb49496dceebea272c4f",
+        "NestLink-Linux-14.0.1-arm64.deb": "6fcfb2eb64c1432edc0546ee0173d4bccdb8de4d1c71f3305a77a87f5dbb0dea"
+      },
+      "scenarios": [
+        {
+          "name": "account-revocation",
+          "status": "not_run",
+          "evidence": [],
+          "owner_waiver": {
+            "approved_by": "owner",
+            "approved_at": "2026-10-11T22:23:17+00:00",
+            "authorization": "不需要远控回归,直接做后面的",
+            "reason": "The owner stopped pending remote-control regression and requested direct publication. This unfinished runtime scenario remains not_run; exact-source CI and payload/signature verification do not constitute installed-product runtime acceptance.",
+            "disclosed_in": "docs/RELEASE_NOTES.md",
+            "version": "14.0.1",
+            "component": "client",
+            "source_revision": "7ca0fd7186586965921e48beef2dbb2ae44fc895",
+            "build_run": 38172051186,
+            "build_attempt": 1,
+            "deliverables": {
+              "NestLink-Setup-14.0.1-x64.exe": "a37e5aea80368c8d39fdbd82f621d936aea4783fa67f2b907ecc07f8faad725e",
+              "NestLink-Linux-14.0.1-x64.deb": "e65e748eff2d48fb1ccacc60245ce28f30d2b2b1d47edb49496dceebea272c4f",
+              "NestLink-Linux-14.0.1-arm64.deb": "6fcfb2eb64c1432edc0546ee0173d4bccdb8de4d1c71f3305a77a87f5dbb0dea"
+            },
+            "policy_file_sha256": {
+              "scripts/homedesk-release.py": "ee33a3edcd082c26871ebde56b1b53d46813cd5738668c17c23f619b7ea97390",
+              "scripts/test_homedesk_release.py": "3eb728f8f78327910ca893577cbeda35fb81a5d4e98738ebbfe5e39532187580"
+            }
+          }
+        },
+        {
+          "name": "browser-screen-input",
+          "status": "not_run",
+          "evidence": [],
+          "owner_waiver": {
+            "approved_by": "owner",
+            "approved_at": "2026-10-11T22:23:17+00:00",
+            "authorization": "不需要远控回归,直接做后面的",
+            "reason": "The owner stopped pending remote-control regression and requested direct publication. This unfinished runtime scenario remains not_run; exact-source CI and payload/signature verification do not constitute installed-product runtime acceptance.",
+            "disclosed_in": "docs/RELEASE_NOTES.md",
+            "version": "14.0.1",
+            "component": "client",
+            "source_revision": "7ca0fd7186586965921e48beef2dbb2ae44fc895",
+            "build_run": 38172051186,
+            "build_attempt": 1,
+            "deliverables": {
+              "NestLink-Setup-14.0.1-x64.exe": "a37e5aea80368c8d39fdbd82f621d936aea4783fa67f2b907ecc07f8faad725e",
+              "NestLink-Linux-14.0.1-x64.deb": "e65e748eff2d48fb1ccacc60245ce28f30d2b2b1d47edb49496dceebea272c4f",
+              "NestLink-Linux-14.0.1-arm64.deb": "6fcfb2eb64c1432edc0546ee0173d4bccdb8de4d1c71f3305a77a87f5dbb0dea"
+            },
+            "policy_file_sha256": {
+              "scripts/homedesk-release.py": "ee33a3edcd082c26871ebde56b1b53d46813cd5738668c17c23f619b7ea97390",
+              "scripts/test_homedesk_release.py": "3eb728f8f78327910ca893577cbeda35fb81a5d4e98738ebbfe5e39532187580"
+            }
+          }
+        },
+        {
+          "name": "installed-native-p2p",
+          "status": "not_run",
+          "evidence": [],
+          "owner_waiver": {
+            "approved_by": "owner",
+            "approved_at": "2026-10-11T22:23:17+00:00",
+            "authorization": "不需要远控回归,直接做后面的",
+            "reason": "The owner stopped pending remote-control regression and requested direct publication. This unfinished runtime scenario remains not_run; exact-source CI and payload/signature verification do not constitute installed-product runtime acceptance.",
+            "disclosed_in": "docs/RELEASE_NOTES.md",
+            "version": "14.0.1",
+            "component": "client",
+            "source_revision": "7ca0fd7186586965921e48beef2dbb2ae44fc895",
+            "build_run": 38172051186,
+            "build_attempt": 1,
+            "deliverables": {
+              "NestLink-Setup-14.0.1-x64.exe": "a37e5aea80368c8d39fdbd82f621d936aea4783fa67f2b907ecc07f8faad725e",
+              "NestLink-Linux-14.0.1-x64.deb": "e65e748eff2d48fb1ccacc60245ce28f30d2b2b1d47edb49496dceebea272c4f",
+              "NestLink-Linux-14.0.1-arm64.deb": "6fcfb2eb64c1432edc0546ee0173d4bccdb8de4d1c71f3305a77a87f5dbb0dea"
+            },
+            "policy_file_sha256": {
+              "scripts/homedesk-release.py": "ee33a3edcd082c26871ebde56b1b53d46813cd5738668c17c23f619b7ea97390",
+              "scripts/test_homedesk_release.py": "3eb728f8f78327910ca893577cbeda35fb81a5d4e98738ebbfe5e39532187580"
+            }
+          }
+        },
+        {
+          "name": "managed-tunnels",
+          "status": "not_run",
+          "evidence": [],
+          "owner_waiver": {
+            "approved_by": "owner",
+            "approved_at": "2026-10-11T22:23:17+00:00",
+            "authorization": "不需要远控回归,直接做后面的",
+            "reason": "The owner stopped pending remote-control regression and requested direct publication. This unfinished runtime scenario remains not_run; exact-source CI and payload/signature verification do not constitute installed-product runtime acceptance.",
+            "disclosed_in": "docs/RELEASE_NOTES.md",
+            "version": "14.0.1",
+            "component": "client",
+            "source_revision": "7ca0fd7186586965921e48beef2dbb2ae44fc895",
+            "build_run": 38172051186,
+            "build_attempt": 1,
+            "deliverables": {
+              "NestLink-Setup-14.0.1-x64.exe": "a37e5aea80368c8d39fdbd82f621d936aea4783fa67f2b907ecc07f8faad725e",
+              "NestLink-Linux-14.0.1-x64.deb": "e65e748eff2d48fb1ccacc60245ce28f30d2b2b1d47edb49496dceebea272c4f",
+              "NestLink-Linux-14.0.1-arm64.deb": "6fcfb2eb64c1432edc0546ee0173d4bccdb8de4d1c71f3305a77a87f5dbb0dea"
+            },
+            "policy_file_sha256": {
+              "scripts/homedesk-release.py": "ee33a3edcd082c26871ebde56b1b53d46813cd5738668c17c23f619b7ea97390",
+              "scripts/test_homedesk_release.py": "3eb728f8f78327910ca893577cbeda35fb81a5d4e98738ebbfe5e39532187580"
+            }
+          }
+        }
+      ],
+      "quality_evidence": {
+        "source_ci": "https://github.com/ZHanry/home-tunnel-client/actions/runs/38172051186",
+        "CodeQL": "https://github.com/ZHanry/home-tunnel-client/actions/runs/38172051180",
+        "Secret scan": "https://github.com/ZHanry/home-tunnel-client/actions/runs/38172051192"
+      },
+      "scope": "Exact C build provenance and payload hashes are verified. Client exact-source CI provenance and payload hashes are verified. The Windows installer has no Authenticode signature. Formal Materials Sigstore verification is performed separately after publication and cannot replace platform executable signing. Pending installed-product remote, authorization, account and tunnel runtime scenarios are not_run after the owner requested direct publication. The Android C overlay is the sole passed required installed-product scenario. Existing local Linux overlay evidence remains a separate completed check. No production server deployment or Windows reinstallation is performed.",
+      "signature_scope": "Client exact-source CI provenance and payload hashes are verified. The Windows installer has no Authenticode signature. Formal Materials Sigstore verification is performed separately after publication and cannot replace platform executable signing.",
+      "preparation_events": [
+        {
+          "event": "linux-c-payload-overlay",
+          "status": "passed",
+          "evidence": {
+            "path": "preparation/fixture1401-candidate-c-dispatch-20261012-attempt01/actual-c-transition-terminal1401-attempt01.json",
+            "sha256": "d5134de4001eac3d987abdfd362cb24769743fd4a757f92ea7aff0e8c335b0e8",
+            "size_bytes": 5134
+          },
+          "observation": "Exact C Linux x64 payload installed with identity, configuration and keyring preserved; GUI and media not run."
+        },
+        {
+          "event": "private-fixture-c-conversion-preflight",
+          "status": "failed_before_dispatch",
+          "evidence": {
+            "path": "preparation/fixture1401-candidate-c-dispatch-20261012-attempt01/actual-c-transition-terminal1401-attempt01.json",
+            "sha256": "d5134de4001eac3d987abdfd362cb24769743fd4a757f92ea7aff0e8c335b0e8",
+            "size_bytes": 5134
+          },
+          "observation": "The private application-image transition refused its shim identity preflight before any dispatch. Existing B application containers and FRPS remained unchanged. No C GUI or runtime fixture acceptance is asserted."
+        }
+      ],
+      "unverified": [
+        "account-revocation",
+        "browser-screen-input",
+        "carrier-network-nat",
+        "current-c-product-ui-matrix",
+        "installed-native-p2p",
+        "local-windows-14.0.1-reinstallation",
+        "long-duration-media",
+        "managed-tunnels",
+        "physical-android-device",
+        "physical-linux-arm64-gui"
+      ],
+      "reproduction": {
+        "artifacts": "Use the original fixed candidate inventory to reproduce exact C build, signature and payload mapping; do not rebuild release installer/APK/image bytes.",
+        "scope": "Unfinished runtime scenarios were deliberately not executed; preserve their not_run status and the direct owner authorization."
+      },
+      "release_scope_authorization": {
+        "path": "evidence/user-release-scope-change1401-attempt01.json",
+        "sha256": "696104008968f4609ba6503afb99ca2adaec36133b521f5425666facdcaf2486",
+        "size_bytes": 837
+      },
+      "original_candidate_inputs": [
+        {
+          "path": "plan1401.candidate-attempt03.json",
+          "sha256": "92554e2977e8c34b1c0296248163bf6c639b68a12d82cf5b4cc519c5c6310618",
+          "size_bytes": 5324
+        },
+        {
+          "path": "evidence/candidate-fetch-client-attempt03/inventory.json",
+          "sha256": "03be4057d46727ada7bbf69ebc8c9f349a93e243b4f37ca04d51fb503d988fbe",
+          "size_bytes": 30860573
+        }
+      ]
+    },
+    "images": {}
+  },
+  "android": {
+    "repository": "ZHanry/home-tunnel-android",
+    "tag": "v14.0.1",
+    "revision": "fc3690289d7bda0b0f0aec122e9379b2fa93f16c",
+    "assets": [
+      {
+        "filename": "NestLink-Android-14.0.1.apk",
+        "sha256": "c06a56a16f69e8432793abea641869e43698c74e8fb38417e6f88cecba38db37",
+        "size_bytes": 118562043,
+        "url": "https://github.com/ZHanry/home-tunnel-android/releases/download/v14.0.1/NestLink-Android-14.0.1.apk"
+      },
+      {
+        "filename": "NestLink-android-Materials-14.0.1.zip",
+        "sha256": "fd9c49dcd2e385a48386fdb852371021af3b3d7ed875e2729ecadfd462f7836f",
+        "size_bytes": 1134506097,
+        "url": "https://github.com/ZHanry/home-tunnel-android/releases/download/v14.0.1/NestLink-android-Materials-14.0.1.zip"
+      },
+      {
+        "filename": "SHA256SUMS.txt",
+        "sha256": "95df6a38c327663ae3687a09b8faae7d8d1c666ec60e382b2f4e51de53121ea5",
+        "size_bytes": 198,
+        "url": "https://github.com/ZHanry/home-tunnel-android/releases/download/v14.0.1/SHA256SUMS.txt"
+      }
+    ],
+    "source_manifest_verified": true,
+    "sigstore_verified": true,
+    "reproducible_acceptance_verified": true,
+    "payload_source_revision": "dcbcf85126af88695a890137ca8ade5fed0e1296",
+    "acceptance": {
+      "schema_version": 1,
+      "version": "14.0.1",
+      "component": "android",
+      "status": "accepted_with_waivers",
+      "source_revision": "dcbcf85126af88695a890137ca8ade5fed0e1296",
+      "build_run": 38172156970,
+      "build_attempt": 1,
+      "recorded_at": "2026-10-11T22:38:10.409209+00:00",
+      "deliverables": {
+        "NestLink-Android-14.0.1.apk": "c06a56a16f69e8432793abea641869e43698c74e8fb38417e6f88cecba38db37"
+      },
+      "scenarios": [
+        {
+          "name": "account-login-management",
+          "status": "not_run",
+          "evidence": [],
+          "owner_waiver": {
+            "approved_by": "owner",
+            "approved_at": "2026-10-11T22:23:17+00:00",
+            "authorization": "不需要远控回归,直接做后面的",
+            "reason": "The owner stopped pending remote-control regression and requested direct publication. This unfinished runtime scenario remains not_run; exact-source CI and payload/signature verification do not constitute installed-product runtime acceptance.",
+            "disclosed_in": "docs/RELEASE_NOTES.md",
+            "version": "14.0.1",
+            "component": "android",
+            "source_revision": "dcbcf85126af88695a890137ca8ade5fed0e1296",
+            "build_run": 38172156970,
+            "build_attempt": 1,
+            "deliverables": {
+              "NestLink-Android-14.0.1.apk": "c06a56a16f69e8432793abea641869e43698c74e8fb38417e6f88cecba38db37"
+            },
+            "policy_file_sha256": {
+              "scripts/homedesk-release.py": "ee33a3edcd082c26871ebde56b1b53d46813cd5738668c17c23f619b7ea97390",
+              "scripts/test_homedesk_release.py": "f86d679ed837485262d7f3e282036caecb1eb0104f19d87261939d5a5d2582bd"
+            }
+          }
+        },
+        {
+          "name": "installed-universal-apk",
+          "status": "passed",
+          "evidence": {
+            "execution": {
+              "started_at": "2026-10-11T21:57:33.124689+00:00",
+              "finished_at": "2026-10-11T21:58:31.326721+00:00",
+              "exit_code": 0,
+              "command": "C:\\Users\\Popdo\\anaconda3\\python.exe -B -X utf8 D:\\代码\\远程控制\\.work\\14.0.1\\preparation\\android1401-c-overlay-successor-attempt02\\overlay_c_upgrade1401.py --target-plan D:/代码/远程控制/.work/14.0.1/plan1401.candidate-attempt03.json --target-plan-sha256 92554e2977e8c34b1c0296248163bf6c639b68a12d82cf5b4cc519c5c6310618 --target-inventory D:/代码/远程控制/.work/14.0.1/evidence/candidate-fetch-android-attempt03/inventory.json --target-inventory-sha256 4a495a0ef4e5a4b7ce4209252edbad1aae4d4787062cfba73df518d2497cc334 --lease D:\\代码\\远程控制\\.work\\14.0.1\\evidence\\android1401-candidate-lease-attempt01\\lease1401.json --readonly-inventory D:\\代码\\远程控制\\.work\\14.0.1\\evidence\\android1401-readonly-headless-inventory-attempt01\\inventory1401.json --prepared-successor D:\\代码\\远程控制\\.work\\14.0.1\\preparation\\android1401-c-overlay-successor-attempt02\\prepared-overlay-c-lock1401.json --prepared-successor-sha256 c5c557c6856b5dc81c1b8962b3aa77dc953b61a7beebcc16e9a489a31a7d622c --output D:\\代码\\远程控制\\.work\\14.0.1\\evidence\\android1401-overlay-c-apply-attempt01 --apply --preflight-record D:\\代码\\远程控制\\.work\\14.0.1\\evidence\\android1401-overlay-c-preflight-attempt01\\terminal1401.json --preflight-record-sha256 d02bcd94aed61e040f1610579ab3b98f8c546e8c74fc08669c5660de9c1d0abd"
+            },
+            "observation": "The exact signed C universal APK was overlaid once on the retained API35 x86_64 emulator. Original signing certificate, application ID, first-install time, installation identity, configuration and protected login ciphertext were preserved. Both ARM64/x86_64 libraries are packaged. UI, login, permissions and media were not tested for C; physical ARM64 was not tested.",
+            "files": [
+              {
+                "path": "evidence/android1401-overlay-c-apply-attempt01/terminal1401.json",
+                "sha256": "8ce1c11fa75291c43695c6759cc68fbfa6bb78bccd5fe6b9671bbb214940116f",
+                "size_bytes": 6425,
+                "kind": "result"
+              },
+              {
+                "path": "evidence/executions1401/android1401-overlay-c-apply-attempt01.json",
+                "sha256": "1e3ebc1b04c104837c73b43abb541d413adebbad11cce28e5cf63c6ff44a983c",
+                "size_bytes": 3330,
+                "kind": "attachment"
+              },
+              {
+                "path": "evidence/executions1401/android1401-overlay-c-apply-attempt01.log",
+                "sha256": "a29cde09fea596eb133cc617dfcd24d867a3d215b2d52a42c62ba2b588800afa",
+                "size_bytes": 202,
+                "kind": "attachment"
+              }
+            ],
+            "fixture_sources": {
+              "client": "7ca0fd7186586965921e48beef2dbb2ae44fc895",
+              "server": "b73ab0472cde66b8a06c1307bbca4b3fb34785df",
+              "android": "dcbcf85126af88695a890137ca8ade5fed0e1296"
+            },
+            "deliverables": {
+              "NestLink-Android-14.0.1.apk": "c06a56a16f69e8432793abea641869e43698c74e8fb38417e6f88cecba38db37"
+            }
+          }
+        },
+        {
+          "name": "native-remote-control",
+          "status": "not_run",
+          "evidence": [],
+          "owner_waiver": {
+            "approved_by": "owner",
+            "approved_at": "2026-10-11T22:23:17+00:00",
+            "authorization": "不需要远控回归,直接做后面的",
+            "reason": "The owner stopped pending remote-control regression and requested direct publication. This unfinished runtime scenario remains not_run; exact-source CI and payload/signature verification do not constitute installed-product runtime acceptance.",
+            "disclosed_in": "docs/RELEASE_NOTES.md",
+            "version": "14.0.1",
+            "component": "android",
+            "source_revision": "dcbcf85126af88695a890137ca8ade5fed0e1296",
+            "build_run": 38172156970,
+            "build_attempt": 1,
+            "deliverables": {
+              "NestLink-Android-14.0.1.apk": "c06a56a16f69e8432793abea641869e43698c74e8fb38417e6f88cecba38db37"
+            },
+            "policy_file_sha256": {
+              "scripts/homedesk-release.py": "ee33a3edcd082c26871ebde56b1b53d46813cd5738668c17c23f619b7ea97390",
+              "scripts/test_homedesk_release.py": "f86d679ed837485262d7f3e282036caecb1eb0104f19d87261939d5a5d2582bd"
+            }
+          }
+        }
+      ],
+      "quality_evidence": {
+        "source_ci": "https://github.com/ZHanry/home-tunnel-android/actions/runs/38172156970",
+        "CodeQL": "https://github.com/ZHanry/home-tunnel-android/actions/runs/38172156982",
+        "Secret scan": "https://github.com/ZHanry/home-tunnel-android/actions/runs/38172156959"
+      },
+      "scope": "Exact C build provenance and payload hashes are verified. The actual APK retains the original Android signing certificate d7779e338be1039acee6dda9a43417cbf2baf4b0c9995578d9708501e95af702. Formal Materials Sigstore verification is performed separately after publication. Pending installed-product remote, authorization, account and tunnel runtime scenarios are not_run after the owner requested direct publication. The Android C overlay is the sole passed required installed-product scenario. Existing local Linux overlay evidence remains a separate completed check. No production server deployment or Windows reinstallation is performed.",
+      "signature_scope": "The actual APK retains the original Android signing certificate d7779e338be1039acee6dda9a43417cbf2baf4b0c9995578d9708501e95af702. Formal Materials Sigstore verification is performed separately after publication.",
+      "preparation_events": [
+        {
+          "event": "linux-c-payload-overlay",
+          "status": "passed",
+          "evidence": {
+            "path": "preparation/fixture1401-candidate-c-dispatch-20261012-attempt01/actual-c-transition-terminal1401-attempt01.json",
+            "sha256": "d5134de4001eac3d987abdfd362cb24769743fd4a757f92ea7aff0e8c335b0e8",
+            "size_bytes": 5134
+          },
+          "observation": "Exact C Linux x64 payload installed with identity, configuration and keyring preserved; GUI and media not run."
+        },
+        {
+          "event": "private-fixture-c-conversion-preflight",
+          "status": "failed_before_dispatch",
+          "evidence": {
+            "path": "preparation/fixture1401-candidate-c-dispatch-20261012-attempt01/actual-c-transition-terminal1401-attempt01.json",
+            "sha256": "d5134de4001eac3d987abdfd362cb24769743fd4a757f92ea7aff0e8c335b0e8",
+            "size_bytes": 5134
+          },
+          "observation": "The private application-image transition refused its shim identity preflight before any dispatch. Existing B application containers and FRPS remained unchanged. No C GUI or runtime fixture acceptance is asserted."
+        }
+      ],
+      "unverified": [
+        "account-login-management",
+        "carrier-network-nat",
+        "current-c-product-ui-matrix",
+        "local-windows-14.0.1-reinstallation",
+        "long-duration-media",
+        "native-remote-control",
+        "physical-android-device",
+        "physical-linux-arm64-gui"
+      ],
+      "reproduction": {
+        "artifacts": "Use the original fixed candidate inventory to reproduce exact C build, signature and payload mapping; do not rebuild release installer/APK/image bytes.",
+        "scope": "Unfinished runtime scenarios were deliberately not executed; preserve their not_run status and the direct owner authorization."
+      },
+      "release_scope_authorization": {
+        "path": "evidence/user-release-scope-change1401-attempt01.json",
+        "sha256": "696104008968f4609ba6503afb99ca2adaec36133b521f5425666facdcaf2486",
+        "size_bytes": 837
+      },
+      "original_candidate_inputs": [
+        {
+          "path": "plan1401.candidate-attempt03.json",
+          "sha256": "92554e2977e8c34b1c0296248163bf6c639b68a12d82cf5b4cc519c5c6310618",
+          "size_bytes": 5324
+        },
+        {
+          "path": "evidence/candidate-fetch-android-attempt03/inventory.json",
+          "sha256": "4a495a0ef4e5a4b7ce4209252edbad1aae4d4787062cfba73df518d2497cc334",
+          "size_bytes": 20868045
+        }
+      ],
+      "client_core_revision": "7ca0fd7186586965921e48beef2dbb2ae44fc895"
+    },
+    "images": {}
+  }
+}

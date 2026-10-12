@@ -25,6 +25,17 @@ HOMEDESK_ATTACHMENTS = {"server": 3, "client": 4, "android": 3}
 CURRENT_PRODUCT_VERSION = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
 NESTLINK_TARGET = {name: CURRENT_PRODUCT_VERSION for name in COMPONENTS}
 STABLE_13_SHA256 = "84b23f52a12c1b75da292b3e693d3db186b239371019fc597a8b76e83ba1a846"
+STABLE_14_SHA256 = "a1da958b0e13db86a6266c2036c993c0df0889c5d6431d3ef0304d9a0fa7629e"
+NESTLINK_PREDECESSORS = {
+    "13.0.0": ("10.1.0", STABLE_101_SHA256),
+    "14.0.0": ("13.0.0", STABLE_13_SHA256),
+    "14.0.1": ("14.0.0", STABLE_14_SHA256),
+}
+
+
+def nestlink_predecessor(version):
+    return NESTLINK_PREDECESSORS.get(version)
+
 
 
 def is_nestlink_version(value):
@@ -144,9 +155,11 @@ def validate_nestlink(candidate, stable, *, root=ROOT):
     """Current NestLink releases require independently verified product bytes."""
     value = candidate.get("version")
     errors=[]
-    previous_version = "10.1.0" if value == "13.0.0" else "13.0.0"
+    predecessor = nestlink_predecessor(value)
+    if predecessor is None:
+        return ["No immutable previous stable snapshot is configured for " + str(value)]
+    previous_version, expected_previous_hash = predecessor
     previous = root / f"docs/release/stable-{previous_version}.json"
-    expected_previous_hash = STABLE_101_SHA256 if value == "13.0.0" else STABLE_13_SHA256
     if not previous.is_file() or hashlib.sha256(previous.read_bytes()).hexdigest() != expected_previous_hash:
         errors.append(f"published {previous_version} snapshot bytes changed or are missing")
     if (not is_nestlink_version(value) or candidate.get("tag") != "v" + value or candidate.get("prerelease") is not False
@@ -211,7 +224,7 @@ def validate_nestlink(candidate, stable, *, root=ROOT):
         if previous.is_file() and stable!=json.loads(previous.read_text()):errors.append(f"Stable channel changed before {value} acceptance")
         if candidate.get("acceptance_status")!="pending" or candidate.get("tested_combination") is not None:errors.append("Unverified target cannot claim installed-app acceptance")
         return errors
-    if not all(publication) or candidate.get("acceptance_status")!="passed_reproducible" or candidate.get("stage")!="stable":
+    if not all(publication) or (candidate.get("acceptance_status")!="passed_reproducible" and not (value == "14.0.1" and candidate.get("acceptance_status") == "accepted_with_waivers")) or candidate.get("stage")!="stable":
         errors.append("Stable promotion requires actual reproducible acceptance and component releases")
     expected_combination={name:value for name in ("server","client","android","agent")}
     if candidate.get("tested_combination")!=expected_combination or stable.get("tested_combination")!=expected_combination:
@@ -225,6 +238,9 @@ def validate_nestlink(candidate, stable, *, root=ROOT):
         for name in ("server","client","android"):
             record=records.get(name,{})
             item=components.get(name,{})
+            acceptance = record.get("acceptance", {})
+            if candidate.get("acceptance_status") == "accepted_with_waivers" and not (value == "14.0.1" and acceptance.get("status") in {"passed_reproducible", "accepted_with_waivers"} and acceptance.get("version") == value):
+                errors.append("Owner waiver channel must bind actual 14.0.1 component records: " + name)
             if (record.get("revision")!=item.get("source_sha") or record.get("assets")!=item.get("artifacts")
                     or record.get("sigstore_verified") is not True or record.get("source_manifest_verified") is not True
                     or record.get("reproducible_acceptance_verified") is not True):
