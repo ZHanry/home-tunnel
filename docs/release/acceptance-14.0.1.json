@@ -1,0 +1,230 @@
+{
+  "schema_version": 1,
+  "version": "14.0.1",
+  "component": "hub",
+  "status": "accepted_with_waivers",
+  "source_revision": "8a3dc6e9579b6742f77536ec591c031a656d8f0c",
+  "build_run": 38190602403,
+  "build_attempt": 1,
+  "recorded_at": "2026-10-12T01:25:55.655830+00:00",
+  "deliverables": {},
+  "scenarios": [
+    {
+      "name": "component-bytes-signatures",
+      "status": "passed",
+      "evidence": {
+        "execution": {
+          "started_at": "2026-10-12T01:13:00.631050+00:00",
+          "finished_at": "2026-10-12T01:14:56.969882+00:00",
+          "exit_code": 0,
+          "command": "[\"C:\\\\Users\\\\Popdo\\\\anaconda3\\\\python.exe\", \"-X\", \"utf8\", \"D:\\\\代码\\\\远程控制\\\\.work\\\\14.0.1\\\\release-evidence-tools\\\\hub1401_evidence_waiver.py\", \"components\", \"--hub\", \"D:\\\\代码\\\\远程控制\\\\.work\\\\12.0.0-RC1\\\\repos\\\\home-tunnel\", \"--plan\", \"D:\\\\代码\\\\远程控制\\\\.work\\\\14.0.1\\\\plan1401.public-final-attempt03.json\", \"--download-dir\", \"D:\\\\代码\\\\远程控制\\\\.work\\\\14.0.1\\\\releases1401\", \"--cosign\", \"D:\\\\代码\\\\远程控制\\\\.work\\\\12.0.0-RC1\\\\toolchains\\\\cosign13\\\\cosign.exe\", \"--hub-source\", \"8a3dc6e9579b6742f77536ec591c031a656d8f0c\", \"--output\", \"D:\\\\代码\\\\远程控制\\\\.work\\\\14.0.1\\\\evidence\\\\hub-final-attempt03\\\\hub-components1401.json\"]"
+        },
+        "observation": "Actual complete component Release bytes, source/build/image signatures and exact C payload/core bindings verified; owner-waived product runtime scenarios remain not_run.",
+        "files": [
+          {
+            "path": "hub-final-attempt03/hub-components1401.json",
+            "sha256": "0f743571a0240653d5e1005d543ac3ef787d76ec48fecc5e71945ee580f7c736",
+            "size_bytes": 40082,
+            "kind": "result"
+          },
+          {
+            "path": "executions1401/final-hub-components1401-attempt03.json",
+            "sha256": "da2e26a1b78a53092ef7d3eb4464c74a1b4d3d32af953c58478a707fc3c233c7",
+            "size_bytes": 2301,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions1401/final-hub-components1401-attempt03.initial.json",
+            "sha256": "af3c9b3ff8023dd0de401176d436d63c6ecc99ad17d2eeb10679d712a159f925",
+            "size_bytes": 1999,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions1401/final-hub-components1401-attempt03.log",
+            "sha256": "6fd3107a422ad86d21b89225962a442ab73a79d1709ddd60691ce1563d1e7412",
+            "size_bytes": 2523,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions1401/final-hub-components1401-attempt03.tools.json",
+            "sha256": "e96167743e7d61a65b1204dddaee87ca6f6868b613a69e97941b0def77290162",
+            "size_bytes": 9797,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions1401/final-hub-components1401-attempt03.tools-closed.json",
+            "sha256": "9b93b2b0fed72da13747870a8f7d3af0199b47998015a5865324bc09100e0050",
+            "size_bytes": 831,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions1401/final-hub-components1401-attempt03.tools/00-run-hub-root-step1401_waiver.py",
+            "sha256": "8e425f66cc5ebe5f98d3696b8706e6052b4b2d041bb0901be4f928cac9611872",
+            "size_bytes": 16746,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions1401/final-hub-components1401-attempt03.tools/01-record-execution1401.py",
+            "sha256": "0df568f48323324fc1f2722a61aa510e43b516d669aba1f121be98c22ce1df1d",
+            "size_bytes": 3183,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions1401/final-hub-components1401-attempt03.tools/02-hub1401_evidence_waiver.py",
+            "sha256": "8d9d0e99c7757e1844d1f7e158cc5f68ead7f6da359959663a25b25fe2b5c6a1",
+            "size_bytes": 38763,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions1401/final-hub-components1401-attempt03.tools/03-release1401_evidence_waiver.py",
+            "sha256": "87b3cd47cc01900204c424d40550ad4150151c60501f9e003d75a4b8d8c598a2",
+            "size_bytes": 57322,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions1401/final-hub-components1401-attempt03.tools/04-hub1401_capture_image.py",
+            "sha256": "f8cef0bd52202a92cac552e66c8993e81dd5c7fee598f908b8f5c5213fbbfdf6",
+            "size_bytes": 3047,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions1401/final-hub-components1401-attempt03.tools/05-hub1401_evidence.py",
+            "sha256": "038c4c2a6c02400ae4b12f0f92d8c836d606bdf81773985ea1cc4dfa74b07b8f",
+            "size_bytes": 37558,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions1401/final-hub-components1401-attempt03.tools/06-release1401_evidence.py",
+            "sha256": "4142382e577dba613262227c7f3c24e66188b53b621b5f817ccde87954a40407",
+            "size_bytes": 55136,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions1401/final-hub-components1401-attempt03.tools/07-assemble-hub-results1401_waiver.py",
+            "sha256": "262ec1ebd9d5199a188ecb7b7f19c2795c3a5103a5429dba7d54510af994ee3e",
+            "size_bytes": 28875,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions1401/final-hub-components1401-attempt03.tools/08-hub_final_policy1401_waiver.py",
+            "sha256": "1b3f8f248807cd9d7968c3c13476ed851753264b0598ccd92ac7aac96da6aee3",
+            "size_bytes": 10052,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions1401/final-hub-components1401-attempt03.tools/09-distribution.py",
+            "sha256": "ea8f826af680b0b1795ddb8ea20d00a6d32badee94d148424bf4b56d03e504ae",
+            "size_bytes": 30510,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions1401/final-hub-components1401-attempt03.tools/10-homedesk_downloads.py",
+            "sha256": "fc806586063b35603e58bce7e6dd230852bc302d42bb43b589345ef459987415",
+            "size_bytes": 10758,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions1401/final-hub-components1401-attempt03.tools/11-verify-homedesk-components.py",
+            "sha256": "75f94f7577dd1fe5c9683d511c98514de5ac21dea527a68c97c4199cf996f99a",
+            "size_bytes": 10455,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions1401/final-hub-components1401-attempt03.tools/12-promote-nestlink.py",
+            "sha256": "f883c1c326d30e0897e3671397233aa272dc50787a6a83737ebc65f1d9b6c392",
+            "size_bytes": 23448,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions1401/final-hub-components1401-attempt03.tools/13-check-site-policy.py",
+            "sha256": "f72e65529fe039fa862528ed7ca9fc966034cde2e0313e133cdfb2be5cecaaff",
+            "size_bytes": 11910,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions1401/final-hub-components1401-attempt03.tools/14-homedesk-release.py",
+            "sha256": "4319bd01f6687405bacb9a1f94eac609b7c1308a8b921f0f3fd40a3be5cc49cb",
+            "size_bytes": 26841,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions1401/final-hub-components1401-attempt03.tools/15-v10_evidence.py",
+            "sha256": "aa23517b49382a62f9ff2efba303391837fe875e615c8d63ccf51ac6d470f65e",
+            "size_bytes": 27681,
+            "kind": "attachment"
+          },
+          {
+            "path": "executions1401/final-hub-components1401-attempt03.tools/16-capture_image.py",
+            "sha256": "f8cef0bd52202a92cac552e66c8993e81dd5c7fee598f908b8f5c5213fbbfdf6",
+            "size_bytes": 3047,
+            "kind": "attachment"
+          }
+        ],
+        "fixture_sources": {
+          "server": "b73ab0472cde66b8a06c1307bbca4b3fb34785df",
+          "client": "7ca0fd7186586965921e48beef2dbb2ae44fc895",
+          "android": "dcbcf85126af88695a890137ca8ade5fed0e1296",
+          "hub": "8a3dc6e9579b6742f77536ec591c031a656d8f0c"
+        },
+        "deliverables": {}
+      }
+    },
+    {
+      "name": "current-ui-site",
+      "status": "not_run",
+      "evidence": [],
+      "owner_waiver": {
+        "approved_by": "owner",
+        "approved_at": "2026-10-11T22:23:17+00:00",
+        "authorization": "不需要远控回归,直接做后面的",
+        "reason": "The owner cancelled pending C installed-product remote-control and UI runtime regression and requested direct publication. Current C product UI remains not_run; the separately completed website layout matrix and exact Release bytes/signatures cannot replace installed-product acceptance.",
+        "disclosed_in": "docs/RELEASE_NOTES.md",
+        "version": "14.0.1",
+        "component": "hub",
+        "source_revision": "8a3dc6e9579b6742f77536ec591c031a656d8f0c",
+        "build_run": 38190602403,
+        "build_attempt": 1,
+        "deliverables": {},
+        "policy_file_sha256": {
+          "scripts/homedesk-release.py": "4319bd01f6687405bacb9a1f94eac609b7c1308a8b921f0f3fd40a3be5cc49cb",
+          "scripts/test_homedesk_release.py": "5ddb47ced4e42d55c2cb104f9d3298abe3eb499dfdf22b699cf3175aa20a844c"
+        }
+      }
+    }
+  ],
+  "quality_evidence": {
+    "source_ci": "https://github.com/ZHanry/home-tunnel/actions/runs/38190602403",
+    "CodeQL": "https://github.com/ZHanry/home-tunnel/actions/runs/38190602438",
+    "Secret scan": "https://github.com/ZHanry/home-tunnel/actions/runs/38190602411"
+  },
+  "reproduction": {
+    "component_bytes": "Run independent hub1401_evidence_waiver.py components with this exact frozen Hub plan/checkout, retained complete public downloads and explicit cosign; retain successful actual wrapper and source-bound primary.",
+    "current_ui_site": "The owner cancelled pending C runtime regression. Preserve current-ui-site as not_run with this exact source/run/product/policy-bound authorization. Verify the actual website matrix separately without asserting C product UI acceptance.",
+    "acceptance": "Run independent release1401_evidence_waiver.py acceptance with this inventory/results/evidence root. It revalidates live exact-source CI, complete public component source/BUILD/image signatures and the immutable inventory again."
+  },
+  "unverified": [
+    "account-login-management",
+    "account-migration",
+    "account-revocation",
+    "browser-authorization",
+    "browser-screen-input",
+    "carrier-network-nat",
+    "current-c-product-ui-matrix",
+    "current-ui-site",
+    "hub-checks-do-not-retest-product-media",
+    "installed-native-p2p",
+    "installed-three-platform-update-ui-discovery-pending-final-publication",
+    "local-windows-14.0.1-reinstallation",
+    "long-duration-media",
+    "managed-tunnels",
+    "native-authorization",
+    "native-remote-control",
+    "physical-android-device",
+    "physical-linux-arm64-gui",
+    "production-server-not-upgraded",
+    "task-update-api-discovery-not-run",
+    "windows-maintenance-local-gui-not-run",
+    "windows-no-authenticode"
+  ],
+  "scope": "Actual 14.0.1 Hub complete component Release bytes/signatures/source/core bindings and 148 source-clean ready.default website cases are independently verified. Current C installed product UI/gallery regression remains not_run under the explicit owner scope change; unchanged 14.0.0 original screenshots are only historical references. Website layout verification is recorded separately from the waived current-ui-site runtime scene. Production service is not upgraded."
+}

@@ -33,6 +33,34 @@ Hub `current-ui-site`：not_run，本版 C 产品真实界面回归未执行；�
 
 Known limitations and untested scope for 14.0.1: the password hint on the Chinese server Remote assistance page still reads “Optional; the host can approve instead”. Physical Android, Linux ARM64 and Wayland hardware, local Windows 14.0.1 installation and GUI, carrier NAT and long-duration media were not tested. Local Windows validation is `not_run` because this maintenance task does not reinstall it; the installer still has no Authenticode signature. Existing Android receiver, PIN and `trusted_devices` limitations and the 18 open dependency alerts remain; version alignment does not establish that they are fixed. The production server remains on its existing version.
 
+## 14.0.1 确切来源与 Hub 验收
+
+本版已接受 Hub 站点源为 `8a3dc6e9579b6742f77536ec591c031a656d8f0c`，确切成功 Pages 构建为 [38190602403](https://github.com/ZHanry/home-tunnel/actions/runs/38190602403)（attempt 1）；同源 CodeQL、敏感信息扫描、页面质量门与部署均通过。独立验收状态为 `accepted_with_waivers`，记录见 [acceptance-14.0.1.json](release/acceptance-14.0.1.json)，该原始 JSON 的 SHA-256 为 `7eae2410ceb00753b221233a79598f4f30e3a56e8c2800db13c7d1c973d29492`。
+
+| 组件 | 正式 v14.0.1 标签源 | 原始 C 载荷源 | 原始 C 构建 | 正式 Release 构建 |
+| --- | --- | --- | --- | --- |
+| 服务端 | `10d3f5be070b4caf4d8feb11defb86ad0e68e5d4` | `b73ab0472cde66b8a06c1307bbca4b3fb34785df` | [38167376775](https://github.com/ZHanry/home-tunnel-server/actions/runs/38167376775) | [38182239546](https://github.com/ZHanry/home-tunnel-server/actions/runs/38182239546) |
+| 桌面客户端 | `181519880a5971f0618adfc81a55281a09d613a8` | `7ca0fd7186586965921e48beef2dbb2ae44fc895` | [38172051186](https://github.com/ZHanry/home-tunnel-client/actions/runs/38172051186) | [38184538505](https://github.com/ZHanry/home-tunnel-client/actions/runs/38184538505) |
+| Android | `fc3690289d7bda0b0f0aec122e9379b2fa93f16c` | `dcbcf85126af88695a890137ca8ade5fed0e1296` | [38172156970](https://github.com/ZHanry/home-tunnel-android/actions/runs/38172156970) | [38185162678](https://github.com/ZHanry/home-tunnel-android/actions/runs/38185162678) |
+
+Android 共享 core 保持客户端原始 C 来源 `7ca0fd7186586965921e48beef2dbb2ae44fc895`，APK 的 applicationId 为 `io.github.zhanry.hometunnel`、versionCode 为 `14000100`，原签名证书 SHA-256 为 `d7779e338be1039acee6dda9a43417cbf2baf4b0c9995578d9708501e95af702`。正式组件 Materials、源提交、BUILD 与原始 C 载荷的绑定均已核验。
+
+| 发行产物 | 确切 SHA-256 |
+| --- | --- |
+| [NestLink-Setup-14.0.1-x64.exe](https://github.com/ZHanry/home-tunnel-client/releases/download/v14.0.1/NestLink-Setup-14.0.1-x64.exe) | `a37e5aea80368c8d39fdbd82f621d936aea4783fa67f2b907ecc07f8faad725e` |
+| [NestLink-Linux-14.0.1-x64.deb](https://github.com/ZHanry/home-tunnel-client/releases/download/v14.0.1/NestLink-Linux-14.0.1-x64.deb) | `e65e748eff2d48fb1ccacc60245ce28f30d2b2b1d47edb49496dceebea272c4f` |
+| [NestLink-Linux-14.0.1-arm64.deb](https://github.com/ZHanry/home-tunnel-client/releases/download/v14.0.1/NestLink-Linux-14.0.1-arm64.deb) | `6fcfb2eb64c1432edc0546ee0173d4bccdb8de4d1c71f3305a77a87f5dbb0dea` |
+| [NestLink-Android-14.0.1.apk](https://github.com/ZHanry/home-tunnel-android/releases/download/v14.0.1/NestLink-Android-14.0.1.apk) | `c06a56a16f69e8432793abea641869e43698c74e8fb38417e6f88cecba38db37` |
+| [NestLink-Server-14.0.1.tar.gz](https://github.com/ZHanry/home-tunnel-server/releases/download/v14.0.1/NestLink-Server-14.0.1.tar.gz) | `c3160a95220d9098aa9ca4c39b5c0f2e273ddd7af0a28ed4298894fd078fa474` |
+
+本站实际核验 8 个中英文页面、11 个组件附件、稳定下载与更新清单投影，以及全部 39 个已追踪站点文件。最终本地 Edge `ready.default` 网站矩阵完成 148 项：attempted 148、captured 148、pending 0，所有实际原始切片、源码、主题及视口均绑定已接受站点源。这些是网站布局与发行检查；产品真实界面回归仍为 `current-ui-site: not_run`，官网 8 份产品截图继续使用真实 14.0.0 原图、原始 manifest 和摘要。
+
+本版网站矩阵 SHA-256：`9ad74c9a5c9b4a2abc1bc9bbee3098d098539184c7543358cc2c8611d964e04a`；组件核验主件 SHA-256：`0f743571a0240653d5e1005d543ac3ef787d76ec48fecc5e71945ee580f7c736`；网站核验主件 SHA-256：`e2a68c398d58310d724499b68a899f2d7ec56ab30af5db06a5614a50e13da3d0`。原始结果索引共绑定 220 份文件，之前失败的矩阵与修正记录另行保留，未纳入通过结果。
+
+未测范围继续按用户原话 `不需要远控回归,直接做后面的` 保留：当前 C 产品 UI、未完成的远控/批准与密码/撤权、账号与穿透运行时场景，以及安装产品的更新发现 API 和 GUI 都为 `not_run`；Windows 本机 14.0.1 未重装，安装器仍无 Authenticode。实体 Android、Linux ARM64/Wayland 实机、运营商 NAT 和长时媒体未测。线上生产服务端保持原版本，14.0.0 历史结论不作为本版验收结果。
+
+The 14.0.1 Hub acceptance is `accepted_with_waivers`. Exact public component bytes, signatures, source/core bindings and all 148 website layout cases passed. Current C installed-product UI, unfinished remote/authorization/account/tunnel runtime scenes, installed update API/GUI discovery, and local Windows reinstallation remain `not_run` under the owner's scope change. The eight product screenshots retain their actual 14.0.0 provenance. The production server remains on its existing version.
+
 ## NestLink 14.0.0 历史发行
 
 NestLink 14.0.0 以桌面 update11 为基准，统一 Windows、Linux、服务端 Web 与 Android 的名称、客户端 SVG Logo、紫色主题、业务图标及“设备管理、远程协助、内网穿透”入口。Web 和 Android 按浏览器、手机与平板的真实能力呈现导航与账号入口。
